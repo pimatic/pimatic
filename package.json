@@ -6,6 +6,11 @@
   "files": ["backends", "docs", "frontends", "lib", "main.js", "sweetpi.coffee", "default_config.coffee",
             "README.md", "LICENSE"],
   "version": "0.0.1",
+  "homepage": "http://github.com/sweetpi/sweetpi-server",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sweetpi/sweetpi-server.git"
+  },
   "dependencies": {
     "coffee-script": "1.6.*",
     "express": "3.0.*",
