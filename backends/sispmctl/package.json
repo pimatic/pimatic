@@ -1,0 +1,2 @@
+{ "name" : "sweetpi-backend-sispmctl",
+  "main" : "./sispmctl" }

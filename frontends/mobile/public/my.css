@@ -1,0 +1,8 @@
+/* Put your custom CSS here */
+h3{
+	margin-bottom: 5px
+}
+
+div.ui-content{
+	padding-top: 0px;
+}

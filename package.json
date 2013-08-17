@@ -1,0 +1,20 @@
+{
+  "name": "sweetpi-server",
+  "description": "SweetPi Server",
+  "author": "Oliver Schneider <oliverschneider89@gmail.com> (http://sweetpi.h3llfire.de)",
+  "main": "main.js",
+  "files": ["backends", "docs", "frontends", "lib", "main.js", "sweetpi.coffee", "default_config.coffee"],
+  "version": "0.0.1",
+  "dependencies": {
+    "coffee-script": "1.6.*",
+    "express": "3.0.*",
+    "jade": "0.27.*",
+    "connect-coffee-script": "0.1.*",
+    "connect-offline": "1.0.*",
+    "should": "1.2.*"
+  },
+     "engines": {
+       "node": ">0.8.x",
+       "npm": ">1.1.x"
+     }
+}

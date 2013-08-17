@@ -1,0 +1,28 @@
+doctype 5
+html(manifest='application.manifest')
+
+head
+  meta(charset='utf-8')
+  meta(name='viewport', content='width=device-width, initial-scale=1')
+  meta(name='apple-mobile-web-app-capable', content='yes')
+  meta(name='apple-mobile-web-app-status-bar-style', content='black')
+  title SweetPi
+  link(rel='stylesheet', href='jquery.mobile-1.2.0.min.css')
+  link(rel='stylesheet', href='my.css')
+  link(rel='stylesheet', href='themes/AndroidHoloDarkLight.min.css')
+  link(rel='stylesheet', href='roboto/fonts.css')
+  script(src='jquery.min.js')
+  script(src='jquery.mobile-1.2.0.min.js')  
+  script(src='my.js')
+      
+body
+  #outlet-control(data-role='page')
+    div(data-theme='a', data-role='header', data-position='fixed')
+      a#talk.ui-btn-right(data-role='button', href='#outlet-control', style='display: none;') Sprechen
+      h3 PiControl
+    div(data-role='content')
+      - for actor in actors
+        h3=actor.name
+          div(data-role='controlgroup', data-type='horizontal')
+            a.switch(data-actorid=actor.id, data-actoraction='turnOff', data-role='button', href='#outlet-control', data-icon='minus', data-iconpos='left') Aus
+            a.switch(data-actorid=actor.id, data-actoraction='turnOn', data-role='button', href='#outlet-control', data-icon='plus', data-iconpos='left') An
