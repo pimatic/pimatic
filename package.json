@@ -3,7 +3,8 @@
   "description": "SweetPi Server",
   "author": "Oliver Schneider <oliverschneider89@gmail.com> (http://sweetpi.h3llfire.de)",
   "main": "main.js",
-  "files": ["backends", "docs", "frontends", "lib", "main.js", "sweetpi.coffee", "default_config.coffee"],
+  "files": ["backends", "docs", "frontends", "lib", "main.js", "sweetpi.coffee", "default_config.coffee",
+            "README.md", "LICENSE"],
   "version": "0.0.1",
   "dependencies": {
     "coffee-script": "1.6.*",
