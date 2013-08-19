@@ -8,9 +8,9 @@ Installation
 ------------
 ```
   npm install sweetpi-server
-  cp default_config.coffee config.coffee
+  cp default_config.json config.json
 ```
-Edit the `config.coffee` file with your favorit editor and then start the server with `node main.js` or `coffee sweetpi.coffee`.
+Edit the `config.json` file with your favorit editor and then start the server with `node main.js` or `coffee sweetpi.coffee`.
 
 Extensions
 ----------

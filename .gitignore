@@ -1,3 +1,5 @@
-config.coffee
+config.json
 node_modules
 node.log
+*.sublime-workspace
+*.sublime-project

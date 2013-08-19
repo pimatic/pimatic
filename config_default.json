@@ -1,0 +1,91 @@
+{
+  "auth": {
+    //username and password for the web interface
+    "username": "admin",
+    "password": "",
+    //disable authentification?
+    "disableAuthentication": false
+    //Section: server
+  },
+  "server": {
+    //Settings for the *http*-server
+    /*
+    "httpServer": {
+      "enabled": true,
+      "port": 80      
+    },
+    */
+    /*
+    "httpsServer": {
+      //Settings for the 'https*-server 
+      "enabled": false,
+      "port": 443,
+      "keyFile": "./.cert/privatekey.pem",
+      "certFile": "./.cert/certificate.pem"
+    }*/
+  },
+  "frontends": [
+    { 
+      "module": "rest" 
+    }, 
+    { 
+      "module": "speak" 
+    }, 
+    { 
+      "module": "mobile",
+      "actorsToDisplay": [ 
+      /*
+        { "id": "light" },
+        { "id": "printer" }
+      */
+      ] 
+    }/*,
+    { 
+      "module": "filebrowser",
+      "mappings": [
+        {
+          "path": "/files",
+          "directory": "/media/usb1"
+        }
+      ]
+    },
+    { 
+      "module": "redirect",
+      "routes": [
+        {
+          "path": "/printer",
+          "redirect": "http://192.168.1.2:631/printers/"
+        }
+      ]
+    }*/
+  ],
+  "backends": [
+    /*
+    { 
+      "module": "rpi433mhz",
+      "binary": "/home/pi/source/433.92-Raspberry-Pi/send"
+    },
+    { 
+      "module": "sispmctl",
+      "binary": "sispmctl"
+    }
+    */
+  ],
+  "actors": [
+    /*
+    { 
+      "id": "light",
+      "class": "Rpi433Mhz",
+      "name": "Licht",
+      "outletUnit": 0,
+      "outletId": 123456 
+    },
+    { 
+      "id": "printer",
+      "class": "Sispmctl",
+      "name": "Drucker",
+      "outletUnit": 1
+    }
+    */
+  ]
+}

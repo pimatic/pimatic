@@ -1,11 +1,16 @@
 should = require 'should'
 express = require "express"
 fs = require "fs"
+convict = require "convict"
 helper = require './lib/helper'
 Server = require "./lib/server"
 
 #Load the configuration file.
-config = require "./config"
+conf = convict require("./config-shema")
+conf.loadFile "./config.json"
+# perform validation
+conf.validate()
+config = conf.get("");
 
 # 
 #  Check config
