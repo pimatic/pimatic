@@ -1,28 +1,36 @@
 spawn = require("child_process").spawn
+convict = require "convict"
 modules = require '../../lib/modules'
 actors = require "../../lib/actors"
 
-class Rpi433Backend extends modules.Backend
+
+class PilightBackend extends modules.Backend
   server: null
   config: null
 
   init: (@server, @config) =>
+    conf = convict require("./backend-config-shema")
+    conf.load config
+    conf.validate()
 
   createActor: (config) =>
-    if config.class is "Rpi433Mhz" 
-      @server.registerActor(new Rpi433Mhz config)
+    if config.class is "PilighOutlet" 
+      @server.registerActor(new PilighOutlet config)
       return true
     return false
 
 
 
-backend = new Rpi433Backend
+backend = new PilightBackend
 
-class Rpi433Mhz extends actors.PowerOutlet
+class PilighOutlet extends actors.PowerOutlet
   _config: null
 
   constructor: (config) ->
-    #TODO: Check config!
+    conf = convict require("./actor-config-shema")
+    conf.load config
+    conf.validate()
+    
     @_config = config
     @name = config.name
     @id = config.id
@@ -44,7 +52,11 @@ class Rpi433Mhz extends actors.PowerOutlet
   #
   _send: (state, resultCallbak) ->
     onOff = (if state then "-t" else "-f")
-    child = spawn backend.config.binary, ["-u " + @_config.outletUnit, "-i " + @_config.outletId, onOff]
+    child = spawn backend.config.binary, [
+      "-p " + @_config.protocol
+      "-u " + @_config.outletUnit, 
+      "-i " + @_config.outletId, 
+      onOff]
     child.on "exit", (code) ->
       success = (code is 0)
       resultCallbak success

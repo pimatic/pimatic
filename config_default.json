@@ -75,7 +75,7 @@
     /*
     { 
       "id": "light",
-      "class": "Rpi433Mhz",
+      "class": "PilightOutlet",
       "name": "Licht",
       "outletUnit": 0,
       "outletId": 123456 
