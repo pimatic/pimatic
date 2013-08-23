@@ -15,8 +15,8 @@ class Actuator
   hasAction: (name) ->
     name in @actions
 
-# A BinaryActuator 
-class BinaryActuator extends Actuator
+# A class for all you can switch on and off.
+class SwitchActuator extends Actuator
   type: 'BinaryActuator'
   state: null
   actions: ["turnOn", "turnOff", "changeStateTo"]
@@ -30,10 +30,9 @@ class BinaryActuator extends Actuator
   changeStateTo: (state, callback) ->
     throw new Error "Function \"changeStateTo\" is not implemented!"
 
-class PowerOutlet extends BinaryActuator
-    type: 'PowerOutlet'
+class PowerSwitch extends SwitchActuator
 
 
 module.exports.Actuator = Actuator
-module.exports.BinaryActuator = BinaryActuator
-module.exports.PowerOutlet = PowerOutlet
+module.exports.SwitchActuator = SwitchActuator
+module.exports.PowerSwitch = PowerSwitch

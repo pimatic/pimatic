@@ -9,14 +9,14 @@ class Sispmctl extends modules.Backend
   init: (@server, @config) =>
 
   createActuator: (config) =>
-    if config.class is "Sispmctl" 
-      @server.registerActuator(new PowerOutletSispmctl config)
+    if config.class is "SispmctlSwitch" 
+      @server.registerActuator(new SispmctlSwitch config)
       return true
     return false
 
 backend = new Sispmctl
 
-class PowerOutletSispmctl extends actuators.PowerOutlet
+class SispmctlSwitch extends actuators.PowerSwitch
   config: null
 
   constructor: (@config) ->

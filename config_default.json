@@ -75,15 +75,15 @@
     /*
     { 
       "id": "light",
-      "class": "PilightOutlet",
-      "name": "Licht",
+      "class": "PilightSwitch",
+      "name": "Light in Livingroom",
       "outletUnit": 0,
       "outletId": 123456 
     },
     { 
       "id": "printer",
-      "class": "Sispmctl",
-      "name": "Drucker",
+      "class": "SispmctlSwitch",
+      "name": "Printer",
       "outletUnit": 1
     }
     */

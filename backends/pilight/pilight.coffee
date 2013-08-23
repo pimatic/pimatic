@@ -14,7 +14,7 @@
 # ``` 
 # { 
 #   "id": "light",
-#   "class": "PilightOutlet", 
+#   "class": "PilightSwitch", 
 #   "name": "Lamp",
 #   "outletUnit": 0,
 #   "outletId": 123456 
@@ -38,8 +38,8 @@ class PilightBackend extends modules.Backend
     conf.validate()
 
   createActuator: (config) =>
-    if config.class is "PilighOutlet" 
-      @server.registerActuator(new PilighOutlet config)
+    if config.class is "PilightSwitch" 
+      @server.registerActuator(new PilightSwitch config)
       return true
     return false
 
@@ -47,7 +47,7 @@ class PilightBackend extends modules.Backend
 
 backend = new PilightBackend
 
-class PilighOutlet extends actuators.PowerOutlet
+class PilightSwitch extends actuators.PowerSwitch
   config: null
 
   constructor: (@config) ->
