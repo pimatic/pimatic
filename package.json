@@ -18,7 +18,11 @@
     "connect-coffee-script": "0.1.*",
     "connect-offline": "1.0.*",
     "should": "1.2.*",
-    "convict": "0.4.*"
+    "convict": "0.4.*",
+    "chrono-node": "0.1.*",
+    "cron": "1.0.*",
+    "time": "0.9.*",
+    "bet": "0.2.*"
   },
      "engines": {
        "node": ">0.8.x",

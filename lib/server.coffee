@@ -1,13 +1,17 @@
 should = require 'should'
 assert = require 'assert'
 helper = require './helper'
-actors = require './actors'
+actuators = require './actuators'
+sensors = require './sensors'
+rules = require './rules'
 modules = require './modules'
 
 class Server extends require('events').EventEmitter
   frontends: []
   backends: []
-  actors: []
+  actuators: []
+  sensors: []
+  ruleManager: null
 
   constructor: (app, config) ->
     should.exist app
@@ -16,10 +20,11 @@ class Server extends require('events').EventEmitter
       config.should.be.a 'object', "config is no object?"
       config.should.have.property('frontends').instanceOf Array, "frontends should be an array"
       config.should.have.property('backends').instanceOf Array, "backends should be an array"
-      config.should.have.property('actors').instanceOf Array, "actors should be an array"
+      config.should.have.property('actuators').instanceOf Array, "actuators should be an array"
 
     @app = app
     @config = config
+    @ruleManager = new rules.RuleManager this
     @loadBackends()
     @loadFrontends()
 
@@ -60,33 +65,49 @@ class Server extends require('events').EventEmitter
     @backends.push {module: backend, config: config}
     @emit "backend", backend
 
-  registerActor: (actor) ->
-    should.exist actor
-    actor.should.be.instanceOf actors.Actor
-    actor.should.have.property("name").not.empty
-    actor.should.have.property("id").not.empty
-    if @actors[actor.id]?
-      throw new assert.AssertionError("dublicate actor id \"#{actor.id}\"")
+  registerActuator: (actuator) ->
+    should.exist actuator
+    actuator.should.be.instanceOf actuators.Actuator
+    actuator.should.have.property("name").not.empty
+    actuator.should.have.property("id").not.empty
+    if @actuators[actuator.id]?
+      throw new assert.AssertionError("dublicate actuator id \"#{actuator.id}\"")
 
-    console.log "new actor \"#{actor.name}\"..."
-    @actors[actor.id]=actor
-    @emit "actor", actor
+    console.log "new actuator \"#{actuator.name}\"..."
+    @actuators[actuator.id]=actuator
+    @emit "actuator", actuator
 
-  loadActors: ->
-    for acConfig in @config.actors
+  registerSensor: (sensor) ->
+    should.exist sensor
+    sensor.should.be.instanceOf sensors.Sensor
+    sensor.should.have.property("name").not.empty
+    sensor.should.have.property("id").not.empty
+    if @sensors[sensor.id]?
+      throw new assert.AssertionError("dublicate sensor id \"#{sensor.id}\"")
+
+    console.log "new sensor \"#{sensor.name}\"..."
+    @sensors[sensor.id]=sensor
+    @emit "sensor", sensor
+
+  loadActuators: ->
+    for acConfig in @config.actuators
       found = false
       for be in @backends
-        found = be.module.createActor acConfig
+        found = be.module.createActuator acConfig
         if found then break
       unless found
-        console.warn "no backend found for actor \"#{acConfig.id}\"!"
+        console.warn "no backend found for actuator \"#{acConfig.id}\"!"
 
-  getActorById: (id) ->
-    @actors[id]
+  getActuatorById: (id) ->
+    @actuators[id]
 
   init: ->
     b.module.init @, b.config for b in @backends
-    @loadActors()
+    @loadActuators()
     f.module.init @app, @, f.config for f in @frontends
+    actions = require './actions'
+    @ruleManager.actionHandlers.push actions(this)
+    @ruleManager.executeAction "turn light off", false, (e, message)->
+      console.log message
 
  module.exports = Server

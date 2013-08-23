@@ -2,7 +2,7 @@ sweetpi-server
 ==============
 
 sweetpi-server is a home automation server and framework built on nodejs and express 
-to control various devices (actors). It can be run on the raspberry pi.
+to control various Actuators. It can run on the raspberry pi.
 
 Installation
 ------------
@@ -20,4 +20,4 @@ The framework is built to be extendet by modules. A module can ba a `Frontend` o
 A frontend is typically a interface for other scripts, software or the user to interact with the server. See the `frontends` directory for more informations.
 
 ###Backends
-A backend typically provides actors that can exectute actions. See the `backends` directory for more informations.
+A backend typically provides actuators that can exectute actions. See the `backends` directory for more informations.

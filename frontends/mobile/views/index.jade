@@ -21,8 +21,10 @@ body
       a#talk.ui-btn-right(data-role='button', href='#outlet-control', style='display: none;') Sprechen
       h3 PiControl
     div(data-role='content')
-      - for actor in actors
-        h3=actor.name
+      - for actuator in actuators
+        h3=actuator.name
           div(data-role='controlgroup', data-type='horizontal')
-            a.switch(data-actorid=actor.id, data-actoraction='turnOff', data-role='button', href='#outlet-control', data-icon='minus', data-iconpos='left') Aus
-            a.switch(data-actorid=actor.id, data-actoraction='turnOn', data-role='button', href='#outlet-control', data-icon='plus', data-iconpos='left') An
+            a.switch(data-actuator-id=actuator.id, data-actuator-action='turnOff', 
+              data-role='button', href='#outlet-control', data-icon='minus', data-iconpos='left') Aus
+            a.switch(data-actuator-id=actuator.id, data-actuator-action='turnOn', 
+              data-role='button', href='#outlet-control', data-icon='plus', data-iconpos='left') An

@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>clock.coffee</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page">
+            
+              
+              <a class="source" href="clock.html">
+                clock.coffee
+              </a>
+            
+              
+              <a class="source" href="config-shema.html">
+                config-shema.coffee
+              </a>
+            
+              
+              <a class="source" href="sweetpi.html">
+                sweetpi.coffee
+              </a>
+            
+          </div>
+        </li>
+      </ul>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>clock.coffee</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <p>Provides a clock module, so actions can be triggert at a specific time</p>
+<h1>Provided predicates</h1>
+<p>For example:</p>
+<ul>
+<li>the condition <code>&quot;Sep 12-13&quot;</code> is true on the 12th of october, 2013 from 0 to 
+23.59 o&#39;clock </li>
+<li>the condition <code>&quot;friday 17:00&quot;</code> is true every friday at 5pm.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>spawn = require(<span class="string">"child_process"</span>).spawn
+convict = require <span class="string">"convict"</span>
+modules = require <span class="string">'../../lib/modules'</span>
+sensors = require <span class="string">"../../lib/sensors"</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>Extend the global Date object to include the <code>setTimezone</code> and <code>getTimezone</code>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>time = require(<span class="string">'time'</span>)(Date);
+util = require <span class="string">'util'</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>Triggers the time events.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>CronJob = require(<span class="string">'cron'</span>).CronJob;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>Parses the dates for the <code>notifyWhen</code> function.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>chrono = require <span class="string">'chrono-node'</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h1">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <h1>The ClockBackend</h1>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="class"><span class="keyword">class</span> <span class="title">ClockBackend</span> <span class="keyword">extends</span> <span class="title">modules</span>.<span class="title">Backend</span></span>
+  server: <span class="literal">null</span>
+  config: <span class="literal">null</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>The <code>init</code> function just register the clock actuator.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  init: (<span class="property">@server</span>, <span class="property">@config</span>) =&gt;
+    server.registerSensor(<span class="keyword">new</span> Clock config)
+
+backend = <span class="keyword">new</span> ClockBackend</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h1">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <h1>The Clock-Actuator</h1>
+<p>Provides the time and time events for the rule module.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="class"><span class="keyword">class</span> <span class="title">Clock</span> <span class="keyword">extends</span> <span class="title">sensors</span>.<span class="title">Sensor</span></span>
+  config: <span class="literal">null</span>
+  cronJobs: []
+
+  constructor: (<span class="property">@config</span>) -&gt;
+    <span class="property">@id</span> = <span class="string">"clock"</span>
+    <span class="property">@name</span> = <span class="string">"clock"</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>Just provides a date object as sensor value</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  getSensorValuesNames: -&gt;
+    <span class="string">"time"</span>
+
+  getSensorValue: (name)-&gt;
+    <span class="keyword">switch</span> name
+      <span class="keyword">when</span> <span class="string">"time"</span>
+        now = <span class="keyword">new</span> Date();
+        now.setTimezone config.timezone
+        <span class="keyword">return</span> now
+      <span class="keyword">else</span> <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">"Clock sensor doesn't provide sensor value \"<span class="subst">#{name}</span>\""</span>)</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>Returns <code>true</code> if the given predicate string is considert to be true. For example the predicate
+<code>&quot;Sep 12-13&quot;</code> is considert to be true if it is the 12th of october, 2013 from 0 to 
+23.59 o&#39;clock. If the given predicate is not an valid date string an Error is thrown. </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  isTrue: (id, predicate) -&gt;
+    parsedDate = <span class="property">@parseNaturalTextDate</span> predicate
+    <span class="keyword">if</span> parsedDate?
+      {second, minute, hour, day, month, dayOfWeek} = <span class="property">@parseDateToCronFormat</span> parsedDate
+      now = <span class="property">@getSensorValue</span> <span class="string">"time"</span>
+      dateObj = date.start.date(config.timezone)
+      <span class="keyword">switch</span>
+        <span class="keyword">when</span> second <span class="keyword">isnt</span> <span class="string">'*'</span> <span class="keyword">and</span> now.getSeconds() <span class="keyword">isnt</span> dateObj.getSeconds() <span class="keyword">then</span> <span class="keyword">return</span> <span class="literal">false</span>
+        <span class="keyword">when</span> minute <span class="keyword">isnt</span> <span class="string">'*'</span> <span class="keyword">and</span> now.getMinutes() <span class="keyword">isnt</span> dateObj.getMinutes() <span class="keyword">then</span> <span class="keyword">return</span> <span class="literal">false</span>
+        <span class="keyword">when</span> hour <span class="keyword">isnt</span> <span class="string">'*'</span> <span class="keyword">and</span> now.getHours() <span class="keyword">isnt</span> dateObj.getHours() <span class="keyword">then</span> <span class="keyword">return</span> <span class="literal">false</span>
+        <span class="keyword">when</span> day <span class="keyword">isnt</span> <span class="string">'*'</span> <span class="keyword">and</span> now.getDate() <span class="keyword">isnt</span> dateObj.getDate() <span class="keyword">then</span> <span class="keyword">return</span> <span class="literal">false</span>
+        <span class="keyword">when</span> month <span class="keyword">isnt</span> <span class="string">'*'</span> <span class="keyword">and</span> now.getMonth() <span class="keyword">isnt</span> ddateObj.getMonth() <span class="keyword">then</span> <span class="keyword">return</span> <span class="literal">false</span>
+        <span class="keyword">when</span> dayOfWeek <span class="keyword">isnt</span> <span class="string">'*'</span> <span class="keyword">and</span> now.getDay() <span class="keyword">isnt</span> dateObj.getDay() <span class="keyword">then</span> <span class="keyword">return</span> <span class="literal">false</span>
+        <span class="keyword">else</span> <span class="keyword">return</span> <span class="literal">true</span>
+    <span class="keyword">else</span>
+      <span class="keyword">throw</span> <span class="keyword">new</span> Error <span class="string">"Clock seonsor can not decide \"predicate\"!"</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>Removes the notification for an with <code>notifyWhen</code> registered predicate. </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  cancelNotify: (id) -&gt;
+    <span class="keyword">if</span> <span class="property">@cronJobs</span>[id]?
+      <span class="property">@cronJobs</span>[id].stop()
+      <span class="keyword">delete</span> <span class="property">@cronJobs</span>[id]</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>Registers notification for time events. </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  notifyWhen: (id, predicate, callback) -&gt;
+    parsedDate = <span class="property">@parseNaturalTextDate</span> predicate
+    <span class="keyword">if</span> parsedDate?
+
+      {second, minute, hour, day, month, dayOfWeek} = <span class="property">@parseDateToCronFormat</span> parsedDate
+      cronFormat = <span class="string">"<span class="subst">#{second}</span> <span class="subst">#{minute}</span> <span class="subst">#{hour}</span> <span class="subst">#{day}</span> <span class="subst">#{month}</span> <span class="subst">#{dayOfWeek}</span>"</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>console.log cronFormat</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      job = <span class="keyword">new</span> CronJob(
+        cronTime: cronFormat
+        onTick: callback
+        start: <span class="literal">false</span>
+        timezone: config.timezone
+      )
+      <span class="property">@cronJobs</span>[id] = job;
+      job.start()
+      <span class="keyword">return</span> <span class="literal">true</span>
+    <span class="keyword">return</span> <span class="literal">false</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>Take a date as string in natural language and parse it with 
+<a href="https://github.com/berryboy/chrono">chrono-node</a>.
+For example transforms:</p>
+<pre><code> &quot;Sep 12-13&quot;</code></pre>
+<p> to:</p>
+<pre><code> [ { start: 
+   { year: 2013,
+     month: 8,
+     day: 12,
+     isCertain: [Function],
+     impliedComponents: [Object],
+     date: [Function] },
+  startDate: Thu Sep 12 2013 12:00:00 GMT+0900 (JST),
+  end: 
+   { year: 2013,
+     month: 8,
+     day: 13,
+     impliedComponents: [Object],
+     isCertain: [Function],
+     date: [Function] },
+  endDate: Fri Sep 13 2013 12:00:00 GMT+0900 (JST),
+  referenceDate: Sat Aug 17 2013 17:54:57 GMT+0900 (JST),
+  index: 0,
+  text: &#39;Sep 12-13&#39;,
+  concordance: &#39;Sep 12-13&#39; } ]</code></pre>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  parseNaturalTextDate: (naturalTextDate)-&gt;
+    parsedDates = chrono.parse naturalTextDate 
+    <span class="keyword">if</span> parsedDates.length != <span class="number">1</span>
+      <span class="keyword">return</span> parsedDates[<span class="number">0</span>]
+    <span class="keyword">else</span> <span class="keyword">return</span> <span class="literal">null</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>Convert a parsedDate to a cronjob-syntax like object. The parsedDate must be parsed from 
+<a href="https://github.com/berryboy/chrono">chrono-node</a>. For Exampe converts the parsedDate of
+<code>&quot;12:00&quot;</code> to:</p>
+<pre><code>{
+  second: 0
+  minute: 0
+  hour: 12
+  day: &quot;*&quot;
+  month: &quot;*&quot;
+  dayOfWeek: &quot;*&quot;
+}</code></pre>
+<p>or <code>&quot;Monday&quot;</code> gets:</p>
+<pre><code>{
+  second: 0
+  minute: 0
+  hour: 0
+  day: &quot;*&quot;
+  month: &quot;*&quot;
+  dayOfWeek: 1
+}</code></pre>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  parseDateToCronFormat: (parsedDate)-&gt;
+    second = parsedDate.start.second
+    minute = parsedDate.start.minute
+    hour = parsedDate.start.hour
+
+    <span class="keyword">if</span> <span class="keyword">not</span> second? <span class="keyword">and</span> <span class="keyword">not</span> minute? <span class="keyword">and</span> <span class="keyword">not</span> hour
+      second = <span class="number">0</span>
+      minute = <span class="number">0</span>
+      hour = <span class="number">0</span>
+    <span class="keyword">else</span> 
+      <span class="keyword">if</span> <span class="keyword">not</span> second?
+        second = <span class="string">"*"</span>
+      <span class="keyword">if</span> <span class="keyword">not</span> minute?
+        minute = <span class="string">"*"</span>
+      <span class="keyword">if</span> <span class="keyword">not</span> hour?
+        hour = <span class="string">"*"</span>
+
+    <span class="keyword">if</span> parsedDate.start.impliedComponents
+      moarsednth = <span class="keyword">if</span> <span class="string">'month'</span> <span class="keyword">in</span> pDate.start.impliedComponents <span class="keyword">then</span> <span class="string">"*"</span> <span class="keyword">else</span> pDate.start.month
+      daarsedy = <span class="keyword">if</span> <span class="string">'day'</span> <span class="keyword">in</span> pDate.start.impliedComponents <span class="keyword">then</span> <span class="string">"*"</span> <span class="keyword">else</span> pDate.start.day
+    <span class="keyword">else</span> 
+      month = parsedDate.start.month
+      day = parsedDate.start.day
+    dayOfWearsedek = <span class="keyword">if</span> pDate.start.dayOfWeek? <span class="keyword">then</span> pDate.start.dayOfWeek <span class="keyword">else</span> <span class="string">"*"</span>
+    <span class="keyword">return</span> {
+      second: second
+      minute: minute
+      hour: hour
+      day: day
+      month: month
+      dayOfWeek: dayOfWeek
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>Export the Backendmodule.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>module.exports = backend</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

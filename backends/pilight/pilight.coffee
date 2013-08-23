@@ -1,7 +1,7 @@
 spawn = require("child_process").spawn
 convict = require "convict"
 modules = require '../../lib/modules'
-actors = require "../../lib/actors"
+actuators = require "../../lib/actuators"
 
 
 class PilightBackend extends modules.Backend
@@ -13,9 +13,9 @@ class PilightBackend extends modules.Backend
     conf.load config
     conf.validate()
 
-  createActor: (config) =>
+  createActuator: (config) =>
     if config.class is "PilighOutlet" 
-      @server.registerActor(new PilighOutlet config)
+      @server.registerActuator(new PilighOutlet config)
       return true
     return false
 
@@ -23,11 +23,11 @@ class PilightBackend extends modules.Backend
 
 backend = new PilightBackend
 
-class PilighOutlet extends actors.PowerOutlet
+class PilighOutlet extends actuators.PowerOutlet
   _config: null
 
   constructor: (config) ->
-    conf = convict require("./actor-config-shema")
+    conf = convict require("./actuator-config-shema")
     conf.load config
     conf.validate()
     

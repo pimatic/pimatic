@@ -1,5 +1,5 @@
 spawn = require("child_process").spawn
-actors = require "../../lib/actors"
+actuators = require "../../lib/actuators"
 modules = require "../../lib/modules"
 
 class Sispmctl extends modules.Backend
@@ -8,9 +8,9 @@ class Sispmctl extends modules.Backend
 
   init: (@server, @config) =>
 
-  createActor: (config) =>
+  createActuator: (config) =>
     if config.class is "Sispmctl" 
-      @server.registerActor(new PowerOutletSispmctl config)
+      @server.registerActuator(new PowerOutletSispmctl config)
       return true
     return false
 
@@ -18,7 +18,7 @@ class Sispmctl extends modules.Backend
 
 backend = new Sispmctl
 
-class PowerOutletSispmctl extends actors.PowerOutlet
+class PowerOutletSispmctl extends actuators.PowerOutlet
   _config: null
 
   constructor: (config) ->

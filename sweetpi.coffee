@@ -45,6 +45,8 @@ unless config.disableAuthentication
 server = new Server app, config
 server.init()
 
+#server.ruleManager.addRuleByString "clock", "if today 12:55 then turn light on"
+
 if not config.server.httpsServer?.enabled and not config.server.httpServer?.enabled
   console.warn "You have no https and no http server defined!"
 

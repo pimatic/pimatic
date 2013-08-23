@@ -5,9 +5,9 @@ $(document).on "pageinit", (a) ->
 
   $(".switch").each (i, o) ->
     $(o).bind "vclick", (event, ui) =>
-      actorId = $(o).data("actorid")
-      actorAction = $(o).data("actoraction")
-      $.get "/api/actor/#{actorId}/#{actorAction}"  , (data) ->
+      actuatorID = $(o).data("actuator-id")
+      actuatorAction = $(o).data("actuator-action")
+      $.get "/api/actuator/#{actuatorID}/#{actuatorAction}"  , (data) ->
         device?.showToast "fertig"
 
 

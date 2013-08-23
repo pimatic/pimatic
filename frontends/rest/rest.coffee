@@ -5,17 +5,17 @@ class RestFrontend extends modules.Frontend
 
   init: (app, server, config) =>
     @config = config
-    app.get "/api/actor/:actorId/:actionName", (req, res, next) ->
-      actor = server.getActorById req.params.actorId
-      if actor?
+    app.get "/api/actuator/:actuatorId/:actionName", (req, res, next) ->
+      actuator = server.getActuatorById req.params.actuatorId
+      if actuator?
         #TODO: add parms support
-        if actor.hasAction req.params.actionName
-          fun = actor[req.params.actionName]
-          fun.apply actor, [(e) ->
+        if actuator.hasAction req.params.actionName
+          fun = actuator[req.params.actionName]
+          fun.apply actuator, [(e) ->
             res.send 200, e
           ]
         else
           res.send 400, 'illegal action!'
-      else res.send 400, 'illegal actor!'
+      else res.send 400, 'illegal actuator!'
       
 module.exports = new RestFrontend

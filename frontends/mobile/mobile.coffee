@@ -46,11 +46,11 @@ class MobileFrontend extends modules.Frontend
     app.set 'views', __dirname + '/views'
     app.set 'view engine', 'jade'
 
-    actors = (server.getActorById(a.id) for a in config.actorsToDisplay)
+    actuators = (server.getActuatorById(a.id) for a in config.actuatorsToDisplay)
 
     app.get '/', (req,res) ->
       res.render 'index',
-        actors: actors
+        actuators: actuators
       
     app.use express.static(__dirname + "/public")
 

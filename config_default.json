@@ -33,7 +33,7 @@
     }, 
     { 
       "module": "mobile",
-      "actorsToDisplay": [ 
+      "actuartorsToDisplay": [ 
       /*
         { "id": "light" },
         { "id": "printer" }
@@ -71,7 +71,7 @@
     }
     */
   ],
-  "actors": [
+  "actuators": [
     /*
     { 
       "id": "light",

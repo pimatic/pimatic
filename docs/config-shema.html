@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>config-shema.coffee</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page">
+            
+              
+              <a class="source" href="clock.html">
+                clock.coffee
+              </a>
+            
+              
+              <a class="source" href="config-shema.html">
+                config-shema.coffee
+              </a>
+            
+              
+              <a class="source" href="sweetpi.html">
+                sweetpi.coffee
+              </a>
+            
+          </div>
+        </li>
+      </ul>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>config-shema.coffee</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <p>define the convict config-schema</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>module.exports =
+  auth:
+    username:
+      doc: <span class="string">"The Username for http-basic-authentification"</span>
+      format: String
+      <span class="reserved">default</span>: <span class="string">""</span>
+    password:
+      doc: <span class="string">"The Password for http-basic-authentification"</span>
+      format: String
+      <span class="reserved">default</span>: <span class="string">""</span>
+    disableAuthentication:
+      doc: <span class="string">"Disable http-basic-authentification"</span>
+      format: Boolean
+      <span class="reserved">default</span>: <span class="literal">false</span>
+  server:
+    httpServer:
+      enabled: 
+        doc: <span class="string">"Should the http-server be started"</span>
+        format: Boolean
+        <span class="reserved">default</span>: <span class="literal">true</span>
+      port:
+        doc: <span class="string">"The port of the http-server"</span>
+        format: <span class="string">"port"</span>
+        <span class="reserved">default</span>: <span class="number">80</span>
+    httpsServer:
+      enabled: 
+        doc: <span class="string">"Should the https-server be started"</span>
+        format: Boolean
+        <span class="reserved">default</span>: <span class="literal">false</span>
+      port:
+        doc: <span class="string">"The port of the https-server"</span>
+        format: <span class="string">"port"</span>
+        <span class="reserved">default</span>: <span class="number">443</span>
+      keyFile:
+        doc: <span class="string">"Certification-file in pem-format"</span>
+        format: String
+        <span class="reserved">default</span>: <span class="string">"./.cert/privatekey.pem"</span>
+      certFile:
+        doc: <span class="string">"Privatekey-file"</span>
+        format: String
+        <span class="reserved">default</span>: <span class="string">"./.cert/certificate.pem"</span>
+  frontends:
+    doc: <span class="string">"Array of frontends to load"</span>
+    format: Array
+    <span class="reserved">default</span>: []
+  backends:
+    doc: <span class="string">"Array of backends to load"</span>
+    format: Array
+    <span class="reserved">default</span>: []
+  actuartos:
+    doc: <span class="string">"Array of actuator definations"</span>
+    format: Array
+    <span class="reserved">default</span>: []</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

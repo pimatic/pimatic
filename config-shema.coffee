@@ -48,7 +48,7 @@ module.exports =
     doc: "Array of backends to load"
     format: Array
     default: []
-  actors:
-    doc: "Array of actor definations"
+  actuartos:
+    doc: "Array of actuator definations"
     format: Array
     default: []

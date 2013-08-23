@@ -9,10 +9,10 @@ $(document).on("pageinit", function(a) {
   return $(".switch").each(function(i, o) {
     var _this = this;
     return $(o).bind("vclick", function(event, ui) {
-      var actorAction, actorId;
-      actorId = $(o).data("actorid");
-      actorAction = $(o).data("actoraction");
-      return $.get("/api/actor/" + actorId + "/" + actorAction, function(data) {
+      var actuatorAction, actuatorID;
+      actuatorID = $(o).data("actuator-id");
+      actuatorAction = $(o).data("actuator-action");
+      return $.get("/api/actuator/" + actuatorID + "/" + actuatorAction, function(data) {
         return typeof device !== "undefined" && device !== null ? device.showToast("fertig") : void 0;
       });
     });
