@@ -19,18 +19,16 @@ class Actuator
 class BinaryActuator extends Actuator
   type: 'BinaryActuator'
   state: null
-  actions: ["turnOn", "turnOff"]
+  actions: ["turnOn", "turnOff", "changeStateTo"]
 
-  _turnOn: ->
-    @state = on
+  turnOn: (callback) ->
+    @changeStateTo on, callback
 
-  _turnOff: ->
-    @state = off
+  turnOff: (callback) ->
+    @changeStateTo off, callback
 
-  setState: (state, callback) ->
-    throw 'Error' unless typeof state?
-    if state then @turnOn callback
-    else @turnOff callback
+  changeStateTo: (state, callback) ->
+    throw new Error "Function \"changeStateTo\" is not implemented!"
 
 class PowerOutlet extends BinaryActuator
     type: 'PowerOutlet'

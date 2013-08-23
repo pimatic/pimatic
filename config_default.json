@@ -62,7 +62,7 @@
   "backends": [
     /*
     { 
-      "module": "rpi433mhz",
+      "module": "pilight",
       "binary": "/home/pi/source/433.92-Raspberry-Pi/send"
     },
     { 

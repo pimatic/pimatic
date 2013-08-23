@@ -14,42 +14,25 @@ class Sispmctl extends modules.Backend
       return true
     return false
 
-
-
 backend = new Sispmctl
 
 class PowerOutletSispmctl extends actuators.PowerOutlet
-  _config: null
+  config: null
 
-  constructor: (config) ->
+  constructor: (@config) ->
     #TODO: Check config!
-    @_config = config
     @name = config.name
     @id = config.id
 
-  turnOn: (callback) ->
-    console.log callback
-    _this = @
-    @_send on, (e) -> 
-      _this._turnOn()
-      callback e
-
-  turnOff: (callback) ->
-    _this = @
-    @_send off, (e) -> 
-      _this._turnOff()
-      callback e
-
-  #
-  #* Turns a outlet-unit on or off.
-  #
-  _send: (state, resultCallbak) ->
+  changeStateTo: (state, resultCallbak) ->
+    thisClass = this
+    if @state is state then resultCallbak true
     param = (if state then "-o" else "-f")
-    param += " " + @_config.outletUnit
+    param += " " + @config.outletUnit
     child = spawn backend.config.binary, [param]
     child.on "exit", (code) ->
       success = (code is 0)
+      thisClass.state = state if success
       resultCallbak success
-
 
 module.exports = backend
