@@ -107,7 +107,5 @@ class Server extends require('events').EventEmitter
     f.module.init @app, @, f.config for f in @frontends
     actions = require './actions'
     @ruleManager.actionHandlers.push actions(this)
-    @ruleManager.executeAction "turn light off", false, (e, message)->
-      console.log message
 
  module.exports = Server
