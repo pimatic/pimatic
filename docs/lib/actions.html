@@ -10,21 +10,21 @@
       <span class="k">if</span> <span class="nx">matches</span><span class="o">?</span>
         <span class="nv">actuatorName = </span><span class="nx">matches</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">trim</span><span class="p">()</span>
         <span class="nv">state = </span><span class="nx">matches</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-        <span class="nv">actionName = </span><span class="p">(</span><span class="k">if</span> <span class="nx">state</span> <span class="o">is</span> <span class="s">&quot;on&quot;</span> <span class="k">then</span> <span class="s">&quot;turnOn&quot;</span> <span class="k">else</span> <span class="s">&quot;turnOff&quot;</span><span class="p">)</span>
+        <span class="nv">actionName = </span><span class="p">(</span><span class="k">if</span> <span class="nx">state</span> <span class="o">is</span> <span class="s2">&quot;on&quot;</span> <span class="k">then</span> <span class="s2">&quot;turnOn&quot;</span> <span class="k">else</span> <span class="s2">&quot;turnOff&quot;</span><span class="p">)</span>
         <span class="nv">result = </span><span class="nx">@runOnActuatorByNameOrId</span>  <span class="nx">actuatorName</span><span class="p">,</span> <span class="nf">(actuator)-&gt;</span>
           <span class="k">if</span> <span class="nx">actuator</span><span class="p">.</span><span class="nx">hasAction</span> <span class="nx">actionName</span>
                 <span class="k">if</span> <span class="nx">simulate</span>
                   <span class="k">return</span> <span class="o">-&gt;</span>
-                    <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="s">&quot;would turn </span><span class="si">#{</span><span class="nx">actuator</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="s"> </span><span class="si">#{</span><span class="nx">state</span><span class="si">}</span><span class="s">&quot;</span><span class="p">)</span>
+                    <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="s2">&quot;would turn #{actuator.name} #{state}&quot;</span><span class="p">)</span>
                 <span class="k">else</span>
-                  <span class="k">if</span> <span class="nx">state</span> <span class="o">is</span> <span class="s">&quot;on&quot;</span>
+                  <span class="k">if</span> <span class="nx">state</span> <span class="o">is</span> <span class="s2">&quot;on&quot;</span>
                     <span class="k">return</span>  <span class="o">-&gt;</span>
                       <span class="nx">actuator</span><span class="p">.</span><span class="nx">turnOn</span> <span class="nf">(e) -&gt;</span>
-                        <span class="nx">callback</span><span class="p">(</span><span class="nx">e</span><span class="p">,</span> <span class="s">&quot;turned </span><span class="si">#{</span><span class="nx">actuator</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="s"> on&quot;</span><span class="p">)</span>
+                        <span class="nx">callback</span><span class="p">(</span><span class="nx">e</span><span class="p">,</span> <span class="s2">&quot;turned #{actuator.name} on&quot;</span><span class="p">)</span>
                   <span class="k">else</span> 
                     <span class="k">return</span> <span class="o">-&gt;</span>
                       <span class="nx">actuator</span><span class="p">.</span><span class="nx">turnOff</span> <span class="nf">(e) -&gt;</span>
-                        <span class="nx">callback</span><span class="p">(</span><span class="nx">e</span><span class="p">,</span> <span class="s">&quot;turned </span><span class="si">#{</span><span class="nx">actuator</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="s"> off&quot;</span><span class="p">)</span>
+                        <span class="nx">callback</span><span class="p">(</span><span class="nx">e</span><span class="p">,</span> <span class="s2">&quot;turned #{actuator.name} off&quot;</span><span class="p">)</span>
           <span class="k">else</span> <span class="k">return</span> <span class="kc">null</span>
       <span class="k">return</span> <span class="nx">result</span>
 
@@ -32,7 +32,7 @@
       <span class="k">for</span> <span class="nx">id</span> <span class="k">of</span> <span class="nx">server</span><span class="p">.</span><span class="nx">actuators</span>
         <span class="nv">actuator = </span><span class="nx">server</span><span class="p">.</span><span class="nx">actuators</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span>
         <span class="k">if</span> <span class="nx">id</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">()</span> <span class="o">is</span> <span class="nx">actuatorName</span> <span class="o">or</span> <span class="nx">actuator</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">()</span> <span class="o">is</span> <span class="nx">actuatorName</span>
-          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&quot;actuator found </span><span class="si">#{</span><span class="nx">actuator</span><span class="p">.</span><span class="nx">id</span><span class="si">}</span><span class="s">&quot;</span>
+          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s2">&quot;actuator found #{actuator.id}&quot;</span>
           <span class="nv">result = </span><span class="nx">doCallback</span> <span class="nx">actuator</span>
           <span class="c1">#&quot;break&quot; when reult was given by callback </span>
           <span class="k">if</span> <span class="nx">result</span><span class="o">?</span> <span class="k">then</span> <span class="k">return</span> <span class="nx">result</span>

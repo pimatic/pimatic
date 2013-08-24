@@ -1,28 +1,28 @@
-<!DOCTYPE html><html lang="en"><head><title>frontends/mobile/mobile</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../"><meta name="groc-document-path" content="frontends/mobile/mobile"><meta name="groc-project-path" content="frontends/mobile/mobile.coffee"><link rel="stylesheet" type="text/css" media="all" href="../../assets/style.css"><script type="text/javascript" src="../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">frontends/mobile/mobile.coffee</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="nv">express = </span><span class="nx">require</span> <span class="s">&quot;express&quot;</span> 
-<span class="nv">offline = </span><span class="nx">require</span> <span class="s">&quot;connect-offline&quot;</span> 
-<span class="nv">coffeescript = </span><span class="nx">require</span> <span class="s">&#39;connect-coffee-script&#39;</span>
-<span class="nv">modules = </span><span class="nx">require</span> <span class="s">&#39;../../lib/modules&#39;</span>
+<!DOCTYPE html><html lang="en"><head><title>frontends/mobile/mobile</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../"><meta name="groc-document-path" content="frontends/mobile/mobile"><meta name="groc-project-path" content="frontends/mobile/mobile.coffee"><link rel="stylesheet" type="text/css" media="all" href="../../assets/style.css"><script type="text/javascript" src="../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">frontends/mobile/mobile.coffee</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="nv">express = </span><span class="nx">require</span> <span class="s2">&quot;express&quot;</span> 
+<span class="nv">offline = </span><span class="nx">require</span> <span class="s2">&quot;connect-offline&quot;</span> 
+<span class="nv">coffeescript = </span><span class="nx">require</span> <span class="s1">&#39;connect-coffee-script&#39;</span>
+<span class="nv">modules = </span><span class="nx">require</span> <span class="s1">&#39;../../lib/modules&#39;</span>
 
 <span class="nv">offlineOptions =</span>
-  <span class="nv">manifest_path: </span><span class="s">&quot;/application.manifest&quot;</span>
+  <span class="nv">manifest_path: </span><span class="s2">&quot;/application.manifest&quot;</span>
   <span class="nv">use_fs_watch: </span><span class="kc">true</span>
   <span class="nv">files: </span><span class="p">[</span>
-    <span class="nv">dir: </span><span class="s">&quot;/public/&quot;</span>
-    <span class="nv">prefix: </span><span class="s">&quot;/&quot;</span>
+    <span class="nv">dir: </span><span class="s2">&quot;/public/&quot;</span>
+    <span class="nv">prefix: </span><span class="s2">&quot;/&quot;</span>
     <span class="p">,</span>
-    <span class="nv">dir: </span><span class="s">&quot;/public/themes/&quot;</span>
-    <span class="nv">prefix: </span><span class="s">&quot;/themes/&quot;</span>
+    <span class="nv">dir: </span><span class="s2">&quot;/public/themes/&quot;</span>
+    <span class="nv">prefix: </span><span class="s2">&quot;/themes/&quot;</span>
    <span class="p">,</span>
-    <span class="nv">dir: </span><span class="s">&quot;/public/themes/images/&quot;</span>
-    <span class="nv">prefix: </span><span class="s">&quot;/themes/images/&quot;</span>
+    <span class="nv">dir: </span><span class="s2">&quot;/public/themes/images/&quot;</span>
+    <span class="nv">prefix: </span><span class="s2">&quot;/themes/images/&quot;</span>
     <span class="p">,</span>
-    <span class="nv">dir: </span><span class="s">&quot;/public/roboto/&quot;</span>
-    <span class="nv">prefix: </span><span class="s">&quot;/roboto/&quot;</span>
+    <span class="nv">dir: </span><span class="s2">&quot;/public/roboto/&quot;</span>
+    <span class="nv">prefix: </span><span class="s2">&quot;/roboto/&quot;</span>
     <span class="p">,</span>
-    <span class="nv">dir: </span><span class="s">&quot;/public/images/&quot;</span>
-    <span class="nv">prefix: </span><span class="s">&quot;/images/&quot;</span>
+    <span class="nv">dir: </span><span class="s2">&quot;/public/images/&quot;</span>
+    <span class="nv">prefix: </span><span class="s2">&quot;/images/&quot;</span>
   <span class="p">]</span>
-  <span class="nv">networks: </span><span class="p">[</span><span class="s">&quot;*&quot;</span><span class="p">]</span>
+  <span class="nv">networks: </span><span class="p">[</span><span class="s2">&quot;*&quot;</span><span class="p">]</span>
 
 <span class="k">class</span> <span class="nx">MobileFrontend</span> <span class="k">extends</span> <span class="nx">modules</span><span class="p">.</span><span class="nx">Frontend</span>
   <span class="nv">config: </span><span class="kc">null</span>
@@ -38,20 +38,20 @@
     <span class="vi">@config = </span><span class="nx">config</span>
     <span class="nx">@useOffline</span> <span class="nx">app</span>
     <span class="nx">app</span><span class="p">.</span><span class="nx">use</span> <span class="nx">coffeescript</span><span class="p">(</span>
-      <span class="nv">src: </span><span class="nx">__dirname</span> <span class="o">+</span> <span class="s">&quot;/public-coffee&quot;</span><span class="p">,</span>
-      <span class="nv">dest: </span><span class="nx">__dirname</span> <span class="o">+</span> <span class="s">&#39;/public&#39;</span><span class="p">,</span>
+      <span class="nv">src: </span><span class="nx">__dirname</span> <span class="o">+</span> <span class="s2">&quot;/public-coffee&quot;</span><span class="p">,</span>
+      <span class="nv">dest: </span><span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">&#39;/public&#39;</span><span class="p">,</span>
       <span class="nv">bare: </span><span class="kc">true</span>
     <span class="p">)</span>
 
-    <span class="nx">app</span><span class="p">.</span><span class="nx">set</span> <span class="s">&#39;views&#39;</span><span class="p">,</span> <span class="nx">__dirname</span> <span class="o">+</span> <span class="s">&#39;/views&#39;</span>
-    <span class="nx">app</span><span class="p">.</span><span class="nx">set</span> <span class="s">&#39;view engine&#39;</span><span class="p">,</span> <span class="s">&#39;jade&#39;</span>
+    <span class="nx">app</span><span class="p">.</span><span class="nx">set</span> <span class="s1">&#39;views&#39;</span><span class="p">,</span> <span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">&#39;/views&#39;</span>
+    <span class="nx">app</span><span class="p">.</span><span class="nx">set</span> <span class="s1">&#39;view engine&#39;</span><span class="p">,</span> <span class="s1">&#39;jade&#39;</span>
 
     <span class="nv">actuators = </span><span class="p">(</span><span class="nx">server</span><span class="p">.</span><span class="nx">getActuatorById</span><span class="p">(</span><span class="nx">a</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span> <span class="k">for</span> <span class="nx">a</span> <span class="k">in</span> <span class="nx">config</span><span class="p">.</span><span class="nx">actuatorsToDisplay</span><span class="p">)</span>
 
-    <span class="nx">app</span><span class="p">.</span><span class="nx">get</span> <span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="nf">(req,res) -&gt;</span>
-      <span class="nx">res</span><span class="p">.</span><span class="nx">render</span> <span class="s">&#39;index&#39;</span><span class="p">,</span>
+    <span class="nx">app</span><span class="p">.</span><span class="nx">get</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="nf">(req,res) -&gt;</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">render</span> <span class="s1">&#39;index&#39;</span><span class="p">,</span>
         <span class="nv">actuators: </span><span class="nx">actuators</span>
       
-    <span class="nx">app</span><span class="p">.</span><span class="nx">use</span> <span class="nx">express</span><span class="p">.</span><span class="nx">static</span><span class="p">(</span><span class="nx">__dirname</span> <span class="o">+</span> <span class="s">&quot;/public&quot;</span><span class="p">)</span>
+    <span class="nx">app</span><span class="p">.</span><span class="nx">use</span> <span class="nx">express</span><span class="p">.</span><span class="nx">static</span><span class="p">(</span><span class="nx">__dirname</span> <span class="o">+</span> <span class="s2">&quot;/public&quot;</span><span class="p">)</span>
 
 <span class="nv">module.exports = </span><span class="k">new</span> <span class="nx">MobileFrontend</span></div></div></div></div></body></html>

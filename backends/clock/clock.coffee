@@ -1,37 +1,40 @@
+# #The clock backend
 # Provides a clock module, so actions can be triggert at a specific time
-#
-# #Provided predicates
+# ##Provided predicates
 # For example:
-#
+# 
 # * the condition `"Sep 12-13"` is true on the 12th of october, 2013 from 0 to 
 #   23.59 o'clock 
 # * the condition `"friday 17:00"` is true every friday at 5pm.
-#   
 
-spawn = require("child_process").spawn
+# ##Dependencies
+# * `node-convice` for config validation.
 convict = require "convict"
+# * `node-time`: Extend the global Date object to include the `setTimezone` and `getTimezone`.
+time = require('time')(Date);
+# * `node-cron`: Triggers the time events.
+CronJob = require('cron').CronJob;
+# * `node-chrono` Parses the dates for the `notifyWhen` function.
+chrono = require 'chrono-node'  
+#  * node.js imports.
+spawn = require("child_process").spawn
+util = require 'util'
+# * sweetpi imports.
 modules = require '../../lib/modules'
 sensors = require "../../lib/sensors"
-# Extend the global Date object to include the `setTimezone` and `getTimezone`.
-time = require('time')(Date);
-util = require 'util'
-# Triggers the time events.
-CronJob = require('cron').CronJob;
-# Parses the dates for the `notifyWhen` function.
-chrono = require 'chrono-node'  
 
-# #The ClockBackend
+# ##The ClockBackend
 class ClockBackend extends modules.Backend
   server: null
   config: null
 
-  # The `init` function just register the clock actuator.
+  # The `init` function just registers the clock actuator.
   init: (@server, @config) =>
     server.registerSensor(new Clock config)
 
 backend = new ClockBackend
 
-# #The Clock-Actuator
+# ##The Clock-Actuator
 # Provides the time and time events for the rule module.
 class Clock extends sensors.Sensor
   config: null
@@ -41,7 +44,7 @@ class Clock extends sensors.Sensor
     @id = "clock"
     @name = "clock"
 
-  # Just provides a date object as sensor value
+  # Only provides a date object as sensor value
   getSensorValuesNames: ->
     "time"
 
@@ -101,32 +104,29 @@ class Clock extends sensors.Sensor
   # Take a date as string in natural language and parse it with 
   # [chrono-node](https://github.com/berryboy/chrono).
   # For example transforms:
-  #  ```
-  #  "Sep 12-13"
-  #  ```
-  #  to:
-  #  ```
-  #  [ { start: 
-  #    { year: 2013,
-  #      month: 8,
-  #      day: 12,
-  #      isCertain: [Function],
-  #      impliedComponents: [Object],
-  #      date: [Function] },
-  #   startDate: Thu Sep 12 2013 12:00:00 GMT+0900 (JST),
-  #   end: 
-  #    { year: 2013,
-  #      month: 8,
-  #      day: 13,
-  #      impliedComponents: [Object],
-  #      isCertain: [Function],
-  #      date: [Function] },
-  #   endDate: Fri Sep 13 2013 12:00:00 GMT+0900 (JST),
-  #   referenceDate: Sat Aug 17 2013 17:54:57 GMT+0900 (JST),
-  #   index: 0,
-  #   text: 'Sep 12-13',
-  #   concordance: 'Sep 12-13' } ]
-  #   ```
+  # `"Sep 12-13"`
+  # to:
+  # 
+  #     { start: 
+  #       { year: 2013,
+  #         month: 8,
+  #         day: 12,
+  #         isCertain: [Function],
+  #         impliedComponents: [Object],
+  #         date: [Function] },
+  #      startDate: Thu Sep 12 2013 12:00:00 GMT+0900 (JST),
+  #      end: 
+  #       { year: 2013,
+  #         month: 8,
+  #         day: 13,
+  #         impliedComponents: [Object],
+  #         isCertain: [Function],
+  #         date: [Function] },
+  #      endDate: Fri Sep 13 2013 12:00:00 GMT+0900 (JST),
+  #      referenceDate: Sat Aug 17 2013 17:54:57 GMT+0900 (JST),
+  #      index: 0,
+  #      text: 'Sep 12-13',
+  #      concordance: 'Sep 12-13' }
   parseNaturalTextDate: (naturalTextDate)->
     parsedDates = chrono.parse naturalTextDate 
     if parsedDates.length != 1
@@ -135,29 +135,27 @@ class Clock extends sensors.Sensor
 
   # Convert a parsedDate to a cronjob-syntax like object. The parsedDate must be parsed from 
   # [chrono-node](https://github.com/berryboy/chrono). For Exampe converts the parsedDate of
-  # ```"12:00"``` to:
-  # ```
-  # {
-  #   second: 0
-  #   minute: 0
-  #   hour: 12
-  #   day: "*"
-  #   month: "*"
-  #   dayOfWeek: "*"
-  # }
-  # ```
-  # or ```"Monday"``` gets:
-  # ```
-  # {
-  #   second: 0
-  #   minute: 0
-  #   hour: 0
-  #   day: "*"
-  #   month: "*"
-  #   dayOfWeek: 1
-  # }
-  # ```
-  #
+  # `"12:00"` to:
+  # 
+  #     {
+  #       second: 0
+  #       minute: 0
+  #       hour: 12
+  #       day: "*"
+  #       month: "*"
+  #       dayOfWeek: "*"
+  #     }
+  #  
+  # or `"Monday"` gets:
+  # 
+  #     {
+  #       second: 0
+  #       minute: 0
+  #       hour: 0
+  #       day: "*"
+  #       month: "*"
+  #       dayOfWeek: 1
+  #     }
   parseDateToCronFormat: (parsedDate)->
     second = parsedDate.start.second
     minute = parsedDate.start.minute

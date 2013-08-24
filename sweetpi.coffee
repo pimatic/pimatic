@@ -1,3 +1,10 @@
+# #Framwork start up
+# 
+# * Reads the config file
+# * Creates a [exprees](http://expressjs.com/) app
+# * Starts the http- and https-server
+
+# 
 should = require 'should'
 express = require "express"
 fs = require "fs"
@@ -5,18 +12,19 @@ convict = require "convict"
 helper = require './lib/helper'
 Server = require "./lib/server"
 
-#Load the configuration file.
+# ##Load the configuration file.
+# 
+# * Uses `node-convict` for config loading. All config options are in the 
+#   [config-shema](config-shema.html) file.
 conf = convict require("./config-shema")
 conf.loadFile "./config.json"
-# perform validation
+# * Performs the validation.
 conf.validate()
 config = conf.get("");
 
+# ##Check the config
 # 
-#  Check config
-#  ------------
-#  Check if the config file has the necessary attributes:
-#
+# * Check if the config file has the necessary attributes.
 helper.checkConfig null, ->
   config.should.be.a 'object', "config is no object?"
   config.should.have.property("auth").be.a('object')
@@ -25,11 +33,10 @@ helper.checkConfig null, ->
 app = express()
 app.use express.logger()
 
-#
+
 # Setup authentification
 # ----------------------
-# User basicAuth if authentification is not disabled
-#
+# Use http-basicAuth if authentification is not disabled.
 unless config.disableAuthentication
   #Check authentification.
   helper.checkConfig 'auth', ->
@@ -38,17 +45,15 @@ unless config.disableAuthentication
 
   app.use express.basicAuth(config.auth.username, config.auth.password)
 
-#
 # Setup the server
 # ----------------
-#
 server = new Server app, config
 server.init()
 
 if not config.server.httpsServer?.enabled and not config.server.httpServer?.enabled
   console.warn "You have no https and no http server defined!"
 
-# Start the https-server if it is enabled
+# Start the https-server if it is enabled.
 if config.server.httpsServer?.enabled
   helper.checkConfig 'server', ->
     config.server.should.have.property("httpsServer").be.a('object')
@@ -62,7 +67,7 @@ if config.server.httpsServer?.enabled
   https.createServer(config.server.httpsServer, app).listen config.server.httpsServer.port
   console.log "listening for https-request on port #{config.server.httpsServer.port}..."
 
-# Start the http-server if it is enabled
+# Start the http-server if it is enabled.
 if config.server.httpServer?.enabled
   helper.checkConfig 'server', ->
     config.server.should.have.property("httpServer").should.be.a 'object'

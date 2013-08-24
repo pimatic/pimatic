@@ -3,9 +3,9 @@
   "glob": [
     "./README.md",
     "./*.coffee",
-    "./lib/*.coffee"
+    "./lib/*.coffee",
     "./frontends/*/*.coffee",
-    "./backends/*/*.coffee",
+    "./backends/*/*.coffee"
   ], 
   "out": "docs"
 }
