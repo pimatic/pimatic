@@ -2,7 +2,7 @@
 # Lists all configuration options for the sweetpi framework itself.
 # For an example `config.json` file see the `config_default.json` file.
 
-# Define a `node-convict` config-schema and export it.
+# Defines a `node-convict` config-shema and exports it.
 module.exports =
   auth:
     username:
