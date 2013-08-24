@@ -7,5 +7,6 @@
     "./frontends/*/*.coffee",
     "./backends/*/*.coffee"
   ], 
-  "out": "docs"
+  "out": "docs",
+  "repository-url": "https://github.com/sweetpi/sweetpi-server"
 }
