@@ -5,7 +5,7 @@ sweetpi-server is a home automation server and framework that runs on [node.js](
 
 Installation
 ------------
-First you need to install [node.js](http://nodejs.org) with its package manager [npm](https://npmjs.org/). Then you can run
+First you need to install [node.js](http://nodejs.org) that comes with the package manager [npm](https://npmjs.org/). Then you can run
 
     npm install sweetpi-server
 
