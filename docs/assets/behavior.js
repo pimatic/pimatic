@@ -13,7 +13,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "commentsOnly": true,
           "name": "Markdown"
         },
-        "sourcePath": "/home/h3llfire/mount/pi/node-scripts/README.md",
+        "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/README.md",
         "projectPath": "README.md",
         "targetPath": "index",
         "firstHeader": {
@@ -130,7 +130,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/mount/pi/node-scripts/backends/clock/clock.coffee",
+                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/backends/clock/clock.coffee",
                 "projectPath": "backends/clock/clock.coffee",
                 "targetPath": "backends/clock/clock",
                 "firstHeader": {
@@ -235,10 +235,20 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/mount/pi/node-scripts/backends/pilight/actuator-config-shema.coffee",
+                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/backends/pilight/actuator-config-shema.coffee",
                 "projectPath": "backends/pilight/actuator-config-shema.coffee",
                 "targetPath": "backends/pilight/actuator-config-shema",
-                "title": "actuator-config-shema"
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "PilightSwitch actuator configuration options",
+                    "slug": "pilightswitch-actuator-configuration-options",
+                    "isFileHeader": true
+                  },
+                  "depth": 1
+                },
+                "title": "PilightSwitch actuator configuration options"
               },
               "depth": 3,
               "outline": []
@@ -251,10 +261,20 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/mount/pi/node-scripts/backends/pilight/backend-config-shema.coffee",
+                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/backends/pilight/backend-config-shema.coffee",
                 "projectPath": "backends/pilight/backend-config-shema.coffee",
                 "targetPath": "backends/pilight/backend-config-shema",
-                "title": "backend-config-shema"
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "pilight configuration options",
+                    "slug": "pilight-configuration-options",
+                    "isFileHeader": true
+                  },
+                  "depth": 1
+                },
+                "title": "pilight configuration options"
               },
               "depth": 3,
               "outline": []
@@ -267,21 +287,42 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/mount/pi/node-scripts/backends/pilight/pilight.coffee",
+                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/backends/pilight/pilight.coffee",
                 "projectPath": "backends/pilight/pilight.coffee",
                 "targetPath": "backends/pilight/pilight",
-                "title": "pilight"
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "The pilight backend",
+                    "slug": "the-pilight-backend",
+                    "isFileHeader": true
+                  },
+                  "depth": 1,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Configuration",
+                        "slug": "configuration"
+                      },
+                      "depth": 2
+                    }
+                  ]
+                },
+                "title": "The pilight backend"
               },
               "depth": 3,
               "outline": [
                 {
                   "type": "heading",
                   "data": {
-                    "level": 1,
+                    "level": 2,
                     "title": "Configuration",
                     "slug": "configuration"
                   },
-                  "depth": 1
+                  "depth": 2
                 }
               ]
             }
@@ -303,13 +344,96 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/mount/pi/node-scripts/backends/sispmctl/sispmctl.coffee",
-                "projectPath": "backends/sispmctl/sispmctl.coffee",
-                "targetPath": "backends/sispmctl/sispmctl",
-                "title": "sispmctl"
+                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/backends/sispmctl/actuator-config-shema.coffee",
+                "projectPath": "backends/sispmctl/actuator-config-shema.coffee",
+                "targetPath": "backends/sispmctl/actuator-config-shema",
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "SispmctlSwitch actuator configuration options",
+                    "slug": "sispmctlswitch-actuator-configuration-options",
+                    "isFileHeader": true
+                  },
+                  "depth": 1
+                },
+                "title": "SispmctlSwitch actuator configuration options"
               },
               "depth": 3,
               "outline": []
+            }, {
+              "type": "file",
+              "data": {
+                "language": {
+                  "nameMatchers": [".coffee", "Cakefile"],
+                  "pygmentsLexer": "coffee-script",
+                  "singleLineComment": ["#"],
+                  "name": "CoffeeScript"
+                },
+                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/backends/sispmctl/backend-config-shema.coffee",
+                "projectPath": "backends/sispmctl/backend-config-shema.coffee",
+                "targetPath": "backends/sispmctl/backend-config-shema",
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "sispmctl configuration options",
+                    "slug": "sispmctl-configuration-options",
+                    "isFileHeader": true
+                  },
+                  "depth": 1
+                },
+                "title": "sispmctl configuration options"
+              },
+              "depth": 3,
+              "outline": []
+            }, {
+              "type": "file",
+              "data": {
+                "language": {
+                  "nameMatchers": [".coffee", "Cakefile"],
+                  "pygmentsLexer": "coffee-script",
+                  "singleLineComment": ["#"],
+                  "name": "CoffeeScript"
+                },
+                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/backends/sispmctl/sispmctl.coffee",
+                "projectPath": "backends/sispmctl/sispmctl.coffee",
+                "targetPath": "backends/sispmctl/sispmctl",
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "The sispmctl backend",
+                    "slug": "the-sispmctl-backend",
+                    "isFileHeader": true
+                  },
+                  "depth": 1,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Configuration",
+                        "slug": "configuration"
+                      },
+                      "depth": 2
+                    }
+                  ]
+                },
+                "title": "The sispmctl backend"
+              },
+              "depth": 3,
+              "outline": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Configuration",
+                    "slug": "configuration"
+                  },
+                  "depth": 2
+                }
+              ]
             }
           ]
         }
@@ -323,7 +447,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "singleLineComment": ["#"],
           "name": "CoffeeScript"
         },
-        "sourcePath": "/home/h3llfire/mount/pi/node-scripts/config-shema.coffee",
+        "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/config-shema.coffee",
         "projectPath": "config-shema.coffee",
         "targetPath": "config-shema",
         "firstHeader": {
@@ -365,7 +489,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/mount/pi/node-scripts/frontends/filebrowser/filebrowser.coffee",
+                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/frontends/filebrowser/filebrowser.coffee",
                 "projectPath": "frontends/filebrowser/filebrowser.coffee",
                 "targetPath": "frontends/filebrowser/filebrowser",
                 "title": "filebrowser"
@@ -391,7 +515,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/mount/pi/node-scripts/frontends/mobile/mobile.coffee",
+                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/frontends/mobile/mobile.coffee",
                 "projectPath": "frontends/mobile/mobile.coffee",
                 "targetPath": "frontends/mobile/mobile",
                 "title": "mobile"
@@ -417,7 +541,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/mount/pi/node-scripts/frontends/redirect/redirect.coffee",
+                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/frontends/redirect/redirect.coffee",
                 "projectPath": "frontends/redirect/redirect.coffee",
                 "targetPath": "frontends/redirect/redirect",
                 "title": "redirect"
@@ -443,7 +567,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/mount/pi/node-scripts/frontends/rest/rest.coffee",
+                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/frontends/rest/rest.coffee",
                 "projectPath": "frontends/rest/rest.coffee",
                 "targetPath": "frontends/rest/rest",
                 "title": "rest"
@@ -469,7 +593,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/mount/pi/node-scripts/frontends/speak/speak.coffee",
+                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/frontends/speak/speak.coffee",
                 "projectPath": "frontends/speak/speak.coffee",
                 "targetPath": "frontends/speak/speak",
                 "title": "speak"
@@ -497,7 +621,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/mount/pi/node-scripts/lib/actions.coffee",
+            "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/lib/actions.coffee",
             "projectPath": "lib/actions.coffee",
             "targetPath": "lib/actions",
             "title": "actions"
@@ -513,7 +637,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/mount/pi/node-scripts/lib/actuators.coffee",
+            "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/lib/actuators.coffee",
             "projectPath": "lib/actuators.coffee",
             "targetPath": "lib/actuators",
             "title": "actuators"
@@ -529,7 +653,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/mount/pi/node-scripts/lib/helper.coffee",
+            "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/lib/helper.coffee",
             "projectPath": "lib/helper.coffee",
             "targetPath": "lib/helper",
             "title": "helper"
@@ -545,7 +669,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/mount/pi/node-scripts/lib/modules.coffee",
+            "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/lib/modules.coffee",
             "projectPath": "lib/modules.coffee",
             "targetPath": "lib/modules",
             "title": "modules"
@@ -561,7 +685,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/mount/pi/node-scripts/lib/rules.coffee",
+            "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/lib/rules.coffee",
             "projectPath": "lib/rules.coffee",
             "targetPath": "lib/rules",
             "title": "rules"
@@ -577,7 +701,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/mount/pi/node-scripts/lib/sensors.coffee",
+            "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/lib/sensors.coffee",
             "projectPath": "lib/sensors.coffee",
             "targetPath": "lib/sensors",
             "title": "sensors"
@@ -593,7 +717,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/mount/pi/node-scripts/lib/server.coffee",
+            "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/lib/server.coffee",
             "projectPath": "lib/server.coffee",
             "targetPath": "lib/server",
             "title": "server"
@@ -611,7 +735,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "singleLineComment": ["#"],
           "name": "CoffeeScript"
         },
-        "sourcePath": "/home/h3llfire/mount/pi/node-scripts/sweetpi.coffee",
+        "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/sweetpi.coffee",
         "projectPath": "sweetpi.coffee",
         "targetPath": "sweetpi",
         "firstHeader": {
