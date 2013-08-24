@@ -22,28 +22,23 @@ conf.loadFile "./config.json"
 conf.validate()
 config = conf.get("");
 
-# ##Check the config
-# 
-# * Check if the config file has the necessary attributes.
-helper.checkConfig null, ->
-  config.should.be.a 'object', "config is no object?"
-  config.should.have.property("auth").be.a('object')
-  config.should.have.property("server").be.a('object')
-
+# Setup express
+# -------------
 app = express()
 app.use express.logger()
 
 
-# Setup authentification
+# Setup authentication
 # ----------------------
-# Use http-basicAuth if authentification is not disabled.
-unless config.disableAuthentication
-  #Check authentification.
-  helper.checkConfig 'auth', ->
-    config.auth.should.have.property("username").be.a('string').not.empty
-    config.auth.should.have.property("password").be.a('string').not.empty
+# Use http-basicAuth if authentication is not disabled.
+auth = config.server.authentication
+if auth.enabled
+  #Check authentication.
+  helper.checkConfig 'server.authentication', ->
+    auth.should.have.property("username").be.a('string').not.empty
+    auth.should.have.property("password").be.a('string').not.empty
 
-  app.use express.basicAuth(config.auth.username, config.auth.password)
+  app.use express.basicAuth(auth.username, auth.password)
 
 # Setup the server
 # ----------------

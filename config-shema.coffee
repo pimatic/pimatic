@@ -4,20 +4,20 @@
 
 # Defines a `node-convict` config-shema and exports it.
 module.exports =
-  auth:
-    username:
-      doc: "The Username for http-basic-authentification"
-      format: String
-      default: ""
-    password:
-      doc: "The Password for http-basic-authentification"
-      format: String
-      default: ""
-    disableAuthentication:
-      doc: "Disable http-basic-authentification"
-      format: Boolean
-      default: false
   server:
+    authentication:
+      username:
+        doc: "The Username for http-basic-authentification"
+        format: String
+        default: ""
+      password:
+        doc: "The Password for http-basic-authentification"
+        format: String
+        default: ""
+      enabled:
+        doc: "Disable http-basic-authentification"
+        format: Boolean
+        default: true
     httpServer:
       enabled: 
         doc: "Should the http-server be started"
@@ -52,7 +52,7 @@ module.exports =
     doc: "Array of backends to load"
     format: Array
     default: []
-  actuartos:
+  actuators:
     doc: "Array of actuator definations"
     format: Array
     default: []
