@@ -1,0 +1,22 @@
+<!DOCTYPE html><html lang="en"><head><title>lib/actuators</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="lib/actuators"><meta name="groc-project-path" content="lib/actuators.coffee"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path">lib/actuators.coffee</div></div><div id="document"><div class="segment"><div class="comments"><div class="wrapper"><p>Povides the <code>Actuator</code> class and some basic common subclasses for the Backend modules. </p></div></div><div class="code"><div class="wrapper"><span class="nv">assert = </span><span class="nx">require</span> <span class="s">&#39;assert&#39;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>An Actuator is an physical or logical element you can control by triggering an action on it.
+For example a power outlet, a light or door opener.</p></div></div><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">Actuator</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Defines the actions an Actuator has.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">actions: </span><span class="p">[]</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>A unic id defined by the config or by the backend module that provies the actuator.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">id: </span><span class="kc">null</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>The name of the actuator to display at the frontend.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">name: </span><span class="kc">null</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Checks if the actuator has a given action.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">hasAction: </span><span class="nf">(name) -&gt;</span>
+    <span class="nx">name</span> <span class="k">in</span> <span class="nx">@actions</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>A class for all you can switch on and off.</p></div></div><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">SwitchActuator</span> <span class="k">extends</span> <span class="nx">Actuator</span>
+  <span class="nv">type: </span><span class="s">&#39;BinaryActuator&#39;</span>
+  <span class="nv">state: </span><span class="kc">null</span>
+  <span class="nv">actions: </span><span class="p">[</span><span class="s">&quot;turnOn&quot;</span><span class="p">,</span> <span class="s">&quot;turnOff&quot;</span><span class="p">,</span> <span class="s">&quot;changeStateTo&quot;</span><span class="p">]</span>
+
+  <span class="nv">turnOn: </span><span class="nf">(callback) -&gt;</span>
+    <span class="nx">@changeStateTo</span> <span class="kc">on</span><span class="p">,</span> <span class="nx">callback</span>
+
+  <span class="nv">turnOff: </span><span class="nf">(callback) -&gt;</span>
+    <span class="nx">@changeStateTo</span> <span class="kc">off</span><span class="p">,</span> <span class="nx">callback</span>
+
+  <span class="nv">changeStateTo: </span><span class="nf">(state, callback) -&gt;</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;Function \&quot;changeStateTo\&quot; is not implemented!&quot;</span>
+
+<span class="k">class</span> <span class="nx">PowerSwitch</span> <span class="k">extends</span> <span class="nx">SwitchActuator</span>
+
+
+<span class="nv">module.exports.Actuator = </span><span class="nx">Actuator</span>
+<span class="nv">module.exports.SwitchActuator = </span><span class="nx">SwitchActuator</span>
+<span class="nv">module.exports.PowerSwitch = </span><span class="nx">PowerSwitch</span></div></div></div></div></body></html>

@@ -1,7 +1,7 @@
 {
   "name": "sweetpi-server",
-  "description": "SweetPi Server",
-  "author": "Oliver Schneider <oliverschneider89@gmail.com> (http://sweetpi.h3llfire.de)",
+  "description": "A home automation server and framework for the raspberry pi running on node.js",
+  "author": "Oliver Schneider <oliverschneider89+sweetpi@gmail.com> (http://sweetpi.h3llfire.de)",
   "main": "main.js",
   "files": ["backends", "docs", "frontends", "lib", "main.js", "sweetpi.coffee", "default_config.coffee",
             "README.md", "LICENSE"],
@@ -24,8 +24,8 @@
     "time": "0.9.*",
     "bet": "0.2.*"
   },
-     "engines": {
-       "node": ">0.8.x",
-       "npm": ">1.1.x"
-     }
+  "engines": {
+    "node": ">0.8.x",
+    "npm": ">1.1.x"
+  }
 }

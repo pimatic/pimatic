@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="en"><head><title>modules</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="modules"><meta name="groc-project-path" content="lib/modules.coffee"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path">lib/modules.coffee</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">Module</span>
+  <span class="nv">name: </span><span class="kc">null</span>
+  <span class="nv">init: </span><span class="o">-&gt;</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your module must implement init&quot;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nx">Frontend</span> <span class="k">extends</span> <span class="nx">Module</span>
+
+<span class="k">class</span> <span class="nx">Backend</span> <span class="k">extends</span> <span class="nx">Module</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>You can overwrite this function, if your module provides the ability to define
+an actuator in the <code>settings.json</code> file. For all defined <code>actuators</code> in the settings, this
+function is called and the options are parsed with the <code>config</code> argument. If the actuator
+belongs to your module you should create a instance of the <code>Actuator</code> class and add the 
+actuator with <code>server.addActuator</code> to the server. Then the function the must return <code>true</code>. If you 
+didn't create an <code>actuator</code> you should return <code>false</code>.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">createActuator: </span><span class="nf">(conifg)-&gt;</span>
+    <span class="kc">false</span>
+
+<span class="nv">module.exports.Module = </span><span class="nx">Module</span>
+<span class="nv">module.exports.Frontend = </span><span class="nx">Frontend</span>
+<span class="nv">module.exports.Backend = </span><span class="nx">Backend</span></div></div></div></div></body></html>

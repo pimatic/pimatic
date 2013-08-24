@@ -1,0 +1,27 @@
+<!DOCTYPE html><html lang="en"><head><title>index</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="index"><meta name="groc-project-path" content="README.md"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path">README.md</div></div><div id="document"><div class="segment"><div class="comments"><div class="wrapper"><h1 id="sweetpi-server">sweetpi-server</h1>
+
+<p>sweetpi-server is a home automation server and framework built on nodejs and express 
+to control various Actuators. It can run on the raspberry pi.</p>
+
+<h2 id="installation">Installation</h2>
+
+<pre><code>  npm install sweetpi-server
+  cp default_config.json config.json
+</code></pre>
+
+<p>Edit the <code>config.json</code> file with your favorit editor and then start the server with <code>node main.js</code> 
+or <code>coffee sweetpi.coffee</code>.</p>
+
+<h2 id="extensions">Extensions</h2>
+
+<p>The framework is built to be extendet by modules. A module can ba a <code>Frontend</code> or a <code>Backend</code>. </p>
+
+<h3 id="frontends">Frontends</h3>
+
+<p>A frontend is typically a interface for other scripts, software or the user to interact with the 
+server. See the <code>frontends</code> directory for more informations.</p>
+
+<h3 id="backends">Backends</h3>
+
+<p>A backend typically provides actuators that can exectute actions. See the <code>backends</code> directory for 
+more informations.</p></div></div></div></div></body></html>

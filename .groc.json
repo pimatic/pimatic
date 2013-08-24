@@ -1,0 +1,11 @@
+{ 
+  "root": ".",
+  "glob": [
+    "./README.md",
+    "./*.coffee",
+    "./lib/*.coffee"
+    "./frontends/*/*.coffee",
+    "./backends/*/*.coffee",
+  ], 
+  "out": "docs"
+}

@@ -1,264 +1,58 @@
-<!DOCTYPE html>
+<!DOCTYPE html><html lang="en"><head><title>sweetpi</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="sweetpi"><meta name="groc-project-path" content="sweetpi.coffee"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path">sweetpi.coffee</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="nv">should = </span><span class="nx">require</span> <span class="s">&#39;should&#39;</span>
+<span class="nv">express = </span><span class="nx">require</span> <span class="s">&quot;express&quot;</span>
+<span class="nv">fs = </span><span class="nx">require</span> <span class="s">&quot;fs&quot;</span>
+<span class="nv">convict = </span><span class="nx">require</span> <span class="s">&quot;convict&quot;</span>
+<span class="nv">helper = </span><span class="nx">require</span> <span class="s">&#39;./lib/helper&#39;</span>
+<span class="nv">Server = </span><span class="nx">require</span> <span class="s">&quot;./lib/server&quot;</span>
 
-<html>
-<head>
-  <title>sweetpi.coffee</title>
-  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
-  <link rel="stylesheet" media="all" href="docco.css" />
-</head>
-<body>
-  <div id="container">
-    <div id="background"></div>
-    
-      <ul id="jump_to">
-        <li>
-          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
-          <a class="small" href="javascript:void(0);">+</a>
-          <div id="jump_wrapper">
-          <div id="jump_page">
-            
-              
-              <a class="source" href="clock.html">
-                clock.coffee
-              </a>
-            
-              
-              <a class="source" href="config-shema.html">
-                config-shema.coffee
-              </a>
-            
-              
-              <a class="source" href="sweetpi.html">
-                sweetpi.coffee
-              </a>
-            
-          </div>
-        </li>
-      </ul>
-    
-    <ul class="sections">
-        
-          <li id="title">
-              <div class="annotation">
-                  <h1>sweetpi.coffee</h1>
-              </div>
-          </li>
-        
-        
-        
-        <li id="section-1">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-1">&#182;</a>
-              </div>
-              
-            </div>
-            
-            <div class="content"><div class='highlight'><pre>should = require <span class="string">'should'</span>
-express = require <span class="string">"express"</span>
-fs = require <span class="string">"fs"</span>
-convict = require <span class="string">"convict"</span>
-helper = require <span class="string">'./lib/helper'</span>
-Server = require <span class="string">"./lib/server"</span></pre></div></div>
-            
-        </li>
-        
-        
-        <li id="section-2">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-2">&#182;</a>
-              </div>
-              <p>Load the configuration file.</p>
+<span class="c1">#Load the configuration file.</span>
+<span class="nv">conf = </span><span class="nx">convict</span> <span class="nx">require</span><span class="p">(</span><span class="s">&quot;./config-shema&quot;</span><span class="p">)</span>
+<span class="nx">conf</span><span class="p">.</span><span class="nx">loadFile</span> <span class="s">&quot;./config.json&quot;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>perform validation</p></div></div><div class="code"><div class="wrapper"><span class="nx">conf</span><span class="p">.</span><span class="nx">validate</span><span class="p">()</span>
+<span class="nv">config = </span><span class="nx">conf</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">);</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Check config</p>
 
-            </div>
-            
-            <div class="content"><div class='highlight'><pre>conf = convict require(<span class="string">"./config-shema"</span>)
-conf.loadFile <span class="string">"./config.json"</span></pre></div></div>
-            
-        </li>
-        
-        
-        <li id="section-3">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-3">&#182;</a>
-              </div>
-              <p>perform validation</p>
+<hr />
 
-            </div>
-            
-            <div class="content"><div class='highlight'><pre>conf.validate()
-config = conf.get(<span class="string">""</span>);</pre></div></div>
-            
-        </li>
-        
-        
-        <li id="section-4">
-            <div class="annotation">
-              
-              <div class="pilwrap for-h2">
-                <a class="pilcrow" href="#section-4">&#182;</a>
-              </div>
-              <h2> Check config</h2>
-<p> Check if the config file has the necessary attributes:</p>
+<p>Check if the config file has the necessary attributes:</p></div></div><div class="code"><div class="wrapper"><span class="c1">#</span>
+<span class="nx">helper</span><span class="p">.</span><span class="nx">checkConfig</span> <span class="kc">null</span><span class="p">,</span> <span class="o">-&gt;</span>
+  <span class="nx">config</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span> <span class="s">&#39;object&#39;</span><span class="p">,</span> <span class="s">&quot;config is no object?&quot;</span>
+  <span class="nx">config</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s">&quot;auth&quot;</span><span class="p">).</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s">&#39;object&#39;</span><span class="p">)</span>
+  <span class="nx">config</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s">&quot;server&quot;</span><span class="p">).</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s">&#39;object&#39;</span><span class="p">)</span>
 
-            </div>
-            
-            <div class="content"><div class='highlight'><pre>helper.checkConfig <span class="literal">null</span>, -&gt;
-  config.should.be.a <span class="string">'object'</span>, <span class="string">"config is no object?"</span>
-  config.should.have.property(<span class="string">"auth"</span>).be.a(<span class="string">'object'</span>)
-  config.should.have.property(<span class="string">"server"</span>).be.a(<span class="string">'object'</span>)
+<span class="nv">app = </span><span class="nx">express</span><span class="p">()</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span> <span class="nx">express</span><span class="p">.</span><span class="nx">logger</span><span class="p">()</span>
 
-app = express()
-app.use express.logger()</pre></div></div>
-            
-        </li>
-        
-        
-        <li id="section-5">
-            <div class="annotation">
-              
-              <div class="pilwrap for-h2">
-                <a class="pilcrow" href="#section-5">&#182;</a>
-              </div>
-              <h2>Setup authentification</h2>
+<span class="c1">#</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><h2 id="setup-authentification">Setup authentification</h2>
 
-            </div>
-            
-        </li>
-        
-        
-        <li id="section-6">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-6">&#182;</a>
-              </div>
-              <p>User basicAuth if authentification is not disabled</p>
+<p>User basicAuth if authentification is not disabled</p></div></div><div class="code"><div class="wrapper"><span class="c1">#</span>
+<span class="nx">unless</span> <span class="nx">config</span><span class="p">.</span><span class="nx">disableAuthentication</span>
+  <span class="c1">#Check authentification.</span>
+  <span class="nx">helper</span><span class="p">.</span><span class="nx">checkConfig</span> <span class="s">&#39;auth&#39;</span><span class="p">,</span> <span class="o">-&gt;</span>
+    <span class="nx">config</span><span class="p">.</span><span class="nx">auth</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s">&quot;username&quot;</span><span class="p">).</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s">&#39;string&#39;</span><span class="p">).</span><span class="o">not</span><span class="p">.</span><span class="nx">empty</span>
+    <span class="nx">config</span><span class="p">.</span><span class="nx">auth</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s">&quot;password&quot;</span><span class="p">).</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s">&#39;string&#39;</span><span class="p">).</span><span class="o">not</span><span class="p">.</span><span class="nx">empty</span>
 
-            </div>
-            
-            <div class="content"><div class='highlight'><pre><span class="keyword">unless</span> config.disableAuthentication</pre></div></div>
-            
-        </li>
-        
-        
-        <li id="section-7">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-7">&#182;</a>
-              </div>
-              <p>Check authentification.</p>
+  <span class="nx">app</span><span class="p">.</span><span class="nx">use</span> <span class="nx">express</span><span class="p">.</span><span class="nx">basicAuth</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">auth</span><span class="p">.</span><span class="nx">username</span><span class="p">,</span> <span class="nx">config</span><span class="p">.</span><span class="nx">auth</span><span class="p">.</span><span class="nx">password</span><span class="p">)</span>
 
-            </div>
-            
-            <div class="content"><div class='highlight'><pre>  helper.checkConfig <span class="string">'auth'</span>, -&gt;
-    config.auth.should.have.property(<span class="string">"username"</span>).be.a(<span class="string">'string'</span>).<span class="keyword">not</span>.empty
-    config.auth.should.have.property(<span class="string">"password"</span>).be.a(<span class="string">'string'</span>).<span class="keyword">not</span>.empty
+<span class="c1">#</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><h2 id="setup-the-server">Setup the server</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="c1">#</span>
+<span class="nv">server = </span><span class="k">new</span> <span class="nx">Server</span> <span class="nx">app</span><span class="p">,</span> <span class="nx">config</span>
+<span class="nx">server</span><span class="p">.</span><span class="nx">init</span><span class="p">()</span>
 
-  app.use express.basicAuth(config.auth.username, config.auth.password)</pre></div></div>
-            
-        </li>
-        
-        
-        <li id="section-8">
-            <div class="annotation">
-              
-              <div class="pilwrap for-h2">
-                <a class="pilcrow" href="#section-8">&#182;</a>
-              </div>
-              <h2>Setup the server</h2>
+<span class="k">if</span> <span class="o">not</span> <span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">httpsServer</span><span class="o">?</span><span class="p">.</span><span class="nx">enabled</span> <span class="o">and</span> <span class="o">not</span> <span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">httpServer</span><span class="o">?</span><span class="p">.</span><span class="nx">enabled</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">warn</span> <span class="s">&quot;You have no https and no http server defined!&quot;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Start the https-server if it is enabled</p></div></div><div class="code"><div class="wrapper"><span class="k">if</span> <span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">httpsServer</span><span class="o">?</span><span class="p">.</span><span class="nx">enabled</span>
+  <span class="nx">helper</span><span class="p">.</span><span class="nx">checkConfig</span> <span class="s">&#39;server&#39;</span><span class="p">,</span> <span class="o">-&gt;</span>
+    <span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s">&quot;httpsServer&quot;</span><span class="p">).</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s">&#39;object&#39;</span><span class="p">)</span>
+    <span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">httpsServer</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s">&quot;port&quot;</span><span class="p">).</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span> <span class="s">&#39;number&#39;</span>
+    <span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">httpsServer</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s">&quot;keyFile&quot;</span><span class="p">).</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s">&#39;string&#39;</span><span class="p">).</span><span class="o">not</span><span class="p">.</span><span class="nx">empty</span>
+    <span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">httpsServer</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s">&quot;certFile&quot;</span><span class="p">).</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s">&#39;string&#39;</span><span class="p">).</span><span class="o">not</span><span class="p">.</span><span class="nx">empty</span>
 
-            </div>
-            
-        </li>
-        
-        
-        <li id="section-9">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-9">&#182;</a>
-              </div>
-              
-            </div>
-            
-            <div class="content"><div class='highlight'><pre>server = <span class="keyword">new</span> Server app, config
-server.init()</pre></div></div>
-            
-        </li>
-        
-        
-        <li id="section-10">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-10">&#182;</a>
-              </div>
-              <p>server.ruleManager.addRuleByString &quot;clock&quot;, &quot;if today 12:55 then turn light on&quot;</p>
-
-            </div>
-            
-            <div class="content"><div class='highlight'><pre><span class="keyword">if</span> <span class="keyword">not</span> config.server.httpsServer?.enabled <span class="keyword">and</span> <span class="keyword">not</span> config.server.httpServer?.enabled
-  console.warn <span class="string">"You have no https and no http server defined!"</span></pre></div></div>
-            
-        </li>
-        
-        
-        <li id="section-11">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-11">&#182;</a>
-              </div>
-              <p>Start the https-server if it is enabled</p>
-
-            </div>
-            
-            <div class="content"><div class='highlight'><pre><span class="keyword">if</span> config.server.httpsServer?.enabled
-  helper.checkConfig <span class="string">'server'</span>, -&gt;
-    config.server.should.have.property(<span class="string">"httpsServer"</span>).be.a(<span class="string">'object'</span>)
-    config.server.httpsServer.should.have.property(<span class="string">"port"</span>).be.a <span class="string">'number'</span>
-    config.server.httpsServer.should.have.property(<span class="string">"keyFile"</span>).be.a(<span class="string">'string'</span>).<span class="keyword">not</span>.empty
-    config.server.httpsServer.should.have.property(<span class="string">"certFile"</span>).be.a(<span class="string">'string'</span>).<span class="keyword">not</span>.empty
-
-  config.server.httpsServer.key = fs.readFileSync config.server.httpsServer.keyFile
-  config.server.httpsServer.cert = fs.readFileSync config.server.httpsServer.certFile
-  https = require <span class="string">"https"</span>
-  https.createServer(config.server.httpsServer, app).listen config.server.httpsServer.port
-  console.log <span class="string">"listening for https-request on port <span class="subst">#{config.server.httpsServer.port}</span>..."</span></pre></div></div>
-            
-        </li>
-        
-        
-        <li id="section-12">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-12">&#182;</a>
-              </div>
-              <p>Start the http-server if it is enabled</p>
-
-            </div>
-            
-            <div class="content"><div class='highlight'><pre><span class="keyword">if</span> config.server.httpServer?.enabled
-  helper.checkConfig <span class="string">'server'</span>, -&gt;
-    config.server.should.have.property(<span class="string">"httpServer"</span>).should.be.a <span class="string">'object'</span>
-    config.server.httpServer.should.have.property(<span class="string">"port"</span>).be.a <span class="string">'number'</span>
+  <span class="nv">config.server.httpsServer.key = </span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span> <span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">httpsServer</span><span class="p">.</span><span class="nx">keyFile</span>
+  <span class="nv">config.server.httpsServer.cert = </span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span> <span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">httpsServer</span><span class="p">.</span><span class="nx">certFile</span>
+  <span class="nv">https = </span><span class="nx">require</span> <span class="s">&quot;https&quot;</span>
+  <span class="nx">https</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">httpsServer</span><span class="p">,</span> <span class="nx">app</span><span class="p">).</span><span class="nx">listen</span> <span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">httpsServer</span><span class="p">.</span><span class="nx">port</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&quot;listening for https-request on port </span><span class="si">#{</span><span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">httpsServer</span><span class="p">.</span><span class="nx">port</span><span class="si">}</span><span class="s">...&quot;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Start the http-server if it is enabled</p></div></div><div class="code"><div class="wrapper"><span class="k">if</span> <span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">httpServer</span><span class="o">?</span><span class="p">.</span><span class="nx">enabled</span>
+  <span class="nx">helper</span><span class="p">.</span><span class="nx">checkConfig</span> <span class="s">&#39;server&#39;</span><span class="p">,</span> <span class="o">-&gt;</span>
+    <span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s">&quot;httpServer&quot;</span><span class="p">).</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span> <span class="s">&#39;object&#39;</span>
+    <span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">httpServer</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s">&quot;port&quot;</span><span class="p">).</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span> <span class="s">&#39;number&#39;</span>
      
-  http = require <span class="string">"http"</span>
-  http.createServer(app).listen config.server.httpServer.port
-  console.log <span class="string">"listening for http-request on port <span class="subst">#{config.server.httpServer.port}</span>..."</span></pre></div></div>
-            
-        </li>
-        
-    </ul>
-  </div>
-</body>
-</html>
+  <span class="nv">http = </span><span class="nx">require</span> <span class="s">&quot;http&quot;</span>
+  <span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">listen</span> <span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">httpServer</span><span class="p">.</span><span class="nx">port</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&quot;listening for http-request on port </span><span class="si">#{</span><span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">httpServer</span><span class="p">.</span><span class="nx">port</span><span class="si">}</span><span class="s">...&quot;</span></div></div></div></div></body></html>

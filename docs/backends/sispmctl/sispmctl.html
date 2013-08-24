@@ -1,0 +1,38 @@
+<!DOCTYPE html><html lang="en"><head><title>backends/sispmctl/sispmctl</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../"><meta name="groc-document-path" content="backends/sispmctl/sispmctl"><meta name="groc-project-path" content="backends/sispmctl/sispmctl.coffee"><link rel="stylesheet" type="text/css" media="all" href="../../assets/style.css"><script type="text/javascript" src="../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">backends/sispmctl/sispmctl.coffee</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="nv">spawn = </span><span class="nx">require</span><span class="p">(</span><span class="s">&quot;child_process&quot;</span><span class="p">).</span><span class="nx">spawn</span>
+<span class="nv">actuators = </span><span class="nx">require</span> <span class="s">&quot;../../lib/actuators&quot;</span>
+<span class="nv">modules = </span><span class="nx">require</span> <span class="s">&quot;../../lib/modules&quot;</span>
+
+<span class="k">class</span> <span class="nx">Sispmctl</span> <span class="k">extends</span> <span class="nx">modules</span><span class="p">.</span><span class="nx">Backend</span>
+  <span class="nv">server: </span><span class="kc">null</span>
+  <span class="nv">config: </span><span class="kc">null</span>
+
+  <span class="nv">init: </span><span class="p">(</span><span class="nx">@server</span><span class="p">,</span> <span class="nx">@config</span><span class="p">)</span> <span class="o">=&gt;</span>
+
+  <span class="nv">createActuator: </span><span class="p">(</span><span class="nx">config</span><span class="p">)</span> <span class="o">=&gt;</span>
+    <span class="k">if</span> <span class="nx">config</span><span class="p">.</span><span class="k">class</span> <span class="o">is</span> <span class="s">&quot;SispmctlSwitch&quot;</span> 
+      <span class="nx">@server</span><span class="p">.</span><span class="nx">registerActuator</span><span class="p">(</span><span class="k">new</span> <span class="nx">SispmctlSwitch</span> <span class="nx">config</span><span class="p">)</span>
+      <span class="k">return</span> <span class="kc">true</span>
+    <span class="k">return</span> <span class="kc">false</span>
+
+<span class="nv">backend = </span><span class="k">new</span> <span class="nx">Sispmctl</span>
+
+<span class="k">class</span> <span class="nx">SispmctlSwitch</span> <span class="k">extends</span> <span class="nx">actuators</span><span class="p">.</span><span class="nx">PowerSwitch</span>
+  <span class="nv">config: </span><span class="kc">null</span>
+
+  <span class="nv">constructor: </span><span class="nf">(@config) -&gt;</span>
+    <span class="c1">#TODO: Check config!</span>
+    <span class="vi">@name = </span><span class="nx">config</span><span class="p">.</span><span class="nx">name</span>
+    <span class="vi">@id = </span><span class="nx">config</span><span class="p">.</span><span class="nx">id</span>
+
+  <span class="nv">changeStateTo: </span><span class="nf">(state, resultCallbak) -&gt;</span>
+    <span class="nv">thisClass = </span><span class="k">this</span>
+    <span class="k">if</span> <span class="nx">@state</span> <span class="o">is</span> <span class="nx">state</span> <span class="k">then</span> <span class="nx">resultCallbak</span> <span class="kc">true</span>
+    <span class="nv">param = </span><span class="p">(</span><span class="k">if</span> <span class="nx">state</span> <span class="k">then</span> <span class="s">&quot;-o&quot;</span> <span class="k">else</span> <span class="s">&quot;-f&quot;</span><span class="p">)</span>
+    <span class="nx">param</span> <span class="o">+=</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">outletUnit</span>
+    <span class="nv">child = </span><span class="nx">spawn</span> <span class="nx">backend</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">binary</span><span class="p">,</span> <span class="p">[</span><span class="nx">param</span><span class="p">]</span>
+    <span class="nx">child</span><span class="p">.</span><span class="kc">on</span> <span class="s">&quot;exit&quot;</span><span class="p">,</span> <span class="nf">(code) -&gt;</span>
+      <span class="nv">success = </span><span class="p">(</span><span class="nx">code</span> <span class="o">is</span> <span class="mi">0</span><span class="p">)</span>
+      <span class="nv">thisClass.state = </span><span class="nx">state</span> <span class="k">if</span> <span class="nx">success</span>
+      <span class="nx">resultCallbak</span> <span class="nx">success</span>
+
+<span class="nv">module.exports = </span><span class="nx">backend</span></div></div></div></div></body></html>
