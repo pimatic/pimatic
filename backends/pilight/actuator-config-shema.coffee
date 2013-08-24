@@ -1,4 +1,6 @@
-# define the convict config-schema
+# #PilightSwitch actuator configuration options
+
+# Defines a `node-convict` config-shema and exports it.
 module.exports =
   protocol:
     doc: "On of the listet protocols of \"pilight-send --help\""

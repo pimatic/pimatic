@@ -1,12 +1,45 @@
-<!DOCTYPE html><html lang="en"><head><title>backends/sispmctl/sispmctl</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../"><meta name="groc-document-path" content="backends/sispmctl/sispmctl"><meta name="groc-project-path" content="backends/sispmctl/sispmctl.coffee"><link rel="stylesheet" type="text/css" media="all" href="../../assets/style.css"><script type="text/javascript" src="../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">backends/sispmctl/sispmctl.coffee</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="nv">spawn = </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;child_process&quot;</span><span class="p">).</span><span class="nx">spawn</span>
+<!DOCTYPE html><html lang="en"><head><title>backends/sispmctl/sispmctl</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../"><meta name="groc-document-path" content="backends/sispmctl/sispmctl"><meta name="groc-project-path" content="backends/sispmctl/sispmctl.coffee"><link rel="stylesheet" type="text/css" media="all" href="../../assets/style.css"><script type="text/javascript" src="../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">backends/sispmctl/sispmctl.coffee</div></div><div id="document"><div class="segment"><div class="comments"><div class="wrapper"><h1 id="the-sispmctl-backend">The sispmctl backend</h1>
+
+<p>Backend for the <a href="http://sispmctl.sourceforge.net/">SIS-PM Control for Linux aka sispmct</a> 
+application that can control GEMBIRD (m)SiS-PM device, witch are USB controled multiple socket.</p>
+
+<h2 id="configuration">Configuration</h2>
+
+<p>You can load the backend by editing your <code>config.json</code> to include:</p>
+
+<pre><code>{ 
+   "module": "sispmctl"
+}
+</code></pre>
+
+<p>in the <code>backend</code> section. For all configuration options see 
+<a href="backend-config-shema.html">backend-config-shema</a></p>
+
+<p>Actuators can be added bei adding them to the <code>actuators</code> section in the config file.
+Set the <code>class</code> attribute to <code>PilightOutlet</code>. For example:</p>
+
+<pre><code>{ 
+  "id": "light",
+  "class": "SispmctlSwitch", 
+  "name": "Lamp",
+  "outletId": 1 
+}
+</code></pre>
+
+<p>For actuator configuration options see the 
+<a href="actuator-config-shema.html">actuator-config-shema.coffee</a> file.</p></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="nv">spawn = </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;child_process&quot;</span><span class="p">).</span><span class="nx">spawn</span>
 <span class="nv">actuators = </span><span class="nx">require</span> <span class="s2">&quot;../../lib/actuators&quot;</span>
 <span class="nv">modules = </span><span class="nx">require</span> <span class="s2">&quot;../../lib/modules&quot;</span>
+<span class="nv">convict = </span><span class="nx">require</span> <span class="s2">&quot;convict&quot;</span>
 
 <span class="k">class</span> <span class="nx">Sispmctl</span> <span class="k">extends</span> <span class="nx">modules</span><span class="p">.</span><span class="nx">Backend</span>
   <span class="nv">server: </span><span class="kc">null</span>
   <span class="nv">config: </span><span class="kc">null</span>
 
   <span class="nv">init: </span><span class="p">(</span><span class="nx">@server</span><span class="p">,</span> <span class="nx">@config</span><span class="p">)</span> <span class="o">=&gt;</span>
+    <span class="nv">conf = </span><span class="nx">convict</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;./backend-config-shema&quot;</span><span class="p">)</span>
+    <span class="nx">conf</span><span class="p">.</span><span class="nx">load</span> <span class="nx">config</span>
+    <span class="nx">conf</span><span class="p">.</span><span class="nx">validate</span><span class="p">()</span>
 
   <span class="nv">createActuator: </span><span class="p">(</span><span class="nx">config</span><span class="p">)</span> <span class="o">=&gt;</span>
     <span class="k">if</span> <span class="nx">config</span><span class="p">.</span><span class="k">class</span> <span class="o">is</span> <span class="s2">&quot;SispmctlSwitch&quot;</span> 
@@ -20,7 +53,10 @@
   <span class="nv">config: </span><span class="kc">null</span>
 
   <span class="nv">constructor: </span><span class="nf">(@config) -&gt;</span>
-    <span class="c1">#TODO: Check config!</span>
+    <span class="nv">conf = </span><span class="nx">convict</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;./actuator-config-shema&quot;</span><span class="p">)</span>
+    <span class="nx">conf</span><span class="p">.</span><span class="nx">load</span> <span class="nx">config</span>
+    <span class="nx">conf</span><span class="p">.</span><span class="nx">validate</span><span class="p">()</span>
+
     <span class="vi">@name = </span><span class="nx">config</span><span class="p">.</span><span class="nx">name</span>
     <span class="vi">@id = </span><span class="nx">config</span><span class="p">.</span><span class="nx">id</span>
 
