@@ -22,7 +22,7 @@ $(document).on("pageinit", function(a) {
     var value;
     if (data.state != null) {
       value = (data.state ? "turnOn" : "turnOff");
-      return $("flip-" + data.id).val(value);
+      return $("#flip-" + data.id).val(value).slider('refresh');
     }
   });
 });

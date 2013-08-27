@@ -64,14 +64,16 @@ class SispmctlSwitch extends actuators.PowerSwitch
       child = exec "#{backend.config.binary} -qng #{@config.outletUnit}", 
         (error, stdout, stderr) ->
           #console.log error
-          console.log stderror if stdout.length isnt 0
+          console.log stderr if stderr.length isnt 0
+          console.log stdout if stdout.length isnt 0
+          stdout = stdout.trim()
           unless error?
             switch stdout
               when "1"
                 @_state = on
               when "0"
                 @_state = off
-              else console.log "SispmctlSwitch: unknown state=\"#{state}\"!"
+              else console.log "SispmctlSwitch: unknown state=\"#{stdout}\"!"
             callback error, @_state
     else callback null, @_state
       
@@ -81,9 +83,10 @@ class SispmctlSwitch extends actuators.PowerSwitch
     if @state is state then resultCallbak true
     param = (if state then "-o" else "-f")
     param += " " + @config.outletUnit
-    child = exec "#{backend.config.binary} param", 
+    child = exec "#{backend.config.binary} #{param}", 
       (error, stdout, stderr) ->
-        console.log stderror if stdout.length isnt 0
+        console.log stderr if stderr.length isnt 0
+        console.log stdout if stdout.length isnt 0
         thisClass._setState(state) unless error?
         resultCallbak error
 

@@ -15,7 +15,7 @@ $(document).on "pageinit", (a) ->
   socket.on "switch-status", (data) ->
     if data.state?
       value = (if data.state then "turnOn" else "turnOff")
-      $("flip-#{data.id}").val value
+      $("#flip-#{data.id}").val(value).slider('refresh');
 
 
 $.ajaxSetup timeout: 7000 #ms

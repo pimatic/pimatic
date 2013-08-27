@@ -61,13 +61,14 @@ class MobileFrontend extends modules.Frontend
       io = socketIo.listen webServer
       # When a new client connects
       io.sockets.on 'connection', (socket) ->
-        for actuator in actuators
-          # * First time push the state to the client
-          actuator.getState (error, state) ->
-            unless error? then thisClass.emitSwitchState socket, actuator, state
-          # * Then forward following state event to the client
-          actuator.on "state", (state) ->
-            thisClass.emitSwitchState socket, actuator, state
+        for actuator in actuators 
+          do (actuator) ->
+            # * First time push the state to the client
+            actuator.getState (error, state) ->
+              unless error? then thisClass.emitSwitchState socket, actuator, state
+            # * Then forward following state event to the client
+            actuator.on "state", (state) ->
+              thisClass.emitSwitchState socket, actuator, state
 
   emitSwitchState: (socket, actuator, state) ->
     socket.emit "switch-status",
