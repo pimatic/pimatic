@@ -1,8 +1,6 @@
-/* Put your custom CSS here */
-h3{
-	margin-bottom: 5px
-}
-
-div.ui-content{
-	padding-top: 0px;
+div.ui-slider-switch {
+    margin: 6px 10px 10px 0;
+    position: absolute;
+    right: 0;
+    top: 0;
 }

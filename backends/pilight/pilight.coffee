@@ -76,7 +76,7 @@ class PilightSwitch extends actuators.PowerSwitch
     ]
     child.on "exit", (code) ->
       success = (code is 0)
-      thisClass.state = state if success
+      thisClass._setState(state) if success
       resultCallbak success
 
 module.exports = backend

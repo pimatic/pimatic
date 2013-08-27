@@ -2,6 +2,7 @@ express = require "express"
 offline = require "connect-offline" 
 coffeescript = require 'connect-coffee-script'
 modules = require '../../lib/modules'
+socketIo = require 'socket.io'
 
 offlineOptions =
   manifest_path: "/application.manifest"
@@ -34,8 +35,8 @@ class MobileFrontend extends modules.Frontend
     process.chdir(cwdBak)
 
 
-  init: (app, server, config) =>
-    @config = config
+  init: (app, server, @config) =>
+    thisClass = @;
     @useOffline app
     app.use coffeescript(
       src: __dirname + "/public-coffee",
@@ -53,5 +54,24 @@ class MobileFrontend extends modules.Frontend
         actuators: actuators
       
     app.use express.static(__dirname + "/public")
+
+    # For every webserver
+    for webServer in app.webServers
+      # Listen for new websocket connections
+      io = socketIo.listen webServer
+      # When a new client connects
+      io.sockets.on 'connection', (socket) ->
+        for actuator in actuators
+          # * First time push the state to the client
+          actuator.getState (error, state) ->
+            unless error? then thisClass.emitSwitchState socket, actuator, state
+          # * Then forward following state event to the client
+          actuator.on "state", (state) ->
+            thisClass.emitSwitchState socket, actuator, state
+
+  emitSwitchState: (socket, actuator, state) ->
+    socket.emit "switch-status",
+      id: actuator.id
+      state: state
 
 module.exports = new MobileFrontend

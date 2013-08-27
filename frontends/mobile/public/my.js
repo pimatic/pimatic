@@ -1,21 +1,27 @@
 var voiceCallback;
 
 $(document).on("pageinit", function(a) {
+  var socket;
   if (typeof device !== "undefined" && device !== null) {
     $("#talk").show().bind("vclick", function(event, ui) {
       return device.startVoiceRecognition("voiceCallback");
     });
   }
-  return $(".switch").each(function(i, o) {
-    var _this = this;
-    return $(o).bind("vclick", function(event, ui) {
-      var actuatorAction, actuatorID;
-      actuatorID = $(o).data("actuator-id");
-      actuatorAction = $(o).data("actuator-action");
-      return $.get("/api/actuator/" + actuatorID + "/" + actuatorAction, function(data) {
-        return typeof device !== "undefined" && device !== null ? device.showToast("fertig") : void 0;
-      });
+  $(".switch").bind("change", function(event, ui) {
+    var actuatorAction, actuatorID;
+    console.log(event);
+    console.log(ui);
+    actuatorID = $(this).data("actuator-id");
+    actuatorAction = $(this).val();
+    return $.get("/api/actuator/" + actuatorID + "/" + actuatorAction, function(data) {
+      return typeof device !== "undefined" && device !== null ? device.showToast("fertig") : void 0;
     });
+  });
+  socket = io.connect("/");
+  return socket.on("switch-status", function(data) {
+    var value;
+    value = (state ? "turnOn" : "turnOff");
+    return $("flip-" + data.id).val(value);
   });
 });
 

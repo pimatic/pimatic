@@ -25,7 +25,7 @@
 # [actuator-config-shema.coffee](actuator-config-shema.html) file.
 
 # 
-spawn = require("child_process").spawn
+exec = require("child_process").exec
 actuators = require "../../lib/actuators"
 modules = require "../../lib/modules"
 convict = require "convict"
@@ -58,15 +58,33 @@ class SispmctlSwitch extends actuators.PowerSwitch
     @name = config.name
     @id = config.id
 
+
+  getState: (callback) ->
+    unless @_state?
+      child = exec "#{backend.config.binary} -qng #{@config.outletUnit}", 
+        (error, stdout, stderr) ->
+          #console.log error
+          console.log stderror if stdout.length isnt 0
+          unless error?
+            switch stdout
+              when "1"
+                @_state = on
+              when "0"
+                @_state = off
+              else console.log "SispmctlSwitch: unknown state=\"#{state}\"!"
+            callback error, @_state
+    else callback null, @_state
+      
+
   changeStateTo: (state, resultCallbak) ->
     thisClass = this
     if @state is state then resultCallbak true
     param = (if state then "-o" else "-f")
     param += " " + @config.outletUnit
-    child = spawn backend.config.binary, [param]
-    child.on "exit", (code) ->
-      success = (code is 0)
-      thisClass.state = state if success
-      resultCallbak success
+    child = exec "#{backend.config.binary} param", 
+      (error, stdout, stderr) ->
+        console.log stderror if stdout.length isnt 0
+        thisClass._setState(state) unless error?
+        resultCallbak error
 
 module.exports = backend

@@ -9,22 +9,24 @@ head
   title SweetPi
   link(rel='stylesheet', href='jquery.mobile-1.2.0.min.css')
   link(rel='stylesheet', href='my.css')
-  link(rel='stylesheet', href='themes/AndroidHoloDarkLight.min.css')
-  link(rel='stylesheet', href='roboto/fonts.css')
+  //- link(rel='stylesheet', href='themes/AndroidHoloDarkLight.min.css')
+  //- link(rel='stylesheet', href='roboto/fonts.css')
   script(src='jquery.min.js')
   script(src='jquery.mobile-1.2.0.min.js')  
+  script(src='socket.io/socket.io.js')
   script(src='my.js')
       
 body
-  #outlet-control(data-role='page')
+  div(data-role='page')
     div(data-theme='a', data-role='header', data-position='fixed')
       a#talk.ui-btn-right(data-role='button', href='#outlet-control', style='display: none;') Sprechen
-      h3 PiControl
+      h3 Sweet Pi Control
     div(data-role='content')
-      - for actuator in actuators
-        h3=actuator.name
-          div(data-role='controlgroup', data-type='horizontal')
-            a.switch(data-actuator-id=actuator.id, data-actuator-action='turnOff', 
-              data-role='button', href='#outlet-control', data-icon='minus', data-iconpos='left') Aus
-            a.switch(data-actuator-id=actuator.id, data-actuator-action='turnOn', 
-              data-role='button', href='#outlet-control', data-icon='plus', data-iconpos='left') An
+      ul(data-role='listview', data-inset='true')
+        - for actuator in actuators
+          li(data-role="fieldcontain")
+            label(for="flip-"+actuator.id)=actuator.name
+            select.switch(name="flip-"+actuator.id, id="flip-"+actuator.id, 
+                          data-role="slider", data-track-theme="c", data-actuator-id=actuator.id)
+              option(value="turnOff")='Off'
+              option(value="turnOn")='On'

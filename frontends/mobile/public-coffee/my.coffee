@@ -3,13 +3,18 @@ $(document).on "pageinit", (a) ->
     $("#talk").show().bind "vclick", (event, ui) ->
       device.startVoiceRecognition "voiceCallback"
 
-  $(".switch").each (i, o) ->
-    $(o).bind "vclick", (event, ui) =>
-      actuatorID = $(o).data("actuator-id")
-      actuatorAction = $(o).data("actuator-action")
-      $.get "/api/actuator/#{actuatorID}/#{actuatorAction}"  , (data) ->
-        device?.showToast "fertig"
+  $(".switch").bind "change", (event, ui) ->
+    console.log event
+    console.log ui
+    actuatorID = $(this).data "actuator-id"
+    actuatorAction = $(this).val()
+    $.get "/api/actuator/#{actuatorID}/#{actuatorAction}"  , (data) ->
+      device?.showToast "fertig"
 
+  socket = io.connect("/")
+  socket.on "switch-status", (data) ->
+    value = (if state then "turnOn" else "turnOff")
+    $("flip-#{data.id}").val value
 
 
 $.ajaxSetup timeout: 7000 #ms
@@ -38,3 +43,4 @@ voiceCallback = (matches) ->
   , (data) ->
     device.showToast data
     $("#talk").blur()
+
