@@ -20,8 +20,10 @@ $(document).on("pageinit", function(a) {
   socket = io.connect("/");
   return socket.on("switch-status", function(data) {
     var value;
-    value = (state ? "turnOn" : "turnOff");
-    return $("flip-" + data.id).val(value);
+    if (data.state != null) {
+      value = (data.state ? "turnOn" : "turnOff");
+      return $("flip-" + data.id).val(value);
+    }
   });
 });
 

@@ -13,8 +13,9 @@ $(document).on "pageinit", (a) ->
 
   socket = io.connect("/")
   socket.on "switch-status", (data) ->
-    value = (if state then "turnOn" else "turnOff")
-    $("flip-#{data.id}").val value
+    if data.state?
+      value = (if data.state then "turnOn" else "turnOff")
+      $("flip-#{data.id}").val value
 
 
 $.ajaxSetup timeout: 7000 #ms
