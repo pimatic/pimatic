@@ -1,6 +1,13 @@
 div.ui-slider-switch {
-    margin: 6px 10px 10px 0;
+    margin: 6px 10px 10px 0 !important;
     position: absolute;
     right: 0;
     top: 0;
+}
+
+.ui-focus,
+.ui-btn:focus {
+    -moz-box-shadow: none;
+    -webkit-box-shadow: none;
+    box-shadow: none ;
 }
