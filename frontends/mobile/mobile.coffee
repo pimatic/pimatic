@@ -59,6 +59,7 @@ class MobileFrontend extends modules.Frontend
     for webServer in app.webServers
       # Listen for new websocket connections
       io = socketIo.listen webServer
+      io.set 'log level', 2 
       # When a new client connects
       io.sockets.on 'connection', (socket) ->
         for actuator in actuators 
