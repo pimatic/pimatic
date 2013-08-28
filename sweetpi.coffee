@@ -9,8 +9,7 @@ should = require 'should'
 express = require "express"
 fs = require "fs"
 convict = require "convict"
-helper = require './lib/helper'
-Server = require "./lib/server"
+i18n = require "i18n"
 
 # ##Load the configuration file.
 # 
@@ -22,11 +21,19 @@ conf.loadFile "./config.json"
 conf.validate()
 config = conf.get("");
 
+i18n.configure({
+    locales:['en', 'de'],
+    directory: __dirname + '/locales',
+    defaultLocale: config.server.locale,
+});
+
+helper = require './lib/helper'
+Server = require "./lib/server"
+
 # Setup express
 # -------------
 app = express()
 app.use express.logger()
-
 
 # Setup authentication
 # ----------------------

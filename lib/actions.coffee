@@ -1,3 +1,5 @@
+__ = require("i18n").__
+
 module.exports = (server) ->
 
   class DefaultRules
@@ -5,26 +7,31 @@ module.exports = (server) ->
       result = null
       actionString = actionString.toLowerCase()
       #console.log actionString
-      matches = actionString.match /^(?:turn)?(?:\s+the)?(.+?)(on|off)$/
+      matches = actionString.match __('/^(?:turn)?(?:\s+the)?(.+?)(on|off)$/')
       #console.log matches
       if matches?
         actuatorName = matches[1].trim()
         state = matches[2]
-        actionName = (if state is "on" then "turnOn" else "turnOff")
+        state =  (if state is __("on") then on else off)
+        actionName = (if state then "turnOn" else "turnOff")
         result = @runOnActuatorByNameOrId  actuatorName, (actuator)->
           if actuator.hasAction actionName
                 if simulate
-                  return ->
-                    callback(null, "would turn #{actuator.name} #{state}")
+                  if state
+                    return ->
+                      callback null, __("would turn %s on", actuator.name)
+                  else 
+                    return ->
+                      callback null, __("would turn %s off", actuator.name)
                 else
-                  if state is "on"
-                    return  ->
+                  if state
+                    return ->
                       actuator.turnOn (e) ->
-                        callback(e, "turned #{actuator.name} on")
+                        callback e, __("turned %s on", actuator.name)
                   else 
                     return ->
                       actuator.turnOff (e) ->
-                        callback(e, "turned #{actuator.name} off")
+                        callback e, __("turned %s off", actuator.name)
           else return null
       return result
 

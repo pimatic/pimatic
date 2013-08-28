@@ -5,6 +5,10 @@
 # Defines a `node-convict` config-shema and exports it.
 module.exports =
   server:
+    locale:
+      doc: "The default language"
+      format: Array
+      default: "en"
     authentication:
       username:
         doc: "The Username for http-basic-authentification"
