@@ -1,3 +1,5 @@
 {
-	"test2": "test2"
+	"^(?:turn)?(?:s+the)?(.+?)(on|off)$": "^(?:turn)?(?:s+the)?(.+?)(on|off)$",
+	"on": "on",
+	"turned %s on": "turned %s on"
 }

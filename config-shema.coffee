@@ -7,7 +7,7 @@ module.exports =
   server:
     locale:
       doc: "The default language"
-      format: Array
+      format: String
       default: "en"
     authentication:
       username:

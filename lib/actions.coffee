@@ -7,8 +7,12 @@ module.exports = (server) ->
       result = null
       actionString = actionString.toLowerCase()
       #console.log actionString
-      matches = actionString.match __('/^(?:turn)?(?:\s+the)?(.+?)(on|off)$/')
-      #console.log matches
+      regExpString = '^(?:turn)?(?:\\s+the)?(.+?)(on|off)$'
+      matches = actionString.match (new RegExp regExpString)
+      # Try the translated form:
+      unless matches? then matches = actionString.match (new RegExp __(regExpString))
+      console.log __(regExpString)
+      console.log matches
       if matches?
         actuatorName = matches[1].trim()
         state = matches[2]

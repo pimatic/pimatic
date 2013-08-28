@@ -33,6 +33,7 @@ Server = require "./lib/server"
 # Setup express
 # -------------
 app = express()
+app.use i18n.init
 app.use express.logger()
 
 # Setup authentication
