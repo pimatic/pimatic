@@ -1,0 +1,8 @@
+.ui-navbar .ui-icon {
+  background-image: url(images/icons-18-white.png);
+}
+@media only screen and (-webkit-min-device-pixel-ratio: 1.5),
+     only screen and (min--moz-device-pixel-ratio: 1.5),
+     only screen and (min-resolution: 240dpi) {
+  background-image: url(images/icons-36-white.png);
+}

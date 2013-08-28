@@ -1,0 +1,8 @@
+# Meta
+name: candy
+'source-theme': 'res/jqm/1.2.0/jquery.mobile-1.2.0.graphite.blue.css'
+'jqm-version': '1.2.0'
+
+base_color: &BASE_COLOR '#f75548'
+secondary_color: &SECONDARY_COLOR '#ff6b5f'
+highlight_border_color: &HIGHLIGHT_COLOR '#a9281e'

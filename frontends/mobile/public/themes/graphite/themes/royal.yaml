@@ -1,0 +1,8 @@
+# Meta
+name: royal
+'source-theme': 'res/jqm/1.2.0/jquery.mobile-1.2.0.graphite.blue.css'
+'jqm-version': '1.2.0'
+
+base_color: &BASE_COLOR '#9e2417'
+secondary_color: &SECONDARY_COLOR '#c22f1b'
+highlight_border_color: &HIGHLIGHT_COLOR '#490100'

@@ -1,0 +1,9 @@
+
+# Meta
+name: aloe
+'source-theme': 'res/jqm/1.2.0/jquery.mobile-1.2.0.graphite.blue.css'
+'jqm-version': '1.2.0'
+
+base_color: &BASE_COLOR '#94b913'
+secondary_color: &SECONDARY_COLOR '#abcd14'
+highlight_border_color: &HIGHLIGHT_COLOR '#648100'

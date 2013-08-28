@@ -1,0 +1,69 @@
+# Meta
+name: water
+'source-theme': 'res/jqm/1.3.1/jquery.mobile-1.3.1.graphite.css'
+'extra-css': 'themes/water.custom.css'
+'jqm-version': '1.3.1'
+
+
+base_color: &BASE_COLOR '#007dcd'
+secondary_color: &SECONDARY_COLOR '#0093EA'
+highlight_border_color: &HIGHLIGHT_COLOR '#005994'
+
+## Core
+#'global-radii-blocks': '0.2em'
+#'global-radii-buttons': '0.2em'
+#'global-box-shadow-size': '1px'
+#'global-box-shadow-color': 'rgba(0,0,0,0.2)'
+#
+## Pages
+#'c-body-background-color': '#eee'
+#'c-body-background-start': '#eee'
+#'c-body-background-end': '#eee'
+#
+## Toolbars
+#'a-bar-border': 'transparent'
+#'b-bar-border': 'transparent'
+#'a-bar-background-end': '#007dcd'
+#'a-bar-background-start': '#0193e9'
+#'a-bar-background-color': '#0193e9'
+#'b-bar-background-end': '#007dcd'
+#'b-bar-background-start': '#0193e9'
+#'b-bar-background-color': '#0193e9'
+#
+#
+## Typography
+#'c-body-link-color': '#007dcd'
+#'c-body-link-hover': '#0193e9'
+#'c-body-link-visited': '#0193e9'
+#'c-body-link-active': '#0193e9'
+#
+## Buttons
+#'global-active-background-color': '#0193e9'
+#'global-active-background-start': '#0193e9'
+#'global-active-background-end': '#0193e9'
+#'global-active-border': '#007dcd'
+#
+#'a-bup-border': '#cfcfcf'
+#'a-bup-background-start': '#fff'
+#'a-bup-background-end': '#fff'
+#'a-bhover-background-start': '#0193e9'
+#'a-bhover-background-end': '#0193e9'
+#'a-bhover-border': '#007dcd'
+#'a-bhover-color': '#fff'
+#'a-bdown-background-start': '#007dcd'
+#'a-bdown-background-end': '#007dcd'
+#'a-bup-color': '#111'
+#'a-bup-shadow-x': '0px'
+#'a-bup-shadow-y': '0px'
+#'a-bup-shadow-radius': '0px'
+#
+#'c-bup-background-start': '#fff'
+#'c-bup-background-end': '#fff'
+#'c-bhover-background-start': '#0193e9'
+#'c-bhover-background-end': '#0193e9'
+#'c-bhover-color': '#fff'
+#'c-bdown-background-start': '#007dcd'
+#'c-bdown-background-end': '#007dcd'
+#'c-bup-shadow-x': '0px'
+#'c-bup-shadow-y': '0px'
+#'c-bup-shadow-radius': '0px'

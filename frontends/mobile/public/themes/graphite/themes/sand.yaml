@@ -1,0 +1,8 @@
+# Meta
+name: sand
+'source-theme': 'res/jqm/1.2.0/jquery.mobile-1.2.0.graphite.blue.css'
+'jqm-version': '1.2.0'
+
+base_color: &BASE_COLOR '#b29573'
+secondary_color: &SECONDARY_COLOR '#cbb294'
+highlight_border_color: &HIGHLIGHT_COLOR '#8b6945'

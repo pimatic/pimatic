@@ -1,0 +1,75 @@
+# Core
+
+'jqm-version': '1.3.1'
+'source-theme': 'res/jqm/1.3.1/jquery.mobile-1.3.1.graphite.css'
+
+'remove_css':
+  - '.ui-bar-a|text-shadow'
+  - '.ui-btn-up-a|text-shadow'
+  - '.ui-btn-hover-a|text-shadow'
+  - '.ui-btn-down-a|text-shadow'
+  - '.ui-bar-b|text-shadow'
+  - '.ui-body-a, .ui-overlay-a|text-shadow'
+  - '.ui-body-c, .ui-overlay-c|text-shadow'
+
+'global-radii-blocks': '0.2em'
+'global-radii-buttons': '0.2em'
+'global-box-shadow-size': '1px'
+'global-box-shadow-color': 'rgba(0,0,0,0.2)'
+
+# Pages
+'c-body-background-color': '#eee'
+'c-body-background-start': '#eee'
+'c-body-background-end': '#eee'
+
+# Toolbars
+'a-bar-border': *HIGHLIGHT_COLOR
+'b-bar-border': *HIGHLIGHT_COLOR
+'a-bar-background-end': *BASE_COLOR
+'a-bar-background-start': *SECONDARY_COLOR
+'a-bar-background-color': *SECONDARY_COLOR
+'b-bar-background-end': *BASE_COLOR
+'b-bar-background-start': *SECONDARY_COLOR
+'b-bar-background-color': *SECONDARY_COLOR
+'a-bar-dropshadow-color': 'rgba(0,0,0,0.15)'
+
+# Typography
+'c-body-link-color': *BASE_COLOR
+'c-body-link-hover': *SECONDARY_COLOR
+'c-body-link-visited': *BASE_COLOR
+'c-body-link-active': *BASE_COLOR
+
+# Buttons
+'global-active-background-color': *BASE_COLOR
+'global-active-background-start': *BASE_COLOR
+'global-active-background-end': *BASE_COLOR
+'global-active-border': *SECONDARY_COLOR
+
+'a-bup-border': *BASE_COLOR
+'a-bup-background-start': *SECONDARY_COLOR
+'a-bup-background-end': *SECONDARY_COLOR
+'a-bhover-background-start': *SECONDARY_COLOR
+'a-bhover-background-end': *SECONDARY_COLOR
+'a-bhover-border': *BASE_COLOR
+'a-bhover-color': '#fff'
+'a-header-bhover-background-start': *SECONDARY_COLOR
+'a-header-bhover-background-end': *SECONDARY_COLOR
+'a-header-bhover-border': *HIGHLIGHT_COLOR
+'a-header-bhover-color': '#fff'
+'a-bdown-background-start': *BASE_COLOR
+'a-bdown-background-end': *BASE_COLOR
+'a-bup-color': '#fff'
+'a-bup-shadow-x': '0px'
+'a-bup-shadow-y': '0px'
+'a-bup-shadow-radius': '0px'
+
+'c-bup-background-start': '#fff'
+'c-bup-background-end': '#fff'
+'c-bhover-background-start': *SECONDARY_COLOR
+'c-bhover-background-end': *SECONDARY_COLOR
+'c-bhover-color': '#fff'
+'c-bdown-background-start': *BASE_COLOR
+'c-bdown-background-end': *BASE_COLOR
+'c-bup-shadow-x': '0px'
+'c-bup-shadow-y': '0px'
+'c-bup-shadow-radius': '0px'

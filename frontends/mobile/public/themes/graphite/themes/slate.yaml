@@ -1,0 +1,71 @@
+# Meta
+name: slate
+'source-theme': 'res/jqm/1.3.1/jquery.mobile-1.3.1.graphite.css'
+'extra-css': 'themes/slate.custom.css'
+'jqm-version': '1.3.1'
+'use_base': 'false'
+
+# Core
+'global-radii-blocks': '0.2em'
+'global-radii-buttons': '0.2em'
+'global-box-shadow-size': '1px'
+'global-box-shadow-color': 'rgba(0,0,0,0.2)'
+
+# Pages
+'c-body-background-color': '#eee'
+'c-body-background-start': '#eee'
+'c-body-background-end': '#eee'
+
+# Toolbars
+'a-bar-border': 'transparent'
+'b-bar-border': 'transparent'
+'a-bar-background-end': '#222222'
+'a-bar-background-start': '#222222'
+'a-bar-background-color': '#222222'
+'b-bar-background-end': '#222222'
+'b-bar-background-start': '#222222'
+'b-bar-background-color': '#222222'
+
+
+# Typography
+'c-body-link-color': '#222222'
+'c-body-link-hover': '#333333'
+'c-body-link-visited': '#333333'
+'c-body-link-active': '#333333'
+'c-bdown-color': '#727272'
+
+# Buttons
+'global-active-background-color': '#222222'
+'global-active-background-start': '#222222'
+'global-active-background-end': '#222222'
+'global-active-border': '#484848'
+
+'a-bup-border': '#000000'
+'a-bup-background-start': '#333333'
+'a-bup-background-end': '#333333'
+'a-bup-color': '#C4C2C2'
+'a-bhover-background-start': '#222222'
+'a-bhover-background-end': '#222222'
+'a-bhover-border': '#222222'
+'a-bhover-color': '#fff'
+'a-header-bhover-background-start': '#333'
+'a-header-bhover-background-end': '#333'
+'a-header-bhover-border': '#000'
+'a-header-bhover-color': '#fff'
+'a-bdown-background-start': '#222222'
+'a-bdown-background-end': '#222222'
+'a-bup-color': '#fff'
+'a-bup-shadow-x': '0px'
+'a-bup-shadow-y': '0px'
+'a-bup-shadow-radius': '0px'
+
+'c-bup-background-start': '#fff'
+'c-bup-background-end': '#fff'
+'c-bhover-background-start': '#333333'
+'c-bhover-background-end': '#333333'
+'c-bhover-color': '#fff'
+'c-bdown-background-start': '#333333'
+'c-bdown-background-end': '#333333'
+'c-bup-shadow-x': '0px'
+'c-bup-shadow-y': '0px'
+'c-bup-shadow-radius': '0px'
