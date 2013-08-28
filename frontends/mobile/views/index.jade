@@ -22,10 +22,11 @@ body
       h3 Sweet Pi Control
     div(data-role='content')
       ul(data-role='listview', data-inset='true')
+        li(data-role='list-divider') Switches
         - for actuator in actuators
           li(data-role="fieldcontain")
             label(for="flip-"+actuator.id)=actuator.name
             select.switch(name="flip-"+actuator.id, id="flip-"+actuator.id, 
-                          data-role="slider", data-track-theme="c", data-actuator-id=actuator.id)
+                          data-role="slider", data-actuator-id=actuator.id)
               option(value="turnOff")='Off'
               option(value="turnOn")='On'
