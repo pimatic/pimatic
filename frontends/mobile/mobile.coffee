@@ -39,8 +39,8 @@ class MobileFrontend extends modules.Frontend
     thisClass = @;
     @useOffline app
     app.use coffeescript(
-      src: __dirname + "/public-coffee",
-      dest: __dirname + '/public',
+      src: __dirname + "/coffee",
+      dest: __dirname + '/public/js',
       bare: true
     )
 

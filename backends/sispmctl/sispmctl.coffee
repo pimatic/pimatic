@@ -25,7 +25,7 @@
 # [actuator-config-shema.coffee](actuator-config-shema.html) file.
 
 # 
-exec = require("child_process").exec
+execFile = require("child_process").execFile
 actuators = require "../../lib/actuators"
 modules = require "../../lib/modules"
 convict = require "convict"
@@ -61,7 +61,7 @@ class SispmctlSwitch extends actuators.PowerSwitch
 
   getState: (callback) ->
     unless @_state?
-      child = exec "#{backend.config.binary} -qng #{@config.outletUnit}", 
+      child = execFile "#{backend.config.binary} -qng #{@config.outletUnit}", 
         (error, stdout, stderr) ->
           #console.log error
           console.log stderr if stderr.length isnt 0
@@ -83,7 +83,7 @@ class SispmctlSwitch extends actuators.PowerSwitch
     if @state is state then resultCallbak true
     param = (if state then "-o" else "-f")
     param += " " + @config.outletUnit
-    child = exec "#{backend.config.binary} #{param}", 
+    child = execFile "#{backend.config.binary} #{param}", 
       (error, stdout, stderr) ->
         console.log stderr if stderr.length isnt 0
         console.log stdout if stdout.length isnt 0
