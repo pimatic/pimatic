@@ -10,6 +10,7 @@ express = require "express"
 fs = require "fs"
 convict = require "convict"
 i18n = require "i18n"
+logger = require "./lib/logger"
 
 # ##Load the configuration file.
 # 
@@ -49,9 +50,7 @@ if auth.enabled
   app.use express.basicAuth(auth.username, auth.password)
 
 if not config.server.httpsServer?.enabled and not config.server.httpServer?.enabled
-  console.warn "You have no https and no http server defined!"
-
-app.webServers = []
+  logger.warn "You have no https and no http server defined!"
 
 # Start the https-server if it is enabled.
 if config.server.httpsServer?.enabled
@@ -64,8 +63,7 @@ if config.server.httpsServer?.enabled
   config.server.httpsServer.key = fs.readFileSync config.server.httpsServer.keyFile
   config.server.httpsServer.cert = fs.readFileSync config.server.httpsServer.certFile
   https = require "https"
-  app.webServers.push(https.createServer(config.server.httpsServer, app).listen config.server.httpsServer.port)
-  console.log "listening for https-request on port #{config.server.httpsServer.port}..."
+  app.httpsServer = https.createServer config.server.httpsServer, app
 
 # Start the http-server if it is enabled.
 if config.server.httpServer?.enabled
@@ -74,11 +72,19 @@ if config.server.httpServer?.enabled
     config.server.httpServer.should.have.property("port").be.a 'number'
      
   http = require "http"
-  app.webServers.push(http.createServer(app).listen config.server.httpServer.port)
-  console.log "listening for http-request on port #{config.server.httpServer.port}..."
+  app.httpServer = http.createServer app
+
 
 
 # Setup the server
 # ----------------
 server = new Server app, config
 server.init()
+
+if app.httpsServer?
+  app.httpsServer.listen config.server.httpsServer.port
+  logger.info "listening for https-request on port #{config.server.httpsServer.port}..."
+
+if app.httpServer?
+  app.httpServer.listen config.server.httpServer.port
+  logger.info "listening for http-request on port #{config.server.httpServer.port}..."

@@ -2,6 +2,7 @@ express = require "express"
 coffeescript = require 'connect-coffee-script'
 modules = require '../../lib/modules'
 socketIo = require 'socket.io'
+logger = require '../../lib/logger'
 
 class MobileFrontend extends modules.Frontend
   config: null
@@ -29,10 +30,10 @@ class MobileFrontend extends modules.Frontend
     app.use express.static(__dirname + "/public")
 
     # For every webserver
-    for webServer in app.webServers
+    for webServer in [app.httpServer, app.httpsServer]
+      continue unless webServer?
       # Listen for new websocket connections
-      io = socketIo.listen webServer
-      io.set 'log level', 2 
+      io = socketIo.listen webServer, {logger: logger}
       # When a new client connects
       io.sockets.on 'connection', (socket) ->
         for actuator in actuators 

@@ -63,9 +63,8 @@ class SispmctlSwitch extends actuators.PowerSwitch
     unless @_state?
       child = exec "#{backend.config.binary} -qng #{@config.outletUnit}", 
         (error, stdout, stderr) ->
-          #console.log error
+          console.log error
           console.log stderr if stderr.length isnt 0
-          console.log stdout if stdout.length isnt 0
           stdout = stdout.trim()
           unless error?
             switch stdout
@@ -86,7 +85,6 @@ class SispmctlSwitch extends actuators.PowerSwitch
     child = exec "#{backend.config.binary} #{param}", 
       (error, stdout, stderr) ->
         console.log stderr if stderr.length isnt 0
-        console.log stdout if stdout.length isnt 0
         thisClass._setState(state) unless error?
         resultCallbak error
 

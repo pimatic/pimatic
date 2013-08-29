@@ -5,6 +5,8 @@ actuators = require './actuators'
 sensors = require './sensors'
 rules = require './rules'
 modules = require './modules'
+logger = require "./logger"
+
 
 class Server extends require('events').EventEmitter
   frontends: []
@@ -35,7 +37,7 @@ class Server extends require('events').EventEmitter
       beConf.should.be.a 'object'
       beConf.should.have.property 'module'
 
-      console.log "loading backend: \"#{beConf.module}\"..."
+      logger.info "loading backend: \"#{beConf.module}\"..."
       be = require "../backends/" + beConf.module
       @registerBackend be, beConf
 
@@ -45,7 +47,7 @@ class Server extends require('events').EventEmitter
       feConf.should.be.a 'object'
       feConf.should.have.property 'module'
 
-      console.log "loading frontend: \"#{feConf.module}\"..."
+      logger.info "loading frontend: \"#{feConf.module}\"..."
       fe = require "../frontends/" + feConf.module
       @registerFrontend fe, feConf
 
@@ -73,7 +75,7 @@ class Server extends require('events').EventEmitter
     if @actuators[actuator.id]?
       throw new assert.AssertionError("dublicate actuator id \"#{actuator.id}\"")
 
-    console.log "new actuator \"#{actuator.name}\"..."
+    logger.info "new actuator \"#{actuator.name}\"..."
     @actuators[actuator.id]=actuator
     @emit "actuator", actuator
 
@@ -85,7 +87,7 @@ class Server extends require('events').EventEmitter
     if @sensors[sensor.id]?
       throw new assert.AssertionError("dublicate sensor id \"#{sensor.id}\"")
 
-    console.log "new sensor \"#{sensor.name}\"..."
+    logger.info "new sensor \"#{sensor.name}\"..."
     @sensors[sensor.id]=sensor
     @emit "sensor", sensor
 
