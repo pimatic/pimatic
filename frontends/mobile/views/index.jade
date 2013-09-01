@@ -1,33 +1,31 @@
 doctype 5
 html(manifest='application.manifest')
-
-head
-  meta(charset='utf-8')
-  meta(name='viewport', content='width=device-width, initial-scale=1')
-  meta(name='apple-mobile-web-app-capable', content='yes')
-  meta(name='apple-mobile-web-app-status-bar-style', content='black')
-  title SweetPi
-  - for css in theme.cssFiles
-    link(rel='stylesheet', href=css)
-  link(rel='stylesheet', href='css/style.css')
-  script(src='js/jquery.min.js')
-  script(src='js/jquery.mobile-1.3.2.min.js')  
-  script(src='socket.io/socket.io.js')
-  script(src='js/main.js')
-      
-body
-  div(data-role='page')
-    div(data-theme='a', data-role='header', data-position='fixed')
-      a#talk.ui-btn-right(data-role='button', href='#outlet-control', 
-                          style='display: none;')=__('Speak')
-      h3 Sweet Pi Control
-    div(data-role='content')
-      ul(data-role='listview', data-inset='true')
-        li(data-role='list-divider')=__('Switches')
-        - for actuator in actuators
-          li(data-role="fieldcontain")
-            label(for="flip-"+actuator.id)=actuator.name
-            select.switch(name="flip-"+actuator.id, id="flip-"+actuator.id, 
-                          data-role="slider", data-actuator-id=actuator.id)
-              option(value="turnOff")=__('Off')
-              option(value="turnOn")=__('On')
+  head
+    meta(charset='utf-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1')
+    meta(name='apple-mobile-web-app-capable', content='yes')
+    meta(name='apple-mobile-web-app-status-bar-style', content='black')
+    title SweetPi
+    - for css in theme.cssFiles
+      link(rel='stylesheet', href=css)
+    link(rel='stylesheet', href='css/style.css')
+    script(src='js/jquery.min.js')
+    script(src='js/jquery.mobile-1.3.2.min.js')  
+    script(src='socket.io/socket.io.js')
+    script(src='js/main.js')
+    script#switch-template(type='text/template')
+      li(data-role="fieldcontain")
+        label()
+        select.switch(data-role="slider")
+          option(value="off")=__('Off')
+          option(value="on")=__('On')
+        
+  body
+    div(data-role='page')
+      div(data-theme='a', data-role='header', data-position='fixed')
+        a#talk.ui-btn-right(data-role='button', href='#outlet-control', 
+                            style='display: none;')=__('Speak')
+        h3 Sweet Pi Control
+      div(data-role='content')
+        ul#actuators(data-role='listview', data-inset='true')
+          li(data-role='list-divider')=__('Switches')

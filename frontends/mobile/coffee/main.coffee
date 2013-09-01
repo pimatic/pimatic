@@ -1,15 +1,12 @@
-$(document).on "pageinit", (a) ->
+$(document).on "pagecreate", (event) ->
+  $.get "/actuators.json", (data) ->
+    for actuator in data
+      addSwitch actuator
+
+$(document).on "pageinit", (event) ->
   if device?
     $("#talk").show().bind "vclick", (event, ui) ->
       device.startVoiceRecognition "voiceCallback"
-
-  $(".switch").bind "change", (event, ui) ->
-    console.log event
-    console.log ui
-    actuatorID = $(this).data "actuator-id"
-    actuatorAction = $(this).val()
-    $.get "/api/actuator/#{actuatorID}/#{actuatorAction}"  , (data) ->
-      device?.showToast "fertig"
 
   socket = io.connect("/")
   socket.on "switch-status", (data) ->
@@ -26,7 +23,6 @@ $(document).ajaxStart ->
     textVisible: true
     textonly: false
 
-
 $(document).ajaxStop ->
   $.mobile.loading "hide"
 
@@ -38,10 +34,30 @@ $(document).ajaxError (event, jqxhr, settings, exception) ->
     error = "Ein Fehler ist aufgetreten."
   alert error
 
+addSwitch = (actuator) ->
+  li = $ $('#switch-template').html()
+  li.find('label')
+    .attr('for', "flip-#{actuator.id}")
+    .text(actuator.name)
+  select = li.find('select')
+    .attr('name', "flip-#{actuator.id}")
+    .attr('id', "flip-#{actuator.id}")             
+    .data('actuator-id', actuator.id)
+  if actuator.state?
+    val = if actuator.state then 'on' else 'off'
+    select.find("option[value=#{val}]").attr('selected', 'selected')
+  select
+    .slider() 
+    .bind "change", (event, ui) ->
+      actuatorAction = if $(this).val() is 'on' then 'turnOn' else 'turnOff'
+      $.get "/api/actuator/#{actuator.id}/#{actuatorAction}"  , (data) ->
+        device?.showToast "fertig"
+  $('#actuators').append li
+  $('#actuators').listview('refresh');
+
 voiceCallback = (matches) ->
   $.get "/api/speak",
     word: matches
   , (data) ->
     device.showToast data
     $("#talk").blur()
-

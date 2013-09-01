@@ -3,6 +3,7 @@ coffeescript = require 'connect-coffee-script'
 modules = require '../../lib/modules'
 socketIo = require 'socket.io'
 logger = require '../../lib/logger'
+async = require 'async'
 
 class MobileFrontend extends modules.Frontend
   config: null
@@ -11,9 +12,11 @@ class MobileFrontend extends modules.Frontend
     thisClass = @;
 
     app.use coffeescript(
+      prefix: '/js'
       src: __dirname + "/coffee",
       dest: __dirname + '/public/js',
-      bare: true
+      bare: true,
+      force: true
     )
 
     app.set 'views', __dirname + '/views'
@@ -26,7 +29,17 @@ class MobileFrontend extends modules.Frontend
         actuators: actuators
         theme: 
           cssFiles: ['themes/graphite/generated/water/jquery.mobile-1.3.1.css']
-      
+
+    app.get '/actuators.json', (req,res) ->
+      async.map actuators, (a, callback) ->
+          a.getState (err, state) ->
+            callback null,
+              id: a.id
+              name: a.name
+              state: (if error? or not state? then null else state)
+        , (err, results) ->
+          res.send results
+
     app.use express.static(__dirname + "/public")
 
     # For every webserver

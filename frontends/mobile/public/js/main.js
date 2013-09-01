@@ -1,22 +1,44 @@
-var voiceCallback;
+var addSwitch, voiceCallback;
 
-$(document).on("pageinit", function(a) {
+addSwitch = function(actuator) {
+  var li, select, val;
+  li = $($('#switch-template').html());
+  li.find('label').attr('for', "flip-" + actuator.id).text(actuator.name);
+  select = li.find('select').attr('name', "flip-" + actuator.id).attr('id', "flip-" + actuator.id).data('actuator-id', actuator.id);
+  if (actuator.state != null) {
+    val = actuator.state ? 'on' : 'off';
+    select.find("option[value=" + val + "]").attr('selected', 'selected');
+  }
+  select.slider().bind("change", function(event, ui) {
+    var actuatorAction;
+    actuatorAction = $(this).val() === 'on' ? 'turnOn' : 'turnOff';
+    return $.get("/api/actuator/" + actuator.id + "/" + actuatorAction, function(data) {
+      return typeof device !== "undefined" && device !== null ? device.showToast("fertig") : void 0;
+    });
+  });
+  $('#actuators').append(li);
+  return $('#actuators').listview('refresh');
+};
+
+$(document).on("pagecreate", function(event) {
+  return $.get("/actuators.json", function(data) {
+    var actuator, _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = data.length; _i < _len; _i++) {
+      actuator = data[_i];
+      _results.push(addSwitch(actuator));
+    }
+    return _results;
+  });
+});
+
+$(document).on("pageinit", function(event) {
   var socket;
   if (typeof device !== "undefined" && device !== null) {
     $("#talk").show().bind("vclick", function(event, ui) {
       return device.startVoiceRecognition("voiceCallback");
     });
   }
-  $(".switch").bind("change", function(event, ui) {
-    var actuatorAction, actuatorID;
-    console.log(event);
-    console.log(ui);
-    actuatorID = $(this).data("actuator-id");
-    actuatorAction = $(this).val();
-    return $.get("/api/actuator/" + actuatorID + "/" + actuatorAction, function(data) {
-      return typeof device !== "undefined" && device !== null ? device.showToast("fertig") : void 0;
-    });
-  });
   socket = io.connect("/");
   return socket.on("switch-status", function(data) {
     var value;

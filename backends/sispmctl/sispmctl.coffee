@@ -73,7 +73,7 @@ class SispmctlSwitch extends actuators.PowerSwitch
               when "0"
                 @_state = off
               else console.log "SispmctlSwitch: unknown state=\"#{stdout}\"!"
-            callback error, @_state
+          callback error, @_state
     else callback null, @_state
       
 
