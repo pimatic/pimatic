@@ -11,7 +11,7 @@ $(document).on "pageinit", (event) ->
   socket = io.connect("/")
   socket.on "switch-status", (data) ->
     if data.state?
-      value = (if data.state then "turnOn" else "turnOff")
+      value = (if data.state then "on" else "off")
       $("#flip-#{data.id}").val(value).slider('refresh');
 
 
