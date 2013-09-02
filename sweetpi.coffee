@@ -53,15 +53,16 @@ if not config.server.httpsServer?.enabled and not config.server.httpServer?.enab
 
 # Start the https-server if it is enabled.
 if config.server.httpsServer?.enabled
+  httpsConfig = config.server.httpsServer
   helper.checkConfig 'server', ->
-    assert config.server.httpsServer instanceof Object
-    assert typeof config.server.keyFile is 'string' and config.server.keyFile.length isnt 0
-    assert typeof config.server.certFile is 'string' and config.server.certFile.length isnt 0 
+    assert httpsConfiginstanceof Object
+    assert typeof httpsConfig.keyFile is 'string' and httpsConfig.keyFile.length isnt 0
+    assert typeof httpsConfig.certFile is 'string' and httpsConfig.certFile.length isnt 0 
 
-  config.server.httpsServer.key = fs.readFileSync config.server.httpsServer.keyFile
-  config.server.httpsServer.cert = fs.readFileSync config.server.httpsServer.certFile
+  httpsConfig.key = fs.readFileSync httpsConfig.keyFile
+  httpsConfig.cert = fs.readFileSync httpsConfig.certFile
   https = require "https"
-  app.httpsServer = https.createServer config.server.httpsServer, app
+  app.httpsServer = https.createServer httpsConfig, app
 
 # Start the http-server if it is enabled.
 if config.server.httpServer?.enabled
