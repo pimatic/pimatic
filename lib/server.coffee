@@ -1,4 +1,4 @@
-assert = require 'assert'
+assert = require 'cassert'
 helper = require './helper'
 actuators = require './actuators'
 sensors = require './sensors'

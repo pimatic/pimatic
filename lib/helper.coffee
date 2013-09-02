@@ -1,4 +1,4 @@
-assert = require 'assert'
+assert = require 'cassert'
 
 module.exports.checkConfig = (moduleName, checker) ->
 	try 

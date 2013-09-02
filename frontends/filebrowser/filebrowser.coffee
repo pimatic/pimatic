@@ -1,4 +1,4 @@
-assert = require 'assert'
+assert = require 'cassert'
 express = require "express" 
 modules = require "../../lib/modules"
 helper = require "../../lib/helper"

@@ -5,7 +5,7 @@
   "main": "main.js",
   "files": ["backends", "docs", "frontends", "lib", "main.js", "sweetpi.coffee", "default_config.coffee",
             "README.md", "LICENSE"],
-  "version": "0.0.1",
+  "version": "0.0.2",
   "homepage": "http://github.com/sweetpi/sweetpi-server",
   "repository": {
     "type": "git",
@@ -25,7 +25,8 @@
     "async": "0.2.*",
     "socket.io": "0.9.*",
     "i28n": "0.4.*",
-    "winston": "0.7.*"
+    "winston": "0.7.*",
+    "cassert": "0.1.*" 
   },
   "engines": {
     "node": ">0.8.x",

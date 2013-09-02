@@ -1,4 +1,4 @@
-assert = require 'assert'
+assert = require 'cassert'
 logger = require "./logger"
 
 class RuleManager

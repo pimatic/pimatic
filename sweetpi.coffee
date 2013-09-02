@@ -5,7 +5,7 @@
 # * Starts the http- and https-server
 
 # 
-assert = require 'assert'
+assert = require 'cassert'
 express = require "express"
 fs = require "fs"
 convict = require "convict"

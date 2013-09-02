@@ -1,5 +1,5 @@
 # Povides the `Actuator` class and some basic common subclasses for the Backend modules. 
-assert = require 'assert'
+assert = require 'cassert'
 
 # An Actuator is an physical or logical element you can control by triggering an action on it.
 # For example a power outlet, a light or door opener.
