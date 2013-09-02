@@ -55,7 +55,7 @@ if not config.server.httpsServer?.enabled and not config.server.httpServer?.enab
 if config.server.httpsServer?.enabled
   httpsConfig = config.server.httpsServer
   helper.checkConfig 'server', ->
-    assert httpsConfiginstanceof Object
+    assert httpsConfig instanceof Object
     assert typeof httpsConfig.keyFile is 'string' and httpsConfig.keyFile.length isnt 0
     assert typeof httpsConfig.certFile is 'string' and httpsConfig.certFile.length isnt 0 
 
