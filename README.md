@@ -23,7 +23,8 @@ The config is in the [json](https://en.wikipedia.org/wiki/JSON) format and curre
       "server": { ... },
       "frontends": [ ... ],
       "backends": [ ... ],
-      "actuators": [ ... ]
+      "actuators": [ ... ],
+      "rules": []
     }
 
 ### The "server"-section
@@ -53,16 +54,25 @@ The `"actuators"`-section should contain all actuators, you want to have registe
 
 where the `"id"` should be unique, the `"name"` should be human readable description and `"class"` determines the backend and type of the actuator. 
 
+### The "rules"-section
+The `"rules"`-section can contain a list of rules in the form of:
+
+    { 
+      "id": "printerOff",
+      "rule":  "if its 6pm then turn the printer off"
+    }
+
+where `"id"` should be a unique string and rule a string of the form "if ... then ...". 
+
 Running
 -------
 The server can be started with 
 
-    node main.js`
+    node main.js
 
 or if you have [CoffeeScript](http://coffeescript.org/) globally installed, just run
 
-  coffee sweetpi.coffee
-
+    coffee sweetpi.coffee
 
 Extensions and Hacking
 ----------------------
