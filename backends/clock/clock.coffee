@@ -52,7 +52,7 @@ class Clock extends sensors.Sensor
     switch name
       when "time"
         now = new Date();
-        now.setTimezone config.timezone
+        now.setTimezone @config.timezone
         return now
       else throw new Error("Clock sensor doesn't provide sensor value \"#{name}\"")
 
@@ -64,7 +64,7 @@ class Clock extends sensors.Sensor
     if parsedDate?
       {second, minute, hour, day, month, dayOfWeek} = @parseDateToCronFormat parsedDate
       now = @getSensorValue "time"
-      dateObj = date.start.date(config.timezone)
+      dateObj = parsedDate.start.date @config.timezone
       switch
         when second isnt '*' and now.getSeconds() isnt dateObj.getSeconds() then return false
         when minute isnt '*' and now.getMinutes() isnt dateObj.getMinutes() then return false
@@ -94,7 +94,7 @@ class Clock extends sensors.Sensor
         cronTime: cronFormat
         onTick: callback
         start: false
-        timezone: config.timezone
+        timezone: @config.timezone
       )
       @cronJobs[id] = job;
       job.start()
@@ -128,8 +128,8 @@ class Clock extends sensors.Sensor
   #      text: 'Sep 12-13',
   #      concordance: 'Sep 12-13' }
   parseNaturalTextDate: (naturalTextDate)->
-    parsedDates = chrono.parse naturalTextDate 
-    if parsedDates.length != 1
+    parsedDates = chrono.parse naturalTextDate
+    if parsedDates.length is 1
       return parsedDates[0]
     else return null
 
@@ -160,7 +160,7 @@ class Clock extends sensors.Sensor
     second = parsedDate.start.second
     minute = parsedDate.start.minute
     hour = parsedDate.start.hour
-
+    #console.log parsedDate
     if not second? and not minute? and not hour
       second = 0
       minute = 0
@@ -173,13 +173,11 @@ class Clock extends sensors.Sensor
       if not hour?
         hour = "*"
 
-    if parsedDate.start.impliedComponents
-      moarsednth = if 'month' in pDate.start.impliedComponents then "*" else pDate.start.month
-      daarsedy = if 'day' in pDate.start.impliedComponents then "*" else pDate.start.day
-    else 
-      month = parsedDate.start.month
-      day = parsedDate.start.day
-    dayOfWearsedek = if pDate.start.dayOfWeek? then pDate.start.dayOfWeek else "*"
+    if parsedDate.start.impliedComponents?
+      month = if 'month' in parsedDate.start.impliedComponents then "*" else parsedDate.start.month
+      day = if 'day' in parsedDate.start.impliedComponents then "*" else parsedDate.start.day
+
+    dayOfWeek = if parsedDate.start.dayOfWeek? then parsedDate.start.dayOfWeek else "*"
     return {
       second: second
       minute: minute

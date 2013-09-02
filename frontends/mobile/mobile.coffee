@@ -6,9 +6,10 @@ logger = require '../../lib/logger'
 async = require 'async'
 
 class MobileFrontend extends modules.Frontend
+  server: null
   config: null
 
-  init: (app, server, @config) =>
+  init: (app, @server, @config) =>
     thisClass = @;
 
     app.use coffeescript(
@@ -22,23 +23,26 @@ class MobileFrontend extends modules.Frontend
     app.set 'views', __dirname + '/views'
     app.set 'view engine', 'jade'
 
-    actuators = (server.getActuatorById(a.id) for a in config.actuatorsToDisplay)
-
     app.get '/', (req,res) ->
       res.render 'index',
-        actuators: actuators
         theme: 
           cssFiles: ['themes/graphite/generated/water/jquery.mobile-1.3.1.css']
 
-    app.get '/actuators.json', (req,res) ->
-      async.map actuators, (a, callback) ->
-          a.getState (err, state) ->
-            callback null,
-              id: a.id
-              name: a.name
-              state: (if error? or not state? then null else state)
-        , (err, results) ->
-          res.send results
+    thisClass.actuators = (server.getActuatorById(a.id) for a in config.actuatorsToDisplay)
+
+    app.get '/data.json', (req,res) ->
+      thisClass.getActuatorDataWithState (error, actuators) ->
+        rules = []
+        for id of server.ruleManager.rules
+          rule = server.ruleManager.rules[id]
+          console.log rule
+          rules.push
+            id: id
+            condition: rule.orgCondition
+            action: rule.action
+        res.send 
+          actuators: actuators
+          rules: rules
 
     app.use express.static(__dirname + "/public")
 
@@ -49,7 +53,7 @@ class MobileFrontend extends modules.Frontend
       io = socketIo.listen webServer, {logger: logger}
       # When a new client connects
       io.sockets.on 'connection', (socket) ->
-        for actuator in actuators 
+        for actuator in thisClass.actuators 
           do (actuator) ->
             # * First time push the state to the client
             actuator.getState (error, state) ->
@@ -57,6 +61,16 @@ class MobileFrontend extends modules.Frontend
             # * Then forward following state event to the client
             actuator.on "state", (state) ->
               thisClass.emitSwitchState socket, actuator, state
+
+  getActuatorDataWithState: (callback) ->
+    async.map( @actuators, (a, callback) ->
+      a.getState (err, state) ->
+        callback null,
+          id: a.id
+          name: a.name
+          state: (if error? or not state? then null else state)
+    , callback)
+
 
   emitSwitchState: (socket, actuator, state) ->
     socket.emit "switch-status",

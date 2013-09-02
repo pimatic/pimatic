@@ -15,10 +15,20 @@ html(manifest='application.manifest')
     script(src='js/main.js')
     script#switch-template(type='text/template')
       li(data-role="fieldcontain")
-        label()
+        label
         select.switch(data-role="slider")
           option(value="off")=__('Off')
           option(value="on")=__('On')
+          script#switch-template(type='text/template')
+    script#rule-template(type='text/template')
+      li
+        span.if=__('if')
+        | 
+        span.condition
+        | 
+        span.then=('then')
+        | 
+        span.action
         
   body
     div(data-role='page')
@@ -29,3 +39,5 @@ html(manifest='application.manifest')
       div(data-role='content')
         ul#actuators(data-role='listview', data-inset='true')
           li(data-role='list-divider')=__('Switches')
+        ul#rules(data-role='listview', data-inset='true')
+          li(data-role='list-divider')=__('Rules')

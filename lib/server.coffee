@@ -1,4 +1,3 @@
-should = require 'should'
 assert = require 'assert'
 helper = require './helper'
 actuators = require './actuators'
@@ -15,27 +14,27 @@ class Server extends require('events').EventEmitter
   sensors: []
   ruleManager: null
 
-  constructor: (app, config) ->
-    should.exist app
-    should.exist config
-    helper.checkConfig null, ->
-      config.should.be.a 'object', "config is no object?"
-      config.should.have.property('frontends').instanceOf Array, "frontends should be an array"
-      config.should.have.property('backends').instanceOf Array, "backends should be an array"
-      config.should.have.property('actuators').instanceOf Array, "actuators should be an array"
+  constructor: (@app, @config) ->
+    assert app?
+    assert config?
 
-    @app = app
-    @config = config
-    @ruleManager = new rules.RuleManager this
+    helper.checkConfig null, ->
+      assert config instanceof Object
+      assert Array.isArray config.frontends
+      assert Array.isArray config.backends
+      assert Array.isArray config.actuators
+      assert Array.isArray config.rules
+
+    @ruleManager = new rules.RuleManager this, @config.rules
     @loadBackends()
     @loadFrontends()
 
 
   loadBackends: ->
     for beConf in @config.backends
-      should.exist beConf
-      beConf.should.be.a 'object'
-      beConf.should.have.property 'module'
+      assert beConf?
+      assert beConf instanceof Object
+      assert beConf.module? and typeof beConf.module is "string" 
 
       logger.info "loading backend: \"#{beConf.module}\"..."
       be = require "../backends/" + beConf.module
@@ -43,35 +42,34 @@ class Server extends require('events').EventEmitter
 
   loadFrontends: ->
     for feConf in @config.frontends
-      should.exist feConf
-      feConf.should.be.a 'object'
-      feConf.should.have.property 'module'
+      assert feConf?
+      assert feConf instanceof Object
+      assert feConf.module? and typeof feConf.module is "string" 
 
       logger.info "loading frontend: \"#{feConf.module}\"..."
       fe = require "../frontends/" + feConf.module
       @registerFrontend fe, feConf
 
   registerFrontend: (frontend, config) ->
-    should.exist frontend
-    should.exist config
-    frontend.should.be.instanceOf modules.Frontend
+    assert frontend? and frontend instanceof modules.Frontend
+    assert config? and config instanceof Object
 
-    config.should.be.a 'object'
     @frontends.push {module: frontend, config: config}
     @emit "frontend", frontend
 
   registerBackend: (backend, config) ->
-    should.exist backend
-    backend.should.be.instanceOf modules.Backend
+    assert backend? and backend instanceof modules.Backend
+    assert config? and config instanceof Object
 
     @backends.push {module: backend, config: config}
     @emit "backend", backend
 
   registerActuator: (actuator) ->
-    should.exist actuator
-    actuator.should.be.instanceOf actuators.Actuator
-    actuator.should.have.property("name").not.empty
-    actuator.should.have.property("id").not.empty
+    assert actuator?
+    assert actuator instanceof actuators.Actuator
+    assert actuator.name? and actuator.name.lenght isnt 0
+    assert actuator.id? and actuator.id.lenght isnt 0
+
     if @actuators[actuator.id]?
       throw new assert.AssertionError("dublicate actuator id \"#{actuator.id}\"")
 
@@ -80,10 +78,11 @@ class Server extends require('events').EventEmitter
     @emit "actuator", actuator
 
   registerSensor: (sensor) ->
-    should.exist sensor
-    sensor.should.be.instanceOf sensors.Sensor
-    sensor.should.have.property("name").not.empty
-    sensor.should.have.property("id").not.empty
+    assert sensor?
+    assert sensor instanceof sensors.Sensor
+    assert sensor.name? and sensor.name.lenght isnt 0
+    assert sensor.id? and sensor.id.lenght isnt 0
+
     if @sensors[sensor.id]?
       throw new assert.AssertionError("dublicate sensor id \"#{sensor.id}\"")
 
@@ -109,5 +108,7 @@ class Server extends require('events').EventEmitter
     f.module.init @app, @, f.config for f in @frontends
     actions = require './actions'
     @ruleManager.actionHandlers.push actions(this)
+    for rule in @config.rules
+      @ruleManager.addRuleByString rule.id, rule.rule
 
  module.exports = Server

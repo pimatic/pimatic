@@ -60,3 +60,7 @@ module.exports =
     doc: "Array of actuator definations"
     format: Array
     default: []
+  rules:
+    doc: "Array of rules"
+    format: Array
+    default: []

@@ -1,7 +1,8 @@
 $(document).on "pagecreate", (event) ->
-  $.get "/actuators.json", (data) ->
-    for actuator in data
-      addSwitch actuator
+  $.get "/data.json", (data) ->
+    addSwitch(actuator) for actuator in data.actuators
+    addRule(rule) for rule in data.rules
+
 
 $(document).on "pageinit", (event) ->
   if device?
@@ -54,6 +55,15 @@ addSwitch = (actuator) ->
         device?.showToast "fertig"
   $('#actuators').append li
   $('#actuators').listview('refresh');
+
+addRule = (rule) ->
+  li = $ $('#rule-template').html()
+  li.attr('id', "rule-#{rule.id}")   
+  li.find('.condition').text(rule.condition)
+  li.find('.action').text(rule.action)
+
+  $('#rules').append li
+  $('#rules').listview('refresh');
 
 voiceCallback = (matches) ->
   $.get "/api/speak",

@@ -11,8 +11,6 @@ module.exports = (server) ->
       matches = actionString.match (new RegExp regExpString)
       # Try the translated form:
       unless matches? then matches = actionString.match (new RegExp __(regExpString))
-      console.log __(regExpString)
-      console.log matches
       if matches?
         actuatorName = matches[1].trim()
         state = matches[2]
@@ -43,7 +41,6 @@ module.exports = (server) ->
       for id of server.actuators
         actuator = server.actuators[id]
         if id.toLowerCase() is actuatorName or actuator.name.toLowerCase() is actuatorName
-          console.log "actuator found #{actuator.id}"
           result = doCallback actuator
           #"break" when reult was given by callback 
           if result? then return result

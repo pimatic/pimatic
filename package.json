@@ -17,7 +17,6 @@
     "jade": "0.27.*",
     "connect-coffee-script": "0.1.*",
     "connect-offline": "1.0.*",
-    "should": "1.2.*",
     "convict": "0.4.*",
     "chrono-node": "0.1.*",
     "cron": "1.0.*",

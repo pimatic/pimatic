@@ -11,3 +11,13 @@ div.ui-slider-switch {
     -webkit-box-shadow: none;
     box-shadow: none ;
 }
+
+
+.ui-btn-up-c, .ui-btn-down-c, .ui-btn-active  {
+  font-weight: normal;
+}
+
+span.if, span.then {
+  font-weight: bold;
+}
+

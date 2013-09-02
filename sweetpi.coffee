@@ -5,7 +5,7 @@
 # * Starts the http- and https-server
 
 # 
-should = require 'should'
+assert = require 'assert'
 express = require "express"
 fs = require "fs"
 convict = require "convict"
@@ -44,9 +44,8 @@ auth = config.server.authentication
 if auth.enabled
   #Check authentication.
   helper.checkConfig 'server.authentication', ->
-    auth.should.have.property("username").be.a('string').not.empty
-    auth.should.have.property("password").be.a('string').not.empty
-
+    assert auth.username and typeof auth.username is "string" and auth.username.length isnt 0 
+    assert auth.password and typeof auth.password is "string" and auth.password.length isnt 0 
   app.use express.basicAuth(auth.username, auth.password)
 
 if not config.server.httpsServer?.enabled and not config.server.httpServer?.enabled
@@ -55,10 +54,9 @@ if not config.server.httpsServer?.enabled and not config.server.httpServer?.enab
 # Start the https-server if it is enabled.
 if config.server.httpsServer?.enabled
   helper.checkConfig 'server', ->
-    config.server.should.have.property("httpsServer").be.a('object')
-    config.server.httpsServer.should.have.property("port").be.a 'number'
-    config.server.httpsServer.should.have.property("keyFile").be.a('string').not.empty
-    config.server.httpsServer.should.have.property("certFile").be.a('string').not.empty
+    assert config.server.httpsServer instanceof Object
+    assert typeof config.server.keyFile is 'string' and config.server.keyFile.length isnt 0
+    assert typeof config.server.certFile is 'string' and config.server.certFile.length isnt 0 
 
   config.server.httpsServer.key = fs.readFileSync config.server.httpsServer.keyFile
   config.server.httpsServer.cert = fs.readFileSync config.server.httpsServer.certFile
@@ -67,10 +65,6 @@ if config.server.httpsServer?.enabled
 
 # Start the http-server if it is enabled.
 if config.server.httpServer?.enabled
-  helper.checkConfig 'server', ->
-    config.server.should.have.property("httpServer").should.be.a 'object'
-    config.server.httpServer.should.have.property("port").be.a 'number'
-     
   http = require "http"
   app.httpServer = http.createServer app
 

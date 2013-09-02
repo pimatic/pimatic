@@ -1,4 +1,5 @@
-should = require 'should'
+assert = require 'assert'
+logger = require "./logger"
 
 class RuleManager
   rules: []
@@ -8,11 +9,9 @@ class RuleManager
   constructor: (@server) ->
 
   findSensorForPredicate: (id, predicate, callback) ->
-    should.exist id
-    should.exist predicate
-    should.exist callback
-    id.should.be.a("string").not.empty
-    predicate.should.be.a("string").not.empty
+    assert id? and typeof id is "string" and id.length isnt 0
+    assert predicate? and typeof predicate is "string" and predicate.length isnt 0
+    assert callback? and typeof callback is "function"
 
     for sensorId, sensor of @server.sensors
       if sensor.notifyWhen id, predicate, callback
@@ -20,32 +19,30 @@ class RuleManager
     return null
 
   predicateIsTrue: (ruleId, predicateId) ->
-    should.exist ruleId
-    should.exist predicateID
-    ruleId.should.be.a("string").not.empty()
-    predicateId.should.be.a("string").not.empty()
+    assert ruleId? and typeof ruleId is "string" and ruleId.length isnt 0
+    assert predicateId? and typeof predicateId is "string" and predicateId.length isnt 0
 
     knownTruePredicates = []
     knownTruePredicates.push predicateId
     rule = @rules[ruleId]
     trueOrFalse = @evaluateConditionOfRule rule, knownTruePredicates
-    if trueOrFalse then executeAction rule.actions, false, (e, message)->
-      console.log "Rule #{ruleId} error: #{e}" if e?
-      console.log "Rule #{ruleId}: #{message}" if message?
+    if trueOrFalse then @executeAction rule.action, false, (e, message)->
+      logger.error "Rule #{ruleId} error: #{e}" if e?
+      logger.info "Rule #{ruleId}: #{message}" if message?
 
   addRuleByString: (id, ruleString) ->
+    assert id? and typeof id is "string" and id.length isnt 0
+    assert ruleString? and typeof ruleString is "string"
+
     _this = this
     #First take the string apart:
     parts = ruleString.split /^if\s|\sthen\s/
     #parts should now be ["", "the if part", "the then part"]
-    console.log parts
     switch
       when parts.length < 3 then throw new Error('The rule must start with "if" and contain a "then" part!')
       when parts.length > 3 then throw new Error('The rule must exactly contain one "if" and one "then"!')
     condition = parts[1].trim();
     actions = parts[2].trim();
-
-    console.log "condition: #{condition}, actions #{actions}"
 
     #Split the condition in a token stream.
     #For example: "12:30 and temperature > 10" becoms
@@ -92,10 +89,15 @@ class RuleManager
 
     #Check if the condition of the rule is allready true
     trueOrFalse = @evaluateConditionOfRule @rules[id]
-    console.log "Rule condition was #{trueOrFalse}"
+    if trueOrFalse then @executeAction actions, false, (e, message)->
+      logger.error "Rule #{ruleId} error: #{e}" if e?
+      logger.info "Rule #{ruleId}: #{message}" if message?
 
   #Uses 'bet' to evaluate rule.tokens
   evaluateConditionOfRule: (rule, knownTruePredicates = []) ->
+    assert rule? and rule instanceof Object
+    assert Array.isArray knownTruePredicates
+
     bet = require 'bet'
     bet.operators['and'] =
       assoc: 'left'
@@ -123,6 +125,10 @@ class RuleManager
     return bet.evaluateSync rule.tokens
 
   executeAction: (actionString, simulate, callback) ->
+    assert actionString? and typeof actionString is "string" 
+    assert simulate? and typeof simulate is "boolean"
+    assert callback? and typeof callback is "function"
+
     for aH in @actionHandlers
       actionFunc = aH.executeAction actionString, simulate, callback
       if actionFunc?
