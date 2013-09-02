@@ -10,5 +10,8 @@
 	"On": "An",
 	"Rules": "Regeln",
 	"would turn %s off": "would turn %s off",
-	"if": "if"
+	"if": "if",
+	"Edit rule": "Edit rule",
+	"Save": "Save",
+	"Test": "Test"
 }
