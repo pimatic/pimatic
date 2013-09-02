@@ -15,6 +15,16 @@ $(document).on "pageinit", (event) ->
       value = (if data.state then "on" else "off")
       $("#flip-#{data.id}").val(value).slider('refresh');
 
+  $('#index #actuators').on "change", ".switch",(event, ui) ->
+      actuatorId = $(this).data('actuator-id')
+      actuatorAction = if $(this).val() is 'on' then 'turnOn' else 'turnOff'
+      $.get "/api/actuator/#{actuatorId}/#{actuatorAction}"  , (data) ->
+        device?.showToast "fertig"
+
+  $('#index #rules').on "click", ".rule", (event, ui) ->
+      ruleId = $(this).data('rule-id')
+      $.mobile.changePage('#edit-rule')
+
 
 $.ajaxSetup timeout: 7000 #ms
 
@@ -49,16 +59,13 @@ addSwitch = (actuator) ->
     select.find("option[value=#{val}]").attr('selected', 'selected')
   select
     .slider() 
-    .bind "change", (event, ui) ->
-      actuatorAction = if $(this).val() is 'on' then 'turnOn' else 'turnOff'
-      $.get "/api/actuator/#{actuator.id}/#{actuatorAction}"  , (data) ->
-        device?.showToast "fertig"
   $('#actuators').append li
   $('#actuators').listview('refresh');
 
 addRule = (rule) ->
   li = $ $('#rule-template').html()
   li.attr('id', "rule-#{rule.id}")   
+  li.find('a').data('rule-id', rule.id)
   li.find('.condition').text(rule.condition)
   li.find('.action').text(rule.action)
 

@@ -26,12 +26,26 @@ $(document).on("pageinit", function(event) {
     });
   }
   socket = io.connect("/");
-  return socket.on("switch-status", function(data) {
+  socket.on("switch-status", function(data) {
     var value;
     if (data.state != null) {
       value = (data.state ? "on" : "off");
       return $("#flip-" + data.id).val(value).slider('refresh');
     }
+  });
+  $('#index #actuators').on("change", ".switch", function(event, ui) {
+    var actuatorAction, actuatorId;
+    actuatorId = $(this).data('actuator-id');
+    actuatorAction = $(this).val() === 'on' ? 'turnOn' : 'turnOff';
+    return $.get("/api/actuator/" + actuatorId + "/" + actuatorAction, function(data) {
+      return typeof device !== "undefined" && device !== null ? device.showToast("fertig") : void 0;
+    });
+  });
+  return $('#index #rules').on("click", ".rule", function(event, ui) {
+    var ruleId;
+    ruleId = $(this).data('rule-id');
+    $.mobile.changePage('#edit-rule');
+    return alert(ruleId);
   });
 });
 
@@ -71,13 +85,7 @@ addSwitch = function(actuator) {
     val = actuator.state ? 'on' : 'off';
     select.find("option[value=" + val + "]").attr('selected', 'selected');
   }
-  select.slider().bind("change", function(event, ui) {
-    var actuatorAction;
-    actuatorAction = $(this).val() === 'on' ? 'turnOn' : 'turnOff';
-    return $.get("/api/actuator/" + actuator.id + "/" + actuatorAction, function(data) {
-      return typeof device !== "undefined" && device !== null ? device.showToast("fertig") : void 0;
-    });
-  });
+  select.slider();
   $('#actuators').append(li);
   return $('#actuators').listview('refresh');
 };
@@ -86,6 +94,7 @@ addRule = function(rule) {
   var li;
   li = $($('#rule-template').html());
   li.attr('id', "rule-" + rule.id);
+  li.find('a').data('rule-id', rule.id);
   li.find('.condition').text(rule.condition);
   li.find('.action').text(rule.action);
   $('#rules').append(li);

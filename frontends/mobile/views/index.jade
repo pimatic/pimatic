@@ -22,16 +22,18 @@ html(manifest='application.manifest')
           script#switch-template(type='text/template')
     script#rule-template(type='text/template')
       li
-        span.if=__('if')
-        | 
-        span.condition
-        | 
-        span.then=('then')
-        | 
-        span.action
+        a.rule
+          span.if=__('if')
+          | 
+          span.condition
+          | 
+          span.then=('then')
+          | 
+          span.action
         
   body
-    div(data-role='page')
+    //- Actuators and rules page
+    div#index(data-role='page')
       div(data-theme='a', data-role='header', data-position='fixed')
         a#talk.ui-btn-right(data-role='button', href='#outlet-control', 
                             style='display: none;')=__('Speak')
@@ -41,3 +43,11 @@ html(manifest='application.manifest')
           li(data-role='list-divider')=__('Switches')
         ul#rules(data-role='listview', data-inset='true')
           li(data-role='list-divider')=__('Rules')
+    //- Rule edit page 
+    div#edit-rule(data-role='page')
+      div(data-theme='a', data-role='header', data-position='fixed')
+        h3=__('Edit rule')
+      div(data-role='content')
+        textarea(name="", placeholder="if ... then ...")
+        input(value=__('Save'), type="submit")
+        a(data-role="button")=__('Test')
