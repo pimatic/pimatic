@@ -20,13 +20,13 @@ conf = convict require("./config-shema")
 conf.loadFile "./config.json"
 # * Performs the validation.
 conf.validate()
-config = conf.get("");
+config = conf.get("")
 
 i18n.configure({
-    locales:['en', 'de'],
-    directory: __dirname + '/locales',
-    defaultLocale: config.server.locale,
-});
+  locales:['en', 'de'],
+  directory: __dirname + '/locales',
+  defaultLocale: config.server.locale,
+})
 
 helper = require './lib/helper'
 Server = require "./lib/server"

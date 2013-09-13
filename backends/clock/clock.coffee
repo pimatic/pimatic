@@ -11,9 +11,9 @@
 # * `node-convice` for config validation.
 convict = require "convict"
 # * `node-time`: Extend the global Date object to include the `setTimezone` and `getTimezone`.
-time = require('time')(Date);
+time = require('time')(Date)
 # * `node-cron`: Triggers the time events.
-CronJob = require('cron').CronJob;
+CronJob = require('cron').CronJob
 # * `node-chrono` Parses the dates for the `notifyWhen` function.
 chrono = require 'chrono-node'  
 #  * node.js imports.
@@ -51,7 +51,7 @@ class Clock extends sensors.Sensor
   getSensorValue: (name)->
     switch name
       when "time"
-        now = new Date();
+        now = new Date
         now.setTimezone @config.timezone
         return now
       else throw new Error("Clock sensor doesn't provide sensor value \"#{name}\"")
@@ -96,7 +96,7 @@ class Clock extends sensors.Sensor
         start: false
         timezone: @config.timezone
       )
-      @cronJobs[id] = job;
+      @cronJobs[id] = job
       job.start()
       return true
     return false
