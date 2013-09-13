@@ -39,10 +39,12 @@ class RuleManager
     parts = ruleString.split /^if\s|\sthen\s/
     #parts should now be ["", "the if part", "the then part"]
     switch
-      when parts.length < 3 then throw new Error('The rule must start with "if" and contain a "then" part!')
-      when parts.length > 3 then throw new Error('The rule must exactly contain one "if" and one "then"!')
-    condition = parts[1].trim();
-    actions = parts[2].trim();
+      when parts.length < 3 
+        throw new Error('The rule must start with "if" and contain a "then" part!')
+      when parts.length > 3 
+        throw new Error('The rule must exactly contain one "if" and one "then"!')
+    condition = parts[1].trim()
+    actions = parts[2].trim()
 
     #Split the condition in a token stream.
     #For example: "12:30 and temperature > 10" becoms

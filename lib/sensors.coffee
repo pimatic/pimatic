@@ -15,7 +15,7 @@ class Sensor
     throw new Error("your sensor must implement notifyWhen")
 
   cancelNotify: (id) ->
-  	throw new Error("your sensor must implement cancelNotify")
+    throw new Error("your sensor must implement cancelNotify")
 
 class TemperatureSensor extends Sensor
   type: 'TemperatureSensor'

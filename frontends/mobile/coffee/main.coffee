@@ -13,7 +13,7 @@ $(document).on "pageinit", (event) ->
   socket.on "switch-status", (data) ->
     if data.state?
       value = (if data.state then "on" else "off")
-      $("#flip-#{data.id}").val(value).slider('refresh');
+      $("#flip-#{data.id}").val(value).slider('refresh')
 
   $('#index #actuators').on "change", ".switch",(event, ui) ->
       actuatorId = $(this).data('actuator-id')
@@ -60,7 +60,7 @@ addSwitch = (actuator) ->
   select
     .slider() 
   $('#actuators').append li
-  $('#actuators').listview('refresh');
+  $('#actuators').listview('refresh')
 
 addRule = (rule) ->
   li = $ $('#rule-template').html()
@@ -70,7 +70,7 @@ addRule = (rule) ->
   li.find('.action').text(rule.action)
 
   $('#rules').append li
-  $('#rules').listview('refresh');
+  $('#rules').listview('refresh')
 
 voiceCallback = (matches) ->
   $.get "/api/speak",

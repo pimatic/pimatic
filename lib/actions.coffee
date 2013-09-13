@@ -18,22 +18,22 @@ module.exports = (server) ->
         actionName = (if state then "turnOn" else "turnOff")
         result = @runOnActuatorByNameOrId  actuatorName, (actuator)->
           if actuator.hasAction actionName
-                if simulate
-                  if state
-                    return ->
-                      callback null, __("would turn %s on", actuator.name)
-                  else 
-                    return ->
-                      callback null, __("would turn %s off", actuator.name)
-                else
-                  if state
-                    return ->
-                      actuator.turnOn (e) ->
-                        callback e, __("turned %s on", actuator.name)
-                  else 
-                    return ->
-                      actuator.turnOff (e) ->
-                        callback e, __("turned %s off", actuator.name)
+            if simulate
+              if state
+                return ->
+                  callback null, __("would turn %s on", actuator.name)
+              else 
+                return ->
+                  callback null, __("would turn %s off", actuator.name)
+            else
+              if state
+                return ->
+                  actuator.turnOn (e) ->
+                    callback e, __("turned %s on", actuator.name)
+              else 
+                return ->
+                  actuator.turnOff (e) ->
+                    callback e, __("turned %s off", actuator.name)
           else return null
       return result
 

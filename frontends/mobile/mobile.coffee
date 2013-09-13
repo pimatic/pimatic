@@ -10,7 +10,7 @@ class MobileFrontend extends modules.Frontend
   config: null
 
   init: (app, @server, @config) =>
-    thisClass = @;
+    thisClass = @
 
     app.use coffeescript(
       prefix: '/js'

@@ -10,8 +10,8 @@ class Backend extends Module
   # an actuator in the `settings.json` file. For all defined `actuators` in the settings, this
   # function is called and the options are parsed with the `config` argument. If the actuator
   # belongs to your module you should create a instance of the `Actuator` class and add the 
-  # actuator with `server.addActuator` to the server. Then the function the must return `true`. If you 
-  # didn't create an `actuator` you should return `false`.
+  # actuator with `server.addActuator` to the server. Then the function the must return `true`. 
+  # If you didn't create an `actuator` you should return `false`.
   createActuator: (conifg)->
     false
 
