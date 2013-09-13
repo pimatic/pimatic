@@ -1,10 +1,11 @@
-<!DOCTYPE html><html lang="en"><head><title>lib/server</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="lib/server"><meta name="groc-project-path" content="lib/server.coffee"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path">lib/server.coffee</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="nv">should = </span><span class="nx">require</span> <span class="s1">&#39;should&#39;</span>
-<span class="nv">assert = </span><span class="nx">require</span> <span class="s1">&#39;assert&#39;</span>
+<!DOCTYPE html><html lang="en"><head><title>lib/server</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="lib/server"><meta name="groc-project-path" content="lib/server.coffee"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path">lib/server.coffee</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="nv">assert = </span><span class="nx">require</span> <span class="s1">&#39;cassert&#39;</span>
 <span class="nv">helper = </span><span class="nx">require</span> <span class="s1">&#39;./helper&#39;</span>
 <span class="nv">actuators = </span><span class="nx">require</span> <span class="s1">&#39;./actuators&#39;</span>
 <span class="nv">sensors = </span><span class="nx">require</span> <span class="s1">&#39;./sensors&#39;</span>
 <span class="nv">rules = </span><span class="nx">require</span> <span class="s1">&#39;./rules&#39;</span>
 <span class="nv">modules = </span><span class="nx">require</span> <span class="s1">&#39;./modules&#39;</span>
+<span class="nv">logger = </span><span class="nx">require</span> <span class="s2">&quot;./logger&quot;</span>
+
 
 <span class="k">class</span> <span class="nx">Server</span> <span class="k">extends</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;events&#39;</span><span class="p">).</span><span class="nx">EventEmitter</span>
   <span class="nv">frontends: </span><span class="p">[]</span>
@@ -13,79 +14,79 @@
   <span class="nv">sensors: </span><span class="p">[]</span>
   <span class="nv">ruleManager: </span><span class="kc">null</span>
 
-  <span class="nv">constructor: </span><span class="nf">(app, config) -&gt;</span>
-    <span class="nx">should</span><span class="p">.</span><span class="nx">exist</span> <span class="nx">app</span>
-    <span class="nx">should</span><span class="p">.</span><span class="nx">exist</span> <span class="nx">config</span>
-    <span class="nx">helper</span><span class="p">.</span><span class="nx">checkConfig</span> <span class="kc">null</span><span class="p">,</span> <span class="o">-&gt;</span>
-      <span class="nx">config</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span> <span class="s1">&#39;object&#39;</span><span class="p">,</span> <span class="s2">&quot;config is no object?&quot;</span>
-      <span class="nx">config</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">&#39;frontends&#39;</span><span class="p">).</span><span class="nx">instanceOf</span> <span class="nb">Array</span><span class="p">,</span> <span class="s2">&quot;frontends should be an array&quot;</span>
-      <span class="nx">config</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">&#39;backends&#39;</span><span class="p">).</span><span class="nx">instanceOf</span> <span class="nb">Array</span><span class="p">,</span> <span class="s2">&quot;backends should be an array&quot;</span>
-      <span class="nx">config</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">&#39;actuators&#39;</span><span class="p">).</span><span class="nx">instanceOf</span> <span class="nb">Array</span><span class="p">,</span> <span class="s2">&quot;actuators should be an array&quot;</span>
+  <span class="nv">constructor: </span><span class="nf">(@app, @config) -&gt;</span>
+    <span class="nx">assert</span> <span class="nx">app</span><span class="o">?</span>
+    <span class="nx">assert</span> <span class="nx">config</span><span class="o">?</span>
 
-    <span class="vi">@app = </span><span class="nx">app</span>
-    <span class="vi">@config = </span><span class="nx">config</span>
-    <span class="vi">@ruleManager = </span><span class="k">new</span> <span class="nx">rules</span><span class="p">.</span><span class="nx">RuleManager</span> <span class="k">this</span>
+    <span class="nx">helper</span><span class="p">.</span><span class="nx">checkConfig</span> <span class="kc">null</span><span class="p">,</span> <span class="o">-&gt;</span>
+      <span class="nx">assert</span> <span class="nx">config</span> <span class="k">instanceof</span> <span class="nb">Object</span>
+      <span class="nx">assert</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span> <span class="nx">config</span><span class="p">.</span><span class="nx">frontends</span>
+      <span class="nx">assert</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span> <span class="nx">config</span><span class="p">.</span><span class="nx">backends</span>
+      <span class="nx">assert</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span> <span class="nx">config</span><span class="p">.</span><span class="nx">actuators</span>
+      <span class="nx">assert</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span> <span class="nx">config</span><span class="p">.</span><span class="nx">rules</span>
+
+    <span class="vi">@ruleManager = </span><span class="k">new</span> <span class="nx">rules</span><span class="p">.</span><span class="nx">RuleManager</span> <span class="k">this</span><span class="p">,</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">rules</span>
     <span class="nx">@loadBackends</span><span class="p">()</span>
     <span class="nx">@loadFrontends</span><span class="p">()</span>
 
 
   <span class="nv">loadBackends: </span><span class="o">-&gt;</span>
     <span class="k">for</span> <span class="nx">beConf</span> <span class="k">in</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">backends</span>
-      <span class="nx">should</span><span class="p">.</span><span class="nx">exist</span> <span class="nx">beConf</span>
-      <span class="nx">beConf</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span> <span class="s1">&#39;object&#39;</span>
-      <span class="nx">beConf</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span> <span class="s1">&#39;module&#39;</span>
+      <span class="nx">assert</span> <span class="nx">beConf</span><span class="o">?</span>
+      <span class="nx">assert</span> <span class="nx">beConf</span> <span class="k">instanceof</span> <span class="nb">Object</span>
+      <span class="nx">assert</span> <span class="nx">beConf</span><span class="p">.</span><span class="nx">module</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">beConf</span><span class="p">.</span><span class="nx">module</span> <span class="o">is</span> <span class="s2">&quot;string&quot;</span> 
 
-      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s2">&quot;loading backend: \&quot;#{beConf.module}\&quot;...&quot;</span>
+      <span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="s2">&quot;loading backend: \&quot;#{beConf.module}\&quot;...&quot;</span>
       <span class="nv">be = </span><span class="nx">require</span> <span class="s2">&quot;../backends/&quot;</span> <span class="o">+</span> <span class="nx">beConf</span><span class="p">.</span><span class="nx">module</span>
       <span class="nx">@registerBackend</span> <span class="nx">be</span><span class="p">,</span> <span class="nx">beConf</span>
 
   <span class="nv">loadFrontends: </span><span class="o">-&gt;</span>
     <span class="k">for</span> <span class="nx">feConf</span> <span class="k">in</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">frontends</span>
-      <span class="nx">should</span><span class="p">.</span><span class="nx">exist</span> <span class="nx">feConf</span>
-      <span class="nx">feConf</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span> <span class="s1">&#39;object&#39;</span>
-      <span class="nx">feConf</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span> <span class="s1">&#39;module&#39;</span>
+      <span class="nx">assert</span> <span class="nx">feConf</span><span class="o">?</span>
+      <span class="nx">assert</span> <span class="nx">feConf</span> <span class="k">instanceof</span> <span class="nb">Object</span>
+      <span class="nx">assert</span> <span class="nx">feConf</span><span class="p">.</span><span class="nx">module</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">feConf</span><span class="p">.</span><span class="nx">module</span> <span class="o">is</span> <span class="s2">&quot;string&quot;</span> 
 
-      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s2">&quot;loading frontend: \&quot;#{feConf.module}\&quot;...&quot;</span>
+      <span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="s2">&quot;loading frontend: \&quot;#{feConf.module}\&quot;...&quot;</span>
       <span class="nv">fe = </span><span class="nx">require</span> <span class="s2">&quot;../frontends/&quot;</span> <span class="o">+</span> <span class="nx">feConf</span><span class="p">.</span><span class="nx">module</span>
       <span class="nx">@registerFrontend</span> <span class="nx">fe</span><span class="p">,</span> <span class="nx">feConf</span>
 
   <span class="nv">registerFrontend: </span><span class="nf">(frontend, config) -&gt;</span>
-    <span class="nx">should</span><span class="p">.</span><span class="nx">exist</span> <span class="nx">frontend</span>
-    <span class="nx">should</span><span class="p">.</span><span class="nx">exist</span> <span class="nx">config</span>
-    <span class="nx">frontend</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">instanceOf</span> <span class="nx">modules</span><span class="p">.</span><span class="nx">Frontend</span>
+    <span class="nx">assert</span> <span class="nx">frontend</span><span class="o">?</span> <span class="o">and</span> <span class="nx">frontend</span> <span class="k">instanceof</span> <span class="nx">modules</span><span class="p">.</span><span class="nx">Frontend</span>
+    <span class="nx">assert</span> <span class="nx">config</span><span class="o">?</span> <span class="o">and</span> <span class="nx">config</span> <span class="k">instanceof</span> <span class="nb">Object</span>
 
-    <span class="nx">config</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span> <span class="s1">&#39;object&#39;</span>
     <span class="nx">@frontends</span><span class="p">.</span><span class="nx">push</span> <span class="p">{</span><span class="nv">module: </span><span class="nx">frontend</span><span class="p">,</span> <span class="nv">config: </span><span class="nx">config</span><span class="p">}</span>
     <span class="nx">@emit</span> <span class="s2">&quot;frontend&quot;</span><span class="p">,</span> <span class="nx">frontend</span>
 
   <span class="nv">registerBackend: </span><span class="nf">(backend, config) -&gt;</span>
-    <span class="nx">should</span><span class="p">.</span><span class="nx">exist</span> <span class="nx">backend</span>
-    <span class="nx">backend</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">instanceOf</span> <span class="nx">modules</span><span class="p">.</span><span class="nx">Backend</span>
+    <span class="nx">assert</span> <span class="nx">backend</span><span class="o">?</span> <span class="o">and</span> <span class="nx">backend</span> <span class="k">instanceof</span> <span class="nx">modules</span><span class="p">.</span><span class="nx">Backend</span>
+    <span class="nx">assert</span> <span class="nx">config</span><span class="o">?</span> <span class="o">and</span> <span class="nx">config</span> <span class="k">instanceof</span> <span class="nb">Object</span>
 
     <span class="nx">@backends</span><span class="p">.</span><span class="nx">push</span> <span class="p">{</span><span class="nv">module: </span><span class="nx">backend</span><span class="p">,</span> <span class="nv">config: </span><span class="nx">config</span><span class="p">}</span>
     <span class="nx">@emit</span> <span class="s2">&quot;backend&quot;</span><span class="p">,</span> <span class="nx">backend</span>
 
   <span class="nv">registerActuator: </span><span class="nf">(actuator) -&gt;</span>
-    <span class="nx">should</span><span class="p">.</span><span class="nx">exist</span> <span class="nx">actuator</span>
-    <span class="nx">actuator</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">instanceOf</span> <span class="nx">actuators</span><span class="p">.</span><span class="nx">Actuator</span>
-    <span class="nx">actuator</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">).</span><span class="o">not</span><span class="p">.</span><span class="nx">empty</span>
-    <span class="nx">actuator</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">).</span><span class="o">not</span><span class="p">.</span><span class="nx">empty</span>
+    <span class="nx">assert</span> <span class="nx">actuator</span><span class="o">?</span>
+    <span class="nx">assert</span> <span class="nx">actuator</span> <span class="k">instanceof</span> <span class="nx">actuators</span><span class="p">.</span><span class="nx">Actuator</span>
+    <span class="nx">assert</span> <span class="nx">actuator</span><span class="p">.</span><span class="nx">name</span><span class="o">?</span> <span class="o">and</span> <span class="nx">actuator</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">lenght</span> <span class="o">isnt</span> <span class="mi">0</span>
+    <span class="nx">assert</span> <span class="nx">actuator</span><span class="p">.</span><span class="nx">id</span><span class="o">?</span> <span class="o">and</span> <span class="nx">actuator</span><span class="p">.</span><span class="nx">id</span><span class="p">.</span><span class="nx">lenght</span> <span class="o">isnt</span> <span class="mi">0</span>
+
     <span class="k">if</span> <span class="nx">@actuators</span><span class="p">[</span><span class="nx">actuator</span><span class="p">.</span><span class="nx">id</span><span class="p">]</span><span class="o">?</span>
       <span class="k">throw</span> <span class="k">new</span> <span class="nx">assert</span><span class="p">.</span><span class="nx">AssertionError</span><span class="p">(</span><span class="s2">&quot;dublicate actuator id \&quot;#{actuator.id}\&quot;&quot;</span><span class="p">)</span>
 
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s2">&quot;new actuator \&quot;#{actuator.name}\&quot;...&quot;</span>
+    <span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="s2">&quot;new actuator \&quot;#{actuator.name}\&quot;...&quot;</span>
     <span class="nx">@actuators</span><span class="p">[</span><span class="nx">actuator</span><span class="p">.</span><span class="nx">id</span><span class="p">]</span><span class="o">=</span><span class="nx">actuator</span>
     <span class="nx">@emit</span> <span class="s2">&quot;actuator&quot;</span><span class="p">,</span> <span class="nx">actuator</span>
 
   <span class="nv">registerSensor: </span><span class="nf">(sensor) -&gt;</span>
-    <span class="nx">should</span><span class="p">.</span><span class="nx">exist</span> <span class="nx">sensor</span>
-    <span class="nx">sensor</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">instanceOf</span> <span class="nx">sensors</span><span class="p">.</span><span class="nx">Sensor</span>
-    <span class="nx">sensor</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">).</span><span class="o">not</span><span class="p">.</span><span class="nx">empty</span>
-    <span class="nx">sensor</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">).</span><span class="o">not</span><span class="p">.</span><span class="nx">empty</span>
+    <span class="nx">assert</span> <span class="nx">sensor</span><span class="o">?</span>
+    <span class="nx">assert</span> <span class="nx">sensor</span> <span class="k">instanceof</span> <span class="nx">sensors</span><span class="p">.</span><span class="nx">Sensor</span>
+    <span class="nx">assert</span> <span class="nx">sensor</span><span class="p">.</span><span class="nx">name</span><span class="o">?</span> <span class="o">and</span> <span class="nx">sensor</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">lenght</span> <span class="o">isnt</span> <span class="mi">0</span>
+    <span class="nx">assert</span> <span class="nx">sensor</span><span class="p">.</span><span class="nx">id</span><span class="o">?</span> <span class="o">and</span> <span class="nx">sensor</span><span class="p">.</span><span class="nx">id</span><span class="p">.</span><span class="nx">lenght</span> <span class="o">isnt</span> <span class="mi">0</span>
+
     <span class="k">if</span> <span class="nx">@sensors</span><span class="p">[</span><span class="nx">sensor</span><span class="p">.</span><span class="nx">id</span><span class="p">]</span><span class="o">?</span>
       <span class="k">throw</span> <span class="k">new</span> <span class="nx">assert</span><span class="p">.</span><span class="nx">AssertionError</span><span class="p">(</span><span class="s2">&quot;dublicate sensor id \&quot;#{sensor.id}\&quot;&quot;</span><span class="p">)</span>
 
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s2">&quot;new sensor \&quot;#{sensor.name}\&quot;...&quot;</span>
+    <span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="s2">&quot;new sensor \&quot;#{sensor.name}\&quot;...&quot;</span>
     <span class="nx">@sensors</span><span class="p">[</span><span class="nx">sensor</span><span class="p">.</span><span class="nx">id</span><span class="p">]</span><span class="o">=</span><span class="nx">sensor</span>
     <span class="nx">@emit</span> <span class="s2">&quot;sensor&quot;</span><span class="p">,</span> <span class="nx">sensor</span>
 
@@ -107,5 +108,7 @@
     <span class="nx">f</span><span class="p">.</span><span class="nx">module</span><span class="p">.</span><span class="nx">init</span> <span class="nx">@app</span><span class="p">,</span> <span class="err">@</span><span class="p">,</span> <span class="nx">f</span><span class="p">.</span><span class="nx">config</span> <span class="k">for</span> <span class="nx">f</span> <span class="k">in</span> <span class="nx">@frontends</span>
     <span class="nv">actions = </span><span class="nx">require</span> <span class="s1">&#39;./actions&#39;</span>
     <span class="nx">@ruleManager</span><span class="p">.</span><span class="nx">actionHandlers</span><span class="p">.</span><span class="nx">push</span> <span class="nx">actions</span><span class="p">(</span><span class="k">this</span><span class="p">)</span>
+    <span class="k">for</span> <span class="nx">rule</span> <span class="k">in</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">rules</span>
+      <span class="nx">@ruleManager</span><span class="p">.</span><span class="nx">addRuleByString</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">rule</span>
 
  <span class="nv">module.exports = </span><span class="nx">Server</span></div></div></div></div></body></html>

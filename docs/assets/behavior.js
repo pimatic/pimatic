@@ -13,7 +13,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "commentsOnly": true,
           "name": "Markdown"
         },
-        "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/README.md",
+        "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/README.md",
         "projectPath": "README.md",
         "targetPath": "index",
         "firstHeader": {
@@ -38,8 +38,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "type": "heading",
               "data": {
                 "level": 2,
-                "title": "Extensions",
-                "slug": "extensions"
+                "title": "Configuration",
+                "slug": "configuration"
               },
               "depth": 2,
               "children": [
@@ -47,20 +47,60 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "type": "heading",
                   "data": {
                     "level": 3,
-                    "title": "Frontends",
-                    "slug": "frontends"
+                    "title": "The \"server\"-section",
+                    "slug": "the-server-section"
                   },
                   "depth": 3
                 }, {
                   "type": "heading",
                   "data": {
                     "level": 3,
-                    "title": "Backends",
-                    "slug": "backends"
+                    "title": "The \"frontend\"-section",
+                    "slug": "the-frontend-section"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "The \"backend\"-section",
+                    "slug": "the-backend-section"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "The \"actuators\"-section",
+                    "slug": "the-actuators-section"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "The \"rules\"-section",
+                    "slug": "the-rules-section"
                   },
                   "depth": 3
                 }
               ]
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "Running",
+                "slug": "running"
+              },
+              "depth": 2
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "Extensions and Hacking",
+                "slug": "extensions-and-hacking"
+              },
+              "depth": 2
             }
           ]
         },
@@ -80,8 +120,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "type": "heading",
           "data": {
             "level": 2,
-            "title": "Extensions",
-            "slug": "extensions"
+            "title": "Configuration",
+            "slug": "configuration"
           },
           "depth": 2,
           "children": [
@@ -89,20 +129,60 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "type": "heading",
               "data": {
                 "level": 3,
-                "title": "Frontends",
-                "slug": "frontends"
+                "title": "The \"server\"-section",
+                "slug": "the-server-section"
               },
               "depth": 3
             }, {
               "type": "heading",
               "data": {
                 "level": 3,
-                "title": "Backends",
-                "slug": "backends"
+                "title": "The \"frontend\"-section",
+                "slug": "the-frontend-section"
+              },
+              "depth": 3
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 3,
+                "title": "The \"backend\"-section",
+                "slug": "the-backend-section"
+              },
+              "depth": 3
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 3,
+                "title": "The \"actuators\"-section",
+                "slug": "the-actuators-section"
+              },
+              "depth": 3
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 3,
+                "title": "The \"rules\"-section",
+                "slug": "the-rules-section"
               },
               "depth": 3
             }
           ]
+        }, {
+          "type": "heading",
+          "data": {
+            "level": 2,
+            "title": "Running",
+            "slug": "running"
+          },
+          "depth": 2
+        }, {
+          "type": "heading",
+          "data": {
+            "level": 2,
+            "title": "Extensions and Hacking",
+            "slug": "extensions-and-hacking"
+          },
+          "depth": 2
         }
       ]
     }, {
@@ -130,7 +210,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/backends/clock/clock.coffee",
+                "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/backends/clock/clock.coffee",
                 "projectPath": "backends/clock/clock.coffee",
                 "targetPath": "backends/clock/clock",
                 "firstHeader": {
@@ -235,7 +315,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/backends/pilight/actuator-config-shema.coffee",
+                "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/backends/pilight/actuator-config-shema.coffee",
                 "projectPath": "backends/pilight/actuator-config-shema.coffee",
                 "targetPath": "backends/pilight/actuator-config-shema",
                 "firstHeader": {
@@ -261,7 +341,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/backends/pilight/backend-config-shema.coffee",
+                "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/backends/pilight/backend-config-shema.coffee",
                 "projectPath": "backends/pilight/backend-config-shema.coffee",
                 "targetPath": "backends/pilight/backend-config-shema",
                 "firstHeader": {
@@ -287,7 +367,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/backends/pilight/pilight.coffee",
+                "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/backends/pilight/pilight.coffee",
                 "projectPath": "backends/pilight/pilight.coffee",
                 "targetPath": "backends/pilight/pilight",
                 "firstHeader": {
@@ -344,7 +424,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/backends/sispmctl/actuator-config-shema.coffee",
+                "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/backends/sispmctl/actuator-config-shema.coffee",
                 "projectPath": "backends/sispmctl/actuator-config-shema.coffee",
                 "targetPath": "backends/sispmctl/actuator-config-shema",
                 "firstHeader": {
@@ -370,7 +450,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/backends/sispmctl/backend-config-shema.coffee",
+                "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/backends/sispmctl/backend-config-shema.coffee",
                 "projectPath": "backends/sispmctl/backend-config-shema.coffee",
                 "targetPath": "backends/sispmctl/backend-config-shema",
                 "firstHeader": {
@@ -396,7 +476,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/backends/sispmctl/sispmctl.coffee",
+                "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/backends/sispmctl/sispmctl.coffee",
                 "projectPath": "backends/sispmctl/sispmctl.coffee",
                 "targetPath": "backends/sispmctl/sispmctl",
                 "firstHeader": {
@@ -447,7 +527,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "singleLineComment": ["#"],
           "name": "CoffeeScript"
         },
-        "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/config-shema.coffee",
+        "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/config-shema.coffee",
         "projectPath": "config-shema.coffee",
         "targetPath": "config-shema",
         "firstHeader": {
@@ -489,7 +569,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/frontends/filebrowser/filebrowser.coffee",
+                "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/frontends/filebrowser/filebrowser.coffee",
                 "projectPath": "frontends/filebrowser/filebrowser.coffee",
                 "targetPath": "frontends/filebrowser/filebrowser",
                 "title": "filebrowser"
@@ -515,7 +595,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/frontends/mobile/mobile.coffee",
+                "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/frontends/mobile/mobile.coffee",
                 "projectPath": "frontends/mobile/mobile.coffee",
                 "targetPath": "frontends/mobile/mobile",
                 "title": "mobile"
@@ -541,7 +621,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/frontends/redirect/redirect.coffee",
+                "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/frontends/redirect/redirect.coffee",
                 "projectPath": "frontends/redirect/redirect.coffee",
                 "targetPath": "frontends/redirect/redirect",
                 "title": "redirect"
@@ -567,7 +647,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/frontends/rest/rest.coffee",
+                "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/frontends/rest/rest.coffee",
                 "projectPath": "frontends/rest/rest.coffee",
                 "targetPath": "frontends/rest/rest",
                 "title": "rest"
@@ -593,7 +673,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/frontends/speak/speak.coffee",
+                "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/frontends/speak/speak.coffee",
                 "projectPath": "frontends/speak/speak.coffee",
                 "targetPath": "frontends/speak/speak",
                 "title": "speak"
@@ -621,7 +701,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/lib/actions.coffee",
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/lib/actions.coffee",
             "projectPath": "lib/actions.coffee",
             "targetPath": "lib/actions",
             "title": "actions"
@@ -637,7 +717,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/lib/actuators.coffee",
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/lib/actuators.coffee",
             "projectPath": "lib/actuators.coffee",
             "targetPath": "lib/actuators",
             "title": "actuators"
@@ -653,7 +733,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/lib/helper.coffee",
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/lib/helper.coffee",
             "projectPath": "lib/helper.coffee",
             "targetPath": "lib/helper",
             "title": "helper"
@@ -669,7 +749,23 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/lib/modules.coffee",
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/lib/logger.coffee",
+            "projectPath": "lib/logger.coffee",
+            "targetPath": "lib/logger",
+            "title": "logger"
+          },
+          "depth": 2,
+          "outline": []
+        }, {
+          "type": "file",
+          "data": {
+            "language": {
+              "nameMatchers": [".coffee", "Cakefile"],
+              "pygmentsLexer": "coffee-script",
+              "singleLineComment": ["#"],
+              "name": "CoffeeScript"
+            },
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/lib/modules.coffee",
             "projectPath": "lib/modules.coffee",
             "targetPath": "lib/modules",
             "title": "modules"
@@ -685,7 +781,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/lib/rules.coffee",
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/lib/rules.coffee",
             "projectPath": "lib/rules.coffee",
             "targetPath": "lib/rules",
             "title": "rules"
@@ -701,7 +797,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/lib/sensors.coffee",
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/lib/sensors.coffee",
             "projectPath": "lib/sensors.coffee",
             "targetPath": "lib/sensors",
             "title": "sensors"
@@ -717,7 +813,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/lib/server.coffee",
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/lib/server.coffee",
             "projectPath": "lib/server.coffee",
             "targetPath": "lib/server",
             "title": "server"
@@ -735,7 +831,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "singleLineComment": ["#"],
           "name": "CoffeeScript"
         },
-        "sourcePath": "/home/h3llfire/Desktop/sweetpi-server/sweetpi.coffee",
+        "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/sweetpi.coffee",
         "projectPath": "sweetpi.coffee",
         "targetPath": "sweetpi",
         "firstHeader": {
@@ -760,16 +856,16 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "type": "heading",
               "data": {
                 "level": 2,
-                "title": "Check the config",
-                "slug": "check-the-config"
+                "title": "Setup express",
+                "slug": "setup-express"
               },
               "depth": 2
             }, {
               "type": "heading",
               "data": {
                 "level": 2,
-                "title": "Setup authentification",
-                "slug": "setup-authentification"
+                "title": "Setup authentication",
+                "slug": "setup-authentication"
               },
               "depth": 2
             }, {
@@ -799,16 +895,16 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "type": "heading",
           "data": {
             "level": 2,
-            "title": "Check the config",
-            "slug": "check-the-config"
+            "title": "Setup express",
+            "slug": "setup-express"
           },
           "depth": 2
         }, {
           "type": "heading",
           "data": {
             "level": 2,
-            "title": "Setup authentification",
-            "slug": "setup-authentification"
+            "title": "Setup authentication",
+            "slug": "setup-authentication"
           },
           "depth": 2
         }, {

@@ -22,14 +22,13 @@ html(manifest='application.manifest')
           script#switch-template(type='text/template')
     script#rule-template(type='text/template')
       li
-        a.rule
-          span.if=__('if')
-          | 
-          span.condition
-          | 
-          span.then=('then')
-          | 
-          span.action
+        span.if=__('if')
+        | 
+        span.condition
+        | 
+        span.then=__('then')
+        | 
+        span.action
         
   body
     //- Actuators and rules page

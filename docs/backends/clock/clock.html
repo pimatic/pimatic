@@ -16,9 +16,9 @@
 <li><code>node-convice</code> for config validation.</li>
 </ul></div></div><div class="code"><div class="wrapper"><span class="nv">convict = </span><span class="nx">require</span> <span class="s2">&quot;convict&quot;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
 <li><code>node-time</code>: Extend the global Date object to include the <code>setTimezone</code> and <code>getTimezone</code>.</li>
-</ul></div></div><div class="code"><div class="wrapper"><span class="nv">time = </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">)(</span><span class="nb">Date</span><span class="p">);</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
+</ul></div></div><div class="code"><div class="wrapper"><span class="nv">time = </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">)(</span><span class="nb">Date</span><span class="p">)</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
 <li><code>node-cron</code>: Triggers the time events.</li>
-</ul></div></div><div class="code"><div class="wrapper"><span class="nv">CronJob = </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cron&#39;</span><span class="p">).</span><span class="nx">CronJob</span><span class="p">;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
+</ul></div></div><div class="code"><div class="wrapper"><span class="nv">CronJob = </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cron&#39;</span><span class="p">).</span><span class="nx">CronJob</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
 <li><code>node-chrono</code> Parses the dates for the <code>notifyWhen</code> function.</li>
 </ul></div></div><div class="code"><div class="wrapper"><span class="nv">chrono = </span><span class="nx">require</span> <span class="s1">&#39;chrono-node&#39;</span>  </div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
 <li>node.js imports.</li>
@@ -45,8 +45,8 @@
   <span class="nv">getSensorValue: </span><span class="nf">(name)-&gt;</span>
     <span class="k">switch</span> <span class="nx">name</span>
       <span class="k">when</span> <span class="s2">&quot;time&quot;</span>
-        <span class="nv">now = </span><span class="k">new</span> <span class="nb">Date</span><span class="p">();</span>
-        <span class="nx">now</span><span class="p">.</span><span class="nx">setTimezone</span> <span class="nx">config</span><span class="p">.</span><span class="nx">timezone</span>
+        <span class="nv">now = </span><span class="k">new</span> <span class="nb">Date</span>
+        <span class="nx">now</span><span class="p">.</span><span class="nx">setTimezone</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">timezone</span>
         <span class="k">return</span> <span class="nx">now</span>
       <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">&quot;Clock sensor doesn&#39;t provide sensor value \&quot;#{name}\&quot;&quot;</span><span class="p">)</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Returns <code>true</code> if the given predicate string is considert to be true. For example the predicate
 <code>"Sep 12-13"</code> is considert to be true if it is the 12th of october, 2013 from 0 to 
@@ -55,7 +55,7 @@
     <span class="k">if</span> <span class="nx">parsedDate</span><span class="o">?</span>
       <span class="p">{</span><span class="nx">second</span><span class="p">,</span> <span class="nx">minute</span><span class="p">,</span> <span class="nx">hour</span><span class="p">,</span> <span class="nx">day</span><span class="p">,</span> <span class="nx">month</span><span class="p">,</span> <span class="nx">dayOfWeek</span><span class="p">}</span> <span class="o">=</span> <span class="nx">@parseDateToCronFormat</span> <span class="nx">parsedDate</span>
       <span class="nv">now = </span><span class="nx">@getSensorValue</span> <span class="s2">&quot;time&quot;</span>
-      <span class="nv">dateObj = </span><span class="nx">date</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">date</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">timezone</span><span class="p">)</span>
+      <span class="nv">dateObj = </span><span class="nx">parsedDate</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">date</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">timezone</span>
       <span class="k">switch</span>
         <span class="k">when</span> <span class="nx">second</span> <span class="o">isnt</span> <span class="s1">&#39;*&#39;</span> <span class="o">and</span> <span class="nx">now</span><span class="p">.</span><span class="nx">getSeconds</span><span class="p">()</span> <span class="o">isnt</span> <span class="nx">dateObj</span><span class="p">.</span><span class="nx">getSeconds</span><span class="p">()</span> <span class="k">then</span> <span class="k">return</span> <span class="kc">false</span>
         <span class="k">when</span> <span class="nx">minute</span> <span class="o">isnt</span> <span class="s1">&#39;*&#39;</span> <span class="o">and</span> <span class="nx">now</span><span class="p">.</span><span class="nx">getMinutes</span><span class="p">()</span> <span class="o">isnt</span> <span class="nx">dateObj</span><span class="p">.</span><span class="nx">getMinutes</span><span class="p">()</span> <span class="k">then</span> <span class="k">return</span> <span class="kc">false</span>
@@ -79,9 +79,9 @@
         <span class="nv">cronTime: </span><span class="nx">cronFormat</span>
         <span class="nv">onTick: </span><span class="nx">callback</span>
         <span class="nv">start: </span><span class="kc">false</span>
-        <span class="nv">timezone: </span><span class="nx">config</span><span class="p">.</span><span class="nx">timezone</span>
+        <span class="nv">timezone: </span><span class="nx">@config</span><span class="p">.</span><span class="nx">timezone</span>
       <span class="p">)</span>
-      <span class="nx">@cronJobs</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span> <span class="nx">job</span><span class="p">;</span>
+      <span class="nx">@cronJobs</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span> <span class="nx">job</span>
       <span class="nx">job</span><span class="p">.</span><span class="nx">start</span><span class="p">()</span>
       <span class="k">return</span> <span class="kc">true</span>
     <span class="k">return</span> <span class="kc">false</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Take a date as string in natural language and parse it with 
@@ -111,8 +111,8 @@ to:</p>
  text: 'Sep 12-13',
  concordance: 'Sep 12-13' }
 </code></pre></div></div><div class="code"><div class="wrapper">  <span class="nv">parseNaturalTextDate: </span><span class="nf">(naturalTextDate)-&gt;</span>
-    <span class="nv">parsedDates = </span><span class="nx">chrono</span><span class="p">.</span><span class="nx">parse</span> <span class="nx">naturalTextDate</span> 
-    <span class="k">if</span> <span class="nx">parsedDates</span><span class="p">.</span><span class="nx">length</span> <span class="o">!=</span> <span class="mi">1</span>
+    <span class="nv">parsedDates = </span><span class="nx">chrono</span><span class="p">.</span><span class="nx">parse</span> <span class="nx">naturalTextDate</span>
+    <span class="k">if</span> <span class="nx">parsedDates</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">1</span>
       <span class="k">return</span> <span class="nx">parsedDates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">else</span> <span class="k">return</span> <span class="kc">null</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Convert a parsedDate to a cronjob-syntax like object. The parsedDate must be parsed from 
 <a href="https://github.com/berryboy/chrono">chrono-node</a>. For Exampe converts the parsedDate of
@@ -142,7 +142,7 @@ to:</p>
     <span class="nv">second = </span><span class="nx">parsedDate</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">second</span>
     <span class="nv">minute = </span><span class="nx">parsedDate</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">minute</span>
     <span class="nv">hour = </span><span class="nx">parsedDate</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">hour</span>
-
+    <span class="c1">#console.log parsedDate</span>
     <span class="k">if</span> <span class="o">not</span> <span class="nx">second</span><span class="o">?</span> <span class="o">and</span> <span class="o">not</span> <span class="nx">minute</span><span class="o">?</span> <span class="o">and</span> <span class="o">not</span> <span class="nx">hour</span>
       <span class="nv">second = </span><span class="mi">0</span>
       <span class="nv">minute = </span><span class="mi">0</span>
@@ -155,13 +155,11 @@ to:</p>
       <span class="k">if</span> <span class="o">not</span> <span class="nx">hour</span><span class="o">?</span>
         <span class="nv">hour = </span><span class="s2">&quot;*&quot;</span>
 
-    <span class="k">if</span> <span class="nx">parsedDate</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">impliedComponents</span>
-      <span class="nv">moarsednth = </span><span class="k">if</span> <span class="s1">&#39;month&#39;</span> <span class="k">in</span> <span class="nx">pDate</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">impliedComponents</span> <span class="k">then</span> <span class="s2">&quot;*&quot;</span> <span class="k">else</span> <span class="nx">pDate</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">month</span>
-      <span class="nv">daarsedy = </span><span class="k">if</span> <span class="s1">&#39;day&#39;</span> <span class="k">in</span> <span class="nx">pDate</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">impliedComponents</span> <span class="k">then</span> <span class="s2">&quot;*&quot;</span> <span class="k">else</span> <span class="nx">pDate</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">day</span>
-    <span class="k">else</span> 
-      <span class="nv">month = </span><span class="nx">parsedDate</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">month</span>
-      <span class="nv">day = </span><span class="nx">parsedDate</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">day</span>
-    <span class="nv">dayOfWearsedek = </span><span class="k">if</span> <span class="nx">pDate</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">dayOfWeek</span><span class="o">?</span> <span class="k">then</span> <span class="nx">pDate</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">dayOfWeek</span> <span class="k">else</span> <span class="s2">&quot;*&quot;</span>
+    <span class="k">if</span> <span class="nx">parsedDate</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">impliedComponents</span><span class="o">?</span>
+      <span class="nv">month = </span><span class="k">if</span> <span class="s1">&#39;month&#39;</span> <span class="k">in</span> <span class="nx">parsedDate</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">impliedComponents</span> <span class="k">then</span> <span class="s2">&quot;*&quot;</span> <span class="k">else</span> <span class="nx">parsedDate</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">month</span>
+      <span class="nv">day = </span><span class="k">if</span> <span class="s1">&#39;day&#39;</span> <span class="k">in</span> <span class="nx">parsedDate</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">impliedComponents</span> <span class="k">then</span> <span class="s2">&quot;*&quot;</span> <span class="k">else</span> <span class="nx">parsedDate</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">day</span>
+
+    <span class="nv">dayOfWeek = </span><span class="k">if</span> <span class="nx">parsedDate</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">dayOfWeek</span><span class="o">?</span> <span class="k">then</span> <span class="nx">parsedDate</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">dayOfWeek</span> <span class="k">else</span> <span class="s2">&quot;*&quot;</span>
     <span class="k">return</span> <span class="p">{</span>
       <span class="nv">second: </span><span class="nx">second</span>
       <span class="nv">minute: </span><span class="nx">minute</span>

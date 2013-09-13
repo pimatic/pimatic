@@ -44,8 +44,7 @@ $(document).on("pageinit", function(event) {
   return $('#index #rules').on("click", ".rule", function(event, ui) {
     var ruleId;
     ruleId = $(this).data('rule-id');
-    $.mobile.changePage('#edit-rule');
-    return alert(ruleId);
+    return $.mobile.changePage('#edit-rule');
   });
 });
 

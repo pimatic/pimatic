@@ -1,27 +1,92 @@
 <!DOCTYPE html><html lang="en"><head><title>index</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="index"><meta name="groc-project-path" content="README.md"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path">README.md</div></div><div id="document"><div class="segment"><div class="comments"><div class="wrapper"><h1 id="sweetpi-server">sweetpi-server</h1>
 
-<p>sweetpi-server is a home automation server and framework built on nodejs and express 
-to control various Actuators. It can run on the raspberry pi.</p>
+<p>sweetpi-server is a home automation server and framework that runs on <a href="http://nodejs.org">node.js</a>. It provied a simple web frontend using <a href="http://expressjs.com">express</a> and <a href="jquerymobile.com/‎">jQuery Mobile</a>. It is built to run on the raspberry pi, but should be runnable on any device that can run node.js.</p>
 
 <h2 id="installation">Installation</h2>
 
-<pre><code>  npm install sweetpi-server
-  cp default_config.json config.json
+<p>First you need to install <a href="http://nodejs.org">node.js</a> that comes with the package manager <a href="https://npmjs.org/">npm</a>. Then you can run</p>
+
+<pre><code>npm install sweetpi-server
 </code></pre>
 
-<p>Edit the <code>config.json</code> file with your favorit editor and then start the server with <code>node main.js</code> 
-or <code>coffee sweetpi.coffee</code>.</p>
+<p>to install the sweetpi-server.</p>
 
-<h2 id="extensions">Extensions</h2>
+<h2 id="configuration">Configuration</h2>
 
-<p>The framework is built to be extendet by modules. A module can ba a <code>Frontend</code> or a <code>Backend</code>. </p>
+<p>I recommend to start with the default config:</p>
 
-<h3 id="frontends">Frontends</h3>
+<pre><code>cp default_config.json config.json
+</code></pre>
 
-<p>A frontend is typically a interface for other scripts, software or the user to interact with the 
-server. See the <code>frontends</code> directory for more informations.</p>
+<p>The config is in the <a href="https://en.wikipedia.org/wiki/JSON">json</a> format and currently includes four sections:</p>
 
-<h3 id="backends">Backends</h3>
+<pre><code>{ 
+  "server": { ... },
+  "frontends": [ ... ],
+  "backends": [ ... ],
+  "actuators": [ ... ],
+  "rules": []
+}
+</code></pre>
 
-<p>A backend typically provides actuators that can exectute actions. See the <code>backends</code> directory for 
-more informations.</p></div></div></div></div></body></html>
+<h3 id="the-server-section">The "server"-section</h3>
+
+<p>The <code>"server"</code>-section contains the configuration for the http- and https-server. You have to set <code>"username"</code> and <code>"password"</code> for the authentication or disable it. In the default config just the http-server is enabled and configurated to run on port 80.</p>
+
+<h3 id="the-frontend-section">The "frontend"-section</h3>
+
+<p>In the <code>"frontends"</code>-section you have to list all frontends to load in the form of</p>
+
+<pre><code>{ 
+  "module": "frontend-name" 
+}
+</code></pre>
+
+<p>where <code>"frontend-name"</code> ist the name and directory of the frontend you want to load. All frontends are in the <code>frontends</code> directory. Additional you can add frontend specific configuration properties. See the documantation of the frontend you want to load for details about them.</p>
+
+<h3 id="the-backend-section">The "backend"-section</h3>
+
+<p>The <code>"backends"</code>-section should contain the backends to load. The form is the same like in the <code>frontend</code>-Section.  All backends are in the <code>backends</code> directory.</p>
+
+<h3 id="the-actuators-section">The "actuators"-section</h3>
+
+<p>The <code>"actuators"</code>-section should contain all actuators, you want to have registered in the framework. An actuator are typically provided by a backend, so take a look at the desired backend for more details about the configuration of your actuators. A actuator configuration has the form</p>
+
+<pre><code>{ 
+  "id": "light",
+  "class": "SomeSwitch",
+  "name": "Light in the kitchen",
+  ...
+}
+</code></pre>
+
+<p>where the <code>"id"</code> should be unique, the <code>"name"</code> should be human readable description and <code>"class"</code> determines the backend and type of the actuator. </p>
+
+<h3 id="the-rules-section">The "rules"-section</h3>
+
+<p>The <code>"rules"</code>-section can contain a list of rules in the form of:</p>
+
+<pre><code>{ 
+  "id": "printerOff",
+  "rule":  "if its 6pm then turn the printer off"
+}
+</code></pre>
+
+<p>where <code>"id"</code> should be a unique string and rule a string of the form "if ... then ...". </p>
+
+<h2 id="running">Running</h2>
+
+<p>The server can be started with </p>
+
+<pre><code>node main.js
+</code></pre>
+
+<p>or if you have <a href="http://coffeescript.org/">CoffeeScript</a> globally installed, just run</p>
+
+<pre><code>coffee sweetpi.coffee
+</code></pre>
+
+<h2 id="extensions-and-hacking">Extensions and Hacking</h2>
+
+<p>The framework is built to be extendable by frontends and backends. If you have devices that are currently not supported please fork the project and add a backend for your devices. 
+As well, if you have a nice Ideas for frontends or need support for specials actuators you are welcome to create a issue or submit a patch.</p></div></div></div></div></body></html>
