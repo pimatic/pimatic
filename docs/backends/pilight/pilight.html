@@ -75,7 +75,7 @@ Set the <code>class</code> attribute to <code>PilightOutlet</code>. For example:
     <span class="p">]</span>
     <span class="nx">child</span><span class="p">.</span><span class="kc">on</span> <span class="s2">&quot;exit&quot;</span><span class="p">,</span> <span class="nf">(code) -&gt;</span>
       <span class="nv">success = </span><span class="p">(</span><span class="nx">code</span> <span class="o">is</span> <span class="mi">0</span><span class="p">)</span>
-      <span class="nv">thisClass.state = </span><span class="nx">state</span> <span class="k">if</span> <span class="nx">success</span>
+      <span class="nx">thisClass</span><span class="p">.</span><span class="nx">_setState</span><span class="p">(</span><span class="nx">state</span><span class="p">)</span> <span class="k">if</span> <span class="nx">success</span>
       <span class="nx">resultCallbak</span> <span class="nx">success</span>
 
 <span class="nv">module.exports = </span><span class="nx">backend</span></div></div></div></div></body></html>

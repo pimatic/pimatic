@@ -30,7 +30,9 @@
   },
   "devDependencies": {
     "grunt": "~0.4.1",
-    "grunt-coffeelint": "~0.0.7"
+    "grunt-coffeelint": "~0.0.7",
+    "grunt-groc": "~0.3.0",
+    "grunt-ftp-deploy": "~0.0.10"
   },
   "engines": {
     "node": ">0.8.x",
