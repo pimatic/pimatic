@@ -18,6 +18,9 @@ $(document).on "pageinit", '#index', (event) ->
       value = (if data.state then "on" else "off")
       $("#flip-#{data.id}").val(value).slider('refresh')
 
+  socket.on "rule-add", (rule) -> addRule rule
+  socket.on "rule-update", (rule) -> updateRule rule
+
   $('#index #actuators').on "change", ".switch",(event, ui) ->
     actuatorId = $(this).data('actuator-id')
     actuatorAction = if $(this).val() is 'on' then 'turnOn' else 'turnOff'
@@ -87,6 +90,13 @@ addRule = (rule) ->
   li.find('.action').text(rule.action)
 
   $('#rules').append li
+  $('#rules').listview('refresh')
+
+updateRule = (rule) ->
+  console.log "update-rule"
+  li = $("\#rule-#{rule.id}")   
+  li.find('.condition').text(rule.condition)
+  li.find('.action').text(rule.action)
   $('#rules').listview('refresh')
 
 voiceCallback = (matches) ->

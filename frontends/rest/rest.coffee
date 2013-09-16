@@ -21,12 +21,11 @@ class RestFrontend extends modules.Frontend
     app.post "/api/rule/:ruleId/update", (req, res, next) ->
       ruleId = req.params.ruleId
       ruleText = req.body.rule
-
       error = null
       try
         server.ruleManager.updateRuleByString ruleId, ruleText
       catch e
-        console.log e
+        #console.log e
         error = e
       res.send 200, {success: not error?, error: error?.message}
 

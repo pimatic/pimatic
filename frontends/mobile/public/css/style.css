@@ -13,8 +13,7 @@ div.ui-slider-switch {
 }
 
 
-.ui-btn-up-c, .ui-btn-down-c, .ui-btn-active, 
-.ui-btn-hover-a a:hover {
+.ui-btn, .ui-btn a, .ui-btn a:hover, .ui-li {
   font-weight: normal;
 }
 

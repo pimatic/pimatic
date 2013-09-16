@@ -1,7 +1,7 @@
 assert = require 'cassert'
 logger = require "./logger"
 
-class RuleManager
+class RuleManager extends require('events').EventEmitter
   rules: []
   server: null
   actionHandlers: []
@@ -83,6 +83,7 @@ class RuleManager
     if not ok then throw Error "Could not find a actuator to execute \"#{actions}\""
 
     return rule = 
+      id: id
       orgCondition: condition
       predicates: predicates
       tokens: tokens
@@ -93,7 +94,8 @@ class RuleManager
     assert ruleString? and typeof ruleString is "string"
 
     # * Parse the rule to ower rules array
-    @rules[id] = @parseRuleString id, ruleString
+    @rules[id] = rule = @parseRuleString id, ruleString
+    @emit "add", rule
 
     # Check if the condition of the rule is allready true
     trueOrFalse = @evaluateConditionOfRule @rules[id]
@@ -113,6 +115,7 @@ class RuleManager
     p.sensor.cancelNotify p.id for p in oldRule.predicates
     # * Add the rule to the rules
     @rules[id] = rule
+    @emit "update", rule
     # * Check if the condition of the rule is allready true and execute the actions
     trueOrFalse = @evaluateConditionOfRule rule
     if trueOrFalse then @executeAction actions, false, (e, message)->

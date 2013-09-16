@@ -53,14 +53,26 @@ class MobileFrontend extends modules.Frontend
       io = socketIo.listen webServer, {logger: logger}
       # When a new client connects
       io.sockets.on 'connection', (socket) ->
+        cleanUpFunctions = []
         for actuator in thisClass.actuators 
           do (actuator) ->
             # * First time push the state to the client
             actuator.getState (error, state) ->
               unless error? then thisClass.emitSwitchState socket, actuator, state
             # * Then forward following state event to the client
-            actuator.on "state", (state) ->
+            actuator.on "state", stateListener = (state) ->
               thisClass.emitSwitchState socket, actuator, state
+            
+            cleanUpFunctions.push (-> actuator.removeListener stateListener)
+        server.ruleManager.on "add", addRuleListener = (rule) ->
+          thisClass.emitRuleUpdate socket, "add", rule
+        cleanUpFunctions.push (-> server.ruleManager.removeListener addRuleListener)       
+        server.ruleManager.on "update", updateRuleListener = (rule) ->
+          thisClass.emitRuleUpdate socket, "update", rule
+        cleanUpFunctions.push (-> server.ruleManager.removeListener updateRuleListener)  
+        # On `close` remove all event listeners
+        socket.on 'close', ->
+          cleanUpFunction() for cleanUpFunction in cleanUpFunctions
 
   getActuatorDataWithState: (callback) ->
     async.map( @actuators, (a, callback) ->
@@ -76,5 +88,12 @@ class MobileFrontend extends modules.Frontend
     socket.emit "switch-status",
       id: actuator.id
       state: state
+
+  emitRuleUpdate: (socket, trigger, rule) ->
+    socket.emit "rule-#{trigger}",
+      id: rule.id
+      condition: rule.orgCondition
+      action: rule.action
+
 
 module.exports = new MobileFrontend

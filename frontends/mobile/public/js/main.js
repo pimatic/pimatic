@@ -1,4 +1,4 @@
-var actuators, addRule, addSwitch, rules, voiceCallback;
+var actuators, addRule, addSwitch, rules, updateRule, voiceCallback;
 
 actuators = [];
 
@@ -36,6 +36,12 @@ $(document).on("pageinit", '#index', function(event) {
       value = (data.state ? "on" : "off");
       return $("#flip-" + data.id).val(value).slider('refresh');
     }
+  });
+  socket.on("rule-add", function(rule) {
+    return addRule(rule);
+  });
+  socket.on("rule-update", function(rule) {
+    return updateRule(rule);
   });
   $('#index #actuators').on("change", ".switch", function(event, ui) {
     var actuatorAction, actuatorId;
@@ -127,6 +133,15 @@ addRule = function(rule) {
   li.find('.condition').text(rule.condition);
   li.find('.action').text(rule.action);
   $('#rules').append(li);
+  return $('#rules').listview('refresh');
+};
+
+updateRule = function(rule) {
+  var li;
+  console.log("update-rule");
+  li = $("\#rule-" + rule.id);
+  li.find('.condition').text(rule.condition);
+  li.find('.action').text(rule.action);
   return $('#rules').listview('refresh');
 };
 
