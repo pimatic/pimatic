@@ -22,13 +22,14 @@ html(manifest='application.manifest')
           script#switch-template(type='text/template')
     script#rule-template(type='text/template')
       li
-        span.if=__('if')
-        | 
-        span.condition
-        | 
-        span.then=__('then')
-        | 
-        span.action
+        a.rule(data-transition='slide', href='#edit-rule')
+          span.if=__('if')
+          | 
+          span.condition
+          | 
+          span.then=__('then')
+          | 
+          span.action
         
   body
     //- Actuators and rules page
@@ -47,6 +48,13 @@ html(manifest='application.manifest')
       div(data-theme='a', data-role='header', data-position='fixed')
         h3=__('Edit rule')
       div(data-role='content')
-        textarea(name="", placeholder="if ... then ...")
-        input(value=__('Save'), type="submit")
-        a(data-role="button")=__('Test')
+        form#edit-rule-form
+          input#edit-rule-id(type="hidden")
+          textarea#edit-rule-text(name="", placeholder="if ... then ...")
+          fieldset.ui-grid-a
+            div.ui-block-a
+              a#edit-rule-cancel(data-icon="check", data-transition='slide', data-direction="reverse"
+                                 data-role="button", href='#index')=__('Cancel')
+            div.ui-block-b
+              input#edit-rule-save(data-icon="delete", value=__('Save'), type="submit")
+

@@ -1,6 +1,10 @@
-var addRule, addSwitch, voiceCallback;
+var actuators, addRule, addSwitch, rules, voiceCallback;
 
-$(document).on("pagecreate", function(event) {
+actuators = [];
+
+rules = [];
+
+$(document).on("pagecreate", '#index', function(event) {
   return $.get("/data.json", function(data) {
     var actuator, rule, _i, _j, _len, _len1, _ref, _ref1, _results;
     _ref = data.actuators;
@@ -18,7 +22,7 @@ $(document).on("pagecreate", function(event) {
   });
 });
 
-$(document).on("pageinit", function(event) {
+$(document).on("pageinit", '#index', function(event) {
   var socket;
   if (typeof device !== "undefined" && device !== null) {
     $("#talk").show().bind("vclick", function(event, ui) {
@@ -42,9 +46,33 @@ $(document).on("pageinit", function(event) {
     });
   });
   return $('#index #rules').on("click", ".rule", function(event, ui) {
-    var ruleId;
+    var rule, ruleId;
     ruleId = $(this).data('rule-id');
-    return $.mobile.changePage('#edit-rule');
+    rule = rules[ruleId];
+    $('#edit-rule-text').val("if " + rule.condition + " then " + rule.action);
+    $('#edit-rule-id').val(ruleId);
+    return true;
+  });
+});
+
+$(document).on("pageinit", '#edit-rule', function(event) {
+  return $('#edit-rule').on("submit", '#edit-rule-form', function() {
+    var ruleId, ruleText;
+    ruleId = $('#edit-rule-id').val();
+    ruleText = $('#edit-rule-text').val();
+    $.post("/api/rule/" + ruleId + "/update", {
+      rule: ruleText
+    }, function(data) {
+      if (data.success) {
+        return $.mobile.changePage('#index', {
+          transition: 'slide',
+          reverse: true
+        });
+      } else {
+        return alert(data.error);
+      }
+    });
+    return false;
   });
 });
 
@@ -77,6 +105,7 @@ $(document).ajaxError(function(event, jqxhr, settings, exception) {
 
 addSwitch = function(actuator) {
   var li, select, val;
+  actuators[actuator.id] = actuator;
   li = $($('#switch-template').html());
   li.find('label').attr('for', "flip-" + actuator.id).text(actuator.name);
   select = li.find('select').attr('name', "flip-" + actuator.id).attr('id', "flip-" + actuator.id).data('actuator-id', actuator.id);
@@ -91,6 +120,7 @@ addSwitch = function(actuator) {
 
 addRule = function(rule) {
   var li;
+  rules[rule.id] = rule;
   li = $($('#rule-template').html());
   li.attr('id', "rule-" + rule.id);
   li.find('a').data('rule-id', rule.id);

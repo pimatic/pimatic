@@ -17,5 +17,18 @@ class RestFrontend extends modules.Frontend
         else
           res.send 400, 'illegal action!'
       else res.send 400, 'illegal actuator!'
+
+    app.post "/api/rule/:ruleId/update", (req, res, next) ->
+      ruleId = req.params.ruleId
+      ruleText = req.body.rule
+
+      error = null
+      try
+        server.ruleManager.updateRuleByString ruleId, ruleText
+      catch e
+        console.log e
+        error = e
+      res.send 200, {success: not error?, error: error?.message}
+
       
 module.exports = new RestFrontend

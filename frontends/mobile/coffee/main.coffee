@@ -1,10 +1,13 @@
-$(document).on "pagecreate", (event) ->
+actuators = []
+rules = []
+
+$(document).on "pagecreate", '#index', (event) ->
   $.get "/data.json", (data) ->
     addSwitch(actuator) for actuator in data.actuators
     addRule(rule) for rule in data.rules
 
 
-$(document).on "pageinit", (event) ->
+$(document).on "pageinit", '#index', (event) ->
   if device?
     $("#talk").show().bind "vclick", (event, ui) ->
       device.startVoiceRecognition "voiceCallback"
@@ -16,14 +19,26 @@ $(document).on "pageinit", (event) ->
       $("#flip-#{data.id}").val(value).slider('refresh')
 
   $('#index #actuators').on "change", ".switch",(event, ui) ->
-      actuatorId = $(this).data('actuator-id')
-      actuatorAction = if $(this).val() is 'on' then 'turnOn' else 'turnOff'
-      $.get "/api/actuator/#{actuatorId}/#{actuatorAction}"  , (data) ->
-        device?.showToast "fertig"
+    actuatorId = $(this).data('actuator-id')
+    actuatorAction = if $(this).val() is 'on' then 'turnOn' else 'turnOff'
+    $.get "/api/actuator/#{actuatorId}/#{actuatorAction}"  , (data) ->
+      device?.showToast "fertig"
 
   $('#index #rules').on "click", ".rule", (event, ui) ->
-      ruleId = $(this).data('rule-id')
-      $.mobile.changePage('#edit-rule')
+    ruleId = $(this).data('rule-id')
+    rule = rules[ruleId]
+    $('#edit-rule-text').val("if " + rule.condition + " then " + rule.action)
+    $('#edit-rule-id').val(ruleId)
+    return true
+
+$(document).on "pageinit", '#edit-rule', (event) ->
+  $('#edit-rule').on "submit", '#edit-rule-form', ->
+    ruleId = $('#edit-rule-id').val()
+    ruleText = $('#edit-rule-text').val()
+    $.post "/api/rule/#{ruleId}/update", rule: ruleText, (data) ->
+      if data.success then $.mobile.changePage('#index',{transition: 'slide', reverse: true})    
+      else alert data.error
+    return false
 
 
 $.ajaxSetup timeout: 7000 #ms
@@ -46,6 +61,7 @@ $(document).ajaxError (event, jqxhr, settings, exception) ->
   alert error
 
 addSwitch = (actuator) ->
+  actuators[actuator.id] = actuator
   li = $ $('#switch-template').html()
   li.find('label')
     .attr('for', "flip-#{actuator.id}")
@@ -63,6 +79,7 @@ addSwitch = (actuator) ->
   $('#actuators').listview('refresh')
 
 addRule = (rule) ->
+  rules[rule.id] = rule 
   li = $ $('#rule-template').html()
   li.attr('id', "rule-#{rule.id}")   
   li.find('a').data('rule-id', rule.id)

@@ -30,14 +30,14 @@ class RuleManager
       logger.error "Rule #{ruleId} error: #{e}" if e?
       logger.info "Rule #{ruleId}: #{message}" if message?
 
-  addRuleByString: (id, ruleString) ->
+  parseRuleString: (id, ruleString) ->
     assert id? and typeof id is "string" and id.length isnt 0
     assert ruleString? and typeof ruleString is "string"
 
     _this = this
-    #First take the string apart:
+    # * First take the string apart:
     parts = ruleString.split /^if\s|\sthen\s/
-    #parts should now be ["", "the if part", "the then part"]
+    # * => parts should now be `["", "the if part", "the then part"]`
     switch
       when parts.length < 3 
         throw new Error('The rule must start with "if" and contain a "then" part!')
@@ -46,13 +46,13 @@ class RuleManager
     condition = parts[1].trim()
     actions = parts[2].trim()
 
-    #Split the condition in a token stream.
-    #For example: "12:30 and temperature > 10" becoms
-    #['12:30', 'and', 'temperature > 30 C']
-    #Then we replace all predicates throw predicate tokens:
-    #['predicate', '(', 0, ')', 'and', 'predicate', '(', 1, ')']
-    #and remember the predicates in predicates
-    #predicates = [ {token: '12:30'}, {token: 'temperature > 10'}]
+    # Split the condition in a token stream.
+    # For example: "12:30 and temperature > 10" becomes
+    # `['12:30', 'and', 'temperature > 30 C']`
+    # Then we replace all predicates throw predicate tokens:
+    # `['predicate', '(', 0, ')', 'and', 'predicate', '(', 1, ')']`
+    # and remember the predicates in predicates
+    # `predicates = [ {token: '12:30'}, {token: 'temperature > 10'}]`
     predicates = []
     tokens = []
     for token in condition.split /(\sand\s|\sor\s|\)|\()/ 
@@ -78,24 +78,48 @@ class RuleManager
             p.sensor.cancelNotify p.id for p in predicates
             throw new Error "Could not found an sensor that decides \"#{predicate.token}\""
     
-    #Ok now the easier part: the action
+    # Ok now the easier part: the action
     ok = _this.executeAction actions, true, -> 
     if not ok then throw Error "Could not find a actuator to execute \"#{actions}\""
 
-    #Now we cann add the rule to ower rules array
-    @rules[id] =
+    return rule = 
       orgCondition: condition
       predicates: predicates
       tokens: tokens
       action: actions
 
-    #Check if the condition of the rule is allready true
+  addRuleByString: (id, ruleString) ->
+    assert id? and typeof id is "string" and id.length isnt 0
+    assert ruleString? and typeof ruleString is "string"
+
+    # * Parse the rule to ower rules array
+    @rules[id] = @parseRuleString id, ruleString
+
+    # Check if the condition of the rule is allready true
     trueOrFalse = @evaluateConditionOfRule @rules[id]
     if trueOrFalse then @executeAction actions, false, (e, message)->
       logger.error "Rule #{ruleId} error: #{e}" if e?
       logger.info "Rule #{ruleId}: #{message}" if message?
 
-  #Uses 'bet' to evaluate rule.tokens
+  updateRuleByString: (id, ruleString) ->
+    assert id? and typeof id is "string" and id.length isnt 0
+    assert ruleString? and typeof ruleString is "string"
+
+    throw new Error("Invalid ruleId: \"#{ruleId}\"") unless @rules[id]?
+    # * First try to parse the updated ruleString:
+    rule = @parseRuleString id, ruleString
+    oldRule = @rules[id]
+    # * Then cancel all Notifier for all predicates
+    p.sensor.cancelNotify p.id for p in oldRule.predicates
+    # * Add the rule to the rules
+    @rules[id] = rule
+    # * Check if the condition of the rule is allready true and execute the actions
+    trueOrFalse = @evaluateConditionOfRule rule
+    if trueOrFalse then @executeAction actions, false, (e, message)->
+      logger.error "Rule #{ruleId} error: #{e}" if e?
+      logger.info "Rule #{ruleId}: #{message}" if message?
+
+  # Uses 'bet' to evaluate rule.tokens
   evaluateConditionOfRule: (rule, knownTruePredicates = []) ->
     assert rule? and rule instanceof Object
     assert Array.isArray knownTruePredicates

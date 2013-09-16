@@ -22,3 +22,8 @@ span.if, span.then {
   font-weight: bold;
 }
 
+.in, .out {
+    -webkit-animation-timing-function: ease-in-out;
+    -webkit-animation-duration: 120ms !important;
+}
+

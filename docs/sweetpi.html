@@ -29,7 +29,8 @@
 <span class="nv">helper = </span><span class="nx">require</span> <span class="s1">&#39;./lib/helper&#39;</span>
 <span class="nv">Server = </span><span class="nx">require</span> <span class="s2">&quot;./lib/server&quot;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><h2 id="setup-express">Setup express</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="nv">app = </span><span class="nx">express</span><span class="p">()</span>
 <span class="nx">app</span><span class="p">.</span><span class="nx">use</span> <span class="nx">i18n</span><span class="p">.</span><span class="nx">init</span>
-<span class="nx">app</span><span class="p">.</span><span class="nx">use</span> <span class="nx">express</span><span class="p">.</span><span class="nx">logger</span><span class="p">()</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><h2 id="setup-authentication">Setup authentication</h2>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span> <span class="nx">express</span><span class="p">.</span><span class="nx">logger</span><span class="p">()</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span> <span class="nx">express</span><span class="p">.</span><span class="nx">bodyParser</span><span class="p">()</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><h2 id="setup-authentication">Setup authentication</h2>
 
 <p>Use http-basicAuth if authentication is not disabled.</p></div></div><div class="code"><div class="wrapper"><span class="nv">auth = </span><span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">authentication</span>
 <span class="k">if</span> <span class="nx">auth</span><span class="p">.</span><span class="nx">enabled</span>
