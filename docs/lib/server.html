@@ -5,7 +5,7 @@
 <span class="nv">rules = </span><span class="nx">require</span> <span class="s1">&#39;./rules&#39;</span>
 <span class="nv">modules = </span><span class="nx">require</span> <span class="s1">&#39;./modules&#39;</span>
 <span class="nv">logger = </span><span class="nx">require</span> <span class="s2">&quot;./logger&quot;</span>
-
+<span class="nv">fs = </span><span class="nx">require</span> <span class="s2">&quot;fs&quot;</span>
 
 <span class="k">class</span> <span class="nx">Server</span> <span class="k">extends</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;events&#39;</span><span class="p">).</span><span class="nx">EventEmitter</span>
   <span class="nv">frontends: </span><span class="p">[]</span>
@@ -103,6 +103,7 @@
     <span class="nx">@actuators</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span>
 
   <span class="nv">init: </span><span class="o">-&gt;</span>
+    <span class="nv">self = </span><span class="err">@</span>
     <span class="nx">b</span><span class="p">.</span><span class="nx">module</span><span class="p">.</span><span class="nx">init</span> <span class="err">@</span><span class="p">,</span> <span class="nx">b</span><span class="p">.</span><span class="nx">config</span> <span class="k">for</span> <span class="nx">b</span> <span class="k">in</span> <span class="nx">@backends</span>
     <span class="nx">@loadActuators</span><span class="p">()</span>
     <span class="nx">f</span><span class="p">.</span><span class="nx">module</span><span class="p">.</span><span class="nx">init</span> <span class="nx">@app</span><span class="p">,</span> <span class="err">@</span><span class="p">,</span> <span class="nx">f</span><span class="p">.</span><span class="nx">config</span> <span class="k">for</span> <span class="nx">f</span> <span class="k">in</span> <span class="nx">@frontends</span>
@@ -111,4 +112,27 @@
     <span class="k">for</span> <span class="nx">rule</span> <span class="k">in</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">rules</span>
       <span class="nx">@ruleManager</span><span class="p">.</span><span class="nx">addRuleByString</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">rule</span>
 
+    <span class="nx">self</span><span class="p">.</span><span class="nx">ruleManager</span><span class="p">.</span><span class="kc">on</span> <span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="nf">(rule) -&gt;</span>
+      <span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">rules</span><span class="p">.</span><span class="nx">push</span> 
+        <span class="nv">id: </span><span class="nx">rule</span><span class="p">.</span><span class="nx">id</span>
+        <span class="nv">rule: </span><span class="nx">rule</span><span class="p">.</span><span class="nx">string</span>
+      <span class="nx">self</span><span class="p">.</span><span class="nx">emit</span> <span class="s2">&quot;config&quot;</span>
+    <span class="nx">self</span><span class="p">.</span><span class="nx">ruleManager</span><span class="p">.</span><span class="kc">on</span> <span class="s2">&quot;update&quot;</span><span class="p">,</span> <span class="nf">(rule) -&gt;</span>
+      <span class="k">for</span> <span class="nx">r</span><span class="p">,</span> <span class="nx">i</span> <span class="k">in</span> <span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">rules</span>
+        <span class="k">if</span> <span class="nx">r</span><span class="p">.</span><span class="nx">id</span> <span class="o">is</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">id</span>
+          <span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">rules</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> 
+            <span class="nv">id: </span><span class="nx">rule</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span>
+            <span class="nv">rule: </span><span class="nx">rule</span><span class="p">.</span><span class="nx">string</span>
+          <span class="k">break</span>
+      <span class="nx">self</span><span class="p">.</span><span class="nx">emit</span> <span class="s2">&quot;config&quot;</span>
+
+    <span class="nx">self</span><span class="p">.</span><span class="kc">on</span> <span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="o">-&gt;</span>
+      <span class="nx">self</span><span class="p">.</span><span class="nx">saveConfig</span><span class="p">()</span>
+
+
+  <span class="nv">saveConfig: </span><span class="o">-&gt;</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="nx">self</span>
+    <span class="nx">fs</span><span class="p">.</span><span class="nx">writeFile</span> <span class="s2">&quot;config.json&quot;</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">@config</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nf">(err) -&gt;</span>
+      <span class="k">if</span> <span class="nx">err</span><span class="o">?</span> <span class="k">then</span> <span class="k">throw</span> <span class="nx">err</span>
+      <span class="k">else</span> <span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="s2">&quot;config.json updated&quot;</span>
  <span class="nv">module.exports = </span><span class="nx">Server</span></div></div></div></div></body></html>

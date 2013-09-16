@@ -1,4 +1,5 @@
-assert = require 'cassert'
+# Must be assert NOT 'cassert' because of  AssertionError class
+assert = require 'assert'
 
 module.exports.checkConfig = (moduleName, checker) ->
   try 

@@ -26,6 +26,7 @@
         <span class="nx">server</span><span class="p">.</span><span class="nx">ruleManager</span><span class="p">.</span><span class="nx">updateRuleByString</span> <span class="nx">ruleId</span><span class="p">,</span> <span class="nx">ruleText</span>
       <span class="k">catch</span> <span class="nx">e</span>
         <span class="c1">#console.log e</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="nx">e</span><span class="p">.</span><span class="nx">stack</span>
         <span class="nv">error = </span><span class="nx">e</span>
       <span class="nx">res</span><span class="p">.</span><span class="nx">send</span> <span class="mi">200</span><span class="p">,</span> <span class="p">{</span><span class="nv">success: </span><span class="o">not</span> <span class="nx">error</span><span class="o">?</span><span class="p">,</span> <span class="nv">error: </span><span class="nx">error</span><span class="o">?</span><span class="p">.</span><span class="nx">message</span><span class="p">}</span>
 

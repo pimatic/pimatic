@@ -93,6 +93,7 @@ addRule = (rule) ->
   $('#rules').listview('refresh')
 
 updateRule = (rule) ->
+  rules[rule.id] = rule 
   li = $("\#rule-#{rule.id}")   
   li.find('.condition').text(rule.condition)
   li.find('.action').text(rule.action)

@@ -5,7 +5,7 @@ sensors = require './sensors'
 rules = require './rules'
 modules = require './modules'
 logger = require "./logger"
-
+fs = require "fs"
 
 class Server extends require('events').EventEmitter
   frontends: []
@@ -103,6 +103,7 @@ class Server extends require('events').EventEmitter
     @actuators[id]
 
   init: ->
+    self = @
     b.module.init @, b.config for b in @backends
     @loadActuators()
     f.module.init @app, @, f.config for f in @frontends
@@ -111,4 +112,26 @@ class Server extends require('events').EventEmitter
     for rule in @config.rules
       @ruleManager.addRuleByString rule.id, rule.rule
 
+    self.ruleManager.on "add", (rule) ->
+      self.config.rules.push 
+        id: rule.id
+        rule: rule.string
+      self.emit "config"
+    self.ruleManager.on "update", (rule) ->
+      for r, i in self.config.rules
+        if r.id is rule.id
+          self.config.rules[i] = 
+            id: rule.id,
+            rule: rule.string
+          break
+      self.emit "config"
+
+    self.on "config", ->
+      self.saveConfig()
+
+
+  saveConfig: ->
+    fs.writeFile "config.json", JSON.stringify(@config, null, 2), (err) ->
+      if err? then throw err
+      else logger.info "config.json updated"
  module.exports = Server

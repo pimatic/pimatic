@@ -88,6 +88,7 @@ class RuleManager extends require('events').EventEmitter
       predicates: predicates
       tokens: tokens
       action: actions
+      string: ruleString
 
   addRuleByString: (id, ruleString) ->
     assert id? and typeof id is "string" and id.length isnt 0

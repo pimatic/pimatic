@@ -26,6 +26,7 @@ class RestFrontend extends modules.Frontend
         server.ruleManager.updateRuleByString ruleId, ruleText
       catch e
         #console.log e
+        console.log e.stack
         error = e
       res.send 200, {success: not error?, error: error?.message}
 
