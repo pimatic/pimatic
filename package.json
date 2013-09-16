@@ -1,11 +1,11 @@
 {
   "name": "sweetpi-server",
   "description": "A home automation server and framework for the raspberry pi running on node.js",
-  "author": "Oliver Schneider <oliverschneider89+sweetpi@gmail.com> (http://sweetpi.h3llfire.de)",
+  "author": "Oliver Schneider <oliverschneider89+sweetpi@gmail.com> (http://sweetpi.de)",
   "main": "main.js",
   "files": ["backends", "docs", "frontends", "lib", "locales", "main.js", "sweetpi.coffee", 
             "config-shema.coffee", "config_default.json", "README.md", "LICENSE"],
-  "version": "0.0.3",
+  "version": "0.0.4",
   "homepage": "http://github.com/sweetpi/sweetpi-server",
   "repository": {
     "type": "git",
