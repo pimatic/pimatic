@@ -63,13 +63,13 @@ class MobileFrontend extends modules.Frontend
             actuator.on "state", stateListener = (state) ->
               thisClass.emitSwitchState socket, actuator, state
             
-            cleanUpFunctions.push (-> actuator.removeListener stateListener)
+            cleanUpFunctions.push (-> actuator.removeListener "state", stateListener)
         server.ruleManager.on "add", addRuleListener = (rule) ->
           thisClass.emitRuleUpdate socket, "add", rule
-        cleanUpFunctions.push (-> server.ruleManager.removeListener addRuleListener)       
+        cleanUpFunctions.push (-> server.ruleManager.removeListener "add", addRuleListener)       
         server.ruleManager.on "update", updateRuleListener = (rule) ->
           thisClass.emitRuleUpdate socket, "update", rule
-        cleanUpFunctions.push (-> server.ruleManager.removeListener updateRuleListener)  
+        cleanUpFunctions.push (-> server.ruleManager.removeListener "update", updateRuleListener)  
         # On `close` remove all event listeners
         socket.on 'close', ->
           cleanUpFunction() for cleanUpFunction in cleanUpFunctions
