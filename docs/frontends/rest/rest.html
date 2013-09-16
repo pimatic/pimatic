@@ -21,13 +21,13 @@
     <span class="nx">app</span><span class="p">.</span><span class="nx">post</span> <span class="s2">&quot;/api/rule/:ruleId/update&quot;</span><span class="p">,</span> <span class="nf">(req, res, next) -&gt;</span>
       <span class="nv">ruleId = </span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">ruleId</span>
       <span class="nv">ruleText = </span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">rule</span>
-
       <span class="nv">error = </span><span class="kc">null</span>
       <span class="k">try</span>
         <span class="nx">server</span><span class="p">.</span><span class="nx">ruleManager</span><span class="p">.</span><span class="nx">updateRuleByString</span> <span class="nx">ruleId</span><span class="p">,</span> <span class="nx">ruleText</span>
       <span class="k">catch</span> <span class="nx">e</span>
+        <span class="c1">#console.log e</span>
         <span class="nv">error = </span><span class="nx">e</span>
-      <span class="nx">res</span><span class="p">.</span><span class="nx">send</span> <span class="mi">200</span><span class="p">,</span> <span class="nx">error</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">send</span> <span class="mi">200</span><span class="p">,</span> <span class="p">{</span><span class="nv">success: </span><span class="o">not</span> <span class="nx">error</span><span class="o">?</span><span class="p">,</span> <span class="nv">error: </span><span class="nx">error</span><span class="o">?</span><span class="p">.</span><span class="nx">message</span><span class="p">}</span>
 
       
 <span class="nv">module.exports = </span><span class="k">new</span> <span class="nx">RestFrontend</span></div></div></div></div></body></html>
