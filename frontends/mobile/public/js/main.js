@@ -138,7 +138,6 @@ addRule = function(rule) {
 
 updateRule = function(rule) {
   var li;
-  console.log("update-rule");
   li = $("\#rule-" + rule.id);
   li.find('.condition').text(rule.condition);
   li.find('.action').text(rule.action);
