@@ -104,28 +104,36 @@ class Server extends require('events').EventEmitter
 
   init: ->
     self = @
-    b.module.init @, b.config for b in @backends
-    @loadActuators()
-    f.module.init @app, @, f.config for f in @frontends
+    b.module.init(self, b.config) for b in self.backends
+    self.loadActuators()
+    f.module.init(self.app, self, f.config) for f in self.frontends
     actions = require './actions'
-    @ruleManager.actionHandlers.push actions(this)
-    for rule in @config.rules
-      @ruleManager.addRuleByString rule.id, rule.rule
+    self.ruleManager.actionHandlers.push actions(this)
+    self.ruleManager.addRuleByString(rule.id, rule.rule) for rule in self.config.rules
 
+    # Save rule updates to the config file:
+    # 
+    # * If a new rule was added then...
     self.ruleManager.on "add", (rule) ->
+      # ...add it to the rules Array in the config.json file
       self.config.rules.push 
         id: rule.id
         rule: rule.string
       self.emit "config"
+    # * If a rule was changed then...
     self.ruleManager.on "update", (rule) ->
-      for r, i in self.config.rules
-        if r.id is rule.id
-          self.config.rules[i] = 
-            id: rule.id,
-            rule: rule.string
-          break
+      # ...change the rule with the right id in the config.json file
+      self.config.rules = for r in self.config.rules 
+        if r.id is rule.id then {id: rule.id, rule: rule.string}
+        else r
+      self.emit "config"
+    # * If a rule was removed then
+    self.ruleManager.on "remove", (rule) ->
+      # ...Remove the rule with the right id in the config.json file
+      self.config.rules = (r for r in self.config.rules when r.id isnt rule.id)
       self.emit "config"
 
+    # Save the config on "config" event
     self.on "config", ->
       self.saveConfig()
 

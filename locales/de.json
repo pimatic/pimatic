@@ -15,5 +15,14 @@
 	"Save": "Save",
 	"Test": "Test",
 	"then": "then",
-	"Cancel": "Cancel"
+	"Cancel": "Cancel",
+	"Add a rule...": "Add a rule...",
+	"Add a new rule...": "Add a new rule...",
+	"Add new rule": "Add new rule",
+	"Please enter a id": "Please enter a id",
+	"Delete": "Delete",
+	"or": "or",
+	"Delete this rule": "Delete this rule",
+	"Advanced Options": "Advanced Options",
+	"Advanced Options:": "Advanced Options:"
 }

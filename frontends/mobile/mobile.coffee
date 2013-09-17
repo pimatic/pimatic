@@ -70,6 +70,9 @@ class MobileFrontend extends modules.Frontend
         server.ruleManager.on "update", updateRuleListener = (rule) ->
           thisClass.emitRuleUpdate socket, "update", rule
         cleanUpFunctions.push (-> server.ruleManager.removeListener "update", updateRuleListener)  
+        server.ruleManager.on "remove", removeRuleListener = (rule) ->
+          thisClass.emitRuleUpdate socket, "remove", rule
+        cleanUpFunctions.push (-> server.ruleManager.removeListener "update", removeRuleListener)  
         # On `close` remove all event listeners
         socket.on 'close', ->
           cleanUpFunction() for cleanUpFunction in cleanUpFunctions

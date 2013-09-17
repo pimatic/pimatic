@@ -95,6 +95,15 @@ and remember the predicates in predicates
       <span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="s2">&quot;Rule #{ruleId} error: #{e}&quot;</span> <span class="k">if</span> <span class="nx">e</span><span class="o">?</span>
       <span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="s2">&quot;Rule #{ruleId}: #{message}&quot;</span> <span class="k">if</span> <span class="nx">message</span><span class="o">?</span>
 
+  <span class="nv">removeRule: </span><span class="nf">(id) -&gt;</span>
+    <span class="nx">assert</span> <span class="nx">id</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">id</span> <span class="o">is</span> <span class="s2">&quot;string&quot;</span> <span class="o">and</span> <span class="nx">id</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">&quot;Invalid ruleId: \&quot;#{ruleId}\&quot;&quot;</span><span class="p">)</span> <span class="nx">unless</span> <span class="nx">@rules</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span><span class="o">?</span>
+    <span class="nv">rule = </span><span class="nx">@rules</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
+<li>Then cancel all Notifier for all predicates</li>
+</ul></div></div><div class="code"><div class="wrapper">    <span class="nx">p</span><span class="p">.</span><span class="nx">sensor</span><span class="p">.</span><span class="nx">cancelNotify</span> <span class="nx">p</span><span class="p">.</span><span class="nx">id</span> <span class="k">for</span> <span class="nx">p</span> <span class="k">in</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">predicates</span>
+    <span class="k">delete</span> <span class="nx">@rules</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span>
+    <span class="nx">@emit</span> <span class="s2">&quot;remove&quot;</span><span class="p">,</span> <span class="nx">rule</span>
+
   <span class="nv">updateRuleByString: </span><span class="nf">(id, ruleString) -&gt;</span>
     <span class="nx">assert</span> <span class="nx">id</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">id</span> <span class="o">is</span> <span class="s2">&quot;string&quot;</span> <span class="o">and</span> <span class="nx">id</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span>
     <span class="nx">assert</span> <span class="nx">ruleString</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">ruleString</span> <span class="o">is</span> <span class="s2">&quot;string&quot;</span>

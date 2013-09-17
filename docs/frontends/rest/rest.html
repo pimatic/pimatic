@@ -1,4 +1,5 @@
 <!DOCTYPE html><html lang="en"><head><title>frontends/rest/rest</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../"><meta name="groc-document-path" content="frontends/rest/rest"><meta name="groc-project-path" content="frontends/rest/rest.coffee"><link rel="stylesheet" type="text/css" media="all" href="../../assets/style.css"><script type="text/javascript" src="../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">frontends/rest/rest.coffee</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="nv">modules = </span><span class="nx">require</span> <span class="s1">&#39;../../lib/modules&#39;</span>
+<span class="nv">__ = </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;i18n&#39;</span><span class="p">).</span><span class="nx">__</span>
 
 <span class="k">class</span> <span class="nx">RestFrontend</span> <span class="k">extends</span> <span class="nx">modules</span><span class="p">.</span><span class="nx">Frontend</span>
   <span class="nv">config: </span><span class="kc">null</span>
@@ -24,6 +25,31 @@
       <span class="nv">error = </span><span class="kc">null</span>
       <span class="k">try</span>
         <span class="nx">server</span><span class="p">.</span><span class="nx">ruleManager</span><span class="p">.</span><span class="nx">updateRuleByString</span> <span class="nx">ruleId</span><span class="p">,</span> <span class="nx">ruleText</span>
+      <span class="k">catch</span> <span class="nx">e</span>
+        <span class="c1">#console.log e</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="nx">e</span><span class="p">.</span><span class="nx">stack</span>
+        <span class="nv">error = </span><span class="nx">e</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">send</span> <span class="mi">200</span><span class="p">,</span> <span class="p">{</span><span class="nv">success: </span><span class="o">not</span> <span class="nx">error</span><span class="o">?</span><span class="p">,</span> <span class="nv">error: </span><span class="nx">error</span><span class="o">?</span><span class="p">.</span><span class="nx">message</span><span class="p">}</span>
+
+    <span class="nx">app</span><span class="p">.</span><span class="nx">post</span> <span class="s2">&quot;/api/rule//add&quot;</span><span class="p">,</span> <span class="nf">(req, res, next) -&gt;</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">send</span> <span class="mi">200</span><span class="p">,</span> <span class="p">{</span><span class="nv">success: </span><span class="kc">false</span><span class="p">,</span> <span class="nv">error: </span><span class="nx">__</span><span class="p">(</span><span class="s1">&#39;Please enter a id&#39;</span><span class="p">)}</span>
+    <span class="nx">app</span><span class="p">.</span><span class="nx">post</span> <span class="s2">&quot;/api/rule/:ruleId/add&quot;</span><span class="p">,</span> <span class="nf">(req, res, next) -&gt;</span>
+      <span class="nv">ruleId = </span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">ruleId</span>
+      <span class="nv">ruleText = </span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">rule</span>
+      <span class="nv">error = </span><span class="kc">null</span>
+      <span class="k">try</span>
+        <span class="nx">server</span><span class="p">.</span><span class="nx">ruleManager</span><span class="p">.</span><span class="nx">addRuleByString</span> <span class="nx">ruleId</span><span class="p">,</span> <span class="nx">ruleText</span>
+      <span class="k">catch</span> <span class="nx">e</span>
+        <span class="c1">#console.log e</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="nx">e</span><span class="p">.</span><span class="nx">stack</span>
+        <span class="nv">error = </span><span class="nx">e</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">send</span> <span class="mi">200</span><span class="p">,</span> <span class="p">{</span><span class="nv">success: </span><span class="o">not</span> <span class="nx">error</span><span class="o">?</span><span class="p">,</span> <span class="nv">error: </span><span class="nx">error</span><span class="o">?</span><span class="p">.</span><span class="nx">message</span><span class="p">}</span>
+
+    <span class="nx">app</span><span class="p">.</span><span class="nx">get</span> <span class="s2">&quot;/api/rule/:ruleId/remove&quot;</span><span class="p">,</span> <span class="nf">(req, res, next) -&gt;</span>
+      <span class="nv">ruleId = </span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">ruleId</span>
+      <span class="nv">error = </span><span class="kc">null</span>
+      <span class="k">try</span>
+        <span class="nx">server</span><span class="p">.</span><span class="nx">ruleManager</span><span class="p">.</span><span class="nx">removeRule</span> <span class="nx">ruleId</span>
       <span class="k">catch</span> <span class="nx">e</span>
         <span class="c1">#console.log e</span>
         <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="nx">e</span><span class="p">.</span><span class="nx">stack</span>

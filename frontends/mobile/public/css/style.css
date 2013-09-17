@@ -26,3 +26,9 @@ span.if, span.then {
     -webkit-animation-duration: 120ms !important;
 }
 
+fieldset .ui-block-a .ui-btn{
+    margin-left: 0px;
+}
+fieldset .ui-block-b .ui-btn{
+    margin-right: 0px;
+}

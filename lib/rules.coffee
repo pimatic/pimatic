@@ -104,6 +104,15 @@ class RuleManager extends require('events').EventEmitter
       logger.error "Rule #{ruleId} error: #{e}" if e?
       logger.info "Rule #{ruleId}: #{message}" if message?
 
+  removeRule: (id) ->
+    assert id? and typeof id is "string" and id.length isnt 0
+    throw new Error("Invalid ruleId: \"#{ruleId}\"") unless @rules[id]?
+    rule = @rules[id]
+    # * Then cancel all Notifier for all predicates
+    p.sensor.cancelNotify p.id for p in rule.predicates
+    delete @rules[id]
+    @emit "remove", rule
+
   updateRuleByString: (id, ruleString) ->
     assert id? and typeof id is "string" and id.length isnt 0
     assert ruleString? and typeof ruleString is "string"

@@ -20,6 +20,7 @@ $(document).on "pageinit", '#index', (event) ->
 
   socket.on "rule-add", (rule) -> addRule rule
   socket.on "rule-update", (rule) -> updateRule rule
+  socket.on "rule-remove", (rule) -> removeRule rule
 
   $('#index #actuators').on "change", ".switch",(event, ui) ->
     actuatorId = $(this).data('actuator-id')
@@ -30,19 +31,47 @@ $(document).on "pageinit", '#index', (event) ->
   $('#index #rules').on "click", ".rule", (event, ui) ->
     ruleId = $(this).data('rule-id')
     rule = rules[ruleId]
+    $('#edit-rule-form').data('action', 'update')
     $('#edit-rule-text').val("if " + rule.condition + " then " + rule.action)
     $('#edit-rule-id').val(ruleId)
+    return true
+
+  $('#index #rules').on "click", "#add-rule", (event, ui) ->
+    $('#edit-rule-form').data('action', 'add')
+    $('#edit-rule-text').val("")
+    $('#edit-rule-id').val("")
     return true
 
 $(document).on "pageinit", '#edit-rule', (event) ->
   $('#edit-rule').on "submit", '#edit-rule-form', ->
     ruleId = $('#edit-rule-id').val()
     ruleText = $('#edit-rule-text').val()
-    $.post "/api/rule/#{ruleId}/update", rule: ruleText, (data) ->
+    action = $('#edit-rule-form').data('action')
+    $.post "/api/rule/#{ruleId}/#{action}", rule: ruleText, (data) ->
       if data.success then $.mobile.changePage('#index',{transition: 'slide', reverse: true})    
       else alert data.error
     return false
 
+  $('#edit-rule').on "click", '#edit-rule-remove', ->
+    ruleId = $('#edit-rule-id').val()
+    $.get "/api/rule/#{ruleId}/remove", (data) ->
+      if data.success then $.mobile.changePage('#index',{transition: 'slide', reverse: true})    
+      else alert data.error
+    return false
+
+  $(document).on "pagebeforeshow", '#edit-rule', (event) ->
+    action = $('#edit-rule-form').data('action')
+    switch action
+      when 'add'
+        $('#edit-rule h3.add').show()
+        $('#edit-rule h3.edit').hide()
+        $('#edit-rule-id').textinput('enable')
+        $('#edit-rule-advanced').hide()
+      when 'update'
+        $('#edit-rule h3.add').hide()
+        $('#edit-rule h3.edit').show()
+        $('#edit-rule-id').textinput('disable')
+        $('#edit-rule-advanced').show()
 
 $.ajaxSetup timeout: 7000 #ms
 
@@ -88,8 +117,7 @@ addRule = (rule) ->
   li.find('a').data('rule-id', rule.id)
   li.find('.condition').text(rule.condition)
   li.find('.action').text(rule.action)
-
-  $('#rules').append li
+  $('#add-rule').before li
   $('#rules').listview('refresh')
 
 updateRule = (rule) ->
@@ -98,6 +126,11 @@ updateRule = (rule) ->
   li.find('.condition').text(rule.condition)
   li.find('.action').text(rule.action)
   $('#rules').listview('refresh')
+
+removeRule = (rule) ->
+  delete rules[rule.id]
+  $("\#rule-#{rule.id}").remove()
+  $('#rules').listview('refresh')  
 
 voiceCallback = (matches) ->
   $.get "/api/speak",

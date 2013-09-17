@@ -1,4 +1,4 @@
-var actuators, addRule, addSwitch, rules, updateRule, voiceCallback;
+var actuators, addRule, addSwitch, removeRule, rules, updateRule, voiceCallback;
 
 actuators = [];
 
@@ -43,6 +43,9 @@ $(document).on("pageinit", '#index', function(event) {
   socket.on("rule-update", function(rule) {
     return updateRule(rule);
   });
+  socket.on("rule-remove", function(rule) {
+    return removeRule(rule);
+  });
   $('#index #actuators').on("change", ".switch", function(event, ui) {
     var actuatorAction, actuatorId;
     actuatorId = $(this).data('actuator-id');
@@ -51,22 +54,30 @@ $(document).on("pageinit", '#index', function(event) {
       return typeof device !== "undefined" && device !== null ? device.showToast("fertig") : void 0;
     });
   });
-  return $('#index #rules').on("click", ".rule", function(event, ui) {
+  $('#index #rules').on("click", ".rule", function(event, ui) {
     var rule, ruleId;
     ruleId = $(this).data('rule-id');
     rule = rules[ruleId];
+    $('#edit-rule-form').data('action', 'update');
     $('#edit-rule-text').val("if " + rule.condition + " then " + rule.action);
     $('#edit-rule-id').val(ruleId);
+    return true;
+  });
+  return $('#index #rules').on("click", "#add-rule", function(event, ui) {
+    $('#edit-rule-form').data('action', 'add');
+    $('#edit-rule-text').val("");
+    $('#edit-rule-id').val("");
     return true;
   });
 });
 
 $(document).on("pageinit", '#edit-rule', function(event) {
-  return $('#edit-rule').on("submit", '#edit-rule-form', function() {
-    var ruleId, ruleText;
+  $('#edit-rule').on("submit", '#edit-rule-form', function() {
+    var action, ruleId, ruleText;
     ruleId = $('#edit-rule-id').val();
     ruleText = $('#edit-rule-text').val();
-    $.post("/api/rule/" + ruleId + "/update", {
+    action = $('#edit-rule-form').data('action');
+    $.post("/api/rule/" + ruleId + "/" + action, {
       rule: ruleText
     }, function(data) {
       if (data.success) {
@@ -79,6 +90,37 @@ $(document).on("pageinit", '#edit-rule', function(event) {
       }
     });
     return false;
+  });
+  $('#edit-rule').on("click", '#edit-rule-remove', function() {
+    var ruleId;
+    ruleId = $('#edit-rule-id').val();
+    $.get("/api/rule/" + ruleId + "/remove", function(data) {
+      if (data.success) {
+        return $.mobile.changePage('#index', {
+          transition: 'slide',
+          reverse: true
+        });
+      } else {
+        return alert(data.error);
+      }
+    });
+    return false;
+  });
+  return $(document).on("pagebeforeshow", '#edit-rule', function(event) {
+    var action;
+    action = $('#edit-rule-form').data('action');
+    switch (action) {
+      case 'add':
+        $('#edit-rule h3.add').show();
+        $('#edit-rule h3.edit').hide();
+        $('#edit-rule-id').textinput('enable');
+        return $('#edit-rule-advanced').hide();
+      case 'update':
+        $('#edit-rule h3.add').hide();
+        $('#edit-rule h3.edit').show();
+        $('#edit-rule-id').textinput('disable');
+        return $('#edit-rule-advanced').show();
+    }
   });
 });
 
@@ -132,7 +174,7 @@ addRule = function(rule) {
   li.find('a').data('rule-id', rule.id);
   li.find('.condition').text(rule.condition);
   li.find('.action').text(rule.action);
-  $('#rules').append(li);
+  $('#add-rule').before(li);
   return $('#rules').listview('refresh');
 };
 
@@ -142,6 +184,12 @@ updateRule = function(rule) {
   li = $("\#rule-" + rule.id);
   li.find('.condition').text(rule.condition);
   li.find('.action').text(rule.action);
+  return $('#rules').listview('refresh');
+};
+
+removeRule = function(rule) {
+  delete rules[rule.id];
+  $("\#rule-" + rule.id).remove();
   return $('#rules').listview('refresh');
 };
 

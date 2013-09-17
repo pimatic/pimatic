@@ -1,4 +1,5 @@
 modules = require '../../lib/modules'
+__ = require('i18n').__
 
 class RestFrontend extends modules.Frontend
   config: null
@@ -24,6 +25,31 @@ class RestFrontend extends modules.Frontend
       error = null
       try
         server.ruleManager.updateRuleByString ruleId, ruleText
+      catch e
+        #console.log e
+        console.log e.stack
+        error = e
+      res.send 200, {success: not error?, error: error?.message}
+
+    app.post "/api/rule//add", (req, res, next) ->
+      res.send 200, {success: false, error: __('Please enter a id')}
+    app.post "/api/rule/:ruleId/add", (req, res, next) ->
+      ruleId = req.params.ruleId
+      ruleText = req.body.rule
+      error = null
+      try
+        server.ruleManager.addRuleByString ruleId, ruleText
+      catch e
+        #console.log e
+        console.log e.stack
+        error = e
+      res.send 200, {success: not error?, error: error?.message}
+
+    app.get "/api/rule/:ruleId/remove", (req, res, next) ->
+      ruleId = req.params.ruleId
+      error = null
+      try
+        server.ruleManager.removeRule ruleId
       catch e
         #console.log e
         console.log e.stack
