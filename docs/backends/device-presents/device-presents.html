@@ -1,0 +1,90 @@
+<!DOCTYPE html><html lang="en"><head><title>backends/device-presents/device-presents</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../"><meta name="groc-document-path" content="backends/device-presents/device-presents"><meta name="groc-project-path" content="backends/device-presents/device-presents.coffee"><link rel="stylesheet" type="text/css" media="all" href="../../assets/style.css"><script type="text/javascript" src="../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">backends/device-presents/device-presents.coffee</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="nv">convict = </span><span class="nx">require</span> <span class="s2">&quot;convict&quot;</span>
+<span class="nv">util = </span><span class="nx">require</span> <span class="s1">&#39;util&#39;</span>
+<span class="nv">ping = </span><span class="nx">require</span> <span class="s2">&quot;net-ping&quot;</span>
+<span class="nv">assert = </span><span class="nx">require</span> <span class="s1">&#39;cassert&#39;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
+<li>sweetpi imports.</li>
+</ul></div></div><div class="code"><div class="wrapper"><span class="nv">modules = </span><span class="nx">require</span> <span class="s1">&#39;../../lib/modules&#39;</span>
+<span class="nv">sensors = </span><span class="nx">require</span> <span class="s2">&quot;../../lib/sensors&quot;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><h2 id="the-clockbackend">The ClockBackend</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">DevicePresentsBackend</span> <span class="k">extends</span> <span class="nx">modules</span><span class="p">.</span><span class="nx">Backend</span>
+  <span class="nv">server: </span><span class="kc">null</span>
+  <span class="nv">config: </span><span class="kc">null</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>The <code>init</code> function just registers the clock actuator.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">init: </span><span class="p">(</span><span class="nx">@server</span><span class="p">,</span> <span class="nx">@config</span><span class="p">)</span> <span class="o">=&gt;</span>
+    <span class="nv">session = </span><span class="nx">ping</span><span class="p">.</span><span class="nx">createSession</span><span class="p">()</span>
+    <span class="nx">assert</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">devices</span>
+    <span class="k">for</span> <span class="nx">dc</span> <span class="k">in</span> <span class="nx">config</span><span class="p">.</span><span class="nx">devices</span>
+      <span class="nx">assert</span> <span class="nx">dc</span><span class="p">.</span><span class="nx">id</span><span class="o">?</span>
+      <span class="nx">assert</span> <span class="nx">dc</span><span class="p">.</span><span class="nx">name</span><span class="o">?</span>
+      <span class="nx">assert</span> <span class="nx">dc</span><span class="p">.</span><span class="nx">host</span><span class="o">?</span> 
+      <span class="nv">device = </span><span class="k">new</span> <span class="nx">NetworkDevicePresents</span><span class="p">(</span><span class="nx">dc</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">dc</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">dc</span><span class="p">.</span><span class="nx">host</span><span class="p">,</span> 
+        <span class="p">(</span><span class="k">if</span> <span class="nx">dc</span><span class="p">.</span><span class="nx">delay</span> <span class="k">then</span> <span class="nx">dc</span><span class="p">.</span><span class="nx">delay</span> <span class="k">else</span> <span class="mi">3000</span><span class="p">),</span> <span class="nx">session</span><span class="p">)</span>
+      <span class="nx">server</span><span class="p">.</span><span class="nx">registerSensor</span> <span class="nx">device</span>
+
+    <span class="c1">#server.registerSensor(new NetworkDevicePresents config)</span>
+
+<span class="nv">backend = </span><span class="k">new</span> <span class="nx">DevicePresentsBackend</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><h2 id="the-clock-actuator">The Clock-Actuator</h2>
+
+<p>Provides the time and time events for the rule module.</p></div></div><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">NetworkDevicePresents</span> <span class="k">extends</span> <span class="nx">sensors</span><span class="p">.</span><span class="nx">Sensor</span>
+  <span class="nv">config: </span><span class="kc">null</span>
+  <span class="nv">listener: </span><span class="p">[]</span>
+  <span class="nv">present: </span><span class="kc">null</span>
+  <span class="nv">interval: </span><span class="kc">null</span>
+
+  <span class="nv">constructor: </span><span class="nf">(@id, @name, @host, @delay, @session) -&gt;</span>
+    <span class="nv">self = </span><span class="err">@</span>
+    <span class="nv">self.interval = </span><span class="nx">setInterval</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">ping</span><span class="p">,</span> <span class="nx">delay</span><span class="p">)</span>
+
+  <span class="nv">getSensorValuesNames: </span><span class="o">-&gt;</span>
+    <span class="s2">&quot;present&quot;</span>
+
+  <span class="nv">getSensorValue: </span><span class="nf">(name)-&gt;</span>
+    <span class="nv">self = </span><span class="err">@</span>
+    <span class="k">switch</span> <span class="nx">name</span>
+      <span class="k">when</span> <span class="s2">&quot;present&quot;</span> <span class="k">then</span> <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">present</span>
+      <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">&quot;Illegal sensor value name&quot;</span><span class="p">)</span>
+
+  <span class="nv">isTrue: </span><span class="nf">(id, predicate) -&gt;</span>
+    <span class="nv">self = </span><span class="err">@</span>
+    <span class="nv">info = </span><span class="nx">self</span><span class="p">.</span><span class="nx">parsePredicate</span> <span class="nx">predicate</span>
+    <span class="k">if</span> <span class="nx">info</span><span class="o">?</span> <span class="k">then</span> <span class="k">return</span> <span class="nx">info</span><span class="p">.</span><span class="nx">present</span> <span class="o">is</span> <span class="nx">self</span><span class="p">.</span><span class="nx">present</span>
+    <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s2">&quot;Sensor can not decide \&quot;#{predicate}\&quot;!&quot;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Removes the notification for an with <code>notifyWhen</code> registered predicate. </p></div></div><div class="code"><div class="wrapper">  <span class="nv">cancelNotify: </span><span class="nf">(id) -&gt;</span>
+    <span class="nv">self = </span><span class="err">@</span>
+    <span class="k">if</span> <span class="nx">self</span><span class="p">.</span><span class="nx">listener</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span><span class="o">?</span>
+      <span class="k">delete</span> <span class="nx">self</span><span class="p">.</span><span class="nx">listener</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Registers notification for time events. </p></div></div><div class="code"><div class="wrapper">  <span class="nv">notifyWhen: </span><span class="nf">(id, predicate, callback) -&gt;</span>
+    <span class="nv">self = </span><span class="err">@</span>
+    <span class="nv">info = </span><span class="nx">self</span><span class="p">.</span><span class="nx">parsePredicate</span> <span class="nx">predicate</span>
+    <span class="k">if</span> <span class="nx">info</span><span class="o">?</span>
+      <span class="nx">self</span><span class="p">.</span><span class="nx">listener</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span>
+        <span class="nv">id: </span><span class="nx">id</span>
+        <span class="nv">callback: </span><span class="nx">callback</span>
+        <span class="nv">present: </span><span class="nx">info</span><span class="p">.</span><span class="nx">present</span>
+      <span class="k">return</span> <span class="kc">true</span>
+    <span class="k">return</span> <span class="kc">false</span>
+
+  <span class="nv">notifyListener: </span><span class="o">-&gt;</span>
+    <span class="nv">self = </span><span class="err">@</span>
+    <span class="k">for</span> <span class="nx">id</span> <span class="k">of</span> <span class="nx">self</span><span class="p">.</span><span class="nx">listener</span>
+      <span class="nv">l = </span><span class="nx">self</span><span class="p">.</span><span class="nx">listener</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span>
+      <span class="k">if</span> <span class="nx">l</span><span class="p">.</span><span class="nx">present</span> <span class="o">is</span> <span class="nx">self</span><span class="p">.</span><span class="nx">present</span>
+        <span class="nx">l</span><span class="p">.</span><span class="nx">callback</span><span class="p">()</span>
+
+  <span class="nv">ping: </span><span class="o">=&gt;</span> 
+    <span class="nv">self = </span><span class="err">@</span>
+    <span class="nx">@session</span><span class="p">.</span><span class="nx">pingHost</span> <span class="nx">self</span><span class="p">.</span><span class="nx">host</span><span class="p">,</span> <span class="nf">(error, target) -&gt;</span>
+      <span class="k">if</span> <span class="nx">error</span>
+        <span class="k">if</span> <span class="nx">self</span><span class="p">.</span><span class="nx">present</span> <span class="o">isnt</span> <span class="kc">false</span>
+          <span class="nv">self.present = </span><span class="kc">false</span>
+          <span class="nx">self</span><span class="p">.</span><span class="nx">notifyListener</span><span class="p">()</span>
+      <span class="k">else</span>
+        <span class="k">if</span> <span class="nx">self</span><span class="p">.</span><span class="nx">present</span> <span class="o">isnt</span> <span class="kc">true</span>  
+          <span class="nv">self.present = </span><span class="kc">true</span>
+          <span class="nx">self</span><span class="p">.</span><span class="nx">notifyListener</span><span class="p">()</span>
+
+  <span class="nv">parsePredicate: </span><span class="nf">(predicate) -&gt;</span>
+    <span class="nv">self = </span><span class="err">@</span>
+    <span class="nv">regExpString = </span><span class="s1">&#39;^(.+)\\s+is\\s+(not\\s+)?present$&#39;</span>
+    <span class="nv">matches = </span><span class="nx">predicate</span><span class="p">.</span><span class="nx">match</span> <span class="p">(</span><span class="k">new</span> <span class="nb">RegExp</span> <span class="nx">regExpString</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">matches</span><span class="o">?</span>
+      <span class="nv">deviceName = </span><span class="nx">matches</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">trim</span><span class="p">()</span>
+      <span class="k">if</span> <span class="nx">deviceName</span> <span class="o">is</span> <span class="nx">self</span><span class="p">.</span><span class="nx">name</span> <span class="o">or</span> <span class="nx">deviceName</span> <span class="o">is</span> <span class="nx">self</span><span class="p">.</span><span class="nx">id</span>
+        <span class="k">return</span> <span class="nv">info =</span>
+          <span class="nv">deviceId: </span><span class="nx">self</span><span class="p">.</span><span class="nx">id</span>
+          <span class="nv">present: </span><span class="p">(</span><span class="k">if</span> <span class="nx">matches</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">?</span> <span class="k">then</span> <span class="kc">no</span> <span class="k">else</span> <span class="kc">yes</span><span class="p">)</span> 
+    <span class="k">return</span> <span class="kc">null</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Export the Backendmodule.</p></div></div><div class="code"><div class="wrapper"><span class="nv">module.exports = </span><span class="nx">backend</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>For testing...</p></div></div><div class="code"><div class="wrapper"><span class="nv">module.exports.NetworkDevicePresents = </span><span class="nx">NetworkDevicePresents</span></div></div></div></div></body></html>
