@@ -1,3 +1,27 @@
+# #The wifi device backend
+# Provides Sensors for you wifi device, so actions can be triggered
+# if a wifi device is (or is not) present.
+# ##Providided predicates
+# Add your device to the backend config:
+# 
+#     { 
+#       "module": "device-presents",
+#       "devices": [
+#         {
+#           "id": "my-phone",
+#           "name": "my smartphone",
+#           "host": "192.168.1.26",
+#           "delay": 5000
+#         }
+#       ]
+#     }
+# 
+# Then you can use the predicates:
+# 
+# * `"my smartphone is present"` or `"my-phone is present"`
+# * `"my smartphone is not present"` or `"my-phone is not present"`
+
+# ##Dependencies
 convict = require "convict"
 util = require 'util'
 ping = require "net-ping"
@@ -6,7 +30,7 @@ assert = require 'cassert'
 modules = require '../../lib/modules'
 sensors = require "../../lib/sensors"
 
-# ##The ClockBackend
+# ##The DevicePresentsBackend
 class DevicePresentsBackend extends modules.Backend
   server: null
   config: null
@@ -23,12 +47,9 @@ class DevicePresentsBackend extends modules.Backend
         (if dc.delay then dc.delay else 3000), session)
       server.registerSensor device
 
-    #server.registerSensor(new NetworkDevicePresents config)
-
 backend = new DevicePresentsBackend
 
-# ##The Clock-Actuator
-# Provides the time and time events for the rule module.
+# ##NetworkDevicePresents Sensor
 class NetworkDevicePresents extends sensors.Sensor
   config: null
   listener: []

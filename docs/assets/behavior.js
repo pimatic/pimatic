@@ -318,7 +318,52 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                 "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/backends/device-presents/device-presents.coffee",
                 "projectPath": "backends/device-presents/device-presents.coffee",
                 "targetPath": "backends/device-presents/device-presents",
-                "title": "device-presents"
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "The wifi device backend",
+                    "slug": "the-wifi-device-backend",
+                    "isFileHeader": true
+                  },
+                  "depth": 1,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Providided predicates",
+                        "slug": "providided-predicates"
+                      },
+                      "depth": 2
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Dependencies",
+                        "slug": "dependencies"
+                      },
+                      "depth": 2
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "The DevicePresentsBackend",
+                        "slug": "the-devicepresentsbackend"
+                      },
+                      "depth": 2
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "NetworkDevicePresents Sensor",
+                        "slug": "networkdevicepresents-sensor"
+                      },
+                      "depth": 2
+                    }
+                  ]
+                },
+                "title": "The wifi device backend"
               },
               "depth": 3,
               "outline": [
@@ -326,16 +371,32 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "type": "heading",
                   "data": {
                     "level": 2,
-                    "title": "The ClockBackend",
-                    "slug": "the-clockbackend"
+                    "title": "Providided predicates",
+                    "slug": "providided-predicates"
                   },
                   "depth": 2
                 }, {
                   "type": "heading",
                   "data": {
                     "level": 2,
-                    "title": "The Clock-Actuator",
-                    "slug": "the-clock-actuator"
+                    "title": "Dependencies",
+                    "slug": "dependencies"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "The DevicePresentsBackend",
+                    "slug": "the-devicepresentsbackend"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "NetworkDevicePresents Sensor",
+                    "slug": "networkdevicepresents-sensor"
                   },
                   "depth": 2
                 }

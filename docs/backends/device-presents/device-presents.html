@@ -1,10 +1,37 @@
-<!DOCTYPE html><html lang="en"><head><title>backends/device-presents/device-presents</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../"><meta name="groc-document-path" content="backends/device-presents/device-presents"><meta name="groc-project-path" content="backends/device-presents/device-presents.coffee"><link rel="stylesheet" type="text/css" media="all" href="../../assets/style.css"><script type="text/javascript" src="../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">backends/device-presents/device-presents.coffee</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="nv">convict = </span><span class="nx">require</span> <span class="s2">&quot;convict&quot;</span>
+<!DOCTYPE html><html lang="en"><head><title>backends/device-presents/device-presents</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../"><meta name="groc-document-path" content="backends/device-presents/device-presents"><meta name="groc-project-path" content="backends/device-presents/device-presents.coffee"><link rel="stylesheet" type="text/css" media="all" href="../../assets/style.css"><script type="text/javascript" src="../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">backends/device-presents/device-presents.coffee</div></div><div id="document"><div class="segment"><div class="comments"><div class="wrapper"><h1 id="the-wifi-device-backend">The wifi device backend</h1>
+
+<p>Provides Sensors for you wifi device, so actions can be triggered
+if a wifi device is (or is not) present.</p>
+
+<h2 id="providided-predicates">Providided predicates</h2>
+
+<p>Add your device to the backend config:</p>
+
+<pre><code>{ 
+  "module": "device-presents",
+  "devices": [
+    {
+      "id": "my-phone",
+      "name": "my smartphone",
+      "host": "192.168.1.26",
+      "delay": 5000
+    }
+  ]
+}
+</code></pre>
+
+<p>Then you can use the predicates:</p>
+
+<ul>
+<li><code>"my smartphone is present"</code> or <code>"my-phone is present"</code></li>
+<li><code>"my smartphone is not present"</code> or <code>"my-phone is not present"</code></li>
+</ul></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><h2 id="dependencies">Dependencies</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="nv">convict = </span><span class="nx">require</span> <span class="s2">&quot;convict&quot;</span>
 <span class="nv">util = </span><span class="nx">require</span> <span class="s1">&#39;util&#39;</span>
 <span class="nv">ping = </span><span class="nx">require</span> <span class="s2">&quot;net-ping&quot;</span>
 <span class="nv">assert = </span><span class="nx">require</span> <span class="s1">&#39;cassert&#39;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
 <li>sweetpi imports.</li>
 </ul></div></div><div class="code"><div class="wrapper"><span class="nv">modules = </span><span class="nx">require</span> <span class="s1">&#39;../../lib/modules&#39;</span>
-<span class="nv">sensors = </span><span class="nx">require</span> <span class="s2">&quot;../../lib/sensors&quot;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><h2 id="the-clockbackend">The ClockBackend</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">DevicePresentsBackend</span> <span class="k">extends</span> <span class="nx">modules</span><span class="p">.</span><span class="nx">Backend</span>
+<span class="nv">sensors = </span><span class="nx">require</span> <span class="s2">&quot;../../lib/sensors&quot;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><h2 id="the-devicepresentsbackend">The DevicePresentsBackend</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">DevicePresentsBackend</span> <span class="k">extends</span> <span class="nx">modules</span><span class="p">.</span><span class="nx">Backend</span>
   <span class="nv">server: </span><span class="kc">null</span>
   <span class="nv">config: </span><span class="kc">null</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>The <code>init</code> function just registers the clock actuator.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">init: </span><span class="p">(</span><span class="nx">@server</span><span class="p">,</span> <span class="nx">@config</span><span class="p">)</span> <span class="o">=&gt;</span>
     <span class="nv">session = </span><span class="nx">ping</span><span class="p">.</span><span class="nx">createSession</span><span class="p">()</span>
@@ -17,11 +44,7 @@
         <span class="p">(</span><span class="k">if</span> <span class="nx">dc</span><span class="p">.</span><span class="nx">delay</span> <span class="k">then</span> <span class="nx">dc</span><span class="p">.</span><span class="nx">delay</span> <span class="k">else</span> <span class="mi">3000</span><span class="p">),</span> <span class="nx">session</span><span class="p">)</span>
       <span class="nx">server</span><span class="p">.</span><span class="nx">registerSensor</span> <span class="nx">device</span>
 
-    <span class="c1">#server.registerSensor(new NetworkDevicePresents config)</span>
-
-<span class="nv">backend = </span><span class="k">new</span> <span class="nx">DevicePresentsBackend</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><h2 id="the-clock-actuator">The Clock-Actuator</h2>
-
-<p>Provides the time and time events for the rule module.</p></div></div><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">NetworkDevicePresents</span> <span class="k">extends</span> <span class="nx">sensors</span><span class="p">.</span><span class="nx">Sensor</span>
+<span class="nv">backend = </span><span class="k">new</span> <span class="nx">DevicePresentsBackend</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><h2 id="networkdevicepresents-sensor">NetworkDevicePresents Sensor</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">NetworkDevicePresents</span> <span class="k">extends</span> <span class="nx">sensors</span><span class="p">.</span><span class="nx">Sensor</span>
   <span class="nv">config: </span><span class="kc">null</span>
   <span class="nv">listener: </span><span class="p">[]</span>
   <span class="nv">present: </span><span class="kc">null</span>
