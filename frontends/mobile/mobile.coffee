@@ -1,3 +1,18 @@
+# #The mobile frontend
+# Displays a [jQuery mobile](http://jquerymobile.com/) page, witch let you control
+# switch-Actuators and add rules. 
+# 
+# ##Example config:
+# 
+#     {
+#       "module": "mobile",
+#       "actuatorsToDisplay": [
+#         { "id": "light" },
+#         { "id": "printer" }
+#       ]
+#     }
+ 
+# ##Dependencies
 express = require "express" 
 coffeescript = require 'connect-coffee-script'
 modules = require '../../lib/modules'
@@ -5,13 +20,19 @@ socketIo = require 'socket.io'
 logger = require '../../lib/logger'
 async = require 'async'
 
+# ##The MobileFrontend
 class MobileFrontend extends modules.Frontend
   server: null
   config: null
 
+  # ###init the frontend:
   init: (app, @server, @config) =>
-    thisClass = @
+    self = @
 
+    # * Get all actuatorsToDisplay from config:
+    self.actuators = (server.getActuatorById(a.id) for a in config.actuatorsToDisplay)
+
+    # * Setup the coffeescript compiler
     app.use coffeescript(
       prefix: '/js'
       src: __dirname + "/coffee",
@@ -20,18 +41,35 @@ class MobileFrontend extends modules.Frontend
       force: true
     )
 
+    # * Setup jade-templates
     app.set 'views', __dirname + '/views'
     app.set 'view engine', 'jade'
 
+    # * Delivers the index-page
     app.get '/', (req,res) ->
       res.render 'index',
         theme: 
           cssFiles: ['themes/graphite/generated/water/jquery.mobile-1.3.1.css']
 
-    thisClass.actuators = (server.getActuatorById(a.id) for a in config.actuatorsToDisplay)
+    # * Delivers json-Data in the form of:
 
+    # 
+    #     {
+    #       "actuators": [
+    #         { "id": "light",
+    #           "name": "Schreibtischlampe",
+    #           "state": null },
+    #           ...
+    #       ], "rules": [
+    #         { "id": "printerOff",
+    #           "condition": "its 6pm",
+    #           "action": "turn the printer off" },
+    #           ...
+    #       ]
+    #     }
+    # 
     app.get '/data.json', (req,res) ->
-      thisClass.getActuatorDataWithState (error, actuators) ->
+      self.getActuatorDataWithState (error, actuators) ->
         rules = []
         for id of server.ruleManager.rules
           rule = server.ruleManager.rules[id]
@@ -43,8 +81,10 @@ class MobileFrontend extends modules.Frontend
           actuators: actuators
           rules: rules
 
+    # * Static assets
     app.use express.static(__dirname + "/public")
 
+    # ###Socket.io stuff:
     # For every webserver
     for webServer in [app.httpServer, app.httpsServer]
       continue unless webServer?
@@ -53,24 +93,24 @@ class MobileFrontend extends modules.Frontend
       # When a new client connects
       io.sockets.on 'connection', (socket) ->
         cleanUpFunctions = []
-        for actuator in thisClass.actuators 
+        for actuator in self.actuators 
           do (actuator) ->
             # * First time push the state to the client
             actuator.getState (error, state) ->
-              unless error? then thisClass.emitSwitchState socket, actuator, state
+              unless error? then self.emitSwitchState socket, actuator, state
             # * Then forward following state event to the client
             actuator.on "state", stateListener = (state) ->
-              thisClass.emitSwitchState socket, actuator, state
+              self.emitSwitchState socket, actuator, state
             
             cleanUpFunctions.push (-> actuator.removeListener "state", stateListener)
         server.ruleManager.on "add", addRuleListener = (rule) ->
-          thisClass.emitRuleUpdate socket, "add", rule
+          self.emitRuleUpdate socket, "add", rule
         cleanUpFunctions.push (-> server.ruleManager.removeListener "add", addRuleListener)       
         server.ruleManager.on "update", updateRuleListener = (rule) ->
-          thisClass.emitRuleUpdate socket, "update", rule
+          self.emitRuleUpdate socket, "update", rule
         cleanUpFunctions.push (-> server.ruleManager.removeListener "update", updateRuleListener)  
         server.ruleManager.on "remove", removeRuleListener = (rule) ->
-          thisClass.emitRuleUpdate socket, "remove", rule
+          self.emitRuleUpdate socket, "remove", rule
         cleanUpFunctions.push (-> server.ruleManager.removeListener "update", removeRuleListener)  
         # On `close` remove all event listeners
         socket.on 'close', ->

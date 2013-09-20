@@ -677,10 +677,73 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                 "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/frontends/filebrowser/filebrowser.coffee",
                 "projectPath": "frontends/filebrowser/filebrowser.coffee",
                 "targetPath": "frontends/filebrowser/filebrowser",
-                "title": "filebrowser"
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "The filebrowser frontend",
+                    "slug": "the-filebrowser-frontend",
+                    "isFileHeader": true
+                  },
+                  "depth": 1,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Example config:",
+                        "slug": "example-config"
+                      },
+                      "depth": 2
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Dependencies",
+                        "slug": "dependencies"
+                      },
+                      "depth": 2
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Filebrowser",
+                        "slug": "filebrowser"
+                      },
+                      "depth": 2
+                    }
+                  ]
+                },
+                "title": "The filebrowser frontend"
               },
               "depth": 3,
-              "outline": []
+              "outline": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Example config:",
+                    "slug": "example-config"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Dependencies",
+                    "slug": "dependencies"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Filebrowser",
+                    "slug": "filebrowser"
+                  },
+                  "depth": 2
+                }
+              ]
             }
           ]
         }, {
@@ -703,10 +766,111 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                 "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/frontends/mobile/mobile.coffee",
                 "projectPath": "frontends/mobile/mobile.coffee",
                 "targetPath": "frontends/mobile/mobile",
-                "title": "mobile"
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "The mobile frontend",
+                    "slug": "the-mobile-frontend",
+                    "isFileHeader": true
+                  },
+                  "depth": 1,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Example config:",
+                        "slug": "example-config"
+                      },
+                      "depth": 2
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Dependencies",
+                        "slug": "dependencies"
+                      },
+                      "depth": 2
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "The MobileFrontend",
+                        "slug": "the-mobilefrontend"
+                      },
+                      "depth": 2,
+                      "children": [
+                        {
+                          "type": "heading",
+                          "data": {
+                            "level": 3,
+                            "title": "init the frontend:",
+                            "slug": "init-the-frontend"
+                          },
+                          "depth": 3
+                        }, {
+                          "type": "heading",
+                          "data": {
+                            "level": 3,
+                            "title": "Socket.io stuff:",
+                            "slug": "socketio-stuff"
+                          },
+                          "depth": 3
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "title": "The mobile frontend"
               },
               "depth": 3,
-              "outline": []
+              "outline": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Example config:",
+                    "slug": "example-config"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Dependencies",
+                    "slug": "dependencies"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "The MobileFrontend",
+                    "slug": "the-mobilefrontend"
+                  },
+                  "depth": 2,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "init the frontend:",
+                        "slug": "init-the-frontend"
+                      },
+                      "depth": 3
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "Socket.io stuff:",
+                        "slug": "socketio-stuff"
+                      },
+                      "depth": 3
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }, {
