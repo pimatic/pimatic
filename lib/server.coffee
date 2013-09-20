@@ -97,7 +97,7 @@ class Server extends require('events').EventEmitter
         found = be.module.createActuator acConfig
         if found then break
       unless found
-        console.warn "no backend found for actuator \"#{acConfig.id}\"!"
+        logger.warn "no backend found for actuator \"#{acConfig.id}\"!"
 
   getActuatorById: (id) ->
     @actuators[id]

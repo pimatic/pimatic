@@ -35,7 +35,7 @@ Server = require "./lib/server"
 # -------------
 app = express()
 app.use i18n.init
-app.use express.logger()
+#app.use express.logger()
 app.use express.bodyParser()
 
 # Setup authentication

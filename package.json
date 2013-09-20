@@ -3,8 +3,19 @@
   "description": "A home automation server and framework for the raspberry pi running on node.js",
   "author": "Oliver Schneider <oliverschneider89+sweetpi@gmail.com> (http://sweetpi.de)",
   "main": "main.js",
-  "files": ["backends", "docs", "frontends", "lib", "locales", "main.js", "sweetpi.coffee", 
-            "config-shema.coffee", "config_default.json", "README.md", "LICENSE"],
+  "files": [
+    "backends",
+    "docs",
+    "frontends",
+    "lib",
+    "locales",
+    "main.js",
+    "sweetpi.coffee",
+    "config-shema.coffee",
+    "config_default.json",
+    "README.md",
+    "LICENSE"
+  ],
   "version": "0.0.5",
   "homepage": "http://github.com/sweetpi/sweetpi-server",
   "repository": {
@@ -26,13 +37,14 @@
     "socket.io": "0.9.*",
     "i18n": "0.4.*",
     "winston": "0.7.*",
-    "cassert": "0.1.*" 
+    "cassert": "0.1.*"
   },
   "devDependencies": {
     "grunt": "~0.4.1",
     "grunt-coffeelint": "~0.0.7",
     "grunt-groc": "~0.3.0",
-    "grunt-ftp-deploy": "~0.0.10"
+    "grunt-ftp-deploy": "~0.0.10",
+    "grunt-cafe-mocha": "~0.1.8"
   },
   "engines": {
     "node": ">0.8.x",

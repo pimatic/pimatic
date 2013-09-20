@@ -24,5 +24,7 @@
 	"or": "or",
 	"Delete this rule": "Delete this rule",
 	"Advanced Options": "Advanced Options",
-	"Advanced Options:": "Advanced Options:"
+	"Advanced Options:": "Advanced Options:",
+	"would log \"%s\"": "would log \"%s\"",
+	"log: \"%s\"": "log: \"%s\""
 }

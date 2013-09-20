@@ -35,7 +35,6 @@ class MobileFrontend extends modules.Frontend
         rules = []
         for id of server.ruleManager.rules
           rule = server.ruleManager.rules[id]
-          console.log rule
           rules.push
             id: id
             condition: rule.orgCondition

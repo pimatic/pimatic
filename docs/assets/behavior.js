@@ -301,6 +301,50 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         }, {
           "type": "folder",
           "data": {
+            "path": "backends/device-presents",
+            "title": "device-presents"
+          },
+          "depth": 2,
+          "children": [
+            {
+              "type": "file",
+              "data": {
+                "language": {
+                  "nameMatchers": [".coffee", "Cakefile"],
+                  "pygmentsLexer": "coffee-script",
+                  "singleLineComment": ["#"],
+                  "name": "CoffeeScript"
+                },
+                "sourcePath": "/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/backends/device-presents/device-presents.coffee",
+                "projectPath": "backends/device-presents/device-presents.coffee",
+                "targetPath": "backends/device-presents/device-presents",
+                "title": "device-presents"
+              },
+              "depth": 3,
+              "outline": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "The ClockBackend",
+                    "slug": "the-clockbackend"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "The Clock-Actuator",
+                    "slug": "the-clock-actuator"
+                  },
+                  "depth": 2
+                }
+              ]
+            }
+          ]
+        }, {
+          "type": "folder",
+          "data": {
             "path": "backends/pilight",
             "title": "pilight"
           },

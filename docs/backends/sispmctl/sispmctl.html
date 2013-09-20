@@ -31,6 +31,7 @@ Set the <code>class</code> attribute to <code>PilightOutlet</code>. For example:
 <span class="nv">actuators = </span><span class="nx">require</span> <span class="s2">&quot;../../lib/actuators&quot;</span>
 <span class="nv">modules = </span><span class="nx">require</span> <span class="s2">&quot;../../lib/modules&quot;</span>
 <span class="nv">convict = </span><span class="nx">require</span> <span class="s2">&quot;convict&quot;</span>
+<span class="nv">logger = </span><span class="nx">require</span> <span class="s2">&quot;../../lib/logger&quot;</span>
 
 <span class="k">class</span> <span class="nx">Sispmctl</span> <span class="k">extends</span> <span class="nx">modules</span><span class="p">.</span><span class="nx">Backend</span>
   <span class="nv">server: </span><span class="kc">null</span>
@@ -65,8 +66,7 @@ Set the <code>class</code> attribute to <code>PilightOutlet</code>. For example:
     <span class="nx">unless</span> <span class="nx">@_state</span><span class="o">?</span>
       <span class="nv">child = </span><span class="nx">exec</span> <span class="s2">&quot;#{backend.config.binary} -qng #{@config.outletUnit}&quot;</span><span class="p">,</span> 
         <span class="nf">(error, stdout, stderr) -&gt;</span>
-          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="nx">error</span>
-          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="nx">stderr</span> <span class="k">if</span> <span class="nx">stderr</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span>
+          <span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="nx">stderr</span> <span class="k">if</span> <span class="nx">stderr</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span>
           <span class="nv">stdout = </span><span class="nx">stdout</span><span class="p">.</span><span class="nx">trim</span><span class="p">()</span>
           <span class="nx">unless</span> <span class="nx">error</span><span class="o">?</span>
             <span class="k">switch</span> <span class="nx">stdout</span>
@@ -74,7 +74,7 @@ Set the <code>class</code> attribute to <code>PilightOutlet</code>. For example:
                 <span class="vi">@_state = </span><span class="kc">on</span>
               <span class="k">when</span> <span class="s2">&quot;0&quot;</span>
                 <span class="vi">@_state = </span><span class="kc">off</span>
-              <span class="k">else</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s2">&quot;SispmctlSwitch: unknown state=\&quot;#{stdout}\&quot;!&quot;</span>
+              <span class="k">else</span> <span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="s2">&quot;SispmctlSwitch: unknown state=\&quot;#{stdout}\&quot;!&quot;</span>
           <span class="nx">callback</span> <span class="nx">error</span><span class="p">,</span> <span class="nx">@_state</span>
     <span class="k">else</span> <span class="nx">callback</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">@_state</span>
       
@@ -86,7 +86,7 @@ Set the <code>class</code> attribute to <code>PilightOutlet</code>. For example:
     <span class="nx">param</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">outletUnit</span>
     <span class="nv">child = </span><span class="nx">exec</span> <span class="s2">&quot;#{backend.config.binary} #{param}&quot;</span><span class="p">,</span> 
       <span class="nf">(error, stdout, stderr) -&gt;</span>
-        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="nx">stderr</span> <span class="k">if</span> <span class="nx">stderr</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span>
+        <span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="nx">stderr</span> <span class="k">if</span> <span class="nx">stderr</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span>
         <span class="nx">thisClass</span><span class="p">.</span><span class="nx">_setState</span><span class="p">(</span><span class="nx">state</span><span class="p">)</span> <span class="nx">unless</span> <span class="nx">error</span><span class="o">?</span>
         <span class="nx">resultCallbak</span> <span class="nx">error</span>
 

@@ -97,7 +97,7 @@
         <span class="nv">found = </span><span class="nx">be</span><span class="p">.</span><span class="nx">module</span><span class="p">.</span><span class="nx">createActuator</span> <span class="nx">acConfig</span>
         <span class="k">if</span> <span class="nx">found</span> <span class="k">then</span> <span class="k">break</span>
       <span class="nx">unless</span> <span class="nx">found</span>
-        <span class="nx">console</span><span class="p">.</span><span class="nx">warn</span> <span class="s2">&quot;no backend found for actuator \&quot;#{acConfig.id}\&quot;!&quot;</span>
+        <span class="nx">logger</span><span class="p">.</span><span class="nx">warn</span> <span class="s2">&quot;no backend found for actuator \&quot;#{acConfig.id}\&quot;!&quot;</span>
 
   <span class="nv">getActuatorById: </span><span class="nf">(id) -&gt;</span>
     <span class="nx">@actuators</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span>

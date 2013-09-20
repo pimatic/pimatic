@@ -29,6 +29,7 @@ exec = require("child_process").exec
 actuators = require "../../lib/actuators"
 modules = require "../../lib/modules"
 convict = require "convict"
+logger = require "../../lib/logger"
 
 class Sispmctl extends modules.Backend
   server: null
@@ -63,8 +64,7 @@ class SispmctlSwitch extends actuators.PowerSwitch
     unless @_state?
       child = exec "#{backend.config.binary} -qng #{@config.outletUnit}", 
         (error, stdout, stderr) ->
-          console.log error
-          console.log stderr if stderr.length isnt 0
+          logger.error stderr if stderr.length isnt 0
           stdout = stdout.trim()
           unless error?
             switch stdout
@@ -72,7 +72,7 @@ class SispmctlSwitch extends actuators.PowerSwitch
                 @_state = on
               when "0"
                 @_state = off
-              else console.log "SispmctlSwitch: unknown state=\"#{stdout}\"!"
+              else logger.error "SispmctlSwitch: unknown state=\"#{stdout}\"!"
           callback error, @_state
     else callback null, @_state
       
@@ -84,7 +84,7 @@ class SispmctlSwitch extends actuators.PowerSwitch
     param += " " + @config.outletUnit
     child = exec "#{backend.config.binary} #{param}", 
       (error, stdout, stderr) ->
-        console.log stderr if stderr.length isnt 0
+        logger.error stderr if stderr.length isnt 0
         thisClass._setState(state) unless error?
         resultCallbak error
 

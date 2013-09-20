@@ -74,7 +74,7 @@ class Clock extends sensors.Sensor
         when dayOfWeek isnt '*' and now.getDay() isnt dateObj.getDay() then return false
         else return true
     else
-      throw new Error "Clock seonsor can not decide \"predicate\"!"
+      throw new Error "Clock sensor can not decide \"#{predicate}\"!"
 
   # Removes the notification for an with `notifyWhen` registered predicate. 
   cancelNotify: (id) ->

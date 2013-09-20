@@ -1,0 +1,2 @@
+{ "name" : "sweetpi-backend-device-presents",
+  "main" : "./device-presents" }
