@@ -159,7 +159,8 @@ class Clock extends sensors.Sensor
 
     return switch
       when naturalTextDate.match (new RegExp afterRegExp) then 'after'
-      when naturalTextDate.match (new RegExp begoreRegExp) then 'before'
+      when naturalTextDate.match (new RegExp begoreRegExp)
+        throw new Error("Sorry before is not supported yet!")#'before'
       else 'exact'
 
 
