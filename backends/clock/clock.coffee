@@ -19,6 +19,7 @@ chrono = require 'chrono-node'
 #  * node.js imports.
 spawn = require("child_process").spawn
 util = require 'util'
+assert = require 'cassert'
 # * sweetpi imports.
 modules = require '../../lib/modules'
 sensors = require "../../lib/sensors"
@@ -38,7 +39,7 @@ backend = new ClockBackend
 # Provides the time and time events for the rule module.
 class Clock extends sensors.Sensor
   config: null
-  cronJobs: []
+  listener: []
 
   constructor: (@config) ->
     @id = "clock"
@@ -62,31 +63,47 @@ class Clock extends sensors.Sensor
   isTrue: (id, predicate) ->
     parsedDate = @parseNaturalTextDate predicate
     if parsedDate?
+      modifier = @parseNaturalTextModifier predicate
       {second, minute, hour, day, month, dayOfWeek} = @parseDateToCronFormat parsedDate
       now = @getSensorValue "time"
       dateObj = parsedDate.start.date @config.timezone
-      switch
-        when second isnt '*' and now.getSeconds() isnt dateObj.getSeconds() then return false
-        when minute isnt '*' and now.getMinutes() isnt dateObj.getMinutes() then return false
-        when hour isnt '*' and now.getHours() isnt dateObj.getHours() then return false
-        when day isnt '*' and now.getDate() isnt dateObj.getDate() then return false
-        when month isnt '*' and now.getMonth() isnt ddateObj.getMonth() then return false
-        when dayOfWeek isnt '*' and now.getDay() isnt dateObj.getDay() then return false
-        else return true
+      return switch modifier
+        when 'exact'
+          ( second is '*' or now.getSeconds() is dateObj.getSeconds() ) and
+          ( minute is '*' or now.getMinutes() is dateObj.getMinutes() ) and
+          ( hour is '*' or now.getHours() is dateObj.getHours() ) and
+          ( day is '*' or now.getDate() is dateObj.getDate() ) and
+          ( month is '*' or now.getMonth() is ddateObj.getMonth() ) and
+          ( dayOfWeek is '*' or now.getDay() is dateObj.getDay() )
+        when 'after'
+          ( second is '*' or now.getSeconds() >= dateObj.getSeconds() ) and
+          ( hour is '*' or now.getHours() >= dateObj.getHours() ) and
+          ( minute is '*' or now.getMinutes() >= dateObj.getMinutes() ) and
+          ( day is '*' or now.getDate() is dateObj.getDate() ) and
+          ( month is '*' or now is ddateObj.getMonth() ) and
+          ( dayOfWeek is '*' or now.getDay() is dateObj.getDay() )
+        when 'before'
+          ( second is '*' or now.getSeconds() <= dateObj.getSeconds() ) and
+          ( hour is '*' or now.getHours() <= dateObj.getHours() ) and
+          ( minute is '*' or now.getMinutes() <= dateObj.getMinutes() ) and
+          ( day is '*' or now.getDate() is dateObj.getDate() ) and
+          ( month is '*' or now is ddateObj.getMonth() ) and
+          ( dayOfWeek is '*' or now.getDay() is dateObj.getDay() )
+        else assert false
     else
       throw new Error "Clock sensor can not decide \"#{predicate}\"!"
 
   # Removes the notification for an with `notifyWhen` registered predicate. 
   cancelNotify: (id) ->
-    if @cronJobs[id]?
-      @cronJobs[id].stop()
-      delete @cronJobs[id]
+    if @listener[id]?
+      @listener[id].cronjob.stop()
+      delete @listener[id]
 
   # Registers notification for time events. 
   notifyWhen: (id, predicate, callback) ->
     parsedDate = @parseNaturalTextDate predicate
     if parsedDate?
-
+      modifier = @parseNaturalTextModifier predicate
       {second, minute, hour, day, month, dayOfWeek} = @parseDateToCronFormat parsedDate
       cronFormat = "#{second} #{minute} #{hour} #{day} #{month} #{dayOfWeek}"
       #console.log cronFormat
@@ -96,7 +113,10 @@ class Clock extends sensors.Sensor
         start: false
         timezone: @config.timezone
       )
-      @cronJobs[id] = job
+      @listener[id] = 
+        id: id
+        cronjob: job
+        modifier: modifier
       job.start()
       return true
     return false
@@ -132,6 +152,16 @@ class Clock extends sensors.Sensor
     if parsedDates.length is 1
       return parsedDates[0]
     else return null
+
+  parseNaturalTextModifier: (naturalTextDate) ->
+    afterRegExp = '.*after\\s.+'
+    begoreRegExp = '.*before\\s.+'
+
+    return switch
+      when naturalTextDate.match (new RegExp afterRegExp) then 'after'
+      when naturalTextDate.match (new RegExp begoreRegExp) then 'before'
+      else 'exact'
+
 
   # Convert a parsedDate to a cronjob-syntax like object. The parsedDate must be parsed from 
   # [chrono-node](https://github.com/berryboy/chrono). For Exampe converts the parsedDate of

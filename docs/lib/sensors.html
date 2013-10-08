@@ -1,24 +1,24 @@
 <!DOCTYPE html><html lang="en"><head><title>lib/sensors</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="lib/sensors"><meta name="groc-project-path" content="lib/sensors.coffee"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path">lib/sensors.coffee</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">Sensor</span>
-  <span class="nv">type: </span><span class="s1">&#39;unknwon&#39;</span>
+  <span class="nv">type: </span><span class="s">&#39;unknwon&#39;</span>
   <span class="nv">name: </span><span class="kc">null</span>
 
-  <span class="nv">getSensorValuesNames: </span><span class="o">-&gt;</span>
-    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">&quot;your sensor must implement getSensorValuesNames&quot;</span><span class="p">)</span>
+  <span class="nv">getSensorValuesNames: </span><span class="nf">-&gt;</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement getSensorValuesNames&quot;</span><span class="p">)</span>
 
   <span class="nv">getSensorValue: </span><span class="nf">(name) -&gt;</span>
-    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">&quot;your sensor must implement getSensorValue&quot;</span><span class="p">)</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement getSensorValue&quot;</span><span class="p">)</span>
 
   <span class="nv">isTrue: </span><span class="nf">(id, predicate) -&gt;</span>
-    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">&quot;your sensor must implement itTrue&quot;</span><span class="p">)</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement itTrue&quot;</span><span class="p">)</span>
 
   <span class="nv">notifyWhen: </span><span class="nf">(id, predicate, callback) -&gt;</span>
-    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">&quot;your sensor must implement notifyWhen&quot;</span><span class="p">)</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement notifyWhen&quot;</span><span class="p">)</span>
 
   <span class="nv">cancelNotify: </span><span class="nf">(id) -&gt;</span>
-    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">&quot;your sensor must implement cancelNotify&quot;</span><span class="p">)</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement cancelNotify&quot;</span><span class="p">)</span>
 
 <span class="k">class</span> <span class="nx">TemperatureSensor</span> <span class="k">extends</span> <span class="nx">Sensor</span>
-  <span class="nv">type: </span><span class="s1">&#39;TemperatureSensor&#39;</span>
+  <span class="nv">type: </span><span class="s">&#39;TemperatureSensor&#39;</span>
 
 
 <span class="nv">module.exports.Sensor = </span><span class="nx">Sensor</span>

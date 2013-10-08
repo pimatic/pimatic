@@ -29,23 +29,23 @@ Set the <code>class</code> attribute to <code>PilightOutlet</code>. For example:
 </code></pre>
 
 <p>For actuator configuration options see the 
-<a href="actuator-config-shema.html">actuator-config-shema.coffee</a> file.</p></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="nv">spawn = </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;child_process&quot;</span><span class="p">).</span><span class="nx">spawn</span>
-<span class="nv">convict = </span><span class="nx">require</span> <span class="s2">&quot;convict&quot;</span>
-<span class="nv">modules = </span><span class="nx">require</span> <span class="s1">&#39;../../lib/modules&#39;</span>
-<span class="nv">actuators = </span><span class="nx">require</span> <span class="s2">&quot;../../lib/actuators&quot;</span>
+<a href="actuator-config-shema.html">actuator-config-shema.coffee</a> file.</p></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="nv">spawn = </span><span class="nx">require</span><span class="p">(</span><span class="s">&quot;child_process&quot;</span><span class="p">).</span><span class="nx">spawn</span>
+<span class="nv">convict = </span><span class="nx">require</span> <span class="s">&quot;convict&quot;</span>
+<span class="nv">modules = </span><span class="nx">require</span> <span class="s">&#39;../../lib/modules&#39;</span>
+<span class="nv">actuators = </span><span class="nx">require</span> <span class="s">&quot;../../lib/actuators&quot;</span>
 
 
 <span class="k">class</span> <span class="nx">PilightBackend</span> <span class="k">extends</span> <span class="nx">modules</span><span class="p">.</span><span class="nx">Backend</span>
   <span class="nv">server: </span><span class="kc">null</span>
   <span class="nv">config: </span><span class="kc">null</span>
 
-  <span class="nv">init: </span><span class="p">(</span><span class="nx">@server</span><span class="p">,</span> <span class="nx">@config</span><span class="p">)</span> <span class="o">=&gt;</span>
-    <span class="nv">conf = </span><span class="nx">convict</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;./backend-config-shema&quot;</span><span class="p">)</span>
+  <span class="nv">init: </span><span class="nf">(@server, @config) =&gt;</span>
+    <span class="nv">conf = </span><span class="nx">convict</span> <span class="nx">require</span><span class="p">(</span><span class="s">&quot;./backend-config-shema&quot;</span><span class="p">)</span>
     <span class="nx">conf</span><span class="p">.</span><span class="nx">load</span> <span class="nx">config</span>
     <span class="nx">conf</span><span class="p">.</span><span class="nx">validate</span><span class="p">()</span>
 
-  <span class="nv">createActuator: </span><span class="p">(</span><span class="nx">config</span><span class="p">)</span> <span class="o">=&gt;</span>
-    <span class="k">if</span> <span class="nx">config</span><span class="p">.</span><span class="k">class</span> <span class="o">is</span> <span class="s2">&quot;PilightSwitch&quot;</span> 
+  <span class="nv">createActuator: </span><span class="nf">(config) =&gt;</span>
+    <span class="k">if</span> <span class="nx">config</span><span class="p">.</span><span class="nx">class</span> <span class="o">is</span> <span class="s">&quot;PilightSwitch&quot;</span> 
       <span class="nx">@server</span><span class="p">.</span><span class="nx">registerActuator</span><span class="p">(</span><span class="k">new</span> <span class="nx">PilightSwitch</span> <span class="nx">config</span><span class="p">)</span>
       <span class="k">return</span> <span class="kc">true</span>
     <span class="k">return</span> <span class="kc">false</span>
@@ -58,7 +58,7 @@ Set the <code>class</code> attribute to <code>PilightOutlet</code>. For example:
   <span class="nv">config: </span><span class="kc">null</span>
 
   <span class="nv">constructor: </span><span class="nf">(@config) -&gt;</span>
-    <span class="nv">conf = </span><span class="nx">convict</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;./actuator-config-shema&quot;</span><span class="p">)</span>
+    <span class="nv">conf = </span><span class="nx">convict</span> <span class="nx">require</span><span class="p">(</span><span class="s">&quot;./actuator-config-shema&quot;</span><span class="p">)</span>
     <span class="nx">conf</span><span class="p">.</span><span class="nx">load</span> <span class="nx">config</span>
     <span class="nx">conf</span><span class="p">.</span><span class="nx">validate</span><span class="p">()</span>
     
@@ -66,14 +66,14 @@ Set the <code>class</code> attribute to <code>PilightOutlet</code>. For example:
     <span class="vi">@id = </span><span class="nx">config</span><span class="p">.</span><span class="nx">id</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Run the pilight-send executable.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">changeState: </span><span class="nf">(state, resultCallbak) -&gt;</span>
     <span class="nv">thisClass = </span><span class="k">this</span>
     <span class="k">if</span> <span class="nx">@state</span> <span class="o">is</span> <span class="nx">state</span> <span class="k">then</span> <span class="nx">resultCallbak</span> <span class="kc">true</span>
-    <span class="nv">onOff = </span><span class="p">(</span><span class="k">if</span> <span class="nx">state</span> <span class="k">then</span> <span class="s2">&quot;-t&quot;</span> <span class="k">else</span> <span class="s2">&quot;-f&quot;</span><span class="p">)</span>
+    <span class="nv">onOff = </span><span class="p">(</span><span class="k">if</span> <span class="nx">state</span> <span class="k">then</span> <span class="s">&quot;-t&quot;</span> <span class="k">else</span> <span class="s">&quot;-f&quot;</span><span class="p">)</span>
     <span class="nv">child = </span><span class="nx">spawn</span> <span class="nx">backend</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">binary</span><span class="p">,</span> <span class="p">[</span>
-      <span class="s2">&quot;-p &quot;</span> <span class="o">+</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">protocol</span>
-      <span class="s2">&quot;-u &quot;</span> <span class="o">+</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">outletUnit</span><span class="p">,</span> 
-      <span class="s2">&quot;-i &quot;</span> <span class="o">+</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">outletId</span><span class="p">,</span> 
+      <span class="s">&quot;-p &quot;</span> <span class="o">+</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">protocol</span>
+      <span class="s">&quot;-u &quot;</span> <span class="o">+</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">outletUnit</span><span class="p">,</span> 
+      <span class="s">&quot;-i &quot;</span> <span class="o">+</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">outletId</span><span class="p">,</span> 
       <span class="nx">onOff</span>
     <span class="p">]</span>
-    <span class="nx">child</span><span class="p">.</span><span class="kc">on</span> <span class="s2">&quot;exit&quot;</span><span class="p">,</span> <span class="nf">(code) -&gt;</span>
+    <span class="nx">child</span><span class="p">.</span><span class="nx">on</span> <span class="s">&quot;exit&quot;</span><span class="p">,</span> <span class="nf">(code) -&gt;</span>
       <span class="nv">success = </span><span class="p">(</span><span class="nx">code</span> <span class="o">is</span> <span class="mi">0</span><span class="p">)</span>
       <span class="nx">thisClass</span><span class="p">.</span><span class="nx">_setState</span><span class="p">(</span><span class="nx">state</span><span class="p">)</span> <span class="k">if</span> <span class="nx">success</span>
       <span class="nx">resultCallbak</span> <span class="nx">success</span>
