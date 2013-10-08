@@ -70,7 +70,7 @@ class LogWatcher extends sensors.Sensor
   cancelNotify: (id) ->
     self = @
     if self.listener[id]?
-      @tail.removeListener self.listener[id]
+      @tail.removeListener 'data', self.listener[id]
       delete self.listener[id]
 
   notifyWhen: (id, predicate, callback) ->
