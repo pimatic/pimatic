@@ -60,10 +60,12 @@ if config.server.httpsServer?.enabled
     assert typeof httpsConfig.keyFile is 'string' and httpsConfig.keyFile.length isnt 0
     assert typeof httpsConfig.certFile is 'string' and httpsConfig.certFile.length isnt 0 
 
-  httpsConfig.key = fs.readFileSync httpsConfig.keyFile
-  httpsConfig.cert = fs.readFileSync httpsConfig.certFile
+  httpsOptions = {}
+  httpsOptions[name]=value for name, value of httpsConfig
+  httpsOptions.key = fs.readFileSync httpsConfig.keyFile
+  httpsOptions.cert = fs.readFileSync httpsConfig.certFile
   https = require "https"
-  app.httpsServer = https.createServer httpsConfig, app
+  app.httpsServer = https.createServer httpsOptions, app
 
 # Start the http-server if it is enabled.
 if config.server.httpServer?.enabled
