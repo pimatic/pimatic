@@ -79,7 +79,7 @@ class NetworkDevicePresents extends sensors.Sensor
   cancelNotify: (id) ->
     self = @
     if self.listener[id]?
-      delete self.listener
+      delete self.listener[id]
 
   # Registers notification for time events. 
   notifyWhen: (id, predicate, callback) ->

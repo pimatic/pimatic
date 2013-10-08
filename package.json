@@ -37,7 +37,8 @@
     "socket.io": "0.9.*",
     "i18n": "0.4.*",
     "winston": "0.7.*",
-    "cassert": "0.1.*"
+    "cassert": "0.1.*",
+    "tail": "0.3.*"
   },
   "devDependencies": {
     "grunt": "~0.4.1",

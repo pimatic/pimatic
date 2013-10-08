@@ -1,0 +1,2 @@
+{ "name" : "sweetpi-backend-log-notifications",
+  "main" : "./log-notifications" }
