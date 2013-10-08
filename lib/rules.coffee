@@ -128,7 +128,7 @@ class RuleManager extends require('events').EventEmitter
     @emit "update", rule
     # * Check if the condition of the rule is allready true and execute the actions
     trueOrFalse = @evaluateConditionOfRule rule
-    if trueOrFalse then @executeAction actions, false, (e, message)->
+    if trueOrFalse then @executeAction rule.actions, false, (e, message)->
       logger.error "Rule #{ruleId} error: #{e}" if e?
       logger.info "Rule #{ruleId}: #{message}" if message?
 
