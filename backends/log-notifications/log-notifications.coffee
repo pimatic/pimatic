@@ -75,17 +75,18 @@ class LogWatcher extends sensors.Sensor
 
   notifyWhen: (id, predicate, callback) ->
     self = @
+    found = false
     for line in @lines
       do (line) ->
-        if predicate.match(new RegExp(line.predicate))
+        if not found and predicate.match(new RegExp(line.predicate))
           regex = new RegExp(line.match)
           lineCallback = (data) ->
             if data.match regex
               callback()
           self.tail.on 'line', lineCallback
           self.listener[id] = lineCallback
-          return true
-    return false
+          found = true
+    return found
 
 
 
