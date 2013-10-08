@@ -82,7 +82,7 @@ class LogWatcher extends sensors.Sensor
           lineCallback = (data) ->
             if data.match regex
               callback()
-          tail.on 'line', lineCallback
+          self.tail.on 'line', lineCallback
           self.listener[id] = lineCallback
           return true
     return false
