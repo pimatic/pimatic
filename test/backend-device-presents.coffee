@@ -1,7 +1,5 @@
 assert = require "cassert"
 
-
-
 describe "NetworkDevicePresents", ->
 
   backend = require '../backends/device-presents'

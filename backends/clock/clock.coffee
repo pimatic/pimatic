@@ -57,6 +57,10 @@ class Clock extends sensors.Sensor
         return now
       else throw new Error("Clock sensor doesn't provide sensor value \"#{name}\"")
 
+  canDecide: (predicate) ->
+    parsedDate = @parseNaturalTextDate predicate
+    return parsedDate?
+
   # Returns `true` if the given predicate string is considert to be true. For example the predicate
   # `"Sep 12-13"` is considert to be true if it is the 12th of october, 2013 from 0 to 
   # 23.59 o'clock. If the given predicate is not an valid date string an Error is thrown. 
@@ -118,8 +122,7 @@ class Clock extends sensors.Sensor
         cronjob: job
         modifier: modifier
       job.start()
-      return true
-    return false
+    else throw new Error "Clock sensor can not decide \"#{predicate}\"!"
 
   # Take a date as string in natural language and parse it with 
   # [chrono-node](https://github.com/berryboy/chrono).
