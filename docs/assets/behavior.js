@@ -406,6 +406,111 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         }, {
           "type": "folder",
           "data": {
+            "path": "backends/log-notifications",
+            "title": "log-notifications"
+          },
+          "depth": 2,
+          "children": [
+            {
+              "type": "file",
+              "data": {
+                "language": {
+                  "nameMatchers": [".coffee", "Cakefile"],
+                  "pygmentsLexer": "coffee-script",
+                  "singleLineComment": ["#"],
+                  "name": "CoffeeScript"
+                },
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/backends/log-notifications/log-notifications.coffee",
+                "projectPath": "backends/log-notifications/log-notifications.coffee",
+                "targetPath": "backends/log-notifications/log-notifications",
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "The log notification backend",
+                    "slug": "the-log-notification-backend",
+                    "isFileHeader": true
+                  },
+                  "depth": 1,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Providided predicates",
+                        "slug": "providided-predicates"
+                      },
+                      "depth": 2
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Dependencies",
+                        "slug": "dependencies"
+                      },
+                      "depth": 2
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "The LogNotificationsBackend",
+                        "slug": "the-lognotificationsbackend"
+                      },
+                      "depth": 2
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "LogWatcher Sensor",
+                        "slug": "logwatcher-sensor"
+                      },
+                      "depth": 2
+                    }
+                  ]
+                },
+                "title": "The log notification backend"
+              },
+              "depth": 3,
+              "outline": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Providided predicates",
+                    "slug": "providided-predicates"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Dependencies",
+                    "slug": "dependencies"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "The LogNotificationsBackend",
+                    "slug": "the-lognotificationsbackend"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "LogWatcher Sensor",
+                    "slug": "logwatcher-sensor"
+                  },
+                  "depth": 2
+                }
+              ]
+            }
+          ]
+        }, {
+          "type": "folder",
+          "data": {
             "path": "backends/pilight",
             "title": "pilight"
           },
@@ -1069,7 +1174,17 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/lib/sensors.coffee",
             "projectPath": "lib/sensors.coffee",
             "targetPath": "lib/sensors",
-            "title": "sensors"
+            "firstHeader": {
+              "type": "heading",
+              "data": {
+                "level": 1,
+                "title": "Sensor",
+                "slug": "sensor",
+                "isFileHeader": true
+              },
+              "depth": 1
+            },
+            "title": "Sensor"
           },
           "depth": 2,
           "outline": []

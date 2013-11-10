@@ -8,13 +8,11 @@
 
   <span class="nv">constructor: </span><span class="nf">(@server) -&gt;</span>
 
-  <span class="nv">findSensorForPredicate: </span><span class="nf">(id, predicate, callback) -&gt;</span>
-    <span class="nx">assert</span> <span class="nx">id</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">id</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span> <span class="o">and</span> <span class="nx">id</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span>
+  <span class="nv">findSensorForPredicate: </span><span class="nf">(predicate) -&gt;</span>
     <span class="nx">assert</span> <span class="nx">predicate</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">predicate</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span> <span class="o">and</span> <span class="nx">predicate</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span>
-    <span class="nx">assert</span> <span class="nx">callback</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">callback</span> <span class="o">is</span> <span class="s">&quot;function&quot;</span>
 
     <span class="k">for</span> <span class="nx">sensorId</span><span class="p">,</span> <span class="nx">sensor</span> <span class="k">of</span> <span class="nx">@server</span><span class="p">.</span><span class="nx">sensors</span>
-      <span class="k">if</span> <span class="nx">sensor</span><span class="p">.</span><span class="nx">notifyWhen</span> <span class="nx">id</span><span class="p">,</span> <span class="nx">predicate</span><span class="p">,</span> <span class="nx">callback</span>
+      <span class="k">if</span> <span class="nx">sensor</span><span class="p">.</span><span class="nx">canDecide</span> <span class="nx">predicate</span>
         <span class="k">return</span> <span class="nx">sensor</span>
     <span class="k">return</span> <span class="kc">null</span>
 
@@ -60,21 +58,21 @@ and remember the predicates in predicates
         <span class="k">else</span>
           <span class="nv">i = </span><span class="nx">predicates</span><span class="p">.</span><span class="nx">length</span>
           <span class="nv">predId = </span><span class="nx">id</span><span class="o">+</span><span class="nx">i</span>
-          <span class="nv">predSensor = </span> <span class="nx">_this</span><span class="p">.</span><span class="nx">findSensorForPredicate</span> <span class="nx">predId</span><span class="p">,</span> <span class="nx">token</span><span class="p">,</span> <span class="nf">-&gt;</span>
-            <span class="nx">_this</span><span class="p">.</span><span class="nx">predicateIsTrue</span> <span class="nx">id</span><span class="p">,</span> <span class="nx">predId</span>
+          <span class="nv">predSensor = </span><span class="nx">_this</span><span class="p">.</span><span class="nx">findSensorForPredicate</span> <span class="nx">token</span>
 
           <span class="nv">predicate =</span>
             <span class="nv">id: </span><span class="nx">predId</span>
             <span class="nv">token: </span><span class="nx">token</span>
             <span class="nv">sensor: </span><span class="nx">predSensor</span>
 
-          <span class="k">if</span> <span class="nx">predicate</span><span class="p">.</span><span class="nx">sensor</span><span class="o">?</span>
-            <span class="nx">predicates</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">predicate</span><span class="p">)</span>
-            <span class="nv">tokens = </span><span class="nx">tokens</span><span class="p">.</span><span class="nx">concat</span> <span class="p">[</span><span class="s">&quot;predicate&quot;</span><span class="p">,</span> <span class="s">&quot;(&quot;</span><span class="p">,</span> <span class="nx">i</span><span class="p">,</span> <span class="s">&quot;)&quot;</span><span class="p">]</span>
-          <span class="k">else</span>
-            <span class="nx">p</span><span class="p">.</span><span class="nx">sensor</span><span class="p">.</span><span class="nx">cancelNotify</span> <span class="nx">p</span><span class="p">.</span><span class="nx">id</span> <span class="k">for</span> <span class="nx">p</span> <span class="k">in</span> <span class="nx">predicates</span>
-            <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;Could not found an sensor that decides \&quot;</span><span class="si">#{</span><span class="nx">predicate</span><span class="p">.</span><span class="nx">token</span><span class="si">}</span><span class="s">\&quot;&quot;</span>
-    </div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Ok now the easier part: the action</p></div></div><div class="code"><div class="wrapper">    <span class="nv">ok = </span><span class="nx">_this</span><span class="p">.</span><span class="nx">executeAction</span> <span class="nx">actions</span><span class="p">,</span> <span class="kc">true</span><span class="p">,</span> <span class="nf">-&gt;</span> 
+          <span class="k">if</span> <span class="o">not</span> <span class="nx">predicate</span><span class="p">.</span><span class="nx">sensor</span><span class="o">?</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;Could not find an sensor that decides \&quot;</span><span class="si">#{</span><span class="nx">predicate</span><span class="p">.</span><span class="nx">token</span><span class="si">}</span><span class="s">\&quot;&quot;</span>
+
+          <span class="nx">predicates</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">predicate</span><span class="p">)</span>
+          <span class="nv">tokens = </span><span class="nx">tokens</span><span class="p">.</span><span class="nx">concat</span> <span class="p">[</span><span class="s">&quot;predicate&quot;</span><span class="p">,</span> <span class="s">&quot;(&quot;</span><span class="p">,</span> <span class="nx">i</span><span class="p">,</span> <span class="s">&quot;)&quot;</span><span class="p">]</span>
+            </div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Register all sensors:</p></div></div><div class="code"><div class="wrapper">    <span class="k">for</span> <span class="nx">p</span> <span class="k">in</span> <span class="nx">predicates</span>
+      <span class="nx">p</span><span class="p">.</span><span class="nx">sensor</span><span class="p">.</span><span class="nx">notifyWhen</span> <span class="nx">p</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">token</span><span class="p">,</span> <span class="nf">-&gt;</span>
+        <span class="nx">_this</span><span class="p">.</span><span class="nx">predicateIsTrue</span> <span class="nx">id</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">id</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Ok now the easier part: the action</p></div></div><div class="code"><div class="wrapper">    <span class="nv">ok = </span><span class="nx">_this</span><span class="p">.</span><span class="nx">executeAction</span> <span class="nx">actions</span><span class="p">,</span> <span class="kc">true</span><span class="p">,</span> <span class="nf">-&gt;</span> 
     <span class="k">if</span> <span class="o">not</span> <span class="nx">ok</span> <span class="k">then</span> <span class="k">throw</span> <span class="nb">Error</span> <span class="s">&quot;Could not find a actuator to execute \&quot;</span><span class="si">#{</span><span class="nx">actions</span><span class="si">}</span><span class="s">\&quot;&quot;</span>
 
     <span class="k">return</span> <span class="nv">rule = </span>
@@ -119,7 +117,7 @@ and remember the predicates in predicates
     <span class="nx">@emit</span> <span class="s">&quot;update&quot;</span><span class="p">,</span> <span class="nx">rule</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
 <li>Check if the condition of the rule is allready true and execute the actions</li>
 </ul></div></div><div class="code"><div class="wrapper">    <span class="nv">trueOrFalse = </span><span class="nx">@evaluateConditionOfRule</span> <span class="nx">rule</span>
-    <span class="k">if</span> <span class="nx">trueOrFalse</span> <span class="k">then</span> <span class="nx">@executeAction</span> <span class="nx">actions</span><span class="p">,</span> <span class="kc">false</span><span class="p">,</span> <span class="nf">(e, message)-&gt;</span>
+    <span class="k">if</span> <span class="nx">trueOrFalse</span> <span class="k">then</span> <span class="nx">@executeAction</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">action</span><span class="p">,</span> <span class="kc">false</span><span class="p">,</span> <span class="nf">(e, message)-&gt;</span>
       <span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="s">&quot;Rule </span><span class="si">#{</span><span class="nx">ruleId</span><span class="si">}</span><span class="s"> error: </span><span class="si">#{</span><span class="nx">e</span><span class="si">}</span><span class="s">&quot;</span> <span class="k">if</span> <span class="nx">e</span><span class="o">?</span>
       <span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="s">&quot;Rule </span><span class="si">#{</span><span class="nx">ruleId</span><span class="si">}</span><span class="s">: </span><span class="si">#{</span><span class="nx">message</span><span class="si">}</span><span class="s">&quot;</span> <span class="k">if</span> <span class="nx">message</span><span class="o">?</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Uses 'bet' to evaluate rule.tokens</p></div></div><div class="code"><div class="wrapper">  <span class="nv">evaluateConditionOfRule: </span><span class="nf">(rule, knownTruePredicates = []) -&gt;</span>
     <span class="nx">assert</span> <span class="nx">rule</span><span class="o">?</span> <span class="o">and</span> <span class="nx">rule</span> <span class="k">instanceof</span> <span class="nb">Object</span>

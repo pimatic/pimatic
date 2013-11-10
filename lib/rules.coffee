@@ -8,13 +8,11 @@ class RuleManager extends require('events').EventEmitter
 
   constructor: (@server) ->
 
-  findSensorForPredicate: (id, predicate, callback) ->
-    assert id? and typeof id is "string" and id.length isnt 0
+  findSensorForPredicate: (predicate) ->
     assert predicate? and typeof predicate is "string" and predicate.length isnt 0
-    assert callback? and typeof callback is "function"
 
     for sensorId, sensor of @server.sensors
-      if sensor.notifyWhen id, predicate, callback
+      if sensor.canDecide predicate
         return sensor
     return null
 
@@ -63,21 +61,24 @@ class RuleManager extends require('events').EventEmitter
         else
           i = predicates.length
           predId = id+i
-          predSensor =  _this.findSensorForPredicate predId, token, ->
-            _this.predicateIsTrue id, predId
+          predSensor = _this.findSensorForPredicate token
 
           predicate =
             id: predId
             token: token
             sensor: predSensor
 
-          if predicate.sensor?
-            predicates.push(predicate)
-            tokens = tokens.concat ["predicate", "(", i, ")"]
-          else
-            p.sensor.cancelNotify p.id for p in predicates
-            throw new Error "Could not found an sensor that decides \"#{predicate.token}\""
-    
+          if not predicate.sensor?
+            throw new Error "Could not find an sensor that decides \"#{predicate.token}\""
+
+          predicates.push(predicate)
+          tokens = tokens.concat ["predicate", "(", i, ")"]
+            
+    # Register all sensors:
+    for p in predicates
+      p.sensor.notifyWhen p.id, p.token, ->
+        _this.predicateIsTrue id, p.id
+
     # Ok now the easier part: the action
     ok = _this.executeAction actions, true, -> 
     if not ok then throw Error "Could not find a actuator to execute \"#{actions}\""
@@ -128,7 +129,7 @@ class RuleManager extends require('events').EventEmitter
     @emit "update", rule
     # * Check if the condition of the rule is allready true and execute the actions
     trueOrFalse = @evaluateConditionOfRule rule
-    if trueOrFalse then @executeAction rule.actions, false, (e, message)->
+    if trueOrFalse then @executeAction rule.action, false, (e, message)->
       logger.error "Rule #{ruleId} error: #{e}" if e?
       logger.info "Rule #{ruleId}: #{message}" if message?
 

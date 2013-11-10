@@ -69,11 +69,16 @@ class NetworkDevicePresents extends sensors.Sensor
       when "present" then return self.present
       else throw new Error("Illegal sensor value name")
 
+  canDecide: (predicate) ->
+    self = @
+    info = self.parsePredicate predicate
+    return info?
+
   isTrue: (id, predicate) ->
     self = @
     info = self.parsePredicate predicate
     if info? then return info.present is self.present
-    else throw new Error "Sensor can not decide \"#{predicate}\"!"
+    else throw new Error "NetworkDevicePresents sensor can not decide \"#{predicate}\"!"
 
   # Removes the notification for an with `notifyWhen` registered predicate. 
   cancelNotify: (id) ->
@@ -90,8 +95,7 @@ class NetworkDevicePresents extends sensors.Sensor
         id: id
         callback: callback
         present: info.present
-      return true
-    return false
+    else throw new Error "NetworkDevicePresents sensor can not decide \"#{predicate}\"!"
 
   notifyListener: ->
     self = @

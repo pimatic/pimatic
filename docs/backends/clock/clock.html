@@ -49,7 +49,11 @@
         <span class="nv">now = </span><span class="k">new</span> <span class="nb">Date</span>
         <span class="nx">now</span><span class="p">.</span><span class="nx">setTimezone</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">timezone</span>
         <span class="k">return</span> <span class="nx">now</span>
-      <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;Clock sensor doesn&#39;t provide sensor value \&quot;</span><span class="si">#{</span><span class="nx">name</span><span class="si">}</span><span class="s">\&quot;&quot;</span><span class="p">)</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Returns <code>true</code> if the given predicate string is considert to be true. For example the predicate
+      <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;Clock sensor doesn&#39;t provide sensor value \&quot;</span><span class="si">#{</span><span class="nx">name</span><span class="si">}</span><span class="s">\&quot;&quot;</span><span class="p">)</span>
+
+  <span class="nv">canDecide: </span><span class="nf">(predicate) -&gt;</span>
+    <span class="nv">parsedDate = </span><span class="nx">@parseNaturalTextDate</span> <span class="nx">predicate</span>
+    <span class="k">return</span> <span class="nx">parsedDate</span><span class="o">?</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Returns <code>true</code> if the given predicate string is considert to be true. For example the predicate
 <code>"Sep 12-13"</code> is considert to be true if it is the 12th of october, 2013 from 0 to 
 23.59 o'clock. If the given predicate is not an valid date string an Error is thrown. </p></div></div><div class="code"><div class="wrapper">  <span class="nv">isTrue: </span><span class="nf">(id, predicate) -&gt;</span>
     <span class="nv">parsedDate = </span><span class="nx">@parseNaturalTextDate</span> <span class="nx">predicate</span>
@@ -103,8 +107,7 @@
         <span class="nv">cronjob: </span><span class="nx">job</span>
         <span class="nv">modifier: </span><span class="nx">modifier</span>
       <span class="nx">job</span><span class="p">.</span><span class="nx">start</span><span class="p">()</span>
-      <span class="k">return</span> <span class="kc">true</span>
-    <span class="k">return</span> <span class="kc">false</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Take a date as string in natural language and parse it with 
+    <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;Clock sensor can not decide \&quot;</span><span class="si">#{</span><span class="nx">predicate</span><span class="si">}</span><span class="s">\&quot;!&quot;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Take a date as string in natural language and parse it with 
 <a href="https://github.com/berryboy/chrono">chrono-node</a>.
 For example transforms:
 <code>"Sep 12-13"</code>
@@ -141,8 +144,9 @@ to:</p>
     <span class="nv">begoreRegExp = </span><span class="s">&#39;.*before\\s.+&#39;</span>
 
     <span class="k">return</span> <span class="k">switch</span>
-      <span class="k">when</span> <span class="nx">predicate</span><span class="p">.</span><span class="nx">match</span> <span class="p">(</span><span class="k">new</span> <span class="nb">RegExp</span> <span class="nx">afterRegExp</span><span class="p">)</span> <span class="k">then</span> <span class="s">&#39;after&#39;</span>
-      <span class="k">when</span> <span class="nx">predicate</span><span class="p">.</span><span class="nx">match</span> <span class="p">(</span><span class="k">new</span> <span class="nb">RegExp</span> <span class="nx">begoreRegExp</span><span class="p">)</span> <span class="k">then</span> <span class="s">&#39;before&#39;</span>
+      <span class="k">when</span> <span class="nx">naturalTextDate</span><span class="p">.</span><span class="nx">match</span> <span class="p">(</span><span class="k">new</span> <span class="nb">RegExp</span> <span class="nx">afterRegExp</span><span class="p">)</span> <span class="k">then</span> <span class="s">&#39;after&#39;</span>
+      <span class="k">when</span> <span class="nx">naturalTextDate</span><span class="p">.</span><span class="nx">match</span> <span class="p">(</span><span class="k">new</span> <span class="nb">RegExp</span> <span class="nx">begoreRegExp</span><span class="p">)</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;Sorry before is not supported yet!&quot;</span><span class="p">)</span><span class="c1">#&#39;before&#39;</span>
       <span class="k">else</span> <span class="s">&#39;exact&#39;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Convert a parsedDate to a cronjob-syntax like object. The parsedDate must be parsed from 
 <a href="https://github.com/berryboy/chrono">chrono-node</a>. For Exampe converts the parsedDate of
 <code>"12:00"</code> to:</p>
