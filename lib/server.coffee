@@ -19,14 +19,12 @@ class Server extends require('events').EventEmitter
 
     helper.checkConfig null, ->
       assert config instanceof Object
-      assert Array.isArray config.frontends
-      assert Array.isArray config.backends
+      assert Array.isArray config.plugins
       assert Array.isArray config.actuators
       assert Array.isArray config.rules
 
     @ruleManager = new rules.RuleManager this, @config.rules
-    @loadBackends()
-    @loadFrontends()
+    @loadPlugins()
 
 
   loadPlugins: ->
@@ -40,7 +38,7 @@ class Server extends require('events').EventEmitter
       @registerPlugin plugin, pConf
 
   registerPlugin: (plugin, config) ->
-    assert plugin? and plugin instanceof plugin.Plugin
+    assert plugin? and plugin instanceof plugins.Plugin
     assert config? and config instanceof Object
 
     @plugins.push {plugin: plugin, config: config}
@@ -75,7 +73,7 @@ class Server extends require('events').EventEmitter
   loadActuators: ->
     for acConfig in @config.actuators
       found = false
-      for plugin in @plugin
+      for plugin in @plugins
         if plugin.plugin.createActuator?
           found = plugin.plugin.createActuator acConfig
           if found then break
@@ -87,7 +85,7 @@ class Server extends require('events').EventEmitter
 
   init: ->
     self = @
-    plugin.module.init(self, b.config) for plugin in self.plugins
+    plugin.plugin.init(self.app, self, plugin.config) for plugin in self.plugins
     self.loadActuators()
     actions = require './actions'
     self.ruleManager.actionHandlers.push actions(this)
