@@ -55,16 +55,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "type": "heading",
                   "data": {
                     "level": 3,
-                    "title": "The \"frontend\"-section",
-                    "slug": "the-frontend-section"
-                  },
-                  "depth": 3
-                }, {
-                  "type": "heading",
-                  "data": {
-                    "level": 3,
-                    "title": "The \"backend\"-section",
-                    "slug": "the-backend-section"
+                    "title": "The \"plugins\"-section",
+                    "slug": "the-plugins-section"
                   },
                   "depth": 3
                 }, {
@@ -137,16 +129,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "type": "heading",
               "data": {
                 "level": 3,
-                "title": "The \"frontend\"-section",
-                "slug": "the-frontend-section"
-              },
-              "depth": 3
-            }, {
-              "type": "heading",
-              "data": {
-                "level": 3,
-                "title": "The \"backend\"-section",
-                "slug": "the-backend-section"
+                "title": "The \"plugins\"-section",
+                "slug": "the-plugins-section"
               },
               "depth": 3
             }, {
@@ -669,8 +653,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         }, {
           "type": "folder",
           "data": {
-            "path": "node_modules/sweetpi-log-events",
-            "title": "sweetpi-log-events"
+            "path": "node_modules/sweetpi-log-reader",
+            "title": "sweetpi-log-reader"
           },
           "depth": 2,
           "children": [
@@ -683,9 +667,9 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-log-events/log-events.coffee",
-                "projectPath": "node_modules/sweetpi-log-events/log-events.coffee",
-                "targetPath": "node_modules/sweetpi-log-events/log-events",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-log-reader/log-reader.coffee",
+                "projectPath": "node_modules/sweetpi-log-reader/log-reader.coffee",
+                "targetPath": "node_modules/sweetpi-log-reader/log-reader",
                 "firstHeader": {
                   "type": "heading",
                   "data": {

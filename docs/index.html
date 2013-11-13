@@ -22,8 +22,7 @@
 
 <pre><code>{ 
   "server": { ... },
-  "frontends": [ ... ],
-  "backends": [ ... ],
+  "plugins": [ ... ],
   "actuators": [ ... ],
   "rules": []
 }
@@ -33,20 +32,16 @@
 
 <p>The <code>"server"</code>-section contains the configuration for the http- and https-server. You have to set <code>"username"</code> and <code>"password"</code> for the authentication or disable it. In the default config just the http-server is enabled and configurated to run on port 80.</p>
 
-<h3 id="the-frontend-section">The "frontend"-section</h3>
+<h3 id="the-plugins-section">The "plugins"-section</h3>
 
-<p>In the <code>"frontends"</code>-section you have to list all frontends to load in the form of</p>
+<p>In the <code>"plugins"</code>-section you have to list all plugins to load in the form of</p>
 
 <pre><code>{ 
-  "module": "frontend-name" 
+  "plugin": "plugin-name" 
 }
 </code></pre>
 
-<p>where <code>"frontend-name"</code> ist the name and directory of the frontend you want to load. All frontends are in the <code>frontends</code> directory. Additional you can add frontend specific configuration properties. See the documantation of the frontend you want to load for details about them.</p>
-
-<h3 id="the-backend-section">The "backend"-section</h3>
-
-<p>The <code>"backends"</code>-section should contain the backends to load. The form is the same like in the <code>frontend</code>-Section.  All backends are in the <code>backends</code> directory.</p>
+<p>where <code>"plugin-name"</code> ist the name and directory of the plugin you want to load. All plugins are in the <code>node_modules</code> directory and there prefixed with <code>sweetpi-</code>. </p>
 
 <h3 id="the-actuators-section">The "actuators"-section</h3>
 
