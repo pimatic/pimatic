@@ -21,8 +21,7 @@ The config is in the [json](https://en.wikipedia.org/wiki/JSON) format and curre
 
     { 
       "server": { ... },
-      "frontends": [ ... ],
-      "backends": [ ... ],
+      "plugins": [ ... ],
       "actuators": [ ... ],
       "rules": []
     }
@@ -30,17 +29,14 @@ The config is in the [json](https://en.wikipedia.org/wiki/JSON) format and curre
 ### The "server"-section
 The `"server"`-section contains the configuration for the http- and https-server. You have to set `"username"` and `"password"` for the authentication or disable it. In the default config just the http-server is enabled and configurated to run on port 80.
 
-### The "frontend"-section
-In the `"frontends"`-section you have to list all frontends to load in the form of
+### The "plugins"-section
+In the `"plugins"`-section you have to list all plugins to load in the form of
 
     { 
-      "module": "frontend-name" 
+      "plugin": "plugin-name" 
     }
 
-where `"frontend-name"` ist the name and directory of the frontend you want to load. All frontends are in the `frontends` directory. Additional you can add frontend specific configuration properties. See the documantation of the frontend you want to load for details about them.
-
-### The "backend"-section
-The `"backends"`-section should contain the backends to load. The form is the same like in the `frontend`-Section.  All backends are in the `backends` directory.
+where `"plugin-name"` ist the name and directory of the plugin you want to load. All plugins are in the `node_modules` directory and there prefixed with `sweetpi-`. 
 
 ### The "actuators"-section
 The `"actuators"`-section should contain all actuators, you want to have registered in the framework. An actuator are typically provided by a backend, so take a look at the desired backend for more details about the configuration of your actuators. A actuator configuration has the form
