@@ -2,7 +2,16 @@ assert = require "cassert"
 
 describe "NetworkDevicePresents", ->
 
-  backend = require '../backends/device-presents'
+    # Setup the environment
+  env =
+    logger: require '../lib/logger'
+    helper: require '../lib/helper'
+    actuators: require '../lib/actuators'
+    sensors: require '../lib/sensors'
+    rules: require '../lib/rules'
+    plugins: require '../lib/plugins'
+
+  backend = (require 'sweetpi-device-presents') env
   NetworkDevicePresents = backend.NetworkDevicePresents
   sessionDummy = null
   sensor = null
