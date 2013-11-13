@@ -3,13 +3,12 @@ helper = require './helper'
 actuators = require './actuators'
 sensors = require './sensors'
 rules = require './rules'
-modules = require './modules'
+plugins = require './plugins'
 logger = require "./logger"
 fs = require "fs"
 
 class Server extends require('events').EventEmitter
-  frontends: []
-  backends: []
+  plugins: []
   actuators: []
   sensors: []
   ruleManager: null
@@ -30,39 +29,22 @@ class Server extends require('events').EventEmitter
     @loadFrontends()
 
 
-  loadBackends: ->
-    for beConf in @config.backends
-      assert beConf?
-      assert beConf instanceof Object
-      assert beConf.module? and typeof beConf.module is "string" 
+  loadPlugins: ->
+    for pConf in @config.plugins
+      assert pConf?
+      assert pConf instanceof Object
+      assert pConf.plugin? and typeof pConf.plugin is "string" 
 
-      logger.info "loading backend: \"#{beConf.module}\"..."
-      be = require "../backends/" + beConf.module
-      @registerBackend be, beConf
+      logger.info "loading plugin: \"#{pConf.plugin}\"..."
+      plugin = require "sweetpi-#{pConf.plugin}"
+      @registerPlugin plugin, pConf
 
-  loadFrontends: ->
-    for feConf in @config.frontends
-      assert feConf?
-      assert feConf instanceof Object
-      assert feConf.module? and typeof feConf.module is "string" 
-
-      logger.info "loading frontend: \"#{feConf.module}\"..."
-      fe = require "../frontends/" + feConf.module
-      @registerFrontend fe, feConf
-
-  registerFrontend: (frontend, config) ->
-    assert frontend? and frontend instanceof modules.Frontend
+  registerPlugin: (plugin, config) ->
+    assert plugin? and plugin instanceof plugin.Plugin
     assert config? and config instanceof Object
 
-    @frontends.push {module: frontend, config: config}
-    @emit "frontend", frontend
-
-  registerBackend: (backend, config) ->
-    assert backend? and backend instanceof modules.Backend
-    assert config? and config instanceof Object
-
-    @backends.push {module: backend, config: config}
-    @emit "backend", backend
+    @plugins.push {plugin: plugin, config: config}
+    @emit "plugin", plugin
 
   registerActuator: (actuator) ->
     assert actuator?
@@ -93,20 +75,20 @@ class Server extends require('events').EventEmitter
   loadActuators: ->
     for acConfig in @config.actuators
       found = false
-      for be in @backends
-        found = be.module.createActuator acConfig
-        if found then break
+      for plugin in @plugin
+        if plugin.plugin.createActuator?
+          found = plugin.plugin.createActuator acConfig
+          if found then break
       unless found
-        logger.warn "no backend found for actuator \"#{acConfig.id}\"!"
+        logger.warn "no plugin found for actuator \"#{acConfig.id}\"!"
 
   getActuatorById: (id) ->
     @actuators[id]
 
   init: ->
     self = @
-    b.module.init(self, b.config) for b in self.backends
+    plugin.module.init(self, b.config) for plugin in self.plugins
     self.loadActuators()
-    f.module.init(self.app, self, f.config) for f in self.frontends
     actions = require './actions'
     self.ruleManager.actionHandlers.push actions(this)
     self.ruleManager.addRuleByString(rule.id, rule.rule) for rule in self.config.rules
@@ -142,4 +124,5 @@ class Server extends require('events').EventEmitter
     fs.writeFile "config.json", JSON.stringify(@config, null, 2), (err) ->
       if err? then throw err
       else logger.info "config.json updated"
+
  module.exports = Server

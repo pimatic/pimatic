@@ -9,21 +9,18 @@
       "port": 80      
     }
   },
-  "frontends": [
+  "plugins": [
     { 
-      "module": "rest" 
+      "plugin": "rest" 
     }, 
     { 
-      "module": "speak" 
+      "plugin": "speak" 
     }, 
     { 
-      "module": "mobile",
+      "plugin": "mobile",
       "actuatorsToDisplay": [ 
       ] 
     }
-  ],
-  "backends": [
- 
   ],
   "actuators": [
  

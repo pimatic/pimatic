@@ -48,12 +48,8 @@ module.exports =
         doc: "Privatekey-file"
         format: String
         default: "./.cert/certificate.pem"
-  frontends:
-    doc: "Array of frontends to load"
-    format: Array
-    default: []
-  backends:
-    doc: "Array of backends to load"
+  plugins:
+    doc: "Array of plugins to load"
     format: Array
     default: []
   actuators:
