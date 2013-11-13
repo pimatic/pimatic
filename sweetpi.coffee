@@ -7,10 +7,19 @@
 # 
 assert = require 'cassert'
 express = require "express"
-fs = require "fs"
-convict = require "convict"
-i18n = require "i18n"
-logger = require "./lib/logger"
+fs = require 'fs'
+convict = require 'convict'
+i18n = require 'i18n'
+
+# Setup the environment
+env =
+  logger: require './lib/logger'
+  helper: require './lib/helper'
+  actuators: require './lib/actuators'
+  sensors: require './lib/sensors'
+  rules: require './lib/rules'
+  plugins: require './lib/plugins'
+
 
 # ##Load the configuration file.
 # 
@@ -28,8 +37,6 @@ i18n.configure({
   defaultLocale: config.server.locale,
 })
 
-helper = require './lib/helper'
-Server = require "./lib/server"
 
 # Setup express
 # -------------
@@ -44,18 +51,18 @@ app.use express.bodyParser()
 auth = config.server.authentication
 if auth.enabled
   #Check authentication.
-  helper.checkConfig 'server.authentication', ->
+  env.helper.checkConfig 'server.authentication', ->
     assert auth.username and typeof auth.username is "string" and auth.username.length isnt 0 
     assert auth.password and typeof auth.password is "string" and auth.password.length isnt 0 
   app.use express.basicAuth(auth.username, auth.password)
 
 if not config.server.httpsServer?.enabled and not config.server.httpServer?.enabled
-  logger.warn "You have no https and no http server defined!"
+  env.logger.warn "You have no https and no http server defined!"
 
 # Start the https-server if it is enabled.
 if config.server.httpsServer?.enabled
   httpsConfig = config.server.httpsServer
-  helper.checkConfig 'server', ->
+  env.helper.checkConfig 'server', ->
     assert httpsConfig instanceof Object
     assert typeof httpsConfig.keyFile is 'string' and httpsConfig.keyFile.length isnt 0
     assert typeof httpsConfig.certFile is 'string' and httpsConfig.certFile.length isnt 0 
@@ -76,13 +83,15 @@ if config.server.httpServer?.enabled
 
 # Setup the server
 # ----------------
+Server = (require './lib/server') env 
+
 server = new Server app, config
 server.init()
 
 if app.httpsServer?
   app.httpsServer.listen config.server.httpsServer.port
-  logger.info "listening for https-request on port #{config.server.httpsServer.port}..."
+  env.logger.info "listening for https-request on port #{config.server.httpsServer.port}..."
 
 if app.httpServer?
   app.httpServer.listen config.server.httpServer.port
-  logger.info "listening for http-request on port #{config.server.httpServer.port}..."
+  env.logger.info "listening for http-request on port #{config.server.httpServer.port}..."
