@@ -4,8 +4,8 @@
     "./README.md",
     "./*.coffee",
     "./lib/*.coffee",
-    "./frontends/*/*.coffee",
-    "./backends/*/*.coffee"
+    "./node_modules/sweetpi-cron/*.coffee",
+    "./node_modules/sweetpi-device-presents/*.coffee"
   ], 
   "out": "docs",
   "repository-url": "https://github.com/sweetpi/sweetpi-server"

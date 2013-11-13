@@ -360,6 +360,121 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         }
       ]
     }, {
+      "type": "folder",
+      "data": {
+        "path": "node_modules",
+        "title": "node_modules"
+      },
+      "depth": 1,
+      "children": [
+        {
+          "type": "folder",
+          "data": {
+            "path": "node_modules/sweetpi-cron",
+            "title": "sweetpi-cron"
+          },
+          "depth": 2,
+          "children": [
+            {
+              "type": "file",
+              "data": {
+                "language": {
+                  "nameMatchers": [".coffee", "Cakefile"],
+                  "pygmentsLexer": "coffee-script",
+                  "singleLineComment": ["#"],
+                  "name": "CoffeeScript"
+                },
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-cron/cron.coffee",
+                "projectPath": "node_modules/sweetpi-cron/cron.coffee",
+                "targetPath": "node_modules/sweetpi-cron/cron",
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "The clock backend",
+                    "slug": "the-clock-backend",
+                    "isFileHeader": true
+                  },
+                  "depth": 1,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Provided predicates",
+                        "slug": "provided-predicates"
+                      },
+                      "depth": 2
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Dependencies",
+                        "slug": "dependencies"
+                      },
+                      "depth": 2
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "The ClockBackend",
+                        "slug": "the-clockbackend"
+                      },
+                      "depth": 2
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "The Clock-Actuator",
+                        "slug": "the-clock-actuator"
+                      },
+                      "depth": 2
+                    }
+                  ]
+                },
+                "title": "The clock backend"
+              },
+              "depth": 3,
+              "outline": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Provided predicates",
+                    "slug": "provided-predicates"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Dependencies",
+                    "slug": "dependencies"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "The ClockBackend",
+                    "slug": "the-clockbackend"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "The Clock-Actuator",
+                    "slug": "the-clock-actuator"
+                  },
+                  "depth": 2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }, {
       "type": "file",
       "data": {
         "language": {

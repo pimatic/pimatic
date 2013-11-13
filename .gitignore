@@ -1,6 +1,5 @@
 config.json
-node_modules
-!/node_modules/sweetpi-*
+#node_modules
 node.log
 *.sublime-workspace
 *.sublime-project
