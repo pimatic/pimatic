@@ -7,7 +7,7 @@
     "./node_modules/sweetpi-cron/*.coffee",
     "./node_modules/sweetpi-device-presents/*.coffee",
     "./node_modules/sweetpi-filebrowser/*.coffee",
-    "./node_modules/sweetpi-log-events/*.coffee",
+    "./node_modules/sweetpi-log-reader/*.coffee",
     "./node_modules/sweetpi-mobile-frontend/*.coffee",
     "./node_modules/sweetpi-pilight/*.coffee",
     "./node_modules/sweetpi-redirect/*.coffee",
