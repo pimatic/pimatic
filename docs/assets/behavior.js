@@ -459,111 +459,6 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         }, {
           "type": "folder",
           "data": {
-            "path": "node_modules/sweetpi-device-presents",
-            "title": "sweetpi-device-presents"
-          },
-          "depth": 2,
-          "children": [
-            {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".coffee", "Cakefile"],
-                  "pygmentsLexer": "coffee-script",
-                  "singleLineComment": ["#"],
-                  "name": "CoffeeScript"
-                },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-device-presents/device-presents.coffee",
-                "projectPath": "node_modules/sweetpi-device-presents/device-presents.coffee",
-                "targetPath": "node_modules/sweetpi-device-presents/device-presents",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "The wifi device backend",
-                    "slug": "the-wifi-device-backend",
-                    "isFileHeader": true
-                  },
-                  "depth": 1,
-                  "children": [
-                    {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Providided predicates",
-                        "slug": "providided-predicates"
-                      },
-                      "depth": 2
-                    }, {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Dependencies",
-                        "slug": "dependencies"
-                      },
-                      "depth": 2
-                    }, {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "The DevicePresentsBackend",
-                        "slug": "the-devicepresentsbackend"
-                      },
-                      "depth": 2
-                    }, {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "NetworkDevicePresents Sensor",
-                        "slug": "networkdevicepresents-sensor"
-                      },
-                      "depth": 2
-                    }
-                  ]
-                },
-                "title": "The wifi device backend"
-              },
-              "depth": 3,
-              "outline": [
-                {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Providided predicates",
-                    "slug": "providided-predicates"
-                  },
-                  "depth": 2
-                }, {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Dependencies",
-                    "slug": "dependencies"
-                  },
-                  "depth": 2
-                }, {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "The DevicePresentsBackend",
-                    "slug": "the-devicepresentsbackend"
-                  },
-                  "depth": 2
-                }, {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "NetworkDevicePresents Sensor",
-                    "slug": "networkdevicepresents-sensor"
-                  },
-                  "depth": 2
-                }
-              ]
-            }
-          ]
-        }, {
-          "type": "folder",
-          "data": {
             "path": "node_modules/sweetpi-filebrowser",
             "title": "sweetpi-filebrowser"
           },
@@ -985,6 +880,111 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                     "level": 2,
                     "title": "Configuration",
                     "slug": "configuration"
+                  },
+                  "depth": 2
+                }
+              ]
+            }
+          ]
+        }, {
+          "type": "folder",
+          "data": {
+            "path": "node_modules/sweetpi-ping",
+            "title": "sweetpi-ping"
+          },
+          "depth": 2,
+          "children": [
+            {
+              "type": "file",
+              "data": {
+                "language": {
+                  "nameMatchers": [".coffee", "Cakefile"],
+                  "pygmentsLexer": "coffee-script",
+                  "singleLineComment": ["#"],
+                  "name": "CoffeeScript"
+                },
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-ping/ping.coffee",
+                "projectPath": "node_modules/sweetpi-ping/ping.coffee",
+                "targetPath": "node_modules/sweetpi-ping/ping",
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "The wifi device backend",
+                    "slug": "the-wifi-device-backend",
+                    "isFileHeader": true
+                  },
+                  "depth": 1,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Providided predicates",
+                        "slug": "providided-predicates"
+                      },
+                      "depth": 2
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Dependencies",
+                        "slug": "dependencies"
+                      },
+                      "depth": 2
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "The DevicePresentsBackend",
+                        "slug": "the-devicepresentsbackend"
+                      },
+                      "depth": 2
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "NetworkDevicePresents Sensor",
+                        "slug": "networkdevicepresents-sensor"
+                      },
+                      "depth": 2
+                    }
+                  ]
+                },
+                "title": "The wifi device backend"
+              },
+              "depth": 3,
+              "outline": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Providided predicates",
+                    "slug": "providided-predicates"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Dependencies",
+                    "slug": "dependencies"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "The DevicePresentsBackend",
+                    "slug": "the-devicepresentsbackend"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "NetworkDevicePresents Sensor",
+                    "slug": "networkdevicepresents-sensor"
                   },
                   "depth": 2
                 }

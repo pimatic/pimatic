@@ -1,6 +1,6 @@
 assert = require "cassert"
 
-describe "NetworkDevicePresents", ->
+describe "sweetpi-ping", ->
 
     # Setup the environment
   env =
@@ -11,7 +11,7 @@ describe "NetworkDevicePresents", ->
     rules: require '../lib/rules'
     plugins: require '../lib/plugins'
 
-  backend = (require 'sweetpi-device-presents') env
+  backend = (require 'sweetpi-ping') env
   NetworkDevicePresents = backend.NetworkDevicePresents
   sessionDummy = null
   sensor = null
