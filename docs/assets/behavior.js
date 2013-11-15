@@ -363,6 +363,52 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "type": "file",
               "data": {
                 "language": {
+                  "nameMatchers": [".md"],
+                  "commentsOnly": true,
+                  "name": "Markdown"
+                },
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-cron/README.md",
+                "projectPath": "node_modules/sweetpi-cron/README.md",
+                "targetPath": "node_modules/sweetpi-cron/README",
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "sweetpi cron plugin",
+                    "slug": "sweetpi-cron-plugin",
+                    "isFileHeader": true
+                  },
+                  "depth": 1,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Provided predicates",
+                        "slug": "provided-predicates"
+                      },
+                      "depth": 2
+                    }
+                  ]
+                },
+                "title": "sweetpi cron plugin"
+              },
+              "depth": 3,
+              "outline": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Provided predicates",
+                    "slug": "provided-predicates"
+                  },
+                  "depth": 2
+                }
+              ]
+            }, {
+              "type": "file",
+              "data": {
+                "language": {
                   "nameMatchers": [".coffee", "Cakefile"],
                   "pygmentsLexer": "coffee-script",
                   "singleLineComment": ["#"],
@@ -415,6 +461,52 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "type": "file",
               "data": {
                 "language": {
+                  "nameMatchers": [".md"],
+                  "commentsOnly": true,
+                  "name": "Markdown"
+                },
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-filebrowser/README.md",
+                "projectPath": "node_modules/sweetpi-filebrowser/README.md",
+                "targetPath": "node_modules/sweetpi-filebrowser/README",
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "sweetpi filebrowser plugin",
+                    "slug": "sweetpi-filebrowser-plugin",
+                    "isFileHeader": true
+                  },
+                  "depth": 1,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Configuration:",
+                        "slug": "configuration"
+                      },
+                      "depth": 2
+                    }
+                  ]
+                },
+                "title": "sweetpi filebrowser plugin"
+              },
+              "depth": 3,
+              "outline": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Configuration:",
+                    "slug": "configuration"
+                  },
+                  "depth": 2
+                }
+              ]
+            }, {
+              "type": "file",
+              "data": {
+                "language": {
                   "nameMatchers": [".coffee", "Cakefile"],
                   "pygmentsLexer": "coffee-script",
                   "singleLineComment": ["#"],
@@ -456,6 +548,52 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "depth": 2,
           "children": [
             {
+              "type": "file",
+              "data": {
+                "language": {
+                  "nameMatchers": [".md"],
+                  "commentsOnly": true,
+                  "name": "Markdown"
+                },
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-log-reader/README.md",
+                "projectPath": "node_modules/sweetpi-log-reader/README.md",
+                "targetPath": "node_modules/sweetpi-log-reader/README",
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "sweetpi log-reader plugin",
+                    "slug": "sweetpi-log-reader-plugin",
+                    "isFileHeader": true
+                  },
+                  "depth": 1,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Configutation:",
+                        "slug": "configutation"
+                      },
+                      "depth": 2
+                    }
+                  ]
+                },
+                "title": "sweetpi log-reader plugin"
+              },
+              "depth": 3,
+              "outline": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Configutation:",
+                    "slug": "configutation"
+                  },
+                  "depth": 2
+                }
+              ]
+            }, {
               "type": "file",
               "data": {
                 "language": {
@@ -704,6 +842,31 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "type": "file",
               "data": {
                 "language": {
+                  "nameMatchers": [".md"],
+                  "commentsOnly": true,
+                  "name": "Markdown"
+                },
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-redirect/README.md",
+                "projectPath": "node_modules/sweetpi-redirect/README.md",
+                "targetPath": "node_modules/sweetpi-redirect/README",
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "sweetpi redirect plugin",
+                    "slug": "sweetpi-redirect-plugin",
+                    "isFileHeader": true
+                  },
+                  "depth": 1
+                },
+                "title": "sweetpi redirect plugin"
+              },
+              "depth": 3,
+              "outline": []
+            }, {
+              "type": "file",
+              "data": {
+                "language": {
                   "nameMatchers": [".coffee", "Cakefile"],
                   "pygmentsLexer": "coffee-script",
                   "singleLineComment": ["#"],
@@ -730,6 +893,31 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "type": "file",
               "data": {
                 "language": {
+                  "nameMatchers": [".md"],
+                  "commentsOnly": true,
+                  "name": "Markdown"
+                },
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-rest-api/README.md",
+                "projectPath": "node_modules/sweetpi-rest-api/README.md",
+                "targetPath": "node_modules/sweetpi-rest-api/README",
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "sweetpi rest-api plugin",
+                    "slug": "sweetpi-rest-api-plugin",
+                    "isFileHeader": true
+                  },
+                  "depth": 1
+                },
+                "title": "sweetpi rest-api plugin"
+              },
+              "depth": 3,
+              "outline": []
+            }, {
+              "type": "file",
+              "data": {
+                "language": {
                   "nameMatchers": [".coffee", "Cakefile"],
                   "pygmentsLexer": "coffee-script",
                   "singleLineComment": ["#"],
@@ -753,6 +941,52 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "depth": 2,
           "children": [
             {
+              "type": "file",
+              "data": {
+                "language": {
+                  "nameMatchers": [".md"],
+                  "commentsOnly": true,
+                  "name": "Markdown"
+                },
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-sispmctl/README.md",
+                "projectPath": "node_modules/sweetpi-sispmctl/README.md",
+                "targetPath": "node_modules/sweetpi-sispmctl/README",
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "sweetpi sispmctl plugin",
+                    "slug": "sweetpi-sispmctl-plugin",
+                    "isFileHeader": true
+                  },
+                  "depth": 1,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Configuration",
+                        "slug": "configuration"
+                      },
+                      "depth": 2
+                    }
+                  ]
+                },
+                "title": "sweetpi sispmctl plugin"
+              },
+              "depth": 3,
+              "outline": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Configuration",
+                    "slug": "configuration"
+                  },
+                  "depth": 2
+                }
+              ]
+            }, {
               "type": "file",
               "data": {
                 "language": {
@@ -831,6 +1065,31 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "depth": 2,
           "children": [
             {
+              "type": "file",
+              "data": {
+                "language": {
+                  "nameMatchers": [".md"],
+                  "commentsOnly": true,
+                  "name": "Markdown"
+                },
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-speak-api/README.md",
+                "projectPath": "node_modules/sweetpi-speak-api/README.md",
+                "targetPath": "node_modules/sweetpi-speak-api/README",
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "sweetpi speak-api plugin",
+                    "slug": "sweetpi-speak-api-plugin",
+                    "isFileHeader": true
+                  },
+                  "depth": 1
+                },
+                "title": "sweetpi speak-api plugin"
+              },
+              "depth": 3,
+              "outline": []
+            }, {
               "type": "file",
               "data": {
                 "language": {
