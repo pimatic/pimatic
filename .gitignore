@@ -27,6 +27,9 @@ node_modules/xml2js/
 node_modules/sweetpi-cron/node_modules/
 node_modules/sweetpi-filebrowser/node_modules/
 node_modules/sweetpi-mobile-frontend/node_modules/
+node_modules/npm/
+node_modules/sweetpi-pilight/node_modules/
+node_modules/sweetpi-ping/node_modules/
 node.log
 *.sublime-workspace
 *.sublime-project

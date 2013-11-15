@@ -15,29 +15,23 @@
     "README.md",
     "LICENSE"
   ],
-  "version": "0.0.9",
+  "version": "0.1.0",
   "homepage": "http://github.com/sweetpi/sweetpi-server",
   "repository": {
     "type": "git",
     "url": "git://github.com/sweetpi/sweetpi-server.git"
   },
+  "preferGlobal": true,
+  "bin" : { "sweetpi-server" : "./main.js" },
   "dependencies": {
     "coffee-script": "1.6.*",
     "express": "3.0.*",
-    "jade": "0.27.*",
-    "connect-coffee-script": "0.1.*",
-    "connect-offline": "1.0.*",
     "convict": "0.4.*",
-    "chrono-node": "0.1.*",
-    "cron": "1.0.*",
-    "time": "0.9.*",
     "bet": "0.2.*",
     "async": "0.2.*",
-    "socket.io": "0.9.*",
     "i18n": "0.4.*",
     "winston": "0.7.*",
-    "cassert": "0.1.*",
-    "tail": "0.3.*"
+    "cassert": "0.1.*"
   },
   "devDependencies": {
     "grunt": "~0.4.1",

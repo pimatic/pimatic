@@ -1,5 +1,6 @@
 assert = require 'cassert'
 fs = require "fs"
+async = require 'async'
 
 module.exports = (env) ->
 
@@ -20,18 +21,24 @@ module.exports = (env) ->
         assert Array.isArray config.rules
 
       @ruleManager = new env.rules.RuleManager this, @config.rules
-      @loadPlugins()
+      @pluginManager = new env.plugins.PluginManager this
 
 
-    loadPlugins: ->
-      for pConf in @config.plugins
+    loadPlugins: (cb)->
+      self = this
+      async.mapSeries(self.config.plugins, (pConf, cb)->
         assert pConf?
         assert pConf instanceof Object
         assert pConf.plugin? and typeof pConf.plugin is "string" 
 
         env.logger.info "loading plugin: \"#{pConf.plugin}\"..."
-        plugin = (require "sweetpi-#{pConf.plugin}") env
-        @registerPlugin plugin, pConf
+        plugin = self.pluginManager.loadPlugin env, "sweetpi-#{pConf.plugin}", (err, plugin) ->
+          cb(err, {plugin: plugin, config: pConf})
+      , (err, plugins) ->
+        self.registerPlugin(p.plugin, p.config) for p in plugins
+        cb(err)
+      )
+
 
     registerPlugin: (plugin, config) ->
       assert plugin? and plugin instanceof env.plugins.Plugin
@@ -80,37 +87,38 @@ module.exports = (env) ->
       @actuators[id]
 
     init: ->
-      self = @
-      plugin.plugin.init(self.app, self, plugin.config) for plugin in self.plugins
-      self.loadActuators()
-      actions = require './actions'
-      self.ruleManager.actionHandlers.push actions(this)
-      self.ruleManager.addRuleByString(rule.id, rule.rule) for rule in self.config.rules
+      self = this
+      self.loadPlugins (err) ->
+        plugin.plugin.init(self.app, self, plugin.config) for plugin in self.plugins
+        self.loadActuators()
+        actions = require './actions'
+        self.ruleManager.actionHandlers.push actions(self)
+        self.ruleManager.addRuleByString(rule.id, rule.rule) for rule in self.config.rules
 
-      # Save rule updates to the config file:
-      # 
-      # * If a new rule was added then...
-      self.ruleManager.on "add", (rule) ->
-        # ...add it to the rules Array in the config.json file
-        self.config.rules.push 
-          id: rule.id
-          rule: rule.string
-        self.emit "config"
-      # * If a rule was changed then...
-      self.ruleManager.on "update", (rule) ->
-        # ...change the rule with the right id in the config.json file
-        self.config.rules = for r in self.config.rules 
-          if r.id is rule.id then {id: rule.id, rule: rule.string}
-          else r
-        self.emit "config"
-      # * If a rule was removed then
-      self.ruleManager.on "remove", (rule) ->
-        # ...Remove the rule with the right id in the config.json file
-        self.config.rules = (r for r in self.config.rules when r.id isnt rule.id)
-        self.emit "config"
+        # Save rule updates to the config file:
+        # 
+        # * If a new rule was added then...
+        self.ruleManager.on "add", (rule) ->
+          # ...add it to the rules Array in the config.json file
+          self.config.rules.push 
+            id: rule.id
+            rule: rule.string
+          self.emit "config"
+        # * If a rule was changed then...
+        self.ruleManager.on "update", (rule) ->
+          # ...change the rule with the right id in the config.json file
+          self.config.rules = for r in self.config.rules 
+            if r.id is rule.id then {id: rule.id, rule: rule.string}
+            else r
+          self.emit "config"
+        # * If a rule was removed then
+        self.ruleManager.on "remove", (rule) ->
+          # ...Remove the rule with the right id in the config.json file
+          self.config.rules = (r for r in self.config.rules when r.id isnt rule.id)
+          self.emit "config"
 
-      # Save the config on "config" event
-      self.on "config", ->
+        # Save the config on "config" event
+        self.on "config", ->
         self.saveConfig()
 
 
