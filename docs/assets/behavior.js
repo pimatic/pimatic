@@ -371,64 +371,11 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                 "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-cron/cron.coffee",
                 "projectPath": "node_modules/sweetpi-cron/cron.coffee",
                 "targetPath": "node_modules/sweetpi-cron/cron",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "The clock backend",
-                    "slug": "the-clock-backend",
-                    "isFileHeader": true
-                  },
-                  "depth": 1,
-                  "children": [
-                    {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Provided predicates",
-                        "slug": "provided-predicates"
-                      },
-                      "depth": 2
-                    }, {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Dependencies",
-                        "slug": "dependencies"
-                      },
-                      "depth": 2
-                    }, {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "The ClockBackend",
-                        "slug": "the-clockbackend"
-                      },
-                      "depth": 2
-                    }, {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "The Clock-Actuator",
-                        "slug": "the-clock-actuator"
-                      },
-                      "depth": 2
-                    }
-                  ]
-                },
-                "title": "The clock backend"
+                "title": "cron"
               },
               "depth": 3,
               "outline": [
                 {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Provided predicates",
-                    "slug": "provided-predicates"
-                  },
-                  "depth": 2
-                }, {
                   "type": "heading",
                   "data": {
                     "level": 2,
@@ -476,56 +423,11 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                 "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-filebrowser/filebrowser.coffee",
                 "projectPath": "node_modules/sweetpi-filebrowser/filebrowser.coffee",
                 "targetPath": "node_modules/sweetpi-filebrowser/filebrowser",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "The filebrowser frontend",
-                    "slug": "the-filebrowser-frontend",
-                    "isFileHeader": true
-                  },
-                  "depth": 1,
-                  "children": [
-                    {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Example config:",
-                        "slug": "example-config"
-                      },
-                      "depth": 2
-                    }, {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Dependencies",
-                        "slug": "dependencies"
-                      },
-                      "depth": 2
-                    }, {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Filebrowser",
-                        "slug": "filebrowser"
-                      },
-                      "depth": 2
-                    }
-                  ]
-                },
-                "title": "The filebrowser frontend"
+                "title": "filebrowser"
               },
               "depth": 3,
               "outline": [
                 {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Example config:",
-                    "slug": "example-config"
-                  },
-                  "depth": 2
-                }, {
                   "type": "heading",
                   "data": {
                     "level": 2,
@@ -565,64 +467,11 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                 "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-log-reader/log-reader.coffee",
                 "projectPath": "node_modules/sweetpi-log-reader/log-reader.coffee",
                 "targetPath": "node_modules/sweetpi-log-reader/log-reader",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "The log notification backend",
-                    "slug": "the-log-notification-backend",
-                    "isFileHeader": true
-                  },
-                  "depth": 1,
-                  "children": [
-                    {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Providided predicates",
-                        "slug": "providided-predicates"
-                      },
-                      "depth": 2
-                    }, {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Dependencies",
-                        "slug": "dependencies"
-                      },
-                      "depth": 2
-                    }, {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "The LogNotificationsBackend",
-                        "slug": "the-lognotificationsbackend"
-                      },
-                      "depth": 2
-                    }, {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "LogWatcher Sensor",
-                        "slug": "logwatcher-sensor"
-                      },
-                      "depth": 2
-                    }
-                  ]
-                },
-                "title": "The log notification backend"
+                "title": "log-reader"
               },
               "depth": 3,
               "outline": [
                 {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Providided predicates",
-                    "slug": "providided-predicates"
-                  },
-                  "depth": 2
-                }, {
                   "type": "heading",
                   "data": {
                     "level": 2,
@@ -670,75 +519,11 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                 "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-mobile-frontend/mobile-frontend.coffee",
                 "projectPath": "node_modules/sweetpi-mobile-frontend/mobile-frontend.coffee",
                 "targetPath": "node_modules/sweetpi-mobile-frontend/mobile-frontend",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "The mobile frontend",
-                    "slug": "the-mobile-frontend",
-                    "isFileHeader": true
-                  },
-                  "depth": 1,
-                  "children": [
-                    {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Example config:",
-                        "slug": "example-config"
-                      },
-                      "depth": 2
-                    }, {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Dependencies",
-                        "slug": "dependencies"
-                      },
-                      "depth": 2
-                    }, {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "The MobileFrontend",
-                        "slug": "the-mobilefrontend"
-                      },
-                      "depth": 2,
-                      "children": [
-                        {
-                          "type": "heading",
-                          "data": {
-                            "level": 3,
-                            "title": "init the frontend:",
-                            "slug": "init-the-frontend"
-                          },
-                          "depth": 3
-                        }, {
-                          "type": "heading",
-                          "data": {
-                            "level": 3,
-                            "title": "Socket.io stuff:",
-                            "slug": "socketio-stuff"
-                          },
-                          "depth": 3
-                        }
-                      ]
-                    }
-                  ]
-                },
-                "title": "The mobile frontend"
+                "title": "mobile-frontend"
               },
               "depth": 3,
               "outline": [
                 {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Example config:",
-                    "slug": "example-config"
-                  },
-                  "depth": 2
-                }, {
                   "type": "heading",
                   "data": {
                     "level": 2,
@@ -820,9 +605,25 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-pilight/backend-config-shema.coffee",
-                "projectPath": "node_modules/sweetpi-pilight/backend-config-shema.coffee",
-                "targetPath": "node_modules/sweetpi-pilight/backend-config-shema",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-pilight/pilight.coffee",
+                "projectPath": "node_modules/sweetpi-pilight/pilight.coffee",
+                "targetPath": "node_modules/sweetpi-pilight/pilight",
+                "title": "pilight"
+              },
+              "depth": 3,
+              "outline": []
+            }, {
+              "type": "file",
+              "data": {
+                "language": {
+                  "nameMatchers": [".coffee", "Cakefile"],
+                  "pygmentsLexer": "coffee-script",
+                  "singleLineComment": ["#"],
+                  "name": "CoffeeScript"
+                },
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-pilight/pilight-config-shema.coffee",
+                "projectPath": "node_modules/sweetpi-pilight/pilight-config-shema.coffee",
+                "targetPath": "node_modules/sweetpi-pilight/pilight-config-shema",
                 "firstHeader": {
                   "type": "heading",
                   "data": {
@@ -837,53 +638,6 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               },
               "depth": 3,
               "outline": []
-            }, {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".coffee", "Cakefile"],
-                  "pygmentsLexer": "coffee-script",
-                  "singleLineComment": ["#"],
-                  "name": "CoffeeScript"
-                },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-pilight/pilight.coffee",
-                "projectPath": "node_modules/sweetpi-pilight/pilight.coffee",
-                "targetPath": "node_modules/sweetpi-pilight/pilight",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "The pilight backend",
-                    "slug": "the-pilight-backend",
-                    "isFileHeader": true
-                  },
-                  "depth": 1,
-                  "children": [
-                    {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Configuration",
-                        "slug": "configuration"
-                      },
-                      "depth": 2
-                    }
-                  ]
-                },
-                "title": "The pilight backend"
-              },
-              "depth": 3,
-              "outline": [
-                {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Configuration",
-                    "slug": "configuration"
-                  },
-                  "depth": 2
-                }
-              ]
             }
           ]
         }, {
@@ -906,64 +660,11 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                 "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-ping/ping.coffee",
                 "projectPath": "node_modules/sweetpi-ping/ping.coffee",
                 "targetPath": "node_modules/sweetpi-ping/ping",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "The wifi device backend",
-                    "slug": "the-wifi-device-backend",
-                    "isFileHeader": true
-                  },
-                  "depth": 1,
-                  "children": [
-                    {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Providided predicates",
-                        "slug": "providided-predicates"
-                      },
-                      "depth": 2
-                    }, {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Dependencies",
-                        "slug": "dependencies"
-                      },
-                      "depth": 2
-                    }, {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "The DevicePresentsBackend",
-                        "slug": "the-devicepresentsbackend"
-                      },
-                      "depth": 2
-                    }, {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "NetworkDevicePresents Sensor",
-                        "slug": "networkdevicepresents-sensor"
-                      },
-                      "depth": 2
-                    }
-                  ]
-                },
-                "title": "The wifi device backend"
+                "title": "ping"
               },
               "depth": 3,
               "outline": [
                 {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Providided predicates",
-                    "slug": "providided-predicates"
-                  },
-                  "depth": 2
-                }, {
                   "type": "heading",
                   "data": {
                     "level": 2,
@@ -1086,9 +787,25 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-sispmctl/backend-config-shema.coffee",
-                "projectPath": "node_modules/sweetpi-sispmctl/backend-config-shema.coffee",
-                "targetPath": "node_modules/sweetpi-sispmctl/backend-config-shema",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-sispmctl/sispmctl.coffee",
+                "projectPath": "node_modules/sweetpi-sispmctl/sispmctl.coffee",
+                "targetPath": "node_modules/sweetpi-sispmctl/sispmctl",
+                "title": "sispmctl"
+              },
+              "depth": 3,
+              "outline": []
+            }, {
+              "type": "file",
+              "data": {
+                "language": {
+                  "nameMatchers": [".coffee", "Cakefile"],
+                  "pygmentsLexer": "coffee-script",
+                  "singleLineComment": ["#"],
+                  "name": "CoffeeScript"
+                },
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-sispmctl/sispmctl-config-shema.coffee",
+                "projectPath": "node_modules/sweetpi-sispmctl/sispmctl-config-shema.coffee",
+                "targetPath": "node_modules/sweetpi-sispmctl/sispmctl-config-shema",
                 "firstHeader": {
                   "type": "heading",
                   "data": {
@@ -1103,53 +820,6 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               },
               "depth": 3,
               "outline": []
-            }, {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".coffee", "Cakefile"],
-                  "pygmentsLexer": "coffee-script",
-                  "singleLineComment": ["#"],
-                  "name": "CoffeeScript"
-                },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-sispmctl/sispmctl.coffee",
-                "projectPath": "node_modules/sweetpi-sispmctl/sispmctl.coffee",
-                "targetPath": "node_modules/sweetpi-sispmctl/sispmctl",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "The sispmctl backend",
-                    "slug": "the-sispmctl-backend",
-                    "isFileHeader": true
-                  },
-                  "depth": 1,
-                  "children": [
-                    {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Configuration",
-                        "slug": "configuration"
-                      },
-                      "depth": 2
-                    }
-                  ]
-                },
-                "title": "The sispmctl backend"
-              },
-              "depth": 3,
-              "outline": [
-                {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Configuration",
-                    "slug": "configuration"
-                  },
-                  "depth": 2
-                }
-              ]
             }
           ]
         }, {

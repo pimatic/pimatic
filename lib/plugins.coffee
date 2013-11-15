@@ -7,7 +7,7 @@ class PluginManager
     self = this
     onComplete = (err) ->
       if (err) 
-        console.log err
+        env.logger.error err
       else plugin = (require name) env
 
       cb err, plugin

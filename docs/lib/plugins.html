@@ -1,6 +1,42 @@
-<!DOCTYPE html><html lang="en"><head><title>lib/plugins</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="lib/plugins"><meta name="groc-project-path" content="lib/plugins.coffee"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path">lib/plugins.coffee</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">Plugin</span>
+<!DOCTYPE html><html lang="en"><head><title>lib/plugins</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="lib/plugins"><meta name="groc-project-path" content="lib/plugins.coffee"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path">lib/plugins.coffee</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="nv">npm = </span><span class="nx">require</span> <span class="s">&#39;npm&#39;</span>
+<span class="nv">fs = </span><span class="nx">require</span> <span class="s">&#39;fs&#39;</span>
+
+<span class="k">class</span> <span class="nx">PluginManager</span>
+
+  <span class="nv">loadPlugin: </span><span class="nf">(env, name, cb) -&gt;</span>
+    <span class="nv">self = </span><span class="k">this</span>
+    <span class="nv">onComplete = </span><span class="nf">(err) -&gt;</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> 
+        <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="nx">err</span>
+      <span class="k">else</span> <span class="nv">plugin = </span><span class="p">(</span><span class="nx">require</span> <span class="nx">name</span><span class="p">)</span> <span class="nx">env</span>
+
+      <span class="nx">cb</span> <span class="nx">err</span><span class="p">,</span> <span class="nx">plugin</span>
+
+    <span class="k">if</span> <span class="nx">self</span><span class="p">.</span><span class="nx">existsPlugin</span> <span class="nx">name</span>
+      <span class="nx">self</span><span class="p">.</span><span class="nx">installDependencies</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">onComplete</span>
+    <span class="k">else</span> <span class="nx">self</span><span class="p">.</span><span class="nx">installPlugin</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">onComplete</span>
+
+  <span class="nv">existsPlugin: </span><span class="nf">(name) -&gt;</span>
+    <span class="nv">self = </span><span class="k">this</span>
+    <span class="k">return</span> <span class="nx">fs</span><span class="p">.</span><span class="nx">existsSync</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">path</span> <span class="nx">name</span><span class="p">)</span>
+
+  <span class="nv">installDependencies: </span><span class="nf">(name, cb) -&gt;</span>
+    <span class="nv">self = </span><span class="k">this</span>
+    <span class="nx">npm</span><span class="p">.</span><span class="nx">load</span> <span class="p">{},</span> <span class="nf">(er, npm) -&gt;</span>
+      <span class="nv">npm.prefix = </span><span class="nx">self</span><span class="p">.</span><span class="nx">path</span> <span class="nx">name</span>
+      <span class="nx">npm</span><span class="p">.</span><span class="nx">install</span> <span class="nx">cb</span>
+
+  <span class="nv">installPlugin: </span><span class="nf">(name, cb) -&gt;</span>
+    <span class="nx">npm</span><span class="p">.</span><span class="nx">load</span> <span class="p">{},</span> <span class="nf">(er, npm) -&gt;</span>
+      <span class="nx">npm</span><span class="p">.</span><span class="nx">install</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">cb</span>
+
+  <span class="nv">path: </span><span class="nf">(name) -&gt;</span>
+    <span class="k">return</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">process</span><span class="p">.</span><span class="nx">cwd</span><span class="p">()</span><span class="si">}</span><span class="s">/node_modules/</span><span class="si">#{</span><span class="nx">name</span><span class="si">}</span><span class="s">&quot;</span>
+
+<span class="k">class</span> <span class="nx">Plugin</span>
   <span class="nv">name: </span><span class="kc">null</span>
   <span class="nv">init: </span><span class="nf">-&gt;</span>
     <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your plugin must implement init&quot;</span><span class="p">)</span>
 
+<span class="nv">module.exports.PluginManager = </span><span class="nx">PluginManager</span>
 <span class="nv">module.exports.Plugin = </span><span class="nx">Plugin</span></div></div></div></div></body></html>
