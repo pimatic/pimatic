@@ -15,6 +15,7 @@ Configuration
 -------------
 I recommend to start with the default config:
 
+    cd node_modules/sweetpi-server
     cp default_config.json config.json
 
 The config is in the [json](https://en.wikipedia.org/wiki/JSON) format and currently includes four sections:
@@ -64,11 +65,13 @@ Running
 -------
 The server can be started with 
 
-    node main.js
+    cd node_modules/sweetpi-server
+    sudo ./main.js
 
-or if you have [CoffeeScript](http://coffeescript.org/) globally installed, just run
+or if you have [CoffeeScript](http://coffeescript.org/) globally installed, you can run
 
-    coffee sweetpi.coffee
+    cd node_modules/sweetpi-server
+    sudo coffee sweetpi.coffee
 
 Extensions and Hacking
 ----------------------
