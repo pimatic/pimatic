@@ -49,6 +49,33 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-groc');
   grunt.loadNpmTasks('grunt-ftp-deploy');
   grunt.loadNpmTasks('grunt-cafe-mocha');
+  
+  grunt.registerTask('publish-plugins', 'publish all sweetpi-plugins', function() {
+    var done = this.async();
+    var cwd = process.cwd();
+    var plugins = require('fs').readdirSync("./node_modules");
+
+    require('async').eachSeries(plugins, function(file, cb){
+      if(file.indexOf("sweetpi-") == 0) {
+        grunt.log.writeln("publishing: "+ file);
+        process.chdir(cwd + "/node_modules/" + file);
+        var child = grunt.util.spawn({
+          opts: {stdio: 'inherit'},
+          cmd: 'npm',
+          args: ['publish']
+        });
+
+        child.on('close', function(code){
+          cb(null);
+        });
+      } else {
+        cb(null);
+      }
+    }, function(err){
+      process.chdir(cwd);
+      done();  
+    });
+  });
 
   // Does not work...
   // grunt.registerTask('sweetpi-server', 'Starts the server', function() {
