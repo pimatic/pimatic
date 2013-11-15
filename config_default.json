@@ -11,13 +11,13 @@
   },
   "plugins": [
     { 
-      "plugin": "rest" 
+      "plugin": "rest-api" 
     }, 
     { 
-      "plugin": "speak" 
+      "plugin": "speak-api" 
     }, 
     { 
-      "plugin": "mobile",
+      "plugin": "mobile-frontend",
       "actuatorsToDisplay": [ 
       ] 
     }
