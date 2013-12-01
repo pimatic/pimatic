@@ -25,7 +25,7 @@ module.exports = (env) ->
       )
 
       # * Setup jade-templates
-      app.engine 'jade', require('jade').__express;
+      app.engine 'jade', require('jade').__express
       app.set 'views', __dirname + '/views'
       app.set 'view engine', 'jade'
 

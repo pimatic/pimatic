@@ -15,7 +15,8 @@
 
 <p>I recommend to start with the default config:</p>
 
-<pre><code>cp default_config.json config.json
+<pre><code>cd node_modules/pimatic
+cp default_config.json config.json
 </code></pre>
 
 <p>The config is in the <a href="https://en.wikipedia.org/wiki/JSON">json</a> format and currently includes four sections:</p>
@@ -73,12 +74,14 @@
 
 <p>The server can be started with </p>
 
-<pre><code>node main.js
+<pre><code>cd node_modules/pimatic
+sudo ./main.js
 </code></pre>
 
-<p>or if you have <a href="http://coffeescript.org/">CoffeeScript</a> globally installed, just run</p>
+<p>or if you have <a href="http://coffeescript.org/">CoffeeScript</a> globally installed, you can run</p>
 
-<pre><code>coffee pimatic.coffee
+<pre><code>cd node_modules/pimatic
+sudo coffee pimatic.coffee
 </code></pre>
 
 <h2 id="extensions-and-hacking">Extensions and Hacking</h2>
