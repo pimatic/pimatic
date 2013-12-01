@@ -7,9 +7,9 @@ module.exports.checkConfig = (env, moduleName, checker) ->
   catch err
     if err instanceof assert.AssertionError
       msg = err.message.split " | "
-      env.error "You have an error in your config file: #{msg[msg.length-1]}"
-      env.error "In: #{moduleName}" if moduleName?
-      env.error "details: #{msg[0]}" if msg.length is 2
+      env.logger.error "You have an error in your config file: #{msg[msg.length-1]}"
+      env.logger.error "In: #{moduleName}" if moduleName?
+      env.logger.error "details: #{msg[0]}" if msg.length is 2
       process.exit 1
     else 
     throw err
