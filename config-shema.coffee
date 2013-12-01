@@ -22,6 +22,10 @@ module.exports =
         doc: "Disable http-basic-authentification"
         format: Boolean
         default: true
+    logLevel:
+      doc: "The log level: debug, info, warn, error" 
+      format: String
+      default: "info"
     httpServer:
       enabled: 
         doc: "Should the http-server be started"

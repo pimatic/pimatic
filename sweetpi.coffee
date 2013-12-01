@@ -31,6 +31,9 @@ conf.loadFile "./config.json"
 conf.validate()
 config = conf.get("")
 
+# * Set the log level
+env.logger.transports.console.level = config.server.logLevel
+
 i18n.configure({
   locales:['en', 'de'],
   directory: __dirname + '/locales',
@@ -51,7 +54,7 @@ app.use express.bodyParser()
 auth = config.server.authentication
 if auth.enabled
   #Check authentication.
-  env.helper.checkConfig 'server.authentication', ->
+  env.helper.checkConfig env, 'server.authentication', ->
     assert auth.username and typeof auth.username is "string" and auth.username.length isnt 0 
     assert auth.password and typeof auth.password is "string" and auth.password.length isnt 0 
   app.use express.basicAuth(auth.username, auth.password)
@@ -62,7 +65,7 @@ if not config.server.httpsServer?.enabled and not config.server.httpServer?.enab
 # Start the https-server if it is enabled.
 if config.server.httpsServer?.enabled
   httpsConfig = config.server.httpsServer
-  env.helper.checkConfig 'server', ->
+  env.helper.checkConfig env, 'server', ->
     assert httpsConfig instanceof Object
     assert typeof httpsConfig.keyFile is 'string' and httpsConfig.keyFile.length isnt 0
     assert typeof httpsConfig.certFile is 'string' and httpsConfig.certFile.length isnt 0 
@@ -80,7 +83,6 @@ if config.server.httpServer?.enabled
   app.httpServer = http.createServer app
 
 
-
 # Setup the server
 # ----------------
 Server = (require './lib/server') env 
@@ -88,10 +90,24 @@ Server = (require './lib/server') env
 server = new Server app, config
 server.init()
 
+errorFunc = (err) ->
+  msg = "Could not listen on port #{config.server.httpsServer.port}. Error: #{err.message}. "
+  switch err.message 
+    when "listen EACCES" then  msg += "Are you root?."
+    when "listen EADDRINUSE" then msg += "Is a server already running?"
+    else msg = null
+  if msg?
+    env.logger.error msg
+    env.logger.debug err.stack  
+  else throw err
+  process.exit 1
+
 if app.httpsServer?
+  app.httpsServer.on 'error', errorFunc
   app.httpsServer.listen config.server.httpsServer.port
   env.logger.info "listening for https-request on port #{config.server.httpsServer.port}..."
 
 if app.httpServer?
+  app.httpServer.on 'error', errorFunc
   app.httpServer.listen config.server.httpServer.port
   env.logger.info "listening for http-request on port #{config.server.httpServer.port}..."

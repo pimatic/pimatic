@@ -14,7 +14,7 @@ module.exports = (env) ->
       assert app?
       assert config?
 
-      env.helper.checkConfig null, ->
+      env.helper.checkConfig env, null, ->
         assert config instanceof Object
         assert Array.isArray config.plugins
         assert Array.isArray config.actuators
@@ -89,11 +89,26 @@ module.exports = (env) ->
     init: ->
       self = this
       self.loadPlugins (err) ->
-        plugin.plugin.init(self.app, self, plugin.config) for plugin in self.plugins
+        if err then throw err
+
+        for plugin in self.plugins
+          try
+            plugin.plugin.init(self.app, self, plugin.config)
+          catch err
+            env.logger.error "Could not initialize the plugin \"#{plugin.config.plugin}\": " +
+              err.message
+            env.logger.debug err.stack
+
         self.loadActuators()
         actions = require './actions'
         self.ruleManager.actionHandlers.push actions(self)
-        self.ruleManager.addRuleByString(rule.id, rule.rule) for rule in self.config.rules
+
+        for rule in self.config.rules
+          try
+            self.ruleManager.addRuleByString(rule.id, rule.rule) 
+          catch err
+            env.logger.error "Could not parse rule \"#{rule.rule}\": " + err.message 
+            env.logger.debug err.stack
 
         # Save rule updates to the config file:
         # 
