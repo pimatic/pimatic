@@ -1,5 +1,5 @@
 {
-  "name": "sweetpi-server",
+  "name": "pimatic",
   "description": "A home automation server and framework for the raspberry pi running on node.js",
   "author": "Oliver Schneider <oliverschneider89+sweetpi@gmail.com> (http://sweetpi.de)",
   "main": "main.js",
@@ -9,20 +9,20 @@
     "locales",
     "test",
     "main.js",
-    "sweetpi.coffee",
+    "pimatic.coffee",
     "config-shema.coffee",
     "config_default.json",
     "README.md",
     "LICENSE"
   ],
   "version": "0.1.2",
-  "homepage": "http://github.com/sweetpi/sweetpi-server",
+  "homepage": "http://github.com/pimatic/pimatic",
   "repository": {
     "type": "git",
-    "url": "git://github.com/sweetpi/sweetpi-server.git"
+    "url": "git://github.com/pimatic/pimatic.git"
   },
   "preferGlobal": true,
-  "bin" : { "sweetpi-server" : "./main.js" },
+  "bin" : { "pimatic" : "./main.js" },
   "dependencies": {
     "coffee-script": "1.6.*",
     "express": "3.0.*",

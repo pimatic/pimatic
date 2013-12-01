@@ -1,6 +1,6 @@
 assert = require "cassert"
 
-describe "sweetpi-ping", ->
+describe "pimatic-ping", ->
 
     # Setup the environment
   env =
@@ -11,7 +11,7 @@ describe "sweetpi-ping", ->
     rules: require '../lib/rules'
     plugins: require '../lib/plugins'
 
-  backend = (require 'sweetpi-ping') env
+  backend = (require 'pimatic-ping') env
   NetworkDevicePresents = backend.NetworkDevicePresents
   sessionDummy = null
   sensor = null

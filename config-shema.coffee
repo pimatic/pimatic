@@ -1,5 +1,5 @@
 # #Configuration options 
-# Lists all configuration options for the sweetpi framework itself.
+# Lists all configuration options for the pimatic framework itself.
 # For an example `config.json` file see the `config_default.json` file.
 
 # Defines a `node-convict` config-shema and exports it.

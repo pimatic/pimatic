@@ -4,7 +4,7 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     coffeelint: {
-      app: ['*.coffee', 'node_modules/sweetpi-*/*.coffee', 'lib/**/*.coffee'],
+      app: ['*.coffee', 'node_modules/pimatic-*/*.coffee', 'lib/**/*.coffee'],
       options: {
         'no_trailing_whitespace': {
           level: 'ignore'
@@ -30,7 +30,7 @@ module.exports = function(grunt) {
           //authKey: 'key1'
         },
         src: 'docs',
-        dest: '/sweetpi/sweetpi-server/docs'
+        dest: '/pimatic/pimatic/docs'
       }
     },
     cafemocha: {
@@ -50,13 +50,13 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-ftp-deploy');
   grunt.loadNpmTasks('grunt-cafe-mocha');
   
-  grunt.registerTask('publish-plugins', 'publish all sweetpi-plugins', function() {
+  grunt.registerTask('publish-plugins', 'publish all pimatic-plugins', function() {
     var done = this.async();
     var cwd = process.cwd();
     var plugins = require('fs').readdirSync("./node_modules");
 
     require('async').eachSeries(plugins, function(file, cb){
-      if(file.indexOf("sweetpi-") == 0) {
+      if(file.indexOf("pimatic-") == 0) {
         grunt.log.writeln("publishing: "+ file);
         process.chdir(cwd + "/node_modules/" + file);
         var child = grunt.util.spawn({
@@ -78,14 +78,14 @@ module.exports = function(grunt) {
   });
 
   // Does not work...
-  // grunt.registerTask('sweetpi-server', 'Starts the server', function() {
+  // grunt.registerTask('pimatic', 'Starts the server', function() {
   //   grunt.util.spawn({
   //     cmd: 'coffee',
-  //     args: ['sweetpi.coffee']
+  //     args: ['pimatic.coffee']
   //   });
   // });
 
   // Default task(s).
   grunt.registerTask('default', ['coffeelint', 'cafemocha','groc']);
-  //grunt.registerTask('run', ['coffeelint', 'sweetpi-server']);
+  //grunt.registerTask('run', ['coffeelint', 'pimatic']);
 };

@@ -13,15 +13,15 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "commentsOnly": true,
           "name": "Markdown"
         },
-        "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/README.md",
+        "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/README.md",
         "projectPath": "README.md",
         "targetPath": "index",
         "firstHeader": {
           "type": "heading",
           "data": {
             "level": 1,
-            "title": "sweetpi-server",
-            "slug": "sweetpi-server",
+            "title": "pimatic",
+            "slug": "pimatic",
             "isFileHeader": true
           },
           "depth": 1,
@@ -96,7 +96,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             }
           ]
         },
-        "title": "sweetpi-server"
+        "title": "pimatic"
       },
       "depth": 1,
       "outline": [
@@ -178,7 +178,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "singleLineComment": ["#"],
           "name": "CoffeeScript"
         },
-        "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/config-shema.coffee",
+        "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/config-shema.coffee",
         "projectPath": "config-shema.coffee",
         "targetPath": "config-shema",
         "firstHeader": {
@@ -212,7 +212,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/lib/actions.coffee",
+            "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/lib/actions.coffee",
             "projectPath": "lib/actions.coffee",
             "targetPath": "lib/actions",
             "title": "actions"
@@ -228,7 +228,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/lib/actuators.coffee",
+            "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/lib/actuators.coffee",
             "projectPath": "lib/actuators.coffee",
             "targetPath": "lib/actuators",
             "title": "actuators"
@@ -244,7 +244,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/lib/helper.coffee",
+            "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/lib/helper.coffee",
             "projectPath": "lib/helper.coffee",
             "targetPath": "lib/helper",
             "title": "helper"
@@ -260,7 +260,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/lib/logger.coffee",
+            "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/lib/logger.coffee",
             "projectPath": "lib/logger.coffee",
             "targetPath": "lib/logger",
             "title": "logger"
@@ -276,7 +276,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/lib/plugins.coffee",
+            "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/lib/plugins.coffee",
             "projectPath": "lib/plugins.coffee",
             "targetPath": "lib/plugins",
             "title": "plugins"
@@ -292,7 +292,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/lib/rules.coffee",
+            "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/lib/rules.coffee",
             "projectPath": "lib/rules.coffee",
             "targetPath": "lib/rules",
             "title": "rules"
@@ -308,7 +308,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/lib/sensors.coffee",
+            "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/lib/sensors.coffee",
             "projectPath": "lib/sensors.coffee",
             "targetPath": "lib/sensors",
             "firstHeader": {
@@ -334,7 +334,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
-            "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/lib/server.coffee",
+            "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/lib/server.coffee",
             "projectPath": "lib/server.coffee",
             "targetPath": "lib/server",
             "title": "server"
@@ -354,8 +354,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         {
           "type": "folder",
           "data": {
-            "path": "node_modules/sweetpi-cron",
-            "title": "sweetpi-cron"
+            "path": "node_modules/pimatic-cron",
+            "title": "pimatic-cron"
           },
           "depth": 2,
           "children": [
@@ -367,15 +367,15 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "commentsOnly": true,
                   "name": "Markdown"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-cron/README.md",
-                "projectPath": "node_modules/sweetpi-cron/README.md",
-                "targetPath": "node_modules/sweetpi-cron/README",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-cron/README.md",
+                "projectPath": "node_modules/pimatic-cron/README.md",
+                "targetPath": "node_modules/pimatic-cron/README",
                 "firstHeader": {
                   "type": "heading",
                   "data": {
                     "level": 1,
-                    "title": "sweetpi cron plugin",
-                    "slug": "sweetpi-cron-plugin",
+                    "title": "pimatic cron plugin",
+                    "slug": "pimatic-cron-plugin",
                     "isFileHeader": true
                   },
                   "depth": 1,
@@ -391,7 +391,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                     }
                   ]
                 },
-                "title": "sweetpi cron plugin"
+                "title": "pimatic cron plugin"
               },
               "depth": 3,
               "outline": [
@@ -414,9 +414,9 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-cron/cron.coffee",
-                "projectPath": "node_modules/sweetpi-cron/cron.coffee",
-                "targetPath": "node_modules/sweetpi-cron/cron",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-cron/cron.coffee",
+                "projectPath": "node_modules/pimatic-cron/cron.coffee",
+                "targetPath": "node_modules/pimatic-cron/cron",
                 "title": "cron"
               },
               "depth": 3,
@@ -452,8 +452,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         }, {
           "type": "folder",
           "data": {
-            "path": "node_modules/sweetpi-filebrowser",
-            "title": "sweetpi-filebrowser"
+            "path": "node_modules/pimatic-filebrowser",
+            "title": "pimatic-filebrowser"
           },
           "depth": 2,
           "children": [
@@ -465,15 +465,15 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "commentsOnly": true,
                   "name": "Markdown"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-filebrowser/README.md",
-                "projectPath": "node_modules/sweetpi-filebrowser/README.md",
-                "targetPath": "node_modules/sweetpi-filebrowser/README",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-filebrowser/README.md",
+                "projectPath": "node_modules/pimatic-filebrowser/README.md",
+                "targetPath": "node_modules/pimatic-filebrowser/README",
                 "firstHeader": {
                   "type": "heading",
                   "data": {
                     "level": 1,
-                    "title": "sweetpi filebrowser plugin",
-                    "slug": "sweetpi-filebrowser-plugin",
+                    "title": "pimatic filebrowser plugin",
+                    "slug": "pimatic-filebrowser-plugin",
                     "isFileHeader": true
                   },
                   "depth": 1,
@@ -489,7 +489,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                     }
                   ]
                 },
-                "title": "sweetpi filebrowser plugin"
+                "title": "pimatic filebrowser plugin"
               },
               "depth": 3,
               "outline": [
@@ -512,9 +512,9 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-filebrowser/filebrowser.coffee",
-                "projectPath": "node_modules/sweetpi-filebrowser/filebrowser.coffee",
-                "targetPath": "node_modules/sweetpi-filebrowser/filebrowser",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-filebrowser/filebrowser.coffee",
+                "projectPath": "node_modules/pimatic-filebrowser/filebrowser.coffee",
+                "targetPath": "node_modules/pimatic-filebrowser/filebrowser",
                 "title": "filebrowser"
               },
               "depth": 3,
@@ -542,8 +542,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         }, {
           "type": "folder",
           "data": {
-            "path": "node_modules/sweetpi-log-reader",
-            "title": "sweetpi-log-reader"
+            "path": "node_modules/pimatic-log-reader",
+            "title": "pimatic-log-reader"
           },
           "depth": 2,
           "children": [
@@ -555,15 +555,15 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "commentsOnly": true,
                   "name": "Markdown"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-log-reader/README.md",
-                "projectPath": "node_modules/sweetpi-log-reader/README.md",
-                "targetPath": "node_modules/sweetpi-log-reader/README",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-log-reader/README.md",
+                "projectPath": "node_modules/pimatic-log-reader/README.md",
+                "targetPath": "node_modules/pimatic-log-reader/README",
                 "firstHeader": {
                   "type": "heading",
                   "data": {
                     "level": 1,
-                    "title": "sweetpi log-reader plugin",
-                    "slug": "sweetpi-log-reader-plugin",
+                    "title": "pimatic log-reader plugin",
+                    "slug": "pimatic-log-reader-plugin",
                     "isFileHeader": true
                   },
                   "depth": 1,
@@ -579,7 +579,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                     }
                   ]
                 },
-                "title": "sweetpi log-reader plugin"
+                "title": "pimatic log-reader plugin"
               },
               "depth": 3,
               "outline": [
@@ -602,9 +602,9 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-log-reader/log-reader.coffee",
-                "projectPath": "node_modules/sweetpi-log-reader/log-reader.coffee",
-                "targetPath": "node_modules/sweetpi-log-reader/log-reader",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-log-reader/log-reader.coffee",
+                "projectPath": "node_modules/pimatic-log-reader/log-reader.coffee",
+                "targetPath": "node_modules/pimatic-log-reader/log-reader",
                 "title": "log-reader"
               },
               "depth": 3,
@@ -640,8 +640,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         }, {
           "type": "folder",
           "data": {
-            "path": "node_modules/sweetpi-mobile-frontend",
-            "title": "sweetpi-mobile-frontend"
+            "path": "node_modules/pimatic-mobile-frontend",
+            "title": "pimatic-mobile-frontend"
           },
           "depth": 2,
           "children": [
@@ -654,9 +654,9 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-mobile-frontend/mobile-frontend.coffee",
-                "projectPath": "node_modules/sweetpi-mobile-frontend/mobile-frontend.coffee",
-                "targetPath": "node_modules/sweetpi-mobile-frontend/mobile-frontend",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-mobile-frontend/mobile-frontend.coffee",
+                "projectPath": "node_modules/pimatic-mobile-frontend/mobile-frontend.coffee",
+                "targetPath": "node_modules/pimatic-mobile-frontend/mobile-frontend",
                 "title": "mobile-frontend"
               },
               "depth": 3,
@@ -703,8 +703,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         }, {
           "type": "folder",
           "data": {
-            "path": "node_modules/sweetpi-pilight",
-            "title": "sweetpi-pilight"
+            "path": "node_modules/pimatic-pilight",
+            "title": "pimatic-pilight"
           },
           "depth": 2,
           "children": [
@@ -717,9 +717,9 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-pilight/actuator-config-shema.coffee",
-                "projectPath": "node_modules/sweetpi-pilight/actuator-config-shema.coffee",
-                "targetPath": "node_modules/sweetpi-pilight/actuator-config-shema",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-pilight/actuator-config-shema.coffee",
+                "projectPath": "node_modules/pimatic-pilight/actuator-config-shema.coffee",
+                "targetPath": "node_modules/pimatic-pilight/actuator-config-shema",
                 "firstHeader": {
                   "type": "heading",
                   "data": {
@@ -743,9 +743,9 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-pilight/pilight.coffee",
-                "projectPath": "node_modules/sweetpi-pilight/pilight.coffee",
-                "targetPath": "node_modules/sweetpi-pilight/pilight",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-pilight/pilight.coffee",
+                "projectPath": "node_modules/pimatic-pilight/pilight.coffee",
+                "targetPath": "node_modules/pimatic-pilight/pilight",
                 "title": "pilight"
               },
               "depth": 3,
@@ -759,9 +759,9 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-pilight/pilight-config-shema.coffee",
-                "projectPath": "node_modules/sweetpi-pilight/pilight-config-shema.coffee",
-                "targetPath": "node_modules/sweetpi-pilight/pilight-config-shema",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-pilight/pilight-config-shema.coffee",
+                "projectPath": "node_modules/pimatic-pilight/pilight-config-shema.coffee",
+                "targetPath": "node_modules/pimatic-pilight/pilight-config-shema",
                 "firstHeader": {
                   "type": "heading",
                   "data": {
@@ -781,8 +781,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         }, {
           "type": "folder",
           "data": {
-            "path": "node_modules/sweetpi-ping",
-            "title": "sweetpi-ping"
+            "path": "node_modules/pimatic-ping",
+            "title": "pimatic-ping"
           },
           "depth": 2,
           "children": [
@@ -795,9 +795,9 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-ping/ping.coffee",
-                "projectPath": "node_modules/sweetpi-ping/ping.coffee",
-                "targetPath": "node_modules/sweetpi-ping/ping",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-ping/ping.coffee",
+                "projectPath": "node_modules/pimatic-ping/ping.coffee",
+                "targetPath": "node_modules/pimatic-ping/ping",
                 "title": "ping"
               },
               "depth": 3,
@@ -833,8 +833,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         }, {
           "type": "folder",
           "data": {
-            "path": "node_modules/sweetpi-redirect",
-            "title": "sweetpi-redirect"
+            "path": "node_modules/pimatic-redirect",
+            "title": "pimatic-redirect"
           },
           "depth": 2,
           "children": [
@@ -846,20 +846,20 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "commentsOnly": true,
                   "name": "Markdown"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-redirect/README.md",
-                "projectPath": "node_modules/sweetpi-redirect/README.md",
-                "targetPath": "node_modules/sweetpi-redirect/README",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-redirect/README.md",
+                "projectPath": "node_modules/pimatic-redirect/README.md",
+                "targetPath": "node_modules/pimatic-redirect/README",
                 "firstHeader": {
                   "type": "heading",
                   "data": {
                     "level": 1,
-                    "title": "sweetpi redirect plugin",
-                    "slug": "sweetpi-redirect-plugin",
+                    "title": "pimatic redirect plugin",
+                    "slug": "pimatic-redirect-plugin",
                     "isFileHeader": true
                   },
                   "depth": 1
                 },
-                "title": "sweetpi redirect plugin"
+                "title": "pimatic redirect plugin"
               },
               "depth": 3,
               "outline": []
@@ -872,9 +872,9 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-redirect/redirect.coffee",
-                "projectPath": "node_modules/sweetpi-redirect/redirect.coffee",
-                "targetPath": "node_modules/sweetpi-redirect/redirect",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-redirect/redirect.coffee",
+                "projectPath": "node_modules/pimatic-redirect/redirect.coffee",
+                "targetPath": "node_modules/pimatic-redirect/redirect",
                 "title": "redirect"
               },
               "depth": 3,
@@ -884,8 +884,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         }, {
           "type": "folder",
           "data": {
-            "path": "node_modules/sweetpi-rest-api",
-            "title": "sweetpi-rest-api"
+            "path": "node_modules/pimatic-rest-api",
+            "title": "pimatic-rest-api"
           },
           "depth": 2,
           "children": [
@@ -897,20 +897,20 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "commentsOnly": true,
                   "name": "Markdown"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-rest-api/README.md",
-                "projectPath": "node_modules/sweetpi-rest-api/README.md",
-                "targetPath": "node_modules/sweetpi-rest-api/README",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-rest-api/README.md",
+                "projectPath": "node_modules/pimatic-rest-api/README.md",
+                "targetPath": "node_modules/pimatic-rest-api/README",
                 "firstHeader": {
                   "type": "heading",
                   "data": {
                     "level": 1,
-                    "title": "sweetpi rest-api plugin",
-                    "slug": "sweetpi-rest-api-plugin",
+                    "title": "pimatic rest-api plugin",
+                    "slug": "pimatic-rest-api-plugin",
                     "isFileHeader": true
                   },
                   "depth": 1
                 },
-                "title": "sweetpi rest-api plugin"
+                "title": "pimatic rest-api plugin"
               },
               "depth": 3,
               "outline": []
@@ -923,9 +923,9 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-rest-api/rest-api.coffee",
-                "projectPath": "node_modules/sweetpi-rest-api/rest-api.coffee",
-                "targetPath": "node_modules/sweetpi-rest-api/rest-api",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-rest-api/rest-api.coffee",
+                "projectPath": "node_modules/pimatic-rest-api/rest-api.coffee",
+                "targetPath": "node_modules/pimatic-rest-api/rest-api",
                 "title": "rest-api"
               },
               "depth": 3,
@@ -935,8 +935,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         }, {
           "type": "folder",
           "data": {
-            "path": "node_modules/sweetpi-sispmctl",
-            "title": "sweetpi-sispmctl"
+            "path": "node_modules/pimatic-sispmctl",
+            "title": "pimatic-sispmctl"
           },
           "depth": 2,
           "children": [
@@ -948,15 +948,15 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "commentsOnly": true,
                   "name": "Markdown"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-sispmctl/README.md",
-                "projectPath": "node_modules/sweetpi-sispmctl/README.md",
-                "targetPath": "node_modules/sweetpi-sispmctl/README",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-sispmctl/README.md",
+                "projectPath": "node_modules/pimatic-sispmctl/README.md",
+                "targetPath": "node_modules/pimatic-sispmctl/README",
                 "firstHeader": {
                   "type": "heading",
                   "data": {
                     "level": 1,
-                    "title": "sweetpi sispmctl plugin",
-                    "slug": "sweetpi-sispmctl-plugin",
+                    "title": "pimatic sispmctl plugin",
+                    "slug": "pimatic-sispmctl-plugin",
                     "isFileHeader": true
                   },
                   "depth": 1,
@@ -972,7 +972,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                     }
                   ]
                 },
-                "title": "sweetpi sispmctl plugin"
+                "title": "pimatic sispmctl plugin"
               },
               "depth": 3,
               "outline": [
@@ -995,9 +995,9 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-sispmctl/actuator-config-shema.coffee",
-                "projectPath": "node_modules/sweetpi-sispmctl/actuator-config-shema.coffee",
-                "targetPath": "node_modules/sweetpi-sispmctl/actuator-config-shema",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-sispmctl/actuator-config-shema.coffee",
+                "projectPath": "node_modules/pimatic-sispmctl/actuator-config-shema.coffee",
+                "targetPath": "node_modules/pimatic-sispmctl/actuator-config-shema",
                 "firstHeader": {
                   "type": "heading",
                   "data": {
@@ -1021,9 +1021,9 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-sispmctl/sispmctl.coffee",
-                "projectPath": "node_modules/sweetpi-sispmctl/sispmctl.coffee",
-                "targetPath": "node_modules/sweetpi-sispmctl/sispmctl",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-sispmctl/sispmctl.coffee",
+                "projectPath": "node_modules/pimatic-sispmctl/sispmctl.coffee",
+                "targetPath": "node_modules/pimatic-sispmctl/sispmctl",
                 "title": "sispmctl"
               },
               "depth": 3,
@@ -1037,9 +1037,9 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-sispmctl/sispmctl-config-shema.coffee",
-                "projectPath": "node_modules/sweetpi-sispmctl/sispmctl-config-shema.coffee",
-                "targetPath": "node_modules/sweetpi-sispmctl/sispmctl-config-shema",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-sispmctl/sispmctl-config-shema.coffee",
+                "projectPath": "node_modules/pimatic-sispmctl/sispmctl-config-shema.coffee",
+                "targetPath": "node_modules/pimatic-sispmctl/sispmctl-config-shema",
                 "firstHeader": {
                   "type": "heading",
                   "data": {
@@ -1059,8 +1059,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         }, {
           "type": "folder",
           "data": {
-            "path": "node_modules/sweetpi-speak-api",
-            "title": "sweetpi-speak-api"
+            "path": "node_modules/pimatic-speak-api",
+            "title": "pimatic-speak-api"
           },
           "depth": 2,
           "children": [
@@ -1072,20 +1072,20 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "commentsOnly": true,
                   "name": "Markdown"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-speak-api/README.md",
-                "projectPath": "node_modules/sweetpi-speak-api/README.md",
-                "targetPath": "node_modules/sweetpi-speak-api/README",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-speak-api/README.md",
+                "projectPath": "node_modules/pimatic-speak-api/README.md",
+                "targetPath": "node_modules/pimatic-speak-api/README",
                 "firstHeader": {
                   "type": "heading",
                   "data": {
                     "level": 1,
-                    "title": "sweetpi speak-api plugin",
-                    "slug": "sweetpi-speak-api-plugin",
+                    "title": "pimatic speak-api plugin",
+                    "slug": "pimatic-speak-api-plugin",
                     "isFileHeader": true
                   },
                   "depth": 1
                 },
-                "title": "sweetpi speak-api plugin"
+                "title": "pimatic speak-api plugin"
               },
               "depth": 3,
               "outline": []
@@ -1098,9 +1098,9 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "singleLineComment": ["#"],
                   "name": "CoffeeScript"
                 },
-                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/node_modules/sweetpi-speak-api/speak-api.coffee",
-                "projectPath": "node_modules/sweetpi-speak-api/speak-api.coffee",
-                "targetPath": "node_modules/sweetpi-speak-api/speak-api",
+                "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/node_modules/pimatic-speak-api/speak-api.coffee",
+                "projectPath": "node_modules/pimatic-speak-api/speak-api.coffee",
+                "targetPath": "node_modules/pimatic-speak-api/speak-api",
                 "title": "speak-api"
               },
               "depth": 3,
@@ -1118,9 +1118,9 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "singleLineComment": ["#"],
           "name": "CoffeeScript"
         },
-        "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/sweetpi-server/sweetpi.coffee",
-        "projectPath": "sweetpi.coffee",
-        "targetPath": "sweetpi",
+        "sourcePath": "/media/pengolin/home/h3llfire/Projektesammlung/2013_sweetpi.de (web)/pimatic/pimatic.coffee",
+        "projectPath": "pimatic.coffee",
+        "targetPath": "pimatic",
         "firstHeader": {
           "type": "heading",
           "data": {

@@ -32,7 +32,7 @@ module.exports = (env) ->
         assert pConf.plugin? and typeof pConf.plugin is "string" 
 
         env.logger.info "loading plugin: \"#{pConf.plugin}\"..."
-        plugin = self.pluginManager.loadPlugin env, "sweetpi-#{pConf.plugin}", (err, plugin) ->
+        plugin = self.pluginManager.loadPlugin env, "pimatic-#{pConf.plugin}", (err, plugin) ->
           cb(err, {plugin: plugin, config: pConf})
       , (err, plugins) ->
         self.registerPlugin(p.plugin, p.config) for p in plugins

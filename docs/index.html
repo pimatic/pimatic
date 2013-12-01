@@ -1,15 +1,15 @@
-<!DOCTYPE html><html lang="en"><head><title>index</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="index"><meta name="groc-project-path" content="README.md"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path">README.md</div></div><div id="document"><div class="segment"><div class="comments"><div class="wrapper"><h1 id="sweetpi-server">sweetpi-server</h1>
+<!DOCTYPE html><html lang="en"><head><title>index</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="index"><meta name="groc-project-path" content="README.md"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path">README.md</div></div><div id="document"><div class="segment"><div class="comments"><div class="wrapper"><h1 id="pimatic">pimatic</h1>
 
-<p>sweetpi-server is a home automation server and framework that runs on <a href="http://nodejs.org">node.js</a>. It provied a simple web frontend using <a href="http://expressjs.com">express</a> and <a href="jquerymobile.com/‎">jQuery Mobile</a>. It is built to run on the raspberry pi, but should be runnable on any device that can run node.js.</p>
+<p>pimatic is a home automation server and framework that runs on <a href="http://nodejs.org">node.js</a>. It provied a simple web frontend using <a href="http://expressjs.com">express</a> and <a href="jquerymobile.com/‎">jQuery Mobile</a>. It is built to run on the raspberry pi, but should be runnable on any device that can run node.js.</p>
 
 <h2 id="installation">Installation</h2>
 
 <p>First you need to install <a href="http://nodejs.org">node.js</a> that comes with the package manager <a href="https://npmjs.org/">npm</a>. Then you can run</p>
 
-<pre><code>npm install sweetpi-server
+<pre><code>npm install pimatic
 </code></pre>
 
-<p>to install the sweetpi-server.</p>
+<p>to install the pimatic.</p>
 
 <h2 id="configuration">Configuration</h2>
 
@@ -41,7 +41,7 @@
 }
 </code></pre>
 
-<p>where <code>"plugin-name"</code> ist the name and directory of the plugin you want to load. All plugins are in the <code>node_modules</code> directory and there prefixed with <code>sweetpi-</code>. </p>
+<p>where <code>"plugin-name"</code> ist the name and directory of the plugin you want to load. All plugins are in the <code>node_modules</code> directory and there prefixed with <code>pimatic-</code>. </p>
 
 <h3 id="the-actuators-section">The "actuators"-section</h3>
 
@@ -78,7 +78,7 @@
 
 <p>or if you have <a href="http://coffeescript.org/">CoffeeScript</a> globally installed, just run</p>
 
-<pre><code>coffee sweetpi.coffee
+<pre><code>coffee pimatic.coffee
 </code></pre>
 
 <h2 id="extensions-and-hacking">Extensions and Hacking</h2>

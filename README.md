@@ -1,21 +1,21 @@
-sweetpi-server
+pimatic
 ==============
 
-sweetpi-server is a home automation server and framework that runs on [node.js](http://nodejs.org). It provied a simple web frontend using [express](http://expressjs.com) and [jQuery Mobile](jquerymobile.com/‎). It is built to run on the raspberry pi, but should be runnable on any device that can run node.js.
+pimatic is a home automation server and framework that runs on [node.js](http://nodejs.org). It provied a simple web frontend using [express](http://expressjs.com) and [jQuery Mobile](jquerymobile.com/‎). It is built to run on the raspberry pi, but should be runnable on any device that can run node.js.
 
 Installation
 ------------
 First you need to install [node.js](http://nodejs.org) that comes with the package manager [npm](https://npmjs.org/). Then you can run
 
-    npm install sweetpi-server
+    npm install pimatic
 
-to install the sweetpi-server.
+to install the pimatic.
 
 Configuration
 -------------
 I recommend to start with the default config:
 
-    cd node_modules/sweetpi-server
+    cd node_modules/pimatic
     cp default_config.json config.json
 
 The config is in the [json](https://en.wikipedia.org/wiki/JSON) format and currently includes four sections:
@@ -37,7 +37,7 @@ In the `"plugins"`-section you have to list all plugins to load in the form of
       "plugin": "plugin-name" 
     }
 
-where `"plugin-name"` ist the name and directory of the plugin you want to load. All plugins are in the `node_modules` directory and there prefixed with `sweetpi-`. 
+where `"plugin-name"` ist the name and directory of the plugin you want to load. All plugins are in the `node_modules` directory and there prefixed with `pimatic-`. 
 
 ### The "actuators"-section
 The `"actuators"`-section should contain all actuators, you want to have registered in the framework. An actuator are typically provided by a backend, so take a look at the desired backend for more details about the configuration of your actuators. A actuator configuration has the form
@@ -65,13 +65,13 @@ Running
 -------
 The server can be started with 
 
-    cd node_modules/sweetpi-server
+    cd node_modules/pimatic
     sudo ./main.js
 
 or if you have [CoffeeScript](http://coffeescript.org/) globally installed, you can run
 
-    cd node_modules/sweetpi-server
-    sudo coffee sweetpi.coffee
+    cd node_modules/pimatic
+    sudo coffee pimatic.coffee
 
 Extensions and Hacking
 ----------------------
