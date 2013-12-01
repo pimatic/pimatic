@@ -5,11 +5,13 @@ class PluginManager
 
   loadPlugin: (env, name, cb) ->
     self = this
+    cwd = process.cwd()
+
     onComplete = (err) ->
       if (err) 
         env.logger.error err
       else plugin = (require name) env
-
+      process.chdir cwd
       cb err, plugin
 
     if self.existsPlugin name

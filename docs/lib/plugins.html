@@ -5,11 +5,13 @@
 
   <span class="nv">loadPlugin: </span><span class="nf">(env, name, cb) -&gt;</span>
     <span class="nv">self = </span><span class="k">this</span>
+    <span class="nv">cwd = </span><span class="nx">process</span><span class="p">.</span><span class="nx">cwd</span><span class="p">()</span>
+
     <span class="nv">onComplete = </span><span class="nf">(err) -&gt;</span>
       <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> 
         <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="nx">err</span>
       <span class="k">else</span> <span class="nv">plugin = </span><span class="p">(</span><span class="nx">require</span> <span class="nx">name</span><span class="p">)</span> <span class="nx">env</span>
-
+      <span class="nx">process</span><span class="p">.</span><span class="nx">chdir</span> <span class="nx">cwd</span>
       <span class="nx">cb</span> <span class="nx">err</span><span class="p">,</span> <span class="nx">plugin</span>
 
     <span class="k">if</span> <span class="nx">self</span><span class="p">.</span><span class="nx">existsPlugin</span> <span class="nx">name</span>
