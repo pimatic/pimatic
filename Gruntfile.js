@@ -63,17 +63,18 @@ module.exports = function(grunt) {
           opts: {stdio: 'inherit'},
           cmd: 'npm',
           args: ['publish']
-        });
-
-        child.on('close', function(code){
-          cb(null);
+        }, function(err){
+          if(err) {
+            console.log(err.message);
+          }
+          cb();
         });
       } else {
-        cb(null);
+        cb();
       }
     }, function(err){
       process.chdir(cwd);
-      done();  
+      done();
     });
   });
 
