@@ -8,12 +8,8 @@
     "pilight-config-shema.coffee",
     "README.md"
   ],
-  "version": "0.1.0",
-  "homepage": "http://github.com/pimatic/pimatic",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/pimatic/pimatic.git/node_modules/pimatic-pilight"
-  },
+  "version": "0.1.1",
+  "homepage": "http://github.com/sweetpi/pimatic",
   "dependencies": {
   },
   "peerDependencies": {

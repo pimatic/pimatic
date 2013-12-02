@@ -9,12 +9,8 @@
     "views",
     "README.md"
   ],
-  "version": "0.1.1",
-  "homepage": "http://github.com/pimatic/pimatic",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/pimatic/pimatic.git/node_modules/pimatic-mobile-frontend"
-  },
+  "version": "0.1.2",
+  "homepage": "http://github.com/sweetpi/pimatic",
   "dependencies": {
     "connect-coffee-script": "0.1.*",
     "connect-offline": "1.0.*",
