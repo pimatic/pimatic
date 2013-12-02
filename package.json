@@ -19,7 +19,7 @@
   "homepage": "http://github.com/sweetpi/pimatic",
   "repository": {
     "type": "git",
-    "url": "git://github.com/pimatic/pimatic.git"
+    "url": "git://github.com/sweetpi/pimatic.git"
   },
   "preferGlobal": true,
   "bin" : { "pimatic" : "./main.js" },
