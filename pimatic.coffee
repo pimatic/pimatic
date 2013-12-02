@@ -88,7 +88,7 @@ if config.server.httpServer?.enabled
 # ----------------
 Server = (require './lib/server') env 
 
-server = new Server app, config
+server = new Server app, config, configFile
 server.init()
 
 errorFunc = (err) ->

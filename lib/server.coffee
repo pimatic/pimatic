@@ -5,14 +5,16 @@ async = require 'async'
 module.exports = (env) ->
 
   class Server extends require('events').EventEmitter
+    configFile: null
     plugins: []
     actuators: []
     sensors: []
     ruleManager: null
 
-    constructor: (@app, @config) ->
+    constructor: (@app, @config, @configFile) ->
       assert app?
       assert config?
+      assert configFile?
 
       env.helper.checkConfig env, null, ->
         assert config instanceof Object
@@ -138,6 +140,7 @@ module.exports = (env) ->
 
 
     saveConfig: ->
-      fs.writeFile "config.json", JSON.stringify(@config, null, 2), (err) ->
+      self = this
+      fs.writeFile self.configFile, JSON.stringify(self.config, null, 2), (err) ->
         if err? then throw err
         else env.logger.info "config.json updated"
