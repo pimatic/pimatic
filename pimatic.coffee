@@ -26,7 +26,8 @@ env =
 # * Uses `node-convict` for config loading. All config options are in the 
 #   [config-shema](config-shema.html) file.
 conf = convict require("./config-shema")
-conf.loadFile "./config.json"
+configFile = if process.env.PIMATIC_CONFIG? then process.env.PIMATIC_CONFIG else "./config.json"
+conf.loadFile configFile
 # * Performs the validation.
 conf.validate()
 config = conf.get("")
