@@ -19,6 +19,7 @@ env =
   sensors: require './lib/sensors'
   rules: require './lib/rules'
   plugins: require './lib/plugins'
+  actions: require './lib/actions'
 
 
 # ##Load the configuration file.

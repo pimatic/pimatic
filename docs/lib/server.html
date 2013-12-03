@@ -5,14 +5,16 @@
 <span class="nv">module.exports = </span><span class="nf">(env) -&gt;</span>
 
   <span class="k">class</span> <span class="nx">Server</span> <span class="k">extends</span> <span class="nx">require</span><span class="p">(</span><span class="s">&#39;events&#39;</span><span class="p">).</span><span class="nx">EventEmitter</span>
+    <span class="nv">configFile: </span><span class="kc">null</span>
     <span class="nv">plugins: </span><span class="p">[]</span>
     <span class="nv">actuators: </span><span class="p">[]</span>
     <span class="nv">sensors: </span><span class="p">[]</span>
     <span class="nv">ruleManager: </span><span class="kc">null</span>
 
-    <span class="nv">constructor: </span><span class="nf">(@app, @config) -&gt;</span>
+    <span class="nv">constructor: </span><span class="nf">(@app, @config, @configFile) -&gt;</span>
       <span class="nx">assert</span> <span class="nx">app</span><span class="o">?</span>
       <span class="nx">assert</span> <span class="nx">config</span><span class="o">?</span>
+      <span class="nx">assert</span> <span class="nx">configFile</span><span class="o">?</span>
 
       <span class="nx">env</span><span class="p">.</span><span class="nx">helper</span><span class="p">.</span><span class="nx">checkConfig</span> <span class="nx">env</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="nf">-&gt;</span>
         <span class="nx">assert</span> <span class="nx">config</span> <span class="k">instanceof</span> <span class="nb">Object</span>
@@ -100,8 +102,9 @@
             <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">debug</span> <span class="nx">err</span><span class="p">.</span><span class="nx">stack</span>
 
         <span class="nx">self</span><span class="p">.</span><span class="nx">loadActuators</span><span class="p">()</span>
-        <span class="nv">actions = </span><span class="nx">require</span> <span class="s">&#39;./actions&#39;</span>
-        <span class="nx">self</span><span class="p">.</span><span class="nx">ruleManager</span><span class="p">.</span><span class="nx">actionHandlers</span><span class="p">.</span><span class="nx">push</span> <span class="nx">actions</span><span class="p">(</span><span class="nx">self</span><span class="p">)</span>
+
+        <span class="nx">self</span><span class="p">.</span><span class="nx">ruleManager</span><span class="p">.</span><span class="nx">actionHandlers</span><span class="p">.</span><span class="nx">push</span> <span class="k">new</span> <span class="nx">env</span><span class="p">.</span><span class="nx">actions</span><span class="p">.</span><span class="nx">SwitchActionHandler</span>
+        <span class="nx">self</span><span class="p">.</span><span class="nx">ruleManager</span><span class="p">.</span><span class="nx">actionHandlers</span><span class="p">.</span><span class="nx">push</span> <span class="k">new</span> <span class="nx">env</span><span class="p">.</span><span class="nx">actions</span><span class="p">.</span><span class="nx">LogActionHandler</span>
 
         <span class="k">for</span> <span class="nx">rule</span> <span class="k">in</span> <span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">rules</span>
           <span class="k">try</span>
@@ -128,6 +131,7 @@
 
 
     <span class="nv">saveConfig: </span><span class="nf">-&gt;</span>
-      <span class="nx">fs</span><span class="p">.</span><span class="nx">writeFile</span> <span class="s">&quot;config.json&quot;</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">@config</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nf">(err) -&gt;</span>
+      <span class="nv">self = </span><span class="k">this</span>
+      <span class="nx">fs</span><span class="p">.</span><span class="nx">writeFile</span> <span class="nx">self</span><span class="p">.</span><span class="nx">configFile</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nf">(err) -&gt;</span>
         <span class="k">if</span> <span class="nx">err</span><span class="o">?</span> <span class="k">then</span> <span class="k">throw</span> <span class="nx">err</span>
         <span class="k">else</span> <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="s">&quot;config.json updated&quot;</span></div></div></div></div></body></html>

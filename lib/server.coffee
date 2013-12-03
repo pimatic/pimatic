@@ -102,8 +102,9 @@ module.exports = (env) ->
             env.logger.debug err.stack
 
         self.loadActuators()
-        actions = require './actions'
-        self.ruleManager.actionHandlers.push actions(self)
+
+        self.ruleManager.actionHandlers.push new env.actions.SwitchActionHandler
+        self.ruleManager.actionHandlers.push new env.actions.LogActionHandler
 
         for rule in self.config.rules
           try
