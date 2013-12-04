@@ -1,6 +1,7 @@
 # 
 spawn = require("child_process").spawn
 convict = require "convict"
+net = require "net"
 
 module.exports = (env) ->
 
@@ -12,6 +13,24 @@ module.exports = (env) ->
       conf = convict require("./pilight-config-shema")
       conf.load config
       conf.validate()
+
+
+      client = net.connect(
+        host: conf.get('host')
+        port: conf.get('port')
+      , -> #'connect' listener
+        env.logger.info "connected to pilight-daemon"
+        client.write JSON.stringify { message: "client gui"}
+      )
+      
+      client.on "data", (data) ->
+        console.log data.toString()
+        client.end()
+
+      client.on "end", ->
+        console.log "client disconnected"
+
+
 
     createActuator: (config) =>
       if config.class is "PilightSwitch" 

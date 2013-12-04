@@ -2,7 +2,11 @@
 
 # Defines a `node-convict` config-shema and exports it.
 module.exports =
-  pilightSendBinary:
-    doc: "The path to the pilight-send command"
+  ip:
+    doc: "The ip to connect to the piligt-daemon"
     format: String
-    default: "pilight-send"
+    default: "127.0.0.1"
+  port:
+  	doc "port to connect to the piligt-daemon"
+  	format: "port"
+  	default: 5000
