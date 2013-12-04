@@ -8,7 +8,7 @@
     "pilight-config-shema.coffee",
     "README.md"
   ],
-  "version": "0.1.1",
+  "version": "0.2.0-git",
   "homepage": "http://github.com/sweetpi/pimatic",
   "dependencies": {
   },
