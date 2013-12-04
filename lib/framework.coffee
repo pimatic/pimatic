@@ -48,7 +48,7 @@ module.exports = (env) ->
 
       i18n.configure({
         locales:['en', 'de'],
-        directory: __dirname + '/locales',
+        directory: __dirname + '/../locales',
         defaultLocale: self.config.settings.locale,
       })
 
