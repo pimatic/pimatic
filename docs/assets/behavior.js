@@ -250,7 +250,25 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "title": "framework"
           },
           "depth": 2,
-          "outline": []
+          "outline": [
+            {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "Setup express",
+                "slug": "setup-express"
+              },
+              "depth": 2
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "Setup authentication",
+                "slug": "setup-authentication"
+              },
+              "depth": 2
+            }
+          ]
         }, {
           "type": "file",
           "data": {
@@ -1129,81 +1147,12 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "slug": "framwork-start-up",
             "isFileHeader": true
           },
-          "depth": 1,
-          "children": [
-            {
-              "type": "heading",
-              "data": {
-                "level": 2,
-                "title": "Load the configuration file.",
-                "slug": "load-the-configuration-file"
-              },
-              "depth": 2
-            }, {
-              "type": "heading",
-              "data": {
-                "level": 2,
-                "title": "Setup express",
-                "slug": "setup-express"
-              },
-              "depth": 2
-            }, {
-              "type": "heading",
-              "data": {
-                "level": 2,
-                "title": "Setup authentication",
-                "slug": "setup-authentication"
-              },
-              "depth": 2
-            }, {
-              "type": "heading",
-              "data": {
-                "level": 2,
-                "title": "Setup the server",
-                "slug": "setup-the-server"
-              },
-              "depth": 2
-            }
-          ]
+          "depth": 1
         },
         "title": "Framwork start up"
       },
       "depth": 1,
-      "outline": [
-        {
-          "type": "heading",
-          "data": {
-            "level": 2,
-            "title": "Load the configuration file.",
-            "slug": "load-the-configuration-file"
-          },
-          "depth": 2
-        }, {
-          "type": "heading",
-          "data": {
-            "level": 2,
-            "title": "Setup express",
-            "slug": "setup-express"
-          },
-          "depth": 2
-        }, {
-          "type": "heading",
-          "data": {
-            "level": 2,
-            "title": "Setup authentication",
-            "slug": "setup-authentication"
-          },
-          "depth": 2
-        }, {
-          "type": "heading",
-          "data": {
-            "level": 2,
-            "title": "Setup the server",
-            "slug": "setup-the-server"
-          },
-          "depth": 2
-        }
-      ]
+      "outline": []
     }
   ];
 

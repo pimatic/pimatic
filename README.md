@@ -71,7 +71,7 @@ The server can be started with
 or if you have [CoffeeScript](http://coffeescript.org/) globally installed, you can run
 
     cd node_modules/pimatic
-    sudo coffee pimatic.coffee
+    sudo coffee startup.coffee
 
 Extensions and Hacking
 ----------------------

@@ -1,6 +1,9 @@
 assert = require 'cassert'
 fs = require "fs"
 async = require 'async'
+convict = require 'convict'
+i18n = require 'i18n'
+express = require "express"
 
 module.exports = (env) ->
 
@@ -9,25 +12,122 @@ module.exports = (env) ->
     plugins: []
     actuators: []
     sensors: []
+    app: null
     ruleManager: null
+    pluginManager: null
 
-    constructor: (@app, @config, @configFile) ->
-      assert app?
-      assert config?
+    constructor: (@configFile) ->
       assert configFile?
 
+      self = this
+      self.loadConfig()
+
+      self.ruleManager = new env.rules.RuleManager self, self.config.rules
+      self.pluginManager = new env.plugins.PluginManager self
+
+      self.setupExpressApp()
+
+    loadConfig: () ->
+      self = this
+      # * Uses `node-convict` for config loading. All config options are in the 
+      #   [config-shema](config-shema.html) file.
+      conf = convict require("../config-shema")
+      
+      conf.loadFile self.configFile
+      # * Performs the validation.
+      conf.validate()
+      self.config = conf.get("")
+
       env.helper.checkConfig env, null, ->
-        assert config instanceof Object
-        assert Array.isArray config.plugins
-        assert Array.isArray config.actuators
-        assert Array.isArray config.rules
+        assert Array.isArray self.config.plugins
+        assert Array.isArray self.config.actuators
+        assert Array.isArray self.config.rules
 
-      @ruleManager = new env.rules.RuleManager this, @config.rules
-      @pluginManager = new env.plugins.PluginManager this
+      # * Set the log level
+      env.logger.transports.console.level = self.config.settings.logLevel
 
+      i18n.configure({
+        locales:['en', 'de'],
+        directory: __dirname + '/locales',
+        defaultLocale: self.config.settings.locale,
+      })
+
+
+    setupExpressApp: () ->
+      self = this
+      # Setup express
+      # -------------
+      self.app = express()
+      self.app.use i18n.init
+      #self.app.use express.logger()
+      self.app.use express.bodyParser()
+
+      # Setup authentication
+      # ----------------------
+      # Use http-basicAuth if authentication is not disabled.
+      auth = self.config.settings.authentication
+      if auth.enabled
+        #Check authentication.
+        env.helper.checkConfig env, 'settings.authentication', ->
+          assert auth.username and typeof auth.username is "string" and auth.username.length isnt 0 
+          assert auth.password and typeof auth.password is "string" and auth.password.length isnt 0 
+        self.app.use express.basicAuth(auth.username, auth.password)
+
+      if not self.config.settings.httpsServer?.enabled and 
+         not self.config.settings.httpServer?.enabled
+        env.logger.warn "You have no https and no http server enabled!"
+
+      # Start the https-server if it is enabled.
+      if self.config.settings.httpsServer?.enabled
+        httpsConfig = self.config.settings.httpsServer
+        env.helper.checkConfig env, 'server', ->
+          assert httpsConfig instanceof Object
+          assert typeof httpsConfig.keyFile is 'string' and httpsConfig.keyFile.length isnt 0
+          assert typeof httpsConfig.certFile is 'string' and httpsConfig.certFile.length isnt 0 
+
+        httpsOptions = {}
+        httpsOptions[name]=value for name, value of httpsConfig
+        httpsOptions.key = fs.readFileSync httpsConfig.keyFile
+        httpsOptions.cert = fs.readFileSync httpsConfig.certFile
+        https = require "https"
+        self.app.httpsServer = https.createServer httpsOptions, self.app
+
+      # Start the http-server if it is enabled.
+      if self.config.settings.httpServer?.enabled
+        http = require "http"
+        self.app.httpServer = http.createServer self.app
+
+    listen: () ->
+      self = this
+      errorFunc = (err) ->
+        msg = "Could not listen on port #{self.config.settings.httpsServer.port}. " + 
+              "Error: #{err.message}. "
+        switch err.message 
+          when "listen EACCES" then  msg += "Are you root?."
+          when "listen EADDRINUSE" then msg += "Is a server already running?"
+          else msg = null
+        if msg?
+          env.logger.error msg
+          env.logger.debug err.stack  
+        else throw err
+        process.exit 1
+
+      if self.app.httpsServer?
+        httpsServerConfig = self.config.settings.httpsServer
+        self.app.httpsServer.on 'error', errorFunc
+        self.app.httpsServer.listen httpsServerConfig.port
+        env.logger.info "listening for https-request on port #{httpsServerConfig.port}..."
+
+      if self.app.httpServer?
+        httpServerConfig = self.config.settings.httpServer
+        self.app.httpServer.on 'error', errorFunc
+        self.app.httpServer.listen httpServerConfig.port
+        env.logger.info "listening for http-request on port #{httpServerConfig.port}..."
+
+      self.emit "server listen", "startup"
 
     loadPlugins: (cb)->
-      self = this
+      self = this 
       async.mapSeries(self.config.plugins, (pConf, cb)->
         assert pConf?
         assert pConf instanceof Object
@@ -137,8 +237,10 @@ module.exports = (env) ->
 
         # Save the config on "config" event
         self.on "config", ->
-        self.saveConfig()
+          self.saveConfig()
 
+        self.emit "after init", "framework"
+        self.listen()
 
     saveConfig: ->
       self = this

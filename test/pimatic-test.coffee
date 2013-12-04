@@ -35,7 +35,7 @@ describe "pimatic", ->
   describe 'startup', ->
 
     it "should startup", ->
-      require '../main.js'
+      require '../startup'
 
     it "httpServer should run", (done)->
       http = require 'http'
