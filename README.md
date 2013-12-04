@@ -21,14 +21,14 @@ I recommend to start with the default config:
 The config is in the [json](https://en.wikipedia.org/wiki/JSON) format and currently includes four sections:
 
     { 
-      "server": { ... },
+      "settings": { ... },
       "plugins": [ ... ],
       "actuators": [ ... ],
       "rules": []
     }
 
-### The "server"-section
-The `"server"`-section contains the configuration for the http- and https-server. You have to set `"username"` and `"password"` for the authentication or disable it. In the default config just the http-server is enabled and configurated to run on port 80.
+### The "settings"-section
+The `"settings"`-section contains the configuration for the http- and https-server. You have to set `"username"` and `"password"` for the authentication or disable it. In the default config just the http-server is enabled and configurated to run on port 80.
 
 ### The "plugins"-section
 In the `"plugins"`-section you have to list all plugins to load in the form of

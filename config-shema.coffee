@@ -4,7 +4,7 @@
 
 # Defines a `node-convict` config-shema and exports it.
 module.exports =
-  server:
+  settings:
     locale:
       doc: "The default language"
       format: String

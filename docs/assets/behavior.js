@@ -47,8 +47,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "type": "heading",
                   "data": {
                     "level": 3,
-                    "title": "The \"server\"-section",
-                    "slug": "the-server-section"
+                    "title": "The \"settings\"-section",
+                    "slug": "the-settings-section"
                   },
                   "depth": 3
                 }, {
@@ -121,8 +121,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "type": "heading",
               "data": {
                 "level": 3,
-                "title": "The \"server\"-section",
-                "slug": "the-server-section"
+                "title": "The \"settings\"-section",
+                "slug": "the-settings-section"
               },
               "depth": 3
             }, {

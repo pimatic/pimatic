@@ -3,7 +3,7 @@ assert = require "cassert"
 describe "pimatic", ->
 
   config =   
-    server:
+    settings:
       locale: "en"
       authentication:
         username: "test"
@@ -39,14 +39,14 @@ describe "pimatic", ->
 
     it "httpServer should run", (done)->
       http = require 'http'
-      http.get("http://localhost:#{config.server.httpServer.port}", (res) ->
+      http.get("http://localhost:#{config.settings.httpServer.port}", (res) ->
         done()
       ).on "error", (e) ->
         throw e
 
     it "httpServer should ask for password", (done)->
       http = require 'http'
-      http.get("http://localhost:#{config.server.httpServer.port}", (res) ->
+      http.get("http://localhost:#{config.settings.httpServer.port}", (res) ->
         assert res.statusCode is 401 # is Unauthorized
         done();
       ).on "error", (e) ->

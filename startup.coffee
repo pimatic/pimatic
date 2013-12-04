@@ -34,12 +34,12 @@ conf.validate()
 config = conf.get("")
 
 # * Set the log level
-env.logger.transports.console.level = config.server.logLevel
+env.logger.transports.console.level = config.settings.logLevel
 
 i18n.configure({
   locales:['en', 'de'],
   directory: __dirname + '/locales',
-  defaultLocale: config.server.locale,
+  defaultLocale: config.settings.locale,
 })
 
 
@@ -53,20 +53,20 @@ app.use express.bodyParser()
 # Setup authentication
 # ----------------------
 # Use http-basicAuth if authentication is not disabled.
-auth = config.server.authentication
+auth = config.settings.authentication
 if auth.enabled
   #Check authentication.
-  env.helper.checkConfig env, 'server.authentication', ->
+  env.helper.checkConfig env, 'settings.authentication', ->
     assert auth.username and typeof auth.username is "string" and auth.username.length isnt 0 
     assert auth.password and typeof auth.password is "string" and auth.password.length isnt 0 
   app.use express.basicAuth(auth.username, auth.password)
 
-if not config.server.httpsServer?.enabled and not config.server.httpServer?.enabled
-  env.logger.warn "You have no https and no http server defined!"
+if not config.settings.httpsServer?.enabled and not config.settings.httpServer?.enabled
+  env.logger.warn "You have no https and no http server enabled!"
 
 # Start the https-server if it is enabled.
-if config.server.httpsServer?.enabled
-  httpsConfig = config.server.httpsServer
+if config.settings.httpsServer?.enabled
+  httpsConfig = config.settings.httpsServer
   env.helper.checkConfig env, 'server', ->
     assert httpsConfig instanceof Object
     assert typeof httpsConfig.keyFile is 'string' and httpsConfig.keyFile.length isnt 0
@@ -80,7 +80,7 @@ if config.server.httpsServer?.enabled
   app.httpsServer = https.createServer httpsOptions, app
 
 # Start the http-server if it is enabled.
-if config.server.httpServer?.enabled
+if config.settings.httpServer?.enabled
   http = require "http"
   app.httpServer = http.createServer app
 
@@ -93,7 +93,7 @@ framework = new Framework app, config, configFile
 framework.init()
 
 errorFunc = (err) ->
-  msg = "Could not listen on port #{config.server.httpsServer.port}. Error: #{err.message}. "
+  msg = "Could not listen on port #{config.settings.httpsServer.port}. Error: #{err.message}. "
   switch err.message 
     when "listen EACCES" then  msg += "Are you root?."
     when "listen EADDRINUSE" then msg += "Is a server already running?"
@@ -106,10 +106,10 @@ errorFunc = (err) ->
 
 if app.httpsServer?
   app.httpsServer.on 'error', errorFunc
-  app.httpsServer.listen config.server.httpsServer.port
-  env.logger.info "listening for https-request on port #{config.server.httpsServer.port}..."
+  app.httpsServer.listen config.settings.httpsServer.port
+  env.logger.info "listening for https-request on port #{config.settings.httpsServer.port}..."
 
 if app.httpServer?
   app.httpServer.on 'error', errorFunc
-  app.httpServer.listen config.server.httpServer.port
-  env.logger.info "listening for http-request on port #{config.server.httpServer.port}..."
+  app.httpServer.listen config.settings.httpServer.port
+  env.logger.info "listening for http-request on port #{config.settings.httpServer.port}..."

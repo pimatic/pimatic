@@ -1,5 +1,5 @@
 {
-  "server": {
+  "settings": {
     "authentication": {
       "username": "admin",
       "password": ""
