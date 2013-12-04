@@ -4,7 +4,7 @@ async = require 'async'
 
 module.exports = (env) ->
 
-  class Server extends require('events').EventEmitter
+  class Framework extends require('events').EventEmitter
     configFile: null
     plugins: []
     actuators: []

@@ -87,10 +87,10 @@ if config.server.httpServer?.enabled
 
 # Setup the server
 # ----------------
-Server = (require './lib/server') env 
+Framework = (require './lib/framework') env 
 
-server = new Server app, config, configFile
-server.init()
+framework = new Framework app, config, configFile
+framework.init()
 
 errorFunc = (err) ->
   msg = "Could not listen on port #{config.server.httpsServer.port}. Error: #{err.message}. "

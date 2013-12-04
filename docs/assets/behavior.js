@@ -244,6 +244,22 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "singleLineComment": ["#"],
               "name": "CoffeeScript"
             },
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/lib/framework.coffee",
+            "projectPath": "lib/framework.coffee",
+            "targetPath": "lib/framework",
+            "title": "framework"
+          },
+          "depth": 2,
+          "outline": []
+        }, {
+          "type": "file",
+          "data": {
+            "language": {
+              "nameMatchers": [".coffee", "Cakefile"],
+              "pygmentsLexer": "coffee-script",
+              "singleLineComment": ["#"],
+              "name": "CoffeeScript"
+            },
             "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/lib/helper.coffee",
             "projectPath": "lib/helper.coffee",
             "targetPath": "lib/helper",
@@ -322,22 +338,6 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "depth": 1
             },
             "title": "Sensor"
-          },
-          "depth": 2,
-          "outline": []
-        }, {
-          "type": "file",
-          "data": {
-            "language": {
-              "nameMatchers": [".coffee", "Cakefile"],
-              "pygmentsLexer": "coffee-script",
-              "singleLineComment": ["#"],
-              "name": "CoffeeScript"
-            },
-            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/lib/server.coffee",
-            "projectPath": "lib/server.coffee",
-            "targetPath": "lib/server",
-            "title": "server"
           },
           "depth": 2,
           "outline": []
@@ -1118,9 +1118,9 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "singleLineComment": ["#"],
           "name": "CoffeeScript"
         },
-        "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/pimatic.coffee",
-        "projectPath": "pimatic.coffee",
-        "targetPath": "pimatic",
+        "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/startup.coffee",
+        "projectPath": "startup.coffee",
+        "targetPath": "startup",
         "firstHeader": {
           "type": "heading",
           "data": {
