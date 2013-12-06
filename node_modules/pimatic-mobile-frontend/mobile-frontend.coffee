@@ -3,6 +3,7 @@ express = require "express"
 coffeescript = require 'connect-coffee-script'
 socketIo = require 'socket.io'
 async = require 'async'
+assert = require 'cassert'
 
 module.exports = (env) ->
 
@@ -39,7 +40,7 @@ module.exports = (env) ->
 
       # 
       #     {
-      #       "actuators": [
+      #       "items": [
       #         { "id": "light",
       #           "name": "Schreibtischlampe",
       #           "state": null },
@@ -53,7 +54,7 @@ module.exports = (env) ->
       #     }
       # 
       app.get '/data.json', (req,res) ->
-        self.getActuatorDataWithState (error, actuators) ->
+        self.getItemsWithData (error, items) ->
           rules = []
           for id of server.ruleManager.rules
             rule = server.ruleManager.rules[id]
@@ -61,8 +62,9 @@ module.exports = (env) ->
               id: id
               condition: rule.orgCondition
               action: rule.action
+          console.log items
           res.send 
-            actuators: actuators
+            items: items
             rules: rules
 
       # * Static assets
@@ -77,50 +79,70 @@ module.exports = (env) ->
         # When a new client connects
         io.sockets.on 'connection', (socket) ->
           cleanUpFunc = []
-          for actuator in self.getActuatorsToDisplay() 
-            do (actuator) ->
-              # * First time push the state to the client
-              actuator.getState (error, state) ->
-                unless error? then self.emitSwitchState socket, actuator, state
-              # * Then forward following state event to the client
-              actuator.on "state", stateListener = (state) ->
-                self.emitSwitchState socket, actuator, state
+
+          for item in self.config.items 
+            do (item) ->
+              if item.type is "actuator" 
+                actuator = self.server.getActuatorById item.id
+                if actuator?
+                  # * First time push the state to the client
+                  actuator.getState (error, state) ->
+                    unless error? then self.emitSwitchState socket, actuator, state
+                  # * Then forward following state event to the client
+                  actuator.on "state", stateListener = (state) ->
+                    self.emitSwitchState socket, actuator, state
+                  socket.on 'close', -> actuator.removeListener "state", stateListener 
               
-              cleanUpFunc.push (-> actuator.removeListener "state", stateListener)
           server.ruleManager.on "add", addRuleListener = (rule) ->
             self.emitRuleUpdate socket, "add", rule
-          cleanUpFunc.push (-> server.ruleManager.removeListener "add", addRuleListener)       
+          
           server.ruleManager.on "update", updateRuleListener = (rule) ->
             self.emitRuleUpdate socket, "update", rule
-          cleanUpFunc.push (-> server.ruleManager.removeListener "update", updateRuleListener)  
+         
           server.ruleManager.on "remove", removeRuleListener = (rule) ->
             self.emitRuleUpdate socket, "remove", rule
-          cleanUpFunc.push (-> server.ruleManager.removeListener "update", removeRuleListener)  
-          # On `close` remove all event listeners
-          socket.on 'close', ->
-            cleanUpFunction() for cleanUpFunction in cleanUpFunc
 
+          socket.on 'close', -> 
+            server.ruleManager.removeListener "update", updateRuleListener
+            server.ruleManager.removeListener "add", addRuleListener 
+            server.ruleManager.removeListener "update", removeRuleListener
 
-    getActuatorsToDisplay: ->
+    getItemsWithData: (cbWithData) ->
       self = this
-      actuators = []
-      for a in self.config.actuatorsToDisplay
-        actuator = self.server.getActuatorById a.id
-        if actuator?
-          actuators.push actuator 
-        else
-          env.logger.error "No actuator to display with id \"#{actuator.id}\" found"
-      return actuators    
+      console.log self.config.items
+      async.map(self.config.items, (item, callback) ->
+        switch item.type
+          when "actuator"
+            getActuatorWithData item
+          else
+            errorMsg = "Unknown item type \"#{item.type}\""
+            env.logger.error 
+            callback null, null
+      , (err, items) -> 
+        # filter `null` items
+        cbWithData err, if items? then (item in items if item?)
+      )
 
-    getActuatorDataWithState: (callback) ->
-      actuators = @getActuatorsToDisplay()
-      async.map( actuators, (a, callback) ->
-        a.getState (err, state) ->
+    getActuatorWithData: (item, callback) ->
+      self = this
+      assert item.id?
+      actuator = self.server.getActuatorById item.id
+      if actuator?
+        actuator.getState (err, state) ->
           callback null,
-            id: a.id
-            name: a.name
+            type: "actuator"
+            id: actuator.id
+            name: actuator.name
             state: (if error? or not state? then null else state)
-      , callback)
+      else
+        errorMsg = "No actuator to display with id \"#{item.id}\" found"
+        env.logger.error errorMsg
+        callback null,
+          type: "actuator"
+          id: item.id
+          name: "Unknown"
+          state: null,
+          error: errorMsg
 
 
     emitSwitchState: (socket, actuator, state) ->
