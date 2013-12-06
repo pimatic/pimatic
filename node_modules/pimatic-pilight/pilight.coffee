@@ -37,7 +37,11 @@ module.exports = (env) ->
 
     send: (jsonMsg) ->
       self = this
-      self.client.write JSON.stringify(jsonMsg) + "\n"
+      success = false
+      if self.state isnt "unconnected"
+        self.client.write JSON.stringify(jsonMsg) + "\n"
+        success = true
+      return success
 
     onReceive: (jsonMsg) ->
       self = this
@@ -60,6 +64,8 @@ module.exports = (env) ->
         for device, deviceProbs of devices
           if typeof deviceProbs is "object"
             if deviceProbs.protocol[0].match "_switch"
+              deviceProbs.location = location
+              deviceProbs.device = device
               self.server.registerActuator new PilightSwitch "#{location}-#{device}", deviceProbs
               console.log device, ": ", deviceProbs 
 
@@ -76,19 +82,20 @@ module.exports = (env) ->
       self.name = probs.name
 
     # Run the pilight-send executable.
-    changeState: (state, resultCallbak) ->
-      # thisClass = this
-      # if @state is state then resultCallbak true
-      # onOff = (if state then "-t" else "-f")
-      # child = spawn backend.config.binary, [
-      #   "-p " + @config.protocol
-      #   "-u " + @config.outletUnit, 
-      #   "-i " + @config.outletId, 
-      #   onOff
-      # ]
-      # child.on "exit", (code) ->
-      #   success = (code is 0)
-      #   thisClass._setState(state) if success
-      #   resultCallbak success
+    changeStateTo: (state, resultCallbak) ->
+      self = this
+      if self.state is state then resultCallbak true
+
+      jsonMsg =
+        message: "send"
+        code:
+          location: self.probs.location
+          device: self.probs.device
+          state: if state then "on" else "off"
+
+      success = backend.send jsonMsg
+
+      self._setState(state) if success
+      resultCallbak success
 
   return backend
