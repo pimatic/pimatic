@@ -23,7 +23,7 @@ class Actuator extends require('events').EventEmitter
 
 # A class for all you can switch on and off.
 class SwitchActuator extends Actuator
-  type: 'BinaryActuator'
+  type: 'SwitchActuator'
   _state: null
   actions: ["turnOn", "turnOff", "changeStateTo", "getState"]
   events: ["state"]

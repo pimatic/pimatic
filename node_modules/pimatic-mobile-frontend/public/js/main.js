@@ -1,4 +1,4 @@
-var actuators, addRule, addSwitch, removeRule, rules, updateRule, voiceCallback;
+var actuators, addActuator, addRule, addSwitch, removeRule, rules, updateRule, voiceCallback;
 
 actuators = [];
 
@@ -6,11 +6,19 @@ rules = [];
 
 $(document).on("pagecreate", '#index', function(event) {
   return $.get("/data.json", function(data) {
-    var actuator, rule, _i, _j, _len, _len1, _ref, _ref1, _results;
-    _ref = data.actuators;
+    var item, rule, _i, _j, _len, _len1, _ref, _ref1, _results;
+    _ref = data.items;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      actuator = _ref[_i];
-      addSwitch(actuator);
+      item = _ref[_i];
+      if (item.template != null) {
+        if (item.template === "switch") {
+          addSwitch(item);
+        } else {
+          addActuator(item);
+        }
+      } else {
+        addActuator(item);
+      }
     }
     _ref1 = data.rules;
     _results = [];
@@ -46,7 +54,7 @@ $(document).on("pageinit", '#index', function(event) {
   socket.on("rule-remove", function(rule) {
     return removeRule(rule);
   });
-  $('#index #actuators').on("change", ".switch", function(event, ui) {
+  $('#index #items').on("change", ".switch", function(event, ui) {
     var actuatorAction, actuatorId;
     actuatorId = $(this).data('actuator-id');
     actuatorAction = $(this).val() === 'on' ? 'turnOn' : 'turnOff';
@@ -162,8 +170,20 @@ addSwitch = function(actuator) {
     select.find("option[value=" + val + "]").attr('selected', 'selected');
   }
   select.slider();
-  $('#actuators').append(li);
-  return $('#actuators').listview('refresh');
+  $('#items').append(li);
+  return $('#items').listview('refresh');
+};
+
+addActuator = function(actuator) {
+  var li;
+  actuators[actuator.id] = actuator;
+  li = $($('#actuator-template').html());
+  li.find('label').text(actuator.name);
+  if (actuator.error != null) {
+    li.find('.error').text(actuator.error);
+  }
+  $('#items').append(li);
+  return $('#items').listview('refresh');
 };
 
 addRule = function(rule) {

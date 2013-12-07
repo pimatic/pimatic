@@ -3,7 +3,14 @@ rules = []
 
 $(document).on "pagecreate", '#index', (event) ->
   $.get "/data.json", (data) ->
-    addSwitch(actuator) for actuator in data.actuators
+    for item in data.items
+      if item.template?
+        if item.template is "switch"
+          addSwitch(item)
+        else addActuator(item)
+      else addActuator(item)
+
+
     addRule(rule) for rule in data.rules
 
 
@@ -22,7 +29,7 @@ $(document).on "pageinit", '#index', (event) ->
   socket.on "rule-update", (rule) -> updateRule rule
   socket.on "rule-remove", (rule) -> removeRule rule
 
-  $('#index #actuators').on "change", ".switch",(event, ui) ->
+  $('#index #items').on "change", ".switch",(event, ui) ->
     actuatorId = $(this).data('actuator-id')
     actuatorAction = if $(this).val() is 'on' then 'turnOn' else 'turnOff'
     $.get "/api/actuator/#{actuatorId}/#{actuatorAction}"  , (data) ->
@@ -107,8 +114,18 @@ addSwitch = (actuator) ->
     select.find("option[value=#{val}]").attr('selected', 'selected')
   select
     .slider() 
-  $('#actuators').append li
-  $('#actuators').listview('refresh')
+  $('#items').append li
+  $('#items').listview('refresh')
+
+addActuator = (actuator) ->
+  actuators[actuator.id] = actuator
+  li = $ $('#actuator-template').html()
+  li.find('label').text(actuator.name)
+  if actuator.error?
+    li.find('.error').text(actuator.error)
+  $('#items').append li
+  $('#items').listview('refresh')
+
 
 addRule = (rule) ->
   rules[rule.id] = rule 
