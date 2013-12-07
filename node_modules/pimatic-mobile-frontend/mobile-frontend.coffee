@@ -120,7 +120,6 @@ module.exports = (env) ->
       , (err, items) -> 
         # filter `null` items
         if items? then items = (item for item in items when item?)
-        console.log items
         cbWithData err, items
       )
 

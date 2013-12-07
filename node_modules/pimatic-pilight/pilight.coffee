@@ -18,13 +18,14 @@ module.exports = (env) ->
       conf.load config
       conf.validate()
 
+      # TODO reconnect
       self.client = net.connect(
         host: conf.get('host')
         port: conf.get('port')
       , -> #'connect' listener
         env.logger.info "connected to pilight-daemon"
-        self.send { message: "client gui" }
         self.state = "welcome"
+        self.send { message: "client gui" }
       )
 
       self.client.on "data", (data) ->
