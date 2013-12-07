@@ -19,7 +19,11 @@ html(manifest='application.manifest')
         select.switch(data-role="slider")
           option(value="off")=__('Off')
           option(value="on")=__('On')
-          script#switch-template(type='text/template')
+    script#actuator-template(type='text/template')     
+      li(data-role="fieldcontain")
+        label
+        | 
+        span.error
     script#rule-template(type='text/template')
       li
         a.rule(data-transition='slide', href='#edit-rule')
@@ -39,8 +43,8 @@ html(manifest='application.manifest')
                             style='display: none;')=__('Speak')
         h3 pimatic
       div(data-role='content')
-        ul#actuators(data-role='listview', data-inset='true')
-          li(data-role='list-divider')=__('Switches')
+        ul#items(data-role='listview', data-inset='true')
+          li(data-role='list-divider')=__('Devices')
         ul#rules(data-role='listview', data-inset='true')
           li(data-role='list-divider')=__('Rules')
           li#add-rule()

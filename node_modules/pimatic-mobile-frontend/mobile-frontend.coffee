@@ -62,7 +62,6 @@ module.exports = (env) ->
               id: id
               condition: rule.orgCondition
               action: rule.action
-          console.log items
           res.send 
             items: items
             rules: rules
@@ -109,18 +108,20 @@ module.exports = (env) ->
 
     getItemsWithData: (cbWithData) ->
       self = this
-      console.log self.config.items
+
       async.map(self.config.items, (item, callback) ->
         switch item.type
           when "actuator"
-            getActuatorWithData item
+            self.getActuatorWithData item, callback
           else
             errorMsg = "Unknown item type \"#{item.type}\""
             env.logger.error 
             callback null, null
       , (err, items) -> 
         # filter `null` items
-        cbWithData err, if items? then (item in items if item?)
+        if items? then items = (item for item in items when item?)
+        console.log items
+        cbWithData err, items
       )
 
     getActuatorWithData: (item, callback) ->
@@ -128,12 +129,19 @@ module.exports = (env) ->
       assert item.id?
       actuator = self.server.getActuatorById item.id
       if actuator?
-        actuator.getState (err, state) ->
+        if actuator instanceof env.actuators.SwitchActuator
+          actuator.getState (err, state) ->
+            callback null,
+              type: "actuator"
+              template: "switch"
+              id: actuator.id
+              name: actuator.name
+              state: (if error? or not state? then null else state)
+        else 
           callback null,
             type: "actuator"
             id: actuator.id
             name: actuator.name
-            state: (if error? or not state? then null else state)
       else
         errorMsg = "No actuator to display with id \"#{item.id}\" found"
         env.logger.error errorMsg
