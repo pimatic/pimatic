@@ -1,4 +1,5 @@
-{ "name": "pimatic-pilight",
+{
+  "name": "pimatic-pilight",
   "description": "pilight plugin for pimatic",
   "author": "Oliver Schneider <oliverschneider89+sweetpi@gmail.com> (http://sweetpi.de)",
   "main": "pilight.coffee",
@@ -11,6 +12,7 @@
   "version": "0.2.0-git",
   "homepage": "http://github.com/sweetpi/pimatic",
   "dependencies": {
+    "eversocket": "0.0.2"
   },
   "peerDependencies": {
     "pimatic": "~0.1.0"
