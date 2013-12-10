@@ -14,18 +14,6 @@ You can load the backend by editing your `config.json` to include:
     }
 
 in the `backend` section. For all configuration options see 
-[backend-config-shema](backend-config-shema.html)
+[pilight-config-shema](pilight-config-shema.html)
 
-Actuators can be added bei adding them to the `actuators` section in the config file.
-Set the `class` attribute to `PilightOutlet`. For example:
-
-    { 
-      "id": "light",
-      "class": "PilightSwitch", 
-      "name": "Lamp",
-      "outletUnit": 0,
-      "outletId": 123456 
-    }
-
-For actuator configuration options see the 
-[actuator-config-shema.coffee](actuator-config-shema.html) file.
+Actuators are automatically added from the pilight-daemon config, when the connection is established. 
