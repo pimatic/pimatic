@@ -164,17 +164,14 @@ class RuleManager extends require('events').EventEmitter
     #console.log rule.tokens
     return bet.evaluateSync rule.tokens
 
-  executeAction: (actionString, simulate, callback) ->
+  executeAction: (actionString, simulate) ->
     assert actionString? and typeof actionString is "string" 
     assert simulate? and typeof simulate is "boolean"
-    assert callback? and typeof callback is "function"
 
     for aH in @actionHandlers
-      actionFunc = aH.executeAction actionString, simulate, callback
-      if actionFunc?
-        actionFunc()
-        return true
-      else
-        return false
+      promise = aH.executeAction actionString, simulate
+      if promise.then?
+        return promise
+    throw new Error("No actionhandler found!")
 
 module.exports.RuleManager = RuleManager

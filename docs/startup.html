@@ -10,6 +10,7 @@
 
 <span class="nv">configFile = </span><span class="k">if</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">PIMATIC_CONFIG</span><span class="o">?</span> <span class="k">then</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">PIMATIC_CONFIG</span> <span class="k">else</span> <span class="s">&quot;./config.json&quot;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Setup the framework</p></div></div><div class="code"><div class="wrapper"><span class="nv">Framework = </span><span class="p">(</span><span class="nx">require</span> <span class="s">&#39;./lib/framework&#39;</span><span class="p">)</span> <span class="nx">env</span> 
 <span class="nv">framework = </span><span class="k">new</span> <span class="nx">Framework</span> <span class="nx">configFile</span>
-<span class="nx">framework</span><span class="p">.</span><span class="nx">init</span><span class="p">()</span>
+<span class="nv">promise = </span><span class="nx">framework</span><span class="p">.</span><span class="nx">init</span><span class="p">()</span>
+<span class="nx">promise</span><span class="p">.</span><span class="nx">done</span><span class="p">()</span>
 
 <span class="nv">module.exports.framework = </span><span class="nx">framework</span></div></div></div></div></body></html>

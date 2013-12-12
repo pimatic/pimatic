@@ -35,6 +35,8 @@ node_modules/pty.js/
 node_modules/rename.txt
 node_modules/term.js/
 node_modules/pimatic-log-reader/node_modules/
+node_modules/lodash/
+node_modules/q/
 npm-debug.log
 node.log
 *.sublime-workspace

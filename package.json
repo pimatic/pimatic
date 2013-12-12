@@ -15,7 +15,7 @@
     "README.md",
     "LICENSE"
   ],
-  "version": "0.1.6-git",
+  "version": "0.2.0-git",
   "homepage": "http://github.com/sweetpi/pimatic",
   "repository": {
     "type": "git",

@@ -4,6 +4,7 @@ convict = require "convict"
 net = require "net"
 EverSocket = require("eversocket").EverSocket
 util = require 'util'
+Q = require 'q'
 
 module.exports = (env) ->
 
@@ -71,24 +72,26 @@ module.exports = (env) ->
         success = true
       return success
 
-    sendState: (jsonMsg, callback) ->
+    sendState: (jsonMsg) ->
       self = this
+      deferred = Q.defer()
 
       receiveTimeout = setTimeout( -> 
         for cb, i in self.stateCallbacks
           if cb.jsonMsg.code.location is jsonMsg.code.location and 
              cb.jsonMsg.code.devie is jsonMsg.code.device
             self.stateCallbacks.splice i, 1
-        callback false
+        deffered.recect "Request to pilight-daemon timeout"
       , 3000)
 
       self.stateCallbacks.push
         jsonMsg: jsonMsg
-        callback: callback
+        deferred: deferred
         timeout: receiveTimeout
 
       success = self.send jsonMsg
-      return success
+      unless success then deferred.recect "Could not send request to pilight-daemon"
+      return deferred.promise
 
     onReceive: (jsonMsg) ->
       self = this
@@ -126,7 +129,7 @@ module.exports = (env) ->
                        cb.jsonMsg.code.device is device
                       clearTimeout cb.timeout
                       self.stateCallbacks.splice i, 1
-                      cb.callback true
+                      cb.deferred.resolve()
 
     onReceiveConfig: (config) ->
       self = this
@@ -157,11 +160,10 @@ module.exports = (env) ->
       self.name = probs.name
 
     # Run the pilight-send executable.
-    changeStateTo: (state, resultCallback) ->
+    changeStateTo: (state) ->
       self = this
       if self.state is state
-        resultCallback true
-        return
+        return Q.fcall -> true
 
       jsonMsg =
         message: "send"
@@ -170,8 +172,6 @@ module.exports = (env) ->
           device: self.probs.device
           state: if state then "on" else "off"
 
-      success = backend.sendState jsonMsg, resultCallback
-
-      unless success then resultCallback false
+      return backend.sendState jsonMsg
 
   return backend

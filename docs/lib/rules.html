@@ -149,17 +149,14 @@ and remember the predicates in predicates
     <span class="c1">#console.log rule.tokens</span>
     <span class="k">return</span> <span class="nx">bet</span><span class="p">.</span><span class="nx">evaluateSync</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">tokens</span>
 
-  <span class="nv">executeAction: </span><span class="nf">(actionString, simulate, callback) -&gt;</span>
+  <span class="nv">executeAction: </span><span class="nf">(actionString, simulate) -&gt;</span>
     <span class="nx">assert</span> <span class="nx">actionString</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">actionString</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span> 
     <span class="nx">assert</span> <span class="nx">simulate</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">simulate</span> <span class="o">is</span> <span class="s">&quot;boolean&quot;</span>
-    <span class="nx">assert</span> <span class="nx">callback</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">callback</span> <span class="o">is</span> <span class="s">&quot;function&quot;</span>
 
     <span class="k">for</span> <span class="nx">aH</span> <span class="k">in</span> <span class="nx">@actionHandlers</span>
-      <span class="nv">actionFunc = </span><span class="nx">aH</span><span class="p">.</span><span class="nx">executeAction</span> <span class="nx">actionString</span><span class="p">,</span> <span class="nx">simulate</span><span class="p">,</span> <span class="nx">callback</span>
-      <span class="k">if</span> <span class="nx">actionFunc</span><span class="o">?</span>
-        <span class="nx">actionFunc</span><span class="p">()</span>
-        <span class="k">return</span> <span class="kc">true</span>
-      <span class="k">else</span>
-        <span class="k">return</span> <span class="kc">false</span>
+      <span class="nv">promise = </span><span class="nx">aH</span><span class="p">.</span><span class="nx">executeAction</span> <span class="nx">actionString</span><span class="p">,</span> <span class="nx">simulate</span>
+      <span class="k">if</span> <span class="nx">promise</span><span class="p">.</span><span class="nx">then</span><span class="o">?</span>
+        <span class="k">return</span> <span class="nx">promise</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;No actionhandler found!&quot;</span><span class="p">)</span>
 
 <span class="nv">module.exports.RuleManager = </span><span class="nx">RuleManager</span></div></div></div></div></body></html>

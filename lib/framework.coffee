@@ -4,6 +4,7 @@ async = require 'async'
 convict = require 'convict'
 i18n = require 'i18n'
 express = require "express"
+Q = require 'q'
 
 module.exports = (env) ->
 
@@ -126,8 +127,9 @@ module.exports = (env) ->
 
       self.emit "server listen", "startup"
 
-    loadPlugins: (cb)->
+    loadPlugins: ->
       self = this 
+      deferred = Q.defer()
       async.mapSeries(self.config.plugins, (pConf, cb)->
         assert pConf?
         assert pConf instanceof Object
@@ -138,8 +140,10 @@ module.exports = (env) ->
           cb(err, {plugin: plugin, config: pConf})
       , (err, plugins) ->
         self.registerPlugin(p.plugin, p.config) for p in plugins
-        cb(err)
+        if err then deferred.reject err
+        else deferred.resolve()
       )
+      return deferred.promise
 
 
     registerPlugin: (plugin, config) ->
@@ -190,9 +194,8 @@ module.exports = (env) ->
 
     init: ->
       self = this
-      self.loadPlugins (err) ->
-        if err then throw err
 
+      initPlugins = ->
         for plugin in self.plugins
           try
             plugin.plugin.init(self.app, self, plugin.config)
@@ -201,17 +204,17 @@ module.exports = (env) ->
               err.message
             env.logger.debug err.stack
 
-        self.loadActuators()
+      initActionHandler = ->
+        self.ruleManager.actionHandlers.push new env.actions.SwitchActionHandler self
+        self.ruleManager.actionHandlers.push new env.actions.LogActionHandler self
 
-        self.ruleManager.actionHandlers.push new env.actions.SwitchActionHandler
-        self.ruleManager.actionHandlers.push new env.actions.LogActionHandler
-
+      initRules = ->
         for rule in self.config.rules
           try
             self.ruleManager.addRuleByString(rule.id, rule.rule) 
           catch err
             env.logger.error "Could not parse rule \"#{rule.rule}\": " + err.message 
-            env.logger.debug err.stack
+            env.logger.debug err.stack        
 
         # Save rule updates to the config file:
         # 
@@ -235,12 +238,19 @@ module.exports = (env) ->
           self.config.rules = (r for r in self.config.rules when r.id isnt rule.id)
           self.emit "config"
 
-        # Save the config on "config" event
-        self.on "config", ->
-          self.saveConfig()
+      return self.loadPlugins()
+        .then(initPlugins)
+        .then(-> self.loadActuators())
+        .then(initActionHandler)
+        .then(initRules)
+        .then(->         
+          # Save the config on "config" event
+          self.on "config", ->
+            self.saveConfig()
 
-        self.emit "after init", "framework"
-        self.listen()
+          self.emit "after init", "framework"
+          self.listen()
+        )
 
     saveConfig: ->
       self = this

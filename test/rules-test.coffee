@@ -1,4 +1,5 @@
 assert = require "cassert"
+Q = require 'q'
 
 describe "RuleManager", ->
 
@@ -27,10 +28,9 @@ describe "RuleManager", ->
       cancelNotify: (id) -> true
 
     class DummyActionHandler
-      executeAction: (actionString, simulate, callback) =>
+      executeAction: (actionString, simulate) =>
         assert actionString is "action 1"
-        return ->
-          callback null, "action 1 executed"
+        return Q.fcall -> "action 1 executed"
 
 
     serverDummy = 

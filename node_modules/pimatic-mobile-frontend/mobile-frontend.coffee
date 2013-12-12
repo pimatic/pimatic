@@ -4,6 +4,7 @@ coffeescript = require 'connect-coffee-script'
 socketIo = require 'socket.io'
 async = require 'async'
 assert = require 'cassert'
+Q = require 'q'
 
 module.exports = (env) ->
 
@@ -54,7 +55,7 @@ module.exports = (env) ->
       #     }
       # 
       app.get '/data.json', (req,res) ->
-        self.getItemsWithData (error, items) ->
+        self.getItemsWithData().then( (items) ->
           rules = []
           for id of server.ruleManager.rules
             rule = server.ruleManager.rules[id]
@@ -65,6 +66,7 @@ module.exports = (env) ->
           res.send 
             items: items
             rules: rules
+        ).done()
 
       # * Static assets
       app.use express.static(__dirname + "/public")
@@ -85,8 +87,12 @@ module.exports = (env) ->
                 actuator = self.server.getActuatorById item.id
                 if actuator?
                   # * First time push the state to the client
-                  actuator.getState (error, state) ->
-                    unless error? then self.emitSwitchState socket, actuator, state
+                  actuator.getState().then( (state) ->
+                    self.emitSwitchState socket, actuator, state
+                  ).catch( (error) ->
+                    env.logger.error error
+                    env.logger.debug error.stack 
+                  )
                   # * Then forward following state event to the client
                   actuator.on "state", stateListener = (state) ->
                     self.emitSwitchState socket, actuator, state
@@ -106,45 +112,45 @@ module.exports = (env) ->
             server.ruleManager.removeListener "add", addRuleListener 
             server.ruleManager.removeListener "update", removeRuleListener
 
-    getItemsWithData: (cbWithData) ->
+    getItemsWithData: () ->
       self = this
 
-      async.map(self.config.items, (item, callback) ->
+      items = []
+      for item in self.config.items
         switch item.type
           when "actuator"
-            self.getActuatorWithData item, callback
+            items.push self.getActuatorWithData item
           else
             errorMsg = "Unknown item type \"#{item.type}\""
             env.logger.error 
-            callback null, null
-      , (err, items) -> 
-        # filter `null` items
-        if items? then items = (item for item in items when item?)
-        cbWithData err, items
-      )
+      return Q.all items
 
-    getActuatorWithData: (item, callback) ->
+    getActuatorWithData: (item) ->
       self = this
       assert item.id?
       actuator = self.server.getActuatorById item.id
       if actuator?
+        item =
+          type: "actuator"
+          id: actuator.id
+          name: actuator.name
+          state: null
         if actuator instanceof env.actuators.SwitchActuator
-          actuator.getState (err, state) ->
-            callback null,
-              type: "actuator"
-              template: "switch"
-              id: actuator.id
-              name: actuator.name
-              state: (if error? or not state? then null else state)
+          item.template = "switch"
+          return actuator.getState().then( (state) ->
+            item.state = state
+            return item
+          ).catch( (error) ->
+            env.logger.error error
+            env.logger.debug error.stack
+            return item
+          ) 
         else 
-          callback null,
-            type: "actuator"
-            id: actuator.id
-            name: actuator.name
+          return Q.fcall -> item
       else
         errorMsg = "No actuator to display with id \"#{item.id}\" found"
         env.logger.error errorMsg
-        callback null,
+        return Q.fcall ->
           type: "actuator"
           id: item.id
           name: "Unknown"

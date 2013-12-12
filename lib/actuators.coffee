@@ -1,5 +1,7 @@
 # Povides the `Actuator` class and some basic common subclasses for the Backend modules. 
+# 
 assert = require 'cassert'
+Q = require 'q'
 
 # An Actuator is an physical or logical element you can control by triggering an action on it.
 # For example a power outlet, a light or door opener.
@@ -28,21 +30,26 @@ class SwitchActuator extends Actuator
   actions: ["turnOn", "turnOff", "changeStateTo", "getState"]
   events: ["state"]
 
-  turnOn: (callback) ->
-    @changeStateTo on, callback
+  # Returns a promise
+  turnOn: ->
+    @changeStateTo on
 
-  turnOff: (callback) ->
-    @changeStateTo off, callback
+  # Retuns a promise
+  turnOff: ->
+    @changeStateTo off
 
-  changeStateTo: (state, callback) ->
+  # Retuns a promise
+  changeStateTo: (state) ->
     throw new Error "Function \"changeStateTo\" is not implemented!"
 
-  getState: (callback) ->
-    callback null, @_state
+  getState: ->
+    self = this
+    return Q.fcall -> self._state
 
   _setState: (state) ->
-    @_state = state
-    @emit "state", state
+    self = this
+    self._state = state
+    self.emit "state", state
 
 class PowerSwitch extends SwitchActuator
 

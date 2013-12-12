@@ -6,13 +6,13 @@
     "ping.coffee",
     "README.md"
   ],
-  "version": "0.1.2",
+  "version": "0.2.0-git",
   "homepage": "http://github.com/sweetpi/pimatic",
   "dependencies": {
     "net-ping": "~1.1.9"
   },
   "peerDependencies": {
-    "pimatic": "~0.1.0"
+    "pimatic": "~0.2.0"
   },
   "engines": {
     "node": ">0.8.x",

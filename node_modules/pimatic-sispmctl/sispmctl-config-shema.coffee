@@ -2,7 +2,7 @@
 
 # Defines a `node-convict` config-shema and exports it.
 module.exports =
-  pilightSendBinary:
+  binary:
     doc: "The path to the sispmctl command"
     format: String
     default: "sispmctl"

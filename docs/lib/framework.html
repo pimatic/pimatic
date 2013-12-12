@@ -4,6 +4,7 @@
 <span class="nv">convict = </span><span class="nx">require</span> <span class="s">&#39;convict&#39;</span>
 <span class="nv">i18n = </span><span class="nx">require</span> <span class="s">&#39;i18n&#39;</span>
 <span class="nv">express = </span><span class="nx">require</span> <span class="s">&quot;express&quot;</span>
+<span class="nv">Q = </span><span class="nx">require</span> <span class="s">&#39;q&#39;</span>
 
 <span class="nv">module.exports = </span><span class="nf">(env) -&gt;</span>
 
@@ -113,8 +114,9 @@
 
       <span class="nx">self</span><span class="p">.</span><span class="nx">emit</span> <span class="s">&quot;server listen&quot;</span><span class="p">,</span> <span class="s">&quot;startup&quot;</span>
 
-    <span class="nv">loadPlugins: </span><span class="nf">(cb)-&gt;</span>
+    <span class="nv">loadPlugins: </span><span class="nf">-&gt;</span>
       <span class="nv">self = </span><span class="k">this</span> 
+      <span class="nv">deferred = </span><span class="nx">Q</span><span class="p">.</span><span class="nx">defer</span><span class="p">()</span>
       <span class="nx">async</span><span class="p">.</span><span class="nx">mapSeries</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">plugins</span><span class="p">,</span> <span class="nf">(pConf, cb)-&gt;</span>
         <span class="nx">assert</span> <span class="nx">pConf</span><span class="o">?</span>
         <span class="nx">assert</span> <span class="nx">pConf</span> <span class="k">instanceof</span> <span class="nb">Object</span>
@@ -125,8 +127,10 @@
           <span class="nx">cb</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="p">{</span><span class="nv">plugin: </span><span class="nx">plugin</span><span class="p">,</span> <span class="nv">config: </span><span class="nx">pConf</span><span class="p">})</span>
       <span class="p">,</span> <span class="nf">(err, plugins) -&gt;</span>
         <span class="nx">self</span><span class="p">.</span><span class="nx">registerPlugin</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">plugin</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">config</span><span class="p">)</span> <span class="k">for</span> <span class="nx">p</span> <span class="k">in</span> <span class="nx">plugins</span>
-        <span class="nx">cb</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nx">err</span> <span class="k">then</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">reject</span> <span class="nx">err</span>
+        <span class="k">else</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">resolve</span><span class="p">()</span>
       <span class="p">)</span>
+      <span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">promise</span>
 
 
     <span class="nv">registerPlugin: </span><span class="nf">(plugin, config) -&gt;</span>
@@ -177,9 +181,8 @@
 
     <span class="nv">init: </span><span class="nf">-&gt;</span>
       <span class="nv">self = </span><span class="k">this</span>
-      <span class="nx">self</span><span class="p">.</span><span class="nx">loadPlugins</span> <span class="nf">(err) -&gt;</span>
-        <span class="k">if</span> <span class="nx">err</span> <span class="k">then</span> <span class="k">throw</span> <span class="nx">err</span>
 
+      <span class="nv">initPlugins = </span><span class="nf">-&gt;</span>
         <span class="k">for</span> <span class="nx">plugin</span> <span class="k">in</span> <span class="nx">self</span><span class="p">.</span><span class="nx">plugins</span>
           <span class="k">try</span>
             <span class="nx">plugin</span><span class="p">.</span><span class="nx">plugin</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">app</span><span class="p">,</span> <span class="nx">self</span><span class="p">,</span> <span class="nx">plugin</span><span class="p">.</span><span class="nx">config</span><span class="p">)</span>
@@ -188,17 +191,17 @@
               <span class="nx">err</span><span class="p">.</span><span class="nx">message</span>
             <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">debug</span> <span class="nx">err</span><span class="p">.</span><span class="nx">stack</span>
 
-        <span class="nx">self</span><span class="p">.</span><span class="nx">loadActuators</span><span class="p">()</span>
+      <span class="nv">initActionHandler = </span><span class="nf">-&gt;</span>
+        <span class="nx">self</span><span class="p">.</span><span class="nx">ruleManager</span><span class="p">.</span><span class="nx">actionHandlers</span><span class="p">.</span><span class="nx">push</span> <span class="k">new</span> <span class="nx">env</span><span class="p">.</span><span class="nx">actions</span><span class="p">.</span><span class="nx">SwitchActionHandler</span> <span class="nx">self</span>
+        <span class="nx">self</span><span class="p">.</span><span class="nx">ruleManager</span><span class="p">.</span><span class="nx">actionHandlers</span><span class="p">.</span><span class="nx">push</span> <span class="k">new</span> <span class="nx">env</span><span class="p">.</span><span class="nx">actions</span><span class="p">.</span><span class="nx">LogActionHandler</span> <span class="nx">self</span>
 
-        <span class="nx">self</span><span class="p">.</span><span class="nx">ruleManager</span><span class="p">.</span><span class="nx">actionHandlers</span><span class="p">.</span><span class="nx">push</span> <span class="k">new</span> <span class="nx">env</span><span class="p">.</span><span class="nx">actions</span><span class="p">.</span><span class="nx">SwitchActionHandler</span>
-        <span class="nx">self</span><span class="p">.</span><span class="nx">ruleManager</span><span class="p">.</span><span class="nx">actionHandlers</span><span class="p">.</span><span class="nx">push</span> <span class="k">new</span> <span class="nx">env</span><span class="p">.</span><span class="nx">actions</span><span class="p">.</span><span class="nx">LogActionHandler</span>
-
+      <span class="nv">initRules = </span><span class="nf">-&gt;</span>
         <span class="k">for</span> <span class="nx">rule</span> <span class="k">in</span> <span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">rules</span>
           <span class="k">try</span>
             <span class="nx">self</span><span class="p">.</span><span class="nx">ruleManager</span><span class="p">.</span><span class="nx">addRuleByString</span><span class="p">(</span><span class="nx">rule</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">rule</span><span class="p">)</span> 
           <span class="k">catch</span> <span class="nx">err</span>
             <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="s">&quot;Could not parse rule \&quot;</span><span class="si">#{</span><span class="nx">rule</span><span class="p">.</span><span class="nx">rule</span><span class="si">}</span><span class="s">\&quot;: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span> 
-            <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">debug</span> <span class="nx">err</span><span class="p">.</span><span class="nx">stack</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Save rule updates to the config file:</p>
+            <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">debug</span> <span class="nx">err</span><span class="p">.</span><span class="nx">stack</span>        </div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Save rule updates to the config file:</p>
 
 <ul>
 <li>If a new rule was added then...</li>
@@ -213,11 +216,19 @@
           <span class="nx">self</span><span class="p">.</span><span class="nx">emit</span> <span class="s">&quot;config&quot;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
 <li>If a rule was removed then</li>
 </ul></div></div><div class="code"><div class="wrapper">        <span class="nx">self</span><span class="p">.</span><span class="nx">ruleManager</span><span class="p">.</span><span class="nx">on</span> <span class="s">&quot;remove&quot;</span><span class="p">,</span> <span class="nf">(rule) -&gt;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>...Remove the rule with the right id in the config.json file</p></div></div><div class="code"><div class="wrapper">          <span class="nv">self.config.rules = </span><span class="p">(</span><span class="nx">r</span> <span class="k">for</span> <span class="nx">r</span> <span class="k">in</span> <span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">rules</span> <span class="k">when</span> <span class="nx">r</span><span class="p">.</span><span class="nx">id</span> <span class="o">isnt</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span>
-          <span class="nx">self</span><span class="p">.</span><span class="nx">emit</span> <span class="s">&quot;config&quot;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Save the config on "config" event</p></div></div><div class="code"><div class="wrapper">        <span class="nx">self</span><span class="p">.</span><span class="nx">on</span> <span class="s">&quot;config&quot;</span><span class="p">,</span> <span class="nf">-&gt;</span>
-          <span class="nx">self</span><span class="p">.</span><span class="nx">saveConfig</span><span class="p">()</span>
+          <span class="nx">self</span><span class="p">.</span><span class="nx">emit</span> <span class="s">&quot;config&quot;</span>
 
-        <span class="nx">self</span><span class="p">.</span><span class="nx">emit</span> <span class="s">&quot;after init&quot;</span><span class="p">,</span> <span class="s">&quot;framework&quot;</span>
-        <span class="nx">self</span><span class="p">.</span><span class="nx">listen</span><span class="p">()</span>
+      <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">loadPlugins</span><span class="p">()</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">initPlugins</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nf">-&gt;</span> <span class="nx">self</span><span class="p">.</span><span class="nx">loadActuators</span><span class="p">())</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">initActionHandler</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">initRules</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nf">-&gt;</span>         </div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Save the config on "config" event</p></div></div><div class="code"><div class="wrapper">          <span class="nx">self</span><span class="p">.</span><span class="nx">on</span> <span class="s">&quot;config&quot;</span><span class="p">,</span> <span class="nf">-&gt;</span>
+            <span class="nx">self</span><span class="p">.</span><span class="nx">saveConfig</span><span class="p">()</span>
+
+          <span class="nx">self</span><span class="p">.</span><span class="nx">emit</span> <span class="s">&quot;after init&quot;</span><span class="p">,</span> <span class="s">&quot;framework&quot;</span>
+          <span class="nx">self</span><span class="p">.</span><span class="nx">listen</span><span class="p">()</span>
+        <span class="p">)</span>
 
     <span class="nv">saveConfig: </span><span class="nf">-&gt;</span>
       <span class="nv">self = </span><span class="k">this</span>

@@ -1,6 +1,7 @@
 # 
-exec = require("child_process").exec
 convict = require "convict"
+Q = require 'q'
+exec = Q.denodeify(require("child_process").exec)
 
 module.exports = (env) ->
 
@@ -8,10 +9,21 @@ module.exports = (env) ->
     server: null
     config: null
 
-    init: (app, @server, @config) =>
+    init: (app, @server, config) =>
+      self = this
       conf = convict require("./sispmctl-config-shema")
       conf.load config
       conf.validate()
+      self.config = conf.get ""
+      self.checkBinary()
+
+    checkBinary: ->
+      self = this
+      exec("#{self.config.binary} -v").catch( (error) ->
+        if error.message.match "not found"
+          env.logger.error "sispmctl binary not found. Check your config!"
+      ).done()
+
 
     createActuator: (config) =>
       if config.class is "SispmctlSwitch" 
@@ -24,41 +36,47 @@ module.exports = (env) ->
   class SispmctlSwitch extends env.actuators.PowerSwitch
     config: null
 
-    constructor: (@config) ->
+    constructor: (config) ->
+      self = this
       conf = convict require("./actuator-config-shema")
       conf.load config
       conf.validate()
+      self.config = conf.get ""
 
-      @name = config.name
-      @id = config.id
+      self.name = config.name
+      self.id = config.id
 
-
-    getState: (callback) ->
-      unless @_state?
-        child = exec "#{backend.config.binary} -qng #{@config.outletUnit}", 
-          (error, stdout, stderr) ->
-            env.logger.error stderr if stderr.length isnt 0
-            stdout = stdout.trim()
-            unless error?
-              switch stdout
-                when "1"
-                  @_state = on
-                when "0"
-                  @_state = off
-                else env.logger.error "SispmctlSwitch: unknown state=\"#{stdout}\"!"
-            callback error, @_state
-      else callback null, @_state
+    getState: () ->
+      self = this
+      unless self._state?
+        command = "#{backend.config.binary} -qng #{self.config.outletUnit}"
+        return exec(command).then( (streams) ->
+          stdout = streams[0]
+          stderr = streams[1]
+          stdout = stdout.trim()
+          switch stdout
+            when "1"
+              return self._state = on
+            when "0"
+              return self._state = off
+            else 
+              env.logger.debug stderr
+              throw new Error "SispmctlSwitch: unknown state=\"#{stdout}\"!"
+          )
+      else Q.fcall -> self._state
         
 
-    changeStateTo: (state, resultCallbak) ->
-      thisClass = this
-      if @state is state then resultCallbak true
+    changeStateTo: (state) ->
+      self = this
+      if self.state is state then Q.fcall -> true
       param = (if state then "-o" else "-f")
-      param += " " + @config.outletUnit
-      child = exec "#{backend.config.binary} #{param}", 
-        (error, stdout, stderr) ->
-          env.logger.error stderr if stderr.length isnt 0
-          thisClass._setState(state) unless error?
-          resultCallbak error
+      param += " " + self.config.outletUnit
+      command = "#{backend.config.binary} #{param}"
+      exec(command).then( (streams) ->
+        stdout = streams[0]
+        stderr = streams[1]
+        env.logger.debug stderr if stderr.length isnt 0
+        self._setState(state)
+      )
 
   return backend

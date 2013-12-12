@@ -1,4 +1,5 @@
 __ = require('i18n').__
+Q = require 'q'
 
 module.exports = (env) ->
 
@@ -12,10 +13,11 @@ module.exports = (env) ->
         if actuator?
           #TODO: add parms support
           if actuator.hasAction req.params.actionName
-            fun = actuator[req.params.actionName]
-            fun.apply actuator, [(e) ->
-              res.send 200, e
-            ]
+            actuator[req.params.actionName]().then( ->
+              res.send 200, null
+            ).catch( (e) ->
+              res.send 500, e.message
+            )
           else
             res.send 400, 'illegal action!'
         else res.send 400, 'illegal actuator!'
@@ -27,8 +29,7 @@ module.exports = (env) ->
         try
           server.ruleManager.updateRuleByString ruleId, ruleText
         catch e
-          #console.log e
-          console.log e.stack
+          env.logger.debug e.stack
           error = e
         res.send 200, {success: not error?, error: error?.message}
 
@@ -41,8 +42,7 @@ module.exports = (env) ->
         try
           server.ruleManager.addRuleByString ruleId, ruleText
         catch e
-          #console.log e
-          console.log e.stack
+          env.logger.debug e.stack
           error = e
         res.send 200, {success: not error?, error: error?.message}
 
@@ -52,8 +52,7 @@ module.exports = (env) ->
         try
           server.ruleManager.removeRule ruleId
         catch e
-          #console.log e
-          console.log e.stack
+          env.logger.debug e.stack
           error = e
         res.send 200, {success: not error?, error: error?.message}
 

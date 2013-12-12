@@ -15,7 +15,7 @@
     "eversocket": "0.0.2"
   },
   "peerDependencies": {
-    "pimatic": "~0.1.0"
+    "pimatic": "~0.2.0"
   },
   "engines": {
     "node": ">0.8.x",

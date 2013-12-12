@@ -18,6 +18,7 @@ configFile = if process.env.PIMATIC_CONFIG? then process.env.PIMATIC_CONFIG else
 # Setup the framework
 Framework = (require './lib/framework') env 
 framework = new Framework configFile
-framework.init()
+promise = framework.init()
+promise.done()
 
 module.exports.framework = framework
