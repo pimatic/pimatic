@@ -11,6 +11,7 @@ chrono = require 'chrono-node'
 spawn = require("child_process").spawn
 util = require 'util'
 assert = require 'cassert'
+Q = require 'q'
 
 module.exports = (env) ->
 
@@ -40,12 +41,14 @@ module.exports = (env) ->
       "time"
 
     getSensorValue: (name)->
-      switch name
-        when "time"
-          now = new Date
-          now.setTimezone @config.timezone
-          return now
-        else throw new Error("Clock sensor doesn't provide sensor value \"#{name}\"")
+      self = this
+      Q.fcall ->
+        switch name
+          when "time"
+            now = new Date
+            now.setTimezone self.config.timezone
+            return now
+          else throw new Error("Clock sensor doesn't provide sensor value \"#{name}\"")
 
     canDecide: (predicate) ->
       parsedDate = @parseNaturalTextDate predicate
@@ -55,35 +58,37 @@ module.exports = (env) ->
     # predicate `"Sep 12-13"` is considert to be true if it is the 12th of october, 2013 from 0 to 
     # 23.59 o'clock. If the given predicate is not an valid date string an Error is thrown. 
     isTrue: (id, predicate) ->
+      self = this
       parsedDate = @parseNaturalTextDate predicate
       if parsedDate?
         modifier = @parseNaturalTextModifier predicate
         {second, minute, hour, day, month, dayOfWeek} = @parseDateToCronFormat parsedDate
-        now = @getSensorValue "time"
-        dateObj = parsedDate.start.date @config.timezone
-        return switch modifier
-          when 'exact'
-            ( second is '*' or now.getSeconds() is dateObj.getSeconds() ) and
-            ( minute is '*' or now.getMinutes() is dateObj.getMinutes() ) and
-            ( hour is '*' or now.getHours() is dateObj.getHours() ) and
-            ( day is '*' or now.getDate() is dateObj.getDate() ) and
-            ( month is '*' or now.getMonth() is ddateObj.getMonth() ) and
-            ( dayOfWeek is '*' or now.getDay() is dateObj.getDay() )
-          when 'after'
-            ( second is '*' or now.getSeconds() >= dateObj.getSeconds() ) and
-            ( hour is '*' or now.getHours() >= dateObj.getHours() ) and
-            ( minute is '*' or now.getMinutes() >= dateObj.getMinutes() ) and
-            ( day is '*' or now.getDate() is dateObj.getDate() ) and
-            ( month is '*' or now is ddateObj.getMonth() ) and
-            ( dayOfWeek is '*' or now.getDay() is dateObj.getDay() )
-          when 'before'
-            ( second is '*' or now.getSeconds() <= dateObj.getSeconds() ) and
-            ( hour is '*' or now.getHours() <= dateObj.getHours() ) and
-            ( minute is '*' or now.getMinutes() <= dateObj.getMinutes() ) and
-            ( day is '*' or now.getDate() is dateObj.getDate() ) and
-            ( month is '*' or now is ddateObj.getMonth() ) and
-            ( dayOfWeek is '*' or now.getDay() is dateObj.getDay() )
-          else assert false
+        return self.getSensorValue("time").then( (now)->
+          dateObj = parsedDate.start.date self.config.timezone
+          return switch modifier
+            when 'exact'
+              ( second is '*' or now.getSeconds() is dateObj.getSeconds() ) and
+              ( minute is '*' or now.getMinutes() is dateObj.getMinutes() ) and
+              ( hour is '*' or now.getHours() is dateObj.getHours() ) and
+              ( day is '*' or now.getDate() is dateObj.getDate() ) and
+              ( month is '*' or now.getMonth() is ddateObj.getMonth() ) and
+              ( dayOfWeek is '*' or now.getDay() is dateObj.getDay() )
+            when 'after'
+              ( second is '*' or now.getSeconds() >= dateObj.getSeconds() ) and
+              ( hour is '*' or now.getHours() >= dateObj.getHours() ) and
+              ( minute is '*' or now.getMinutes() >= dateObj.getMinutes() ) and
+              ( day is '*' or now.getDate() is dateObj.getDate() ) and
+              ( month is '*' or now is ddateObj.getMonth() ) and
+              ( dayOfWeek is '*' or now.getDay() is dateObj.getDay() )
+            when 'before'
+              ( second is '*' or now.getSeconds() <= dateObj.getSeconds() ) and
+              ( hour is '*' or now.getHours() <= dateObj.getHours() ) and
+              ( minute is '*' or now.getMinutes() <= dateObj.getMinutes() ) and
+              ( day is '*' or now.getDate() is dateObj.getDate() ) and
+              ( month is '*' or now is ddateObj.getMonth() ) and
+              ( dayOfWeek is '*' or now.getDay() is dateObj.getDay() )
+            else assert false
+        )
       else
         throw new Error "Clock sensor can not decide \"#{predicate}\"!"
 

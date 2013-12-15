@@ -4,6 +4,7 @@ util = require 'util'
 ping = require "net-ping"
 assert = require 'cassert'
 Tail = require('tail').Tail
+Q = require 'q'
 
 module.exports = (env) ->
 
@@ -27,29 +28,28 @@ module.exports = (env) ->
     name: "log-watcher"
 
     constructor: (@id, @file, @lines) ->
-      self = @
-      @tail = new Tail(file)
-
+      self = this
+      self.tail = new Tail(file)
 
     getSensorValue: (name)->
-      self = @
+      self = this
       throw new Error("Illegal sensor value name")
 
     isTrue: (id, predicate) ->
-      self = @
-      return false
+      self = this
+      return Q.fcall -> false
 
     # Removes the notification for an with `notifyWhen` registered predicate. 
     cancelNotify: (id) ->
-      self = @
+      self = this
       if self.listener[id]?
-        @tail.removeListener 'data', self.listener[id]
+        self.tail.removeListener 'data', self.listener[id]
         delete self.listener[id]
 
     notifyWhen: (id, predicate, callback) ->
-      self = @
+      self = this
       found = false
-      for line in @lines
+      for line in self.lines
         do (line) ->
           if not found and predicate.match(new RegExp(line.predicate))
             regex = new RegExp(line.match)

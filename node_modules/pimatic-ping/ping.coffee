@@ -3,6 +3,7 @@ convict = require "convict"
 util = require 'util'
 ping = require "net-ping"
 assert = require 'cassert'
+Q = require 'q'
 
 module.exports = (env) ->
 
@@ -13,11 +14,12 @@ module.exports = (env) ->
 
     # The `init` function just registers the clock actuator.
     init: (app, @server, @config) =>
+      self = this
       # ping package needs root access...
       if process.getuid() != 0
         throw new Error "ping-plugins needs root privilegs. Please restart the framework as root!"
       session = ping.createSession()
-      assert Array.isArray @config.devices
+      assert Array.isArray self.config.devices
       for dc in config.devices
         assert dc.id?
         assert dc.name?
@@ -36,38 +38,38 @@ module.exports = (env) ->
     interval: null
 
     constructor: (@id, @name, @host, @delay, @session) ->
-      self = @
+      self = this
       self.interval = setInterval(self.ping, delay)
 
     getSensorValuesNames: ->
       "present"
 
     getSensorValue: (name)->
-      self = @
+      self = this
       switch name
-        when "present" then return self.present
+        when "present" then return Q.fcall -> self.present
         else throw new Error("Illegal sensor value name")
 
     canDecide: (predicate) ->
-      self = @
+      self = this
       info = self.parsePredicate predicate
       return info?
 
     isTrue: (id, predicate) ->
-      self = @
+      self = this
       info = self.parsePredicate predicate
-      if info? then return info.present is self.present
+      if info? then return Q.fcall -> info.present is self.present
       else throw new Error "NetworkDevicePresents sensor can not decide \"#{predicate}\"!"
 
     # Removes the notification for an with `notifyWhen` registered predicate. 
     cancelNotify: (id) ->
-      self = @
+      self = this
       if self.listener[id]?
         delete self.listener[id]
 
     # Registers notification for time events. 
     notifyWhen: (id, predicate, callback) ->
-      self = @
+      self = this
       info = self.parsePredicate predicate
       if info?
         self.listener[id] =
@@ -77,15 +79,15 @@ module.exports = (env) ->
       else throw new Error "NetworkDevicePresents sensor can not decide \"#{predicate}\"!"
 
     notifyListener: ->
-      self = @
+      self = this
       for id of self.listener
         l = self.listener[id]
         if l.present is self.present
           l.callback()
 
     ping: => 
-      self = @
-      @session.pingHost self.host, (error, target) ->
+      self = this
+      this.session.pingHost self.host, (error, target) ->
         if error
           if self.present isnt false
             self.present = false
@@ -96,7 +98,7 @@ module.exports = (env) ->
             self.notifyListener()
 
     parsePredicate: (predicate) ->
-      self = @
+      self = this
       regExpString = '^(.+)\\s+is\\s+(not\\s+)?present$'
       matches = predicate.match (new RegExp regExpString)
       if matches?

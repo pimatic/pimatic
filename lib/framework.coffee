@@ -100,28 +100,29 @@ module.exports = (env) ->
 
     listen: () ->
       self = this
-      errorFunc = (err) ->
-        msg = "Could not listen on port #{self.config.settings.httpsServer.port}. " + 
-              "Error: #{err.message}. "
-        switch err.message 
-          when "listen EACCES" then  msg += "Are you root?."
-          when "listen EADDRINUSE" then msg += "Is a server already running?"
-          else msg = null
-        if msg?
-          env.logger.error msg
-          env.logger.debug err.stack  
-        else throw err
-        process.exit 1
+      genErrFunc = (serverConfig) -> 
+        return (err) ->
+          msg = "Could not listen on port #{serverConfig.port}. " + 
+                "Error: #{err.message}. "
+          switch err.message 
+            when "listen EACCES" then  msg += "Are you root?."
+            when "listen EADDRINUSE" then msg += "Is a server already running?"
+            else msg = null
+          if msg?
+            env.logger.error msg
+            env.logger.debug err.stack  
+          else throw err
+          process.exit 1
 
       if self.app.httpsServer?
         httpsServerConfig = self.config.settings.httpsServer
-        self.app.httpsServer.on 'error', errorFunc
+        self.app.httpsServer.on 'error', genErrFunc(self.config.settings.httpsServer)
         self.app.httpsServer.listen httpsServerConfig.port
         env.logger.info "listening for https-request on port #{httpsServerConfig.port}..."
 
       if self.app.httpServer?
         httpServerConfig = self.config.settings.httpServer
-        self.app.httpServer.on 'error', errorFunc
+        self.app.httpServer.on 'error', genErrFunc(self.config.settings.httpServer)
         self.app.httpServer.listen httpServerConfig.port
         env.logger.info "listening for http-request on port #{httpServerConfig.port}..."
 
@@ -192,6 +193,9 @@ module.exports = (env) ->
     getActuatorById: (id) ->
       @actuators[id]
 
+    getSensorById: (id) ->
+      @sensors[id]
+
     init: ->
       self = this
 
@@ -221,6 +225,8 @@ module.exports = (env) ->
         # * If a new rule was added then...
         self.ruleManager.on "add", (rule) ->
           # ...add it to the rules Array in the config.json file
+          for r in self.config.rules 
+            if r.id is rule.id then return
           self.config.rules.push 
             id: rule.id
             rule: rule.string
@@ -254,6 +260,7 @@ module.exports = (env) ->
 
     saveConfig: ->
       self = this
-      fs.writeFile self.configFile, JSON.stringify(self.config, null, 2), (err) ->
-        if err? then throw err
-        else env.logger.info "config.json updated"
+      if self.config?
+        fs.writeFile self.configFile, JSON.stringify(self.config, null, 2), (err) ->
+          if err? then throw err
+          else env.logger.info "config.json updated"

@@ -81,7 +81,7 @@ module.exports = (env) ->
           if cb.jsonMsg.code.location is jsonMsg.code.location and 
              cb.jsonMsg.code.devie is jsonMsg.code.device
             self.stateCallbacks.splice i, 1
-        deffered.recect "Request to pilight-daemon timeout"
+        deferred.recect "Request to pilight-daemon timeout"
       , 3000)
 
       self.stateCallbacks.push
@@ -120,15 +120,21 @@ module.exports = (env) ->
               for location, devices of jsonMsg.devices
                 for device in devices
                   id = "#{location}-#{device}"
-                  actuator = self.server.getActuatorById id
-                  if actuator?
-                    actuator._setState if jsonMsg.values.state is 'on' then on else off
-                  for cb, i in self.stateCallbacks
-                    if cb.jsonMsg.code.location is location and 
-                       cb.jsonMsg.code.device is device
-                      clearTimeout cb.timeout
-                      self.stateCallbacks.splice i, 1
-                      cb.deferred.resolve()
+                  switch jsonMsg.type
+                    when 1
+                      actuator = self.server.getActuatorById id
+                      if actuator?
+                        actuator._setState if jsonMsg.values.state is 'on' then on else off
+                      for cb, i in self.stateCallbacks
+                        if cb.jsonMsg.code.location is location and 
+                           cb.jsonMsg.code.device is device
+                          clearTimeout cb.timeout
+                          self.stateCallbacks.splice i, 1
+                          cb.deferred.resolve()
+                    when 3
+                      sensor = self.server.getSensorById id
+                      if sensor?
+                        sensor._setValues jsonMsg.values
 
     onReceiveConfig: (config) ->
       self = this
@@ -140,11 +146,17 @@ module.exports = (env) ->
         for device, deviceProbs of devices
           if typeof deviceProbs is "object"
             id = "#{location}-#{device}"
-            unless (self.server.getActuatorById id)?
-              if deviceProbs.protocol[0].match "_switch"
-                deviceProbs.location = location
-                deviceProbs.device = device
-                self.server.registerActuator new PilightSwitch id, deviceProbs
+            deviceProbs.location = location
+            deviceProbs.device = device
+            switch deviceProbs.type
+              when 1
+                unless (self.server.getActuatorById id)?
+                  self.server.registerActuator new PilightSwitch id, deviceProbs
+              when 3
+                unless (self.server.getSensorById id)?
+                  self.server.registerSensor new PilightTemperatureSensor id, deviceProbs
+              else
+                env.logger.warn "Unimplemented pilight device type: #{deviceProbstype}" 
 
     createActuator: (config) =>
       return false
@@ -172,5 +184,50 @@ module.exports = (env) ->
           state: if state then "on" else "off"
 
       return backend.sendState jsonMsg
+
+  class PilightTemperatureSensor extends env.sensors.TemperatureSensor
+    name: null
+    temperature: null
+    humidity: null
+
+    constructor: (@id, @probs) ->
+      self = this
+      self.name = probs.name
+
+    _setValues: (values) ->
+      self = this
+      if values.temperature?
+        self.temperature = values.temperature/self.probs.settings.decimals
+      if values.humidity?
+        self.humidity = values.humidity/self.probs.settings.decimals
+
+    getSensorValuesNames: ->
+      self = this
+      names = []
+      if self.probs.settings.temperature is 1
+        names.push 'temperature' 
+      if self.probs.settings.humidity is 1
+        names.push 'humidity' 
+      return names
+
+    getSensorValue: (name) ->
+      self = this
+      Q.fcall -> 
+        switch name
+          when 'temperature' then return self.temperature
+          when 'humidity' then return self.humidity
+        throw "Unknown sensor value name"
+
+    canDecide: (predicate) ->
+      return false
+
+    isTrue: (id, predicate) ->
+      throw new Error("no predicate implemented")
+
+    notifyWhen: (id, predicate, callback) ->
+      throw new Error("no predicates implemented")
+
+    cancelNotify: (id) ->
+      throw new Error("no predicates implemented")
 
   return backend

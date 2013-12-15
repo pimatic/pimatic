@@ -23,7 +23,7 @@ describe "RuleManager", ->
       canDecide: (predicate) -> 
         assert predicate is "predicate 1"
         return true
-      isTrue: (id, predicate) -> false
+      isTrue: (id, predicate) -> Q.fcall -> false
       notifyWhen: (id, predicate, callback) -> true
       cancelNotify: (id) -> true
 
@@ -40,7 +40,8 @@ describe "RuleManager", ->
 
   describe '#parseRuleString()', ->
 
-    it 'should parse valid rule"', ->
-      ruleManager.parseRuleString "test1", "if predicate 1 then action 1"
+    it 'should parse valid rule"', (done) ->
+      ruleManager.parseRuleString("test1", "if predicate 1 then action 1")
+        .then(done).done()
 
 
