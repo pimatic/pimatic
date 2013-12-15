@@ -79,7 +79,6 @@ module.exports = (env) ->
         io = socketIo.listen webServer, {logger: env.logger}
         # When a new client connects
         io.sockets.on 'connection', (socket) ->
-          cleanUpFunc = []
 
           for item in self.config.items 
             do (item) ->
@@ -90,7 +89,7 @@ module.exports = (env) ->
                   actuator.getState().then( (state) ->
                     self.emitSwitchState socket, actuator, state
                   ).catch( (error) ->
-                    env.logger.error error
+                    env.logger.error error.message
                     env.logger.debug error.stack 
                   )
                   # * Then forward following state event to the client
@@ -107,10 +106,18 @@ module.exports = (env) ->
           server.ruleManager.on "remove", removeRuleListener = (rule) ->
             self.emitRuleUpdate socket, "remove", rule
 
+          memoryTransport = env.logger.transports.memory
+          memoryTransport.on 'log', logListener = (entry)->
+            socket.emit 'log', entry
+
           socket.on 'close', -> 
             server.ruleManager.removeListener "update", updateRuleListener
             server.ruleManager.removeListener "add", addRuleListener 
             server.ruleManager.removeListener "update", removeRuleListener
+            memoryTransport.removeListener 'log', logListener
+
+
+
 
     getItemsWithData: () ->
       self = this
@@ -141,7 +148,7 @@ module.exports = (env) ->
             item.state = state
             return item
           ).catch( (error) ->
-            env.logger.error error
+            env.logger.error error.message
             env.logger.debug error.stack
             return item
           ) 

@@ -68,11 +68,11 @@ module.exports = (env) ->
 
     changeStateTo: (state) ->
       self = this
-      if self.state is state then Q.fcall -> true
+      if self.state is state then return Q.fcall -> true
       param = (if state then "-o" else "-f")
       param += " " + self.config.outletUnit
       command = "#{backend.config.binary} #{param}"
-      exec(command).then( (streams) ->
+      return exec(command).then( (streams) ->
         stdout = streams[0]
         stderr = streams[1]
         env.logger.debug stderr if stderr.length isnt 0

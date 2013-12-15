@@ -1,0 +1,19 @@
+    //- Rule edit page 
+div#edit-rule(data-role='page')
+  div(data-theme='a', data-role='header', data-position='fixed')
+    h3.edit=__('Edit rule')
+    h3.add=__('Add new rule')
+  div(data-role='content')
+    form#edit-rule-form
+      input#edit-rule-id(type="text", placeholder="id")
+      textarea#edit-rule-text(name="", placeholder="if ... then ...")
+      fieldset.ui-grid-a
+        div.ui-block-a
+          a#edit-rule-cancel(data-icon="close", data-transition='slide', data-direction="reverse"
+                             data-role="button", href='#index')=__('Cancel')
+        div.ui-block-b
+          input#edit-rule-save(data-icon="check", data-theme="a",value=__('Save'), type="submit")
+      div#edit-rule-advanced
+        span=__('Advanced Options:') 
+        a#edit-rule-remove(data-icon="delete", data-transition='slide', data-direction="reverse"
+                               data-role="button", href='#index')=__('Delete this rule')

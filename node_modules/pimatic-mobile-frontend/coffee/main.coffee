@@ -1,5 +1,6 @@
 actuators = []
 rules = []
+socket = null
 
 $(document).on "pagecreate", '#index', (event) ->
   $.get "/data.json", (data) ->
@@ -28,6 +29,9 @@ $(document).on "pageinit", '#index', (event) ->
   socket.on "rule-add", (rule) -> addRule rule
   socket.on "rule-update", (rule) -> updateRule rule
   socket.on "rule-remove", (rule) -> removeRule rule
+
+  socket.on 'log', (entry) -> 
+    console.log entry
 
   $('#index #items').on "change", ".switch",(event, ui) ->
     actuatorId = $(this).data('actuator-id')
@@ -79,6 +83,14 @@ $(document).on "pageinit", '#edit-rule', (event) ->
         $('#edit-rule h3.edit').show()
         $('#edit-rule-id').textinput('disable')
         $('#edit-rule-advanced').show()
+
+
+$(document).on "pageinit", '#log', (event) ->
+  $.get "/api/messages"  , (data) ->
+    for entry in data
+      addLogMessage entry
+    socket.on 'log', (entry) -> 
+      addLogMessage entry
 
 $.ajaxSetup timeout: 7000 #ms
 
@@ -155,3 +167,10 @@ voiceCallback = (matches) ->
   , (data) ->
     device.showToast data
     $("#talk").blur()
+
+addLogMessage = (entry) ->
+  li = $ $('#log-message-template').html()
+  li.find('.level').text(entry.level).addClass(entry.level)
+  li.find('.msg').text(entry.msg)
+  $('#log-messages').append li
+  $('#log-messages').listview('refresh') 

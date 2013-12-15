@@ -1,0 +1,41 @@
+script#switch-template(type='text/template')
+  li(data-role="fieldcontain")
+    label
+    select.switch(data-role="slider")
+      option(value="off")=__('Off')
+      option(value="on")=__('On')
+script#actuator-template(type='text/template')     
+  li(data-role="fieldcontain")
+    label
+    | 
+    span.error
+script#rule-template(type='text/template')
+  li
+    a.rule(data-transition='slide', href='#edit-rule')
+      span.if=__('if')
+      | 
+      span.condition
+      | 
+      span.then=__('then')
+      | 
+      span.action
+//- Actuators and rules page
+div#index(data-role='page')
+  div(data-theme='a', data-role='header', data-position='fixed')
+    h3 pimatic
+    a#nav-button(href='#nav-panel', data-icon='bars', data-iconpos='notext')=__('Menu')
+    a#talk.ui-btn-right(data-role='button', href='#outlet-control', 
+                style='display: none;')=__('Speak')
+  div(data-role='content')
+    ul#items(data-role='listview', data-inset='true')
+      li(data-role='list-divider')=__('Devices')
+    ul#rules(data-role='listview', data-inset='true')
+      li(data-role='list-divider')=__('Rules')
+      li#add-rule()
+        a(data-transition='slide', href='#edit-rule')=__('Add a new rule...')
+  div#nav-panel(data-role='panel', data-position='left', data-position-fixed='false', data-display='reveal', data-theme='a')
+    ul.nav-search(data-role='listview', data-theme='a', data-divider-theme='a', style='margin-top: -16px;')
+      li(data-icon='delete', data-theme='f')
+        a(href='#', data-rel='close')=__("Close menu")
+      li(data-theme='f')
+        a(href='#log')=__('Log') 

@@ -13,59 +13,7 @@ html(manifest='application.manifest')
     script(src='js/jquery.mobile-1.3.2.min.js')  
     script(src='socket.io/socket.io.js')
     script(src='js/main.js')
-    script#switch-template(type='text/template')
-      li(data-role="fieldcontain")
-        label
-        select.switch(data-role="slider")
-          option(value="off")=__('Off')
-          option(value="on")=__('On')
-    script#actuator-template(type='text/template')     
-      li(data-role="fieldcontain")
-        label
-        | 
-        span.error
-    script#rule-template(type='text/template')
-      li
-        a.rule(data-transition='slide', href='#edit-rule')
-          span.if=__('if')
-          | 
-          span.condition
-          | 
-          span.then=__('then')
-          | 
-          span.action
-        
   body
-    //- Actuators and rules page
-    div#index(data-role='page')
-      div(data-theme='a', data-role='header', data-position='fixed')
-        a#talk.ui-btn-right(data-role='button', href='#outlet-control', 
-                            style='display: none;')=__('Speak')
-        h3 pimatic
-      div(data-role='content')
-        ul#items(data-role='listview', data-inset='true')
-          li(data-role='list-divider')=__('Devices')
-        ul#rules(data-role='listview', data-inset='true')
-          li(data-role='list-divider')=__('Rules')
-          li#add-rule()
-            a(data-transition='slide', href='#edit-rule')=__('Add a new rule...')
-    //- Rule edit page 
-    div#edit-rule(data-role='page')
-      div(data-theme='a', data-role='header', data-position='fixed')
-        h3.edit=__('Edit rule')
-        h3.add=__('Add new rule')
-      div(data-role='content')
-        form#edit-rule-form
-          input#edit-rule-id(type="text", placeholder="id")
-          textarea#edit-rule-text(name="", placeholder="if ... then ...")
-          fieldset.ui-grid-a
-            div.ui-block-a
-              a#edit-rule-cancel(data-icon="close", data-transition='slide', data-direction="reverse"
-                                 data-role="button", href='#index')=__('Cancel')
-            div.ui-block-b
-              input#edit-rule-save(data-icon="check", data-theme="a",value=__('Save'), type="submit")
-          div#edit-rule-advanced
-            span=__('Advanced Options:') 
-            a#edit-rule-remove(data-icon="delete", data-transition='slide', data-direction="reverse"
-                                   data-role="button", href='#index')=__('Delete this rule')
-
+    include index-page
+    include rule-edit-page
+    include log-page

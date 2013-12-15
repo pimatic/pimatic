@@ -27,5 +27,10 @@
 	"Advanced Options:": "Advanced Options:",
 	"would log \"%s\"": "would log \"%s\"",
 	"log: \"%s\"": "log: \"%s\"",
-	"Devices": "Devices"
+	"Devices": "Devices",
+	"Menu": "Menu",
+	"Close menu": "Close menu",
+	"Log": "Log",
+	"Log messages": "Log messages",
+	"Back": "Back"
 }

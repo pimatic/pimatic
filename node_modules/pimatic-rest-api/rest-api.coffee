@@ -16,6 +16,8 @@ module.exports = (env) ->
             actuator[req.params.actionName]().then( ->
               res.send 200, null
             ).catch( (e) ->
+              env.logger.error e.message
+              env.logger.debug e.stack
               res.send 500, e.message
             )
           else
@@ -29,6 +31,7 @@ module.exports = (env) ->
         try
           server.ruleManager.updateRuleByString ruleId, ruleText
         catch e
+          env.logger.error e.message
           env.logger.debug e.stack
           error = e
         res.send 200, {success: not error?, error: error?.message}
@@ -55,6 +58,10 @@ module.exports = (env) ->
           env.logger.debug e.stack
           error = e
         res.send 200, {success: not error?, error: error?.message}
+
+      app.get "/api/messages", (req, res, next) ->
+        memoryTransport = env.logger.transports.memory
+        res.send 200, memoryTransport.getBuffer()
 
         
   return new RestFrontend

@@ -121,7 +121,6 @@ module.exports = (env) ->
                 for device in devices
                   id = "#{location}-#{device}"
                   actuator = self.server.getActuatorById id
-                  env.logger.info id
                   if actuator?
                     actuator._setState if jsonMsg.values.state is 'on' then on else off
                   for cb, i in self.stateCallbacks

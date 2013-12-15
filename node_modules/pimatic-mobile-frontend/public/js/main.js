@@ -1,8 +1,10 @@
-var actuators, addActuator, addRule, addSwitch, removeRule, rules, updateRule, voiceCallback;
+var actuators, addActuator, addLogMessage, addRule, addSwitch, removeRule, rules, socket, updateRule, voiceCallback;
 
 actuators = [];
 
 rules = [];
+
+socket = null;
 
 $(document).on("pagecreate", '#index', function(event) {
   return $.get("/data.json", function(data) {
@@ -31,7 +33,6 @@ $(document).on("pagecreate", '#index', function(event) {
 });
 
 $(document).on("pageinit", '#index', function(event) {
-  var socket;
   if (typeof device !== "undefined" && device !== null) {
     $("#talk").show().bind("vclick", function(event, ui) {
       return device.startVoiceRecognition("voiceCallback");
@@ -53,6 +54,9 @@ $(document).on("pageinit", '#index', function(event) {
   });
   socket.on("rule-remove", function(rule) {
     return removeRule(rule);
+  });
+  socket.on('log', function(entry) {
+    return console.log(entry);
   });
   $('#index #items').on("change", ".switch", function(event, ui) {
     var actuatorAction, actuatorId;
@@ -129,6 +133,19 @@ $(document).on("pageinit", '#edit-rule', function(event) {
         $('#edit-rule-id').textinput('disable');
         return $('#edit-rule-advanced').show();
     }
+  });
+});
+
+$(document).on("pageinit", '#log', function(event) {
+  return $.get("/api/messages", function(data) {
+    var entry, _i, _len;
+    for (_i = 0, _len = data.length; _i < _len; _i++) {
+      entry = data[_i];
+      addLogMessage(entry);
+    }
+    return socket.on('log', function(entry) {
+      return addLogMessage(entry);
+    });
   });
 });
 
@@ -220,4 +237,13 @@ voiceCallback = function(matches) {
     device.showToast(data);
     return $("#talk").blur();
   });
+};
+
+addLogMessage = function(entry) {
+  var li;
+  li = $($('#log-message-template').html());
+  li.find('.level').text(entry.level).addClass(entry.level);
+  li.find('.msg').text(entry.msg);
+  $('#log-messages').append(li);
+  return $('#log-messages').listview('refresh');
 };
