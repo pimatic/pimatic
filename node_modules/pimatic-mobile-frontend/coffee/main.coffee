@@ -6,9 +6,10 @@ $(document).on "pagecreate", '#index', (event) ->
   $.get "/data.json", (data) ->
     for item in data.items
       if item.template?
-        if item.template is "switch"
-          addSwitch(item)
-        else addActuator(item)
+        switch item.template 
+          when "switch" then addSwitch(item)
+          when "temperature" then addTemperature(item)
+          else addActuator(item)
       else addActuator(item)
 
 
@@ -135,6 +136,14 @@ addActuator = (actuator) ->
   li.find('label').text(actuator.name)
   if actuator.error?
     li.find('.error').text(actuator.error)
+  $('#items').append li
+  $('#items').listview('refresh')
+
+addTemperature = (sensor) ->
+  li = $ $('#temperature-template').html()
+  li.find('label').text(sensor.name)
+  li.find('.temperature').text(sensor.values.temperature)
+  li.find('.humidity').text(sensor.values.humidity)
   $('#items').append li
   $('#items').listview('refresh')
 

@@ -127,9 +127,11 @@ module.exports = (env) ->
         switch item.type
           when "actuator"
             items.push self.getActuatorWithData item
+          when "sensor"
+            items.push self.getSensorWithData item
           else
             errorMsg = "Unknown item type \"#{item.type}\""
-            env.logger.error 
+            env.logger.error errorMsg
       return Q.all items
 
     getActuatorWithData: (item) ->
@@ -164,6 +166,43 @@ module.exports = (env) ->
           state: null,
           error: errorMsg
 
+    getSensorWithData: (item) ->
+      self = this
+      assert item.id?
+      sensor = self.server.getSensorById item.id
+      if sensor?
+        item =
+          type: "sensor"
+          id: sensor.id
+          name: sensor.name
+          values: {}
+        if sensor instanceof env.sensors.TemperatureSensor
+          item.template = "temperature"
+          nameValues = []
+          for name in sensor.getSensorValuesNames()
+            do (name) ->
+              nameValues.push sensor.getSensorValue(name).then (value) ->
+                return name: name, value: value
+          return Q.all(nameValues).then( (nameValues)->
+            for nameValue in nameValues
+              item.values[nameValue.name] = nameValue.value
+            return item
+          ).catch( (error) ->
+            env.logger.error error.message
+            env.logger.debug error.stack
+            return item
+          ) 
+        else 
+          return Q.fcall -> item
+      else
+        errorMsg = "No sensor to display with id \"#{item.id}\" found"
+        env.logger.error errorMsg
+        return Q.fcall ->
+          type: "sensor"
+          id: item.id
+          name: "Unknown"
+          values: null,
+          error: errorMsg
 
     emitSwitchState: (socket, actuator, state) ->
       socket.emit "switch-status",

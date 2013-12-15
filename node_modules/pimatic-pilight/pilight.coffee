@@ -134,7 +134,7 @@ module.exports = (env) ->
                     when 3
                       sensor = self.server.getSensorById id
                       if sensor?
-                        sensor._setValues jsonMsg.values
+                        sensor.setValues jsonMsg.values
 
     onReceiveConfig: (config) ->
       self = this
@@ -193,13 +193,16 @@ module.exports = (env) ->
     constructor: (@id, @probs) ->
       self = this
       self.name = probs.name
+      self.setValues
+        temperature: self.probs.temperature
+        humidity: self.probs.humidity
 
-    _setValues: (values) ->
+    setValues: (values) ->
       self = this
       if values.temperature?
-        self.temperature = values.temperature/self.probs.settings.decimals
+        self.temperature = values.temperature/(self.probs.settings.decimals*10)
       if values.humidity?
-        self.humidity = values.humidity/self.probs.settings.decimals
+        self.humidity = values.humidity/(self.probs.settings.decimals*10)
 
     getSensorValuesNames: ->
       self = this

@@ -1,4 +1,4 @@
-var actuators, addActuator, addLogMessage, addRule, addSwitch, removeRule, rules, socket, updateRule, voiceCallback;
+var actuators, addActuator, addLogMessage, addRule, addSwitch, addTemperature, removeRule, rules, socket, updateRule, voiceCallback;
 
 actuators = [];
 
@@ -13,10 +13,15 @@ $(document).on("pagecreate", '#index', function(event) {
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       item = _ref[_i];
       if (item.template != null) {
-        if (item.template === "switch") {
-          addSwitch(item);
-        } else {
-          addActuator(item);
+        switch (item.template) {
+          case "switch":
+            addSwitch(item);
+            break;
+          case "temperature":
+            addTemperature(item);
+            break;
+          default:
+            addActuator(item);
         }
       } else {
         addActuator(item);
@@ -199,6 +204,16 @@ addActuator = function(actuator) {
   if (actuator.error != null) {
     li.find('.error').text(actuator.error);
   }
+  $('#items').append(li);
+  return $('#items').listview('refresh');
+};
+
+addTemperature = function(sensor) {
+  var li;
+  li = $($('#temperature-template').html());
+  li.find('label').text(sensor.name);
+  li.find('.temperature').text(sensor.values.temperature);
+  li.find('.humidity').text(sensor.values.humidity);
   $('#items').append(li);
   return $('#items').listview('refresh');
 };

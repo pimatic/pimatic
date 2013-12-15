@@ -9,16 +9,14 @@ script#actuator-template(type='text/template')
     label
     | 
     span.error
-script#rule-template(type='text/template')
-  li
-    a.rule(data-transition='slide', href='#edit-rule')
-      span.if=__('if')
-      | 
-      span.condition
-      | 
-      span.then=__('then')
-      | 
-      span.action
+script#temperature-template(type='text/template')
+  li(data-role="fieldcontain")
+    label
+    | 
+    span.temperature
+    | 
+    span.humidity
+
 //- Actuators and rules page
 div#index(data-role='page')
   div(data-theme='a', data-role='header', data-position='fixed')

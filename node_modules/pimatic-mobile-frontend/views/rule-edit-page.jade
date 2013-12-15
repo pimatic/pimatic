@@ -1,3 +1,13 @@
+script#rule-template(type='text/template')
+  li
+    a.rule(data-transition='slide', href='#edit-rule')
+      span.if=__('if')
+      | 
+      span.condition
+      | 
+      span.then=__('then')
+      | 
+      span.action
     //- Rule edit page 
 div#edit-rule(data-role='page')
   div(data-theme='a', data-role='header', data-position='fixed')
