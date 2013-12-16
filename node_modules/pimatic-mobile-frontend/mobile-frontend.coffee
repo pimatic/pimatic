@@ -82,20 +82,11 @@ module.exports = (env) ->
 
           for item in self.config.items 
             do (item) ->
-              if item.type is "actuator" 
-                actuator = self.server.getActuatorById item.id
-                if actuator?
-                  # * First time push the state to the client
-                  actuator.getState().then( (state) ->
-                    self.emitSwitchState socket, actuator, state
-                  ).catch( (error) ->
-                    env.logger.error error.message
-                    env.logger.debug error.stack 
-                  )
-                  # * Then forward following state event to the client
-                  actuator.on "state", stateListener = (state) ->
-                    self.emitSwitchState socket, actuator, state
-                  socket.on 'close', -> actuator.removeListener "state", stateListener 
+              switch item.type
+                when "actuator" 
+                  self.addActiatorNotify socket, item
+                when 'sensor'
+                  self.addSensorNotify socket, item
               
           server.ruleManager.on "add", addRuleListener = (rule) ->
             self.emitRuleUpdate socket, "add", rule
@@ -117,6 +108,32 @@ module.exports = (env) ->
             memoryTransport.removeListener 'log', logListener
 
 
+    addActiatorNotify: (socket, item) ->
+      actuator = self.server.getActuatorById item.id
+      if actuator?
+        # * First time push the state to the client
+        actuator.getState().then( (state) ->
+          self.emitSwitchState socket, actuator, state
+        ).catch( (error) ->
+          env.logger.error error.message
+          env.logger.debug error.stack 
+        )
+        # * Then forward following state event to the client
+        actuator.on "state", stateListener = (state) ->
+          self.emitSwitchState socket, actuator, state
+        socket.on 'close', -> actuator.removeListener "state", stateListener
+
+    addSensorNotify: (socket, item) ->
+      sensor = self.server.getSensorById item.id
+      if sensor?
+        names = sensor.getSensorValuesNames()
+        for name in names 
+          do (name) ->
+            console.log name
+            sensor.on name, (value) ->
+              console.log name
+              self.emitSensorValue socket, sensor, name, value
+            socket.on 'close', -> sensor.removeListener name, valueListener
 
 
     getItemsWithData: () ->
@@ -214,5 +231,11 @@ module.exports = (env) ->
         id: rule.id
         condition: rule.orgCondition
         action: rule.action
+
+    emitSensorValue: (socket, sensor, name, value) ->
+      socket.emit "sensor-value",
+        id: sensor.id
+        name: name
+        value: value
 
   return new MobileFrontend

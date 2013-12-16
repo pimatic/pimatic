@@ -48,6 +48,6 @@ describe "pimatic", ->
       http = require 'http'
       http.get("http://localhost:#{config.settings.httpServer.port}", (res) ->
         assert res.statusCode is 401 # is Unauthorized
-        done();
+        done()
       ).on "error", (e) ->
         throw e

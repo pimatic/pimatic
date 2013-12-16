@@ -1,6 +1,8 @@
-var actuators, addActuator, addLogMessage, addRule, addSwitch, addTemperature, removeRule, rules, socket, updateRule, voiceCallback;
+var actuators, addActuator, addLogMessage, addRule, addSwitch, addTemperature, removeRule, rules, sensors, socket, updateRule, updateSensorValue, voiceCallback;
 
 actuators = [];
+
+sensors = [];
 
 rules = [];
 
@@ -50,6 +52,9 @@ $(document).on("pageinit", '#index', function(event) {
       value = (data.state ? "on" : "off");
       return $("#flip-" + data.id).val(value).slider('refresh');
     }
+  });
+  socket.on("sensor-value", function(data) {
+    return updateSensorValue(data);
   });
   socket.on("rule-add", function(rule) {
     return addRule(rule);
@@ -210,12 +215,20 @@ addActuator = function(actuator) {
 
 addTemperature = function(sensor) {
   var li;
+  sensors[sensor.id] = sensor;
   li = $($('#temperature-template').html());
+  li.attr('id', "sensor-" + sensor.id);
   li.find('label').text(sensor.name);
-  li.find('.temperature').text(sensor.values.temperature);
-  li.find('.humidity').text(sensor.values.humidity);
+  li.find('.temperature .val').text(sensor.values.temperature);
+  li.find('.humidity .val').text(sensor.values.humidity);
   $('#items').append(li);
   return $('#items').listview('refresh');
+};
+
+updateSensorValue = function(sensorValue) {
+  var li;
+  li = $("\#sensor-" + sensorValue.id);
+  return li.find("." + sensorValue.name + " .val").text(sensorValue.value);
 };
 
 addRule = function(rule) {

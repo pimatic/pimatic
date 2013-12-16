@@ -6,8 +6,8 @@ util = require("util")
 class MemoryTransport extends winston.Transport
 
   __constructor: (options) ->
-	  self = this
-	  Transport.call self, options
+    self = this
+    Transport.call self, options
 
   getBuffer: ->
     self = this
@@ -17,10 +17,10 @@ MemoryTransport::name = "memory"
 MemoryTransport::buffer = []
 MemoryTransport::log = (level, msg, meta, callback) ->
   self = this
-  msg = 	
-  	level: level
-  	msg: msg
-  	meta: meta
+  msg =   
+    level: level
+    msg: msg
+    meta: meta
   self.buffer.push msg
   self.emit "logged"
   self.emit "log", msg

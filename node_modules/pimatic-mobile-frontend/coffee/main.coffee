@@ -1,4 +1,5 @@
 actuators = []
+sensors = []
 rules = []
 socket = null
 
@@ -26,6 +27,8 @@ $(document).on "pageinit", '#index', (event) ->
     if data.state?
       value = (if data.state then "on" else "off")
       $("#flip-#{data.id}").val(value).slider('refresh')
+
+  socket.on "sensor-value", (data) -> updateSensorValue data
 
   socket.on "rule-add", (rule) -> addRule rule
   socket.on "rule-update", (rule) -> updateRule rule
@@ -140,13 +143,18 @@ addActuator = (actuator) ->
   $('#items').listview('refresh')
 
 addTemperature = (sensor) ->
+  sensors[sensor.id] = sensor
   li = $ $('#temperature-template').html()
+  li.attr('id', "sensor-#{sensor.id}")     
   li.find('label').text(sensor.name)
-  li.find('.temperature').text(sensor.values.temperature)
-  li.find('.humidity').text(sensor.values.humidity)
+  li.find('.temperature .val').text(sensor.values.temperature)
+  li.find('.humidity .val').text(sensor.values.humidity)
   $('#items').append li
   $('#items').listview('refresh')
 
+updateSensorValue = (sensorValue) ->
+  li = $("\#sensor-#{sensorValue.id}")
+  li.find(".#{sensorValue.name} .val").text(sensorValue.value)
 
 addRule = (rule) ->
   rules[rule.id] = rule 

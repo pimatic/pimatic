@@ -12,7 +12,6 @@ div.ui-slider-switch {
     box-shadow: none ;
 }
 
-
 .ui-btn, .ui-btn a, .ui-btn a:hover, .ui-li {
   font-weight: normal;
 }
@@ -31,6 +30,14 @@ fieldset .ui-block-a .ui-btn{
 }
 fieldset .ui-block-b .ui-btn{
     margin-right: 0px;
+}
+
+#items .values{
+  float: right;
+}
+
+#items .values > span{
+  margin-left: 0.5em;
 }
 
 #log-messages li {

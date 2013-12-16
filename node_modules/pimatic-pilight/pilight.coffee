@@ -201,8 +201,10 @@ module.exports = (env) ->
       self = this
       if values.temperature?
         self.temperature = values.temperature/(self.probs.settings.decimals*10)
+        self.emit "temperature", self.temperature
       if values.humidity?
         self.humidity = values.humidity/(self.probs.settings.decimals*10)
+        self.emit "temperature", self.humidity
 
     getSensorValuesNames: ->
       self = this
@@ -219,7 +221,7 @@ module.exports = (env) ->
         switch name
           when 'temperature' then return self.temperature
           when 'humidity' then return self.humidity
-        throw "Unknown sensor value name"
+        throw new Error "Unknown sensor value name"
 
     canDecide: (predicate) ->
       return false

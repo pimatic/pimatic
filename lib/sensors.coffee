@@ -1,6 +1,6 @@
 # #Sensor
 # A sensor can decide predicates. 
-class Sensor
+class Sensor extends require('events').EventEmitter
   type: 'unknwon'
   name: null
 

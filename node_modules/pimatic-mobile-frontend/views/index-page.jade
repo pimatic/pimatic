@@ -13,9 +13,13 @@ script#temperature-template(type='text/template')
   li(data-role="fieldcontain")
     label
     | 
-    span.temperature
-    | 
-    span.humidity
+    span.values
+      span.temperature
+        span.val
+        span.unit °C
+      span.humidity
+        span.val
+        span.unit %
 
 //- Actuators and rules page
 div#index(data-role='page')

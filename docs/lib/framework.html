@@ -87,28 +87,29 @@
 
     <span class="nv">listen: </span><span class="p">()</span> <span class="nf">-&gt;</span>
       <span class="nv">self = </span><span class="k">this</span>
-      <span class="nv">errorFunc = </span><span class="nf">(err) -&gt;</span>
-        <span class="nv">msg = </span><span class="s">&quot;Could not listen on port </span><span class="si">#{</span><span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">httpsServer</span><span class="p">.</span><span class="nx">port</span><span class="si">}</span><span class="s">. &quot;</span> <span class="o">+</span> 
-              <span class="s">&quot;Error: </span><span class="si">#{</span><span class="nx">err</span><span class="p">.</span><span class="nx">message</span><span class="si">}</span><span class="s">. &quot;</span>
-        <span class="k">switch</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span> 
-          <span class="k">when</span> <span class="s">&quot;listen EACCES&quot;</span> <span class="k">then</span>  <span class="nx">msg</span> <span class="o">+=</span> <span class="s">&quot;Are you root?.&quot;</span>
-          <span class="k">when</span> <span class="s">&quot;listen EADDRINUSE&quot;</span> <span class="k">then</span> <span class="nx">msg</span> <span class="o">+=</span> <span class="s">&quot;Is a server already running?&quot;</span>
-          <span class="k">else</span> <span class="nv">msg = </span><span class="kc">null</span>
-        <span class="k">if</span> <span class="nx">msg</span><span class="o">?</span>
-          <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="nx">msg</span>
-          <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">debug</span> <span class="nx">err</span><span class="p">.</span><span class="nx">stack</span>  
-        <span class="k">else</span> <span class="k">throw</span> <span class="nx">err</span>
-        <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span> <span class="mi">1</span>
+      <span class="nv">genErrFunc = </span><span class="nf">(serverConfig) -&gt;</span> 
+        <span class="k">return</span> <span class="nf">(err) -&gt;</span>
+          <span class="nv">msg = </span><span class="s">&quot;Could not listen on port </span><span class="si">#{</span><span class="nx">serverConfig</span><span class="p">.</span><span class="nx">port</span><span class="si">}</span><span class="s">. &quot;</span> <span class="o">+</span> 
+                <span class="s">&quot;Error: </span><span class="si">#{</span><span class="nx">err</span><span class="p">.</span><span class="nx">message</span><span class="si">}</span><span class="s">. &quot;</span>
+          <span class="k">switch</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span> 
+            <span class="k">when</span> <span class="s">&quot;listen EACCES&quot;</span> <span class="k">then</span>  <span class="nx">msg</span> <span class="o">+=</span> <span class="s">&quot;Are you root?.&quot;</span>
+            <span class="k">when</span> <span class="s">&quot;listen EADDRINUSE&quot;</span> <span class="k">then</span> <span class="nx">msg</span> <span class="o">+=</span> <span class="s">&quot;Is a server already running?&quot;</span>
+            <span class="k">else</span> <span class="nv">msg = </span><span class="kc">null</span>
+          <span class="k">if</span> <span class="nx">msg</span><span class="o">?</span>
+            <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="nx">msg</span>
+            <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">debug</span> <span class="nx">err</span><span class="p">.</span><span class="nx">stack</span>  
+          <span class="k">else</span> <span class="k">throw</span> <span class="nx">err</span>
+          <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span> <span class="mi">1</span>
 
       <span class="k">if</span> <span class="nx">self</span><span class="p">.</span><span class="nx">app</span><span class="p">.</span><span class="nx">httpsServer</span><span class="o">?</span>
         <span class="nv">httpsServerConfig = </span><span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">httpsServer</span>
-        <span class="nx">self</span><span class="p">.</span><span class="nx">app</span><span class="p">.</span><span class="nx">httpsServer</span><span class="p">.</span><span class="nx">on</span> <span class="s">&#39;error&#39;</span><span class="p">,</span> <span class="nx">errorFunc</span>
+        <span class="nx">self</span><span class="p">.</span><span class="nx">app</span><span class="p">.</span><span class="nx">httpsServer</span><span class="p">.</span><span class="nx">on</span> <span class="s">&#39;error&#39;</span><span class="p">,</span> <span class="nx">genErrFunc</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">httpsServer</span><span class="p">)</span>
         <span class="nx">self</span><span class="p">.</span><span class="nx">app</span><span class="p">.</span><span class="nx">httpsServer</span><span class="p">.</span><span class="nx">listen</span> <span class="nx">httpsServerConfig</span><span class="p">.</span><span class="nx">port</span>
         <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="s">&quot;listening for https-request on port </span><span class="si">#{</span><span class="nx">httpsServerConfig</span><span class="p">.</span><span class="nx">port</span><span class="si">}</span><span class="s">...&quot;</span>
 
       <span class="k">if</span> <span class="nx">self</span><span class="p">.</span><span class="nx">app</span><span class="p">.</span><span class="nx">httpServer</span><span class="o">?</span>
         <span class="nv">httpServerConfig = </span><span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">httpServer</span>
-        <span class="nx">self</span><span class="p">.</span><span class="nx">app</span><span class="p">.</span><span class="nx">httpServer</span><span class="p">.</span><span class="nx">on</span> <span class="s">&#39;error&#39;</span><span class="p">,</span> <span class="nx">errorFunc</span>
+        <span class="nx">self</span><span class="p">.</span><span class="nx">app</span><span class="p">.</span><span class="nx">httpServer</span><span class="p">.</span><span class="nx">on</span> <span class="s">&#39;error&#39;</span><span class="p">,</span> <span class="nx">genErrFunc</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">httpServer</span><span class="p">)</span>
         <span class="nx">self</span><span class="p">.</span><span class="nx">app</span><span class="p">.</span><span class="nx">httpServer</span><span class="p">.</span><span class="nx">listen</span> <span class="nx">httpServerConfig</span><span class="p">.</span><span class="nx">port</span>
         <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="s">&quot;listening for http-request on port </span><span class="si">#{</span><span class="nx">httpServerConfig</span><span class="p">.</span><span class="nx">port</span><span class="si">}</span><span class="s">...&quot;</span>
 
@@ -179,6 +180,9 @@
     <span class="nv">getActuatorById: </span><span class="nf">(id) -&gt;</span>
       <span class="nx">@actuators</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span>
 
+    <span class="nv">getSensorById: </span><span class="nf">(id) -&gt;</span>
+      <span class="nx">@sensors</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span>
+
     <span class="nv">init: </span><span class="nf">-&gt;</span>
       <span class="nv">self = </span><span class="k">this</span>
 
@@ -205,7 +209,9 @@
 
 <ul>
 <li>If a new rule was added then...</li>
-</ul></div></div><div class="code"><div class="wrapper">        <span class="nx">self</span><span class="p">.</span><span class="nx">ruleManager</span><span class="p">.</span><span class="nx">on</span> <span class="s">&quot;add&quot;</span><span class="p">,</span> <span class="nf">(rule) -&gt;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>...add it to the rules Array in the config.json file</p></div></div><div class="code"><div class="wrapper">          <span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">rules</span><span class="p">.</span><span class="nx">push</span> 
+</ul></div></div><div class="code"><div class="wrapper">        <span class="nx">self</span><span class="p">.</span><span class="nx">ruleManager</span><span class="p">.</span><span class="nx">on</span> <span class="s">&quot;add&quot;</span><span class="p">,</span> <span class="nf">(rule) -&gt;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>...add it to the rules Array in the config.json file</p></div></div><div class="code"><div class="wrapper">          <span class="k">for</span> <span class="nx">r</span> <span class="k">in</span> <span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">rules</span> 
+            <span class="k">if</span> <span class="nx">r</span><span class="p">.</span><span class="nx">id</span> <span class="o">is</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">id</span> <span class="k">then</span> <span class="k">return</span>
+          <span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">rules</span><span class="p">.</span><span class="nx">push</span> 
             <span class="nv">id: </span><span class="nx">rule</span><span class="p">.</span><span class="nx">id</span>
             <span class="nv">rule: </span><span class="nx">rule</span><span class="p">.</span><span class="nx">string</span>
           <span class="nx">self</span><span class="p">.</span><span class="nx">emit</span> <span class="s">&quot;config&quot;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
@@ -232,6 +238,7 @@
 
     <span class="nv">saveConfig: </span><span class="nf">-&gt;</span>
       <span class="nv">self = </span><span class="k">this</span>
-      <span class="nx">fs</span><span class="p">.</span><span class="nx">writeFile</span> <span class="nx">self</span><span class="p">.</span><span class="nx">configFile</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nf">(err) -&gt;</span>
-        <span class="k">if</span> <span class="nx">err</span><span class="o">?</span> <span class="k">then</span> <span class="k">throw</span> <span class="nx">err</span>
-        <span class="k">else</span> <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="s">&quot;config.json updated&quot;</span></div></div></div></div></body></html>
+      <span class="k">if</span> <span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="o">?</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">writeFile</span> <span class="nx">self</span><span class="p">.</span><span class="nx">configFile</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nf">(err) -&gt;</span>
+          <span class="k">if</span> <span class="nx">err</span><span class="o">?</span> <span class="k">then</span> <span class="k">throw</span> <span class="nx">err</span>
+          <span class="k">else</span> <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="s">&quot;config.json updated&quot;</span></div></div></div></div></body></html>

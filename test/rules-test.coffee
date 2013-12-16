@@ -42,6 +42,6 @@ describe "RuleManager", ->
 
     it 'should parse valid rule"', (done) ->
       ruleManager.parseRuleString("test1", "if predicate 1 then action 1")
-        .then(done).done()
+        .then( -> done() ).catch( (e) -> done e )
 
 
