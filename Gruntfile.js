@@ -4,7 +4,7 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     coffeelint: {
-      app: ['*.coffee', 'node_modules/pimatic-*/*.coffee', 'lib/**/*.coffee'],
+      app: ['*.coffee', 'node_modules/pimatic-*/*.coffee', 'lib/**/*.coffee', "test/**/*.coffee"],
       options: {
         'no_trailing_whitespace': {
           level: 'ignore'

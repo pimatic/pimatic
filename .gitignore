@@ -37,6 +37,7 @@ node_modules/term.js/
 node_modules/pimatic-log-reader/node_modules/
 node_modules/lodash/
 node_modules/q/
+node_modules/proxyquire/
 npm-debug.log
 node.log
 *.sublime-workspace

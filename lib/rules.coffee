@@ -26,13 +26,14 @@ class RuleManager extends require('events').EventEmitter
     knownTruePredicates = [predicateId]
     rule = self.rules[ruleId]
 
-    return self.evaluateConditionOfRule(rule, knownTruePredicates).then( (isTrue) ->
+    self.evaluateConditionOfRule(rule, knownTruePredicates).then( (isTrue) ->
       if isTrue then self.executeAction(rule.action, false).then( (message) ->
         logger.info "Rule #{ruleId}: #{message}"
       ).catch( (error)->
         logger.error "Rule #{ruleId} error: #{error}"
-      )
+      ).done()
     )
+    return
 
 
   parseRuleString: (id, ruleString) ->
@@ -40,66 +41,67 @@ class RuleManager extends require('events').EventEmitter
     assert ruleString? and typeof ruleString is "string"
 
     self = this
-    # * First take the string apart:
-    parts = ruleString.split /^if\s|\sthen\s/
-    # * => parts should now be `["", "the if part", "the then part"]`
-    switch
-      when parts.length < 3 
-        throw new Error('The rule must start with "if" and contain a "then" part!')
-      when parts.length > 3 
-        throw new Error('The rule must exactly contain one "if" and one "then"!')
-    condition = parts[1].trim()
-    actions = parts[2].trim()
+    return Q.fcall ->
+      # * First take the string apart:
+      parts = ruleString.split /^if\s|\sthen\s/
+      # * => parts should now be `["", "the if part", "the then part"]`
+      switch
+        when parts.length < 3 
+          throw new Error('The rule must start with "if" and contain a "then" part!')
+        when parts.length > 3 
+          throw new Error('The rule must exactly contain one "if" and one "then"!')
+      condition = parts[1].trim()
+      actions = parts[2].trim()
 
-    # Split the condition in a token stream.
-    # For example: "12:30 and temperature > 10" becomes
-    # `['12:30', 'and', 'temperature > 30 C']`
-    # Then we replace all predicates throw predicate tokens:
-    # `['predicate', '(', 0, ')', 'and', 'predicate', '(', 1, ')']`
-    # and remember the predicates in predicates
-    # `predicates = [ {token: '12:30'}, {token: 'temperature > 10'}]`
-    predicates = []
-    tokens = []
-    for token in condition.split /(\sand\s|\sor\s|\)|\()/ 
-      do (token) ->
-        token = token.trim()
-        if token in ["and", "or", ")", "("]
-          tokens.push token
-        else
-          i = predicates.length
-          predId = id+i
-          predSensor = self.findSensorForPredicate token
+      # Split the condition in a token stream.
+      # For example: "12:30 and temperature > 10" becomes
+      # `['12:30', 'and', 'temperature > 30 C']`
+      # Then we replace all predicates throw predicate tokens:
+      # `['predicate', '(', 0, ')', 'and', 'predicate', '(', 1, ')']`
+      # and remember the predicates in predicates
+      # `predicates = [ {token: '12:30'}, {token: 'temperature > 10'}]`
+      predicates = []
+      tokens = []
+      for token in condition.split /(\sand\s|\sor\s|\)|\()/ 
+        do (token) ->
+          token = token.trim()
+          if token in ["and", "or", ")", "("]
+            tokens.push token
+          else
+            i = predicates.length
+            predId = id+i
+            predSensor = self.findSensorForPredicate token
 
-          predicate =
-            id: predId
-            token: token
-            sensor: predSensor
+            predicate =
+              id: predId
+              token: token
+              sensor: predSensor
 
-          if not predicate.sensor?
-            throw new Error "Could not find an sensor that decides \"#{predicate.token}\""
+            if not predicate.sensor?
+              throw new Error "Could not find an sensor that decides \"#{predicate.token}\""
 
-          predicates.push(predicate)
-          tokens = tokens.concat ["predicate", "(", i, ")"]
-            
-    # Register all sensors:
-    for p in predicates
-      p.sensor.notifyWhen p.id, p.token, ->
-        self.whenPredicateIsTrue id, p.id
+            predicates.push(predicate)
+            tokens = tokens.concat ["predicate", "(", i, ")"]
+              
+      # Register all sensors:
+      for p in predicates
+        p.sensor.notifyWhen p.id, p.token, ->
+          self.whenPredicateIsTrue id, p.id
 
-    # Ok now the easier part: the action
-    return self.executeAction(actions, true).then( ->
-      return rule = 
-        id: id
-        orgCondition: condition
-        predicates: predicates
-        tokens: tokens
-        action: actions
-        string: ruleString
+      # Ok now the easier part: the action
+      return self.executeAction(actions, true).then( ->
+        return rule = 
+          id: id
+          orgCondition: condition
+          predicates: predicates
+          tokens: tokens
+          action: actions
+          string: ruleString
 
-    ).catch( (error) ->
-      env.logger.debug error
-      throw new Error "Could not find a actuator to execute \"#{actions}\""
-    )
+      ).catch( (error) ->
+        env.logger.debug error
+        throw new Error "Could not find a actuator to execute \"#{actions}\""
+      )
 
   addRuleByString: (id, ruleString) ->
     self = this
@@ -107,7 +109,7 @@ class RuleManager extends require('events').EventEmitter
     assert ruleString? and typeof ruleString is "string"
 
     # * Parse the rule to ower rules array
-    self.parseRuleString(id, ruleString).then( (rule)->
+    return self.parseRuleString(id, ruleString).then( (rule)->
       self.rules[id] = rule
       self.emit "add", rule
       # Check if the condition of the rule is allready true
@@ -118,7 +120,7 @@ class RuleManager extends require('events').EventEmitter
           logger.error "Rule #{ruleId} error: #{error}"
         )
       )
-    ).done()
+    )
 
   removeRule: (id) ->
     assert id? and typeof id is "string" and id.length isnt 0
@@ -136,7 +138,7 @@ class RuleManager extends require('events').EventEmitter
     throw new Error("Invalid ruleId: \"#{ruleId}\"") unless self.rules[id]?
 
     # * First try to parse the updated ruleString:
-    self.parseRuleString(id, ruleString).then( (rule)->
+    return self.parseRuleString(id, ruleString).then( (rule)->
       oldRule = self.rules[id]
       # * Then cancel all Notifier for all predicates
       p.sensor.cancelNotify p.id for p in oldRule.predicates
@@ -151,7 +153,7 @@ class RuleManager extends require('events').EventEmitter
           logger.error "Rule #{ruleId} error: #{error}"
         )
       )
-    ).done()
+    )
 
 
   # Uses 'bet' to evaluate rule.tokens

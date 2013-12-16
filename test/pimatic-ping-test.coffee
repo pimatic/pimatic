@@ -20,7 +20,7 @@ describe "pimatic-ping", ->
     sessionDummy = 
       pingHost: (host, callback) ->
     sensor = new NetworkDevicePresents("test", "test device" 
-                                       "localhost", 200, sessionDummy)
+      "localhost", 200, sessionDummy)
 
   describe '#parsePredicate()', ->
 

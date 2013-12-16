@@ -26,79 +26,81 @@
     <span class="nv">knownTruePredicates = </span><span class="p">[</span><span class="nx">predicateId</span><span class="p">]</span>
     <span class="nv">rule = </span><span class="nx">self</span><span class="p">.</span><span class="nx">rules</span><span class="p">[</span><span class="nx">ruleId</span><span class="p">]</span>
 
-    <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">evaluateConditionOfRule</span><span class="p">(</span><span class="nx">rule</span><span class="p">,</span> <span class="nx">knownTruePredicates</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span> <span class="nf">(isTrue) -&gt;</span>
+    <span class="nx">self</span><span class="p">.</span><span class="nx">evaluateConditionOfRule</span><span class="p">(</span><span class="nx">rule</span><span class="p">,</span> <span class="nx">knownTruePredicates</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span> <span class="nf">(isTrue) -&gt;</span>
       <span class="k">if</span> <span class="nx">isTrue</span> <span class="k">then</span> <span class="nx">self</span><span class="p">.</span><span class="nx">executeAction</span><span class="p">(</span><span class="nx">rule</span><span class="p">.</span><span class="nx">action</span><span class="p">,</span> <span class="kc">false</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span> <span class="nf">(message) -&gt;</span>
         <span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="s">&quot;Rule </span><span class="si">#{</span><span class="nx">ruleId</span><span class="si">}</span><span class="s">: </span><span class="si">#{</span><span class="nx">message</span><span class="si">}</span><span class="s">&quot;</span>
       <span class="p">).</span><span class="nx">catch</span><span class="p">(</span> <span class="nf">(error)-&gt;</span>
         <span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="s">&quot;Rule </span><span class="si">#{</span><span class="nx">ruleId</span><span class="si">}</span><span class="s"> error: </span><span class="si">#{</span><span class="nx">error</span><span class="si">}</span><span class="s">&quot;</span>
-      <span class="p">)</span>
+      <span class="p">).</span><span class="nx">done</span><span class="p">()</span>
     <span class="p">)</span>
+    <span class="k">return</span>
 
 
   <span class="nv">parseRuleString: </span><span class="nf">(id, ruleString) -&gt;</span>
     <span class="nx">assert</span> <span class="nx">id</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">id</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span> <span class="o">and</span> <span class="nx">id</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span>
     <span class="nx">assert</span> <span class="nx">ruleString</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">ruleString</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span>
 
-    <span class="nv">self = </span><span class="k">this</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
+    <span class="nv">self = </span><span class="k">this</span>
+    <span class="k">return</span> <span class="nx">Q</span><span class="p">.</span><span class="nx">fcall</span> <span class="nf">-&gt;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
 <li>First take the string apart:</li>
-</ul></div></div><div class="code"><div class="wrapper">    <span class="nv">parts = </span><span class="nx">ruleString</span><span class="p">.</span><span class="nx">split</span> <span class="sr">/^if\s|\sthen\s/</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
+</ul></div></div><div class="code"><div class="wrapper">      <span class="nv">parts = </span><span class="nx">ruleString</span><span class="p">.</span><span class="nx">split</span> <span class="sr">/^if\s|\sthen\s/</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
 <li>=> parts should now be <code>["", "the if part", "the then part"]</code></li>
-</ul></div></div><div class="code"><div class="wrapper">    <span class="k">switch</span>
-      <span class="k">when</span> <span class="nx">parts</span><span class="p">.</span><span class="nx">length</span> <span class="o">&lt;</span> <span class="mi">3</span> 
-        <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&#39;The rule must start with &quot;if&quot; and contain a &quot;then&quot; part!&#39;</span><span class="p">)</span>
-      <span class="k">when</span> <span class="nx">parts</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">3</span> 
-        <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&#39;The rule must exactly contain one &quot;if&quot; and one &quot;then&quot;!&#39;</span><span class="p">)</span>
-    <span class="nv">condition = </span><span class="nx">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">trim</span><span class="p">()</span>
-    <span class="nv">actions = </span><span class="nx">parts</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="nx">trim</span><span class="p">()</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Split the condition in a token stream.
+</ul></div></div><div class="code"><div class="wrapper">      <span class="k">switch</span>
+        <span class="k">when</span> <span class="nx">parts</span><span class="p">.</span><span class="nx">length</span> <span class="o">&lt;</span> <span class="mi">3</span> 
+          <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&#39;The rule must start with &quot;if&quot; and contain a &quot;then&quot; part!&#39;</span><span class="p">)</span>
+        <span class="k">when</span> <span class="nx">parts</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">3</span> 
+          <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&#39;The rule must exactly contain one &quot;if&quot; and one &quot;then&quot;!&#39;</span><span class="p">)</span>
+      <span class="nv">condition = </span><span class="nx">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">trim</span><span class="p">()</span>
+      <span class="nv">actions = </span><span class="nx">parts</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="nx">trim</span><span class="p">()</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Split the condition in a token stream.
 For example: "12:30 and temperature > 10" becomes
 <code>['12:30', 'and', 'temperature &gt; 30 C']</code>
 Then we replace all predicates throw predicate tokens:
 <code>['predicate', '(', 0, ')', 'and', 'predicate', '(', 1, ')']</code>
 and remember the predicates in predicates
-<code>predicates = [ {token: '12:30'}, {token: 'temperature &gt; 10'}]</code></p></div></div><div class="code"><div class="wrapper">    <span class="nv">predicates = </span><span class="p">[]</span>
-    <span class="nv">tokens = </span><span class="p">[]</span>
-    <span class="k">for</span> <span class="nx">token</span> <span class="k">in</span> <span class="nx">condition</span><span class="p">.</span><span class="nx">split</span> <span class="sr">/(\sand\s|\sor\s|\)|\()/</span> 
-      <span class="nx">do</span> <span class="nf">(token) -&gt;</span>
-        <span class="nv">token = </span><span class="nx">token</span><span class="p">.</span><span class="nx">trim</span><span class="p">()</span>
-        <span class="k">if</span> <span class="nx">token</span> <span class="k">in</span> <span class="p">[</span><span class="s">&quot;and&quot;</span><span class="p">,</span> <span class="s">&quot;or&quot;</span><span class="p">,</span> <span class="s">&quot;)&quot;</span><span class="p">,</span> <span class="s">&quot;(&quot;</span><span class="p">]</span>
-          <span class="nx">tokens</span><span class="p">.</span><span class="nx">push</span> <span class="nx">token</span>
-        <span class="k">else</span>
-          <span class="nv">i = </span><span class="nx">predicates</span><span class="p">.</span><span class="nx">length</span>
-          <span class="nv">predId = </span><span class="nx">id</span><span class="o">+</span><span class="nx">i</span>
-          <span class="nv">predSensor = </span><span class="nx">self</span><span class="p">.</span><span class="nx">findSensorForPredicate</span> <span class="nx">token</span>
+<code>predicates = [ {token: '12:30'}, {token: 'temperature &gt; 10'}]</code></p></div></div><div class="code"><div class="wrapper">      <span class="nv">predicates = </span><span class="p">[]</span>
+      <span class="nv">tokens = </span><span class="p">[]</span>
+      <span class="k">for</span> <span class="nx">token</span> <span class="k">in</span> <span class="nx">condition</span><span class="p">.</span><span class="nx">split</span> <span class="sr">/(\sand\s|\sor\s|\)|\()/</span> 
+        <span class="nx">do</span> <span class="nf">(token) -&gt;</span>
+          <span class="nv">token = </span><span class="nx">token</span><span class="p">.</span><span class="nx">trim</span><span class="p">()</span>
+          <span class="k">if</span> <span class="nx">token</span> <span class="k">in</span> <span class="p">[</span><span class="s">&quot;and&quot;</span><span class="p">,</span> <span class="s">&quot;or&quot;</span><span class="p">,</span> <span class="s">&quot;)&quot;</span><span class="p">,</span> <span class="s">&quot;(&quot;</span><span class="p">]</span>
+            <span class="nx">tokens</span><span class="p">.</span><span class="nx">push</span> <span class="nx">token</span>
+          <span class="k">else</span>
+            <span class="nv">i = </span><span class="nx">predicates</span><span class="p">.</span><span class="nx">length</span>
+            <span class="nv">predId = </span><span class="nx">id</span><span class="o">+</span><span class="nx">i</span>
+            <span class="nv">predSensor = </span><span class="nx">self</span><span class="p">.</span><span class="nx">findSensorForPredicate</span> <span class="nx">token</span>
 
-          <span class="nv">predicate =</span>
-            <span class="nv">id: </span><span class="nx">predId</span>
-            <span class="nv">token: </span><span class="nx">token</span>
-            <span class="nv">sensor: </span><span class="nx">predSensor</span>
+            <span class="nv">predicate =</span>
+              <span class="nv">id: </span><span class="nx">predId</span>
+              <span class="nv">token: </span><span class="nx">token</span>
+              <span class="nv">sensor: </span><span class="nx">predSensor</span>
 
-          <span class="k">if</span> <span class="o">not</span> <span class="nx">predicate</span><span class="p">.</span><span class="nx">sensor</span><span class="o">?</span>
-            <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;Could not find an sensor that decides \&quot;</span><span class="si">#{</span><span class="nx">predicate</span><span class="p">.</span><span class="nx">token</span><span class="si">}</span><span class="s">\&quot;&quot;</span>
+            <span class="k">if</span> <span class="o">not</span> <span class="nx">predicate</span><span class="p">.</span><span class="nx">sensor</span><span class="o">?</span>
+              <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;Could not find an sensor that decides \&quot;</span><span class="si">#{</span><span class="nx">predicate</span><span class="p">.</span><span class="nx">token</span><span class="si">}</span><span class="s">\&quot;&quot;</span>
 
-          <span class="nx">predicates</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">predicate</span><span class="p">)</span>
-          <span class="nv">tokens = </span><span class="nx">tokens</span><span class="p">.</span><span class="nx">concat</span> <span class="p">[</span><span class="s">&quot;predicate&quot;</span><span class="p">,</span> <span class="s">&quot;(&quot;</span><span class="p">,</span> <span class="nx">i</span><span class="p">,</span> <span class="s">&quot;)&quot;</span><span class="p">]</span>
-            </div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Register all sensors:</p></div></div><div class="code"><div class="wrapper">    <span class="k">for</span> <span class="nx">p</span> <span class="k">in</span> <span class="nx">predicates</span>
-      <span class="nx">p</span><span class="p">.</span><span class="nx">sensor</span><span class="p">.</span><span class="nx">notifyWhen</span> <span class="nx">p</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">token</span><span class="p">,</span> <span class="nf">-&gt;</span>
-        <span class="nx">self</span><span class="p">.</span><span class="nx">whenPredicateIsTrue</span> <span class="nx">id</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">id</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Ok now the easier part: the action</p></div></div><div class="code"><div class="wrapper">    <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">executeAction</span><span class="p">(</span><span class="nx">actions</span><span class="p">,</span> <span class="kc">true</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span> <span class="nf">-&gt;</span>
-      <span class="k">return</span> <span class="nv">rule = </span>
-        <span class="nv">id: </span><span class="nx">id</span>
-        <span class="nv">orgCondition: </span><span class="nx">condition</span>
-        <span class="nv">predicates: </span><span class="nx">predicates</span>
-        <span class="nv">tokens: </span><span class="nx">tokens</span>
-        <span class="nv">action: </span><span class="nx">actions</span>
-        <span class="nv">string: </span><span class="nx">ruleString</span>
+            <span class="nx">predicates</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">predicate</span><span class="p">)</span>
+            <span class="nv">tokens = </span><span class="nx">tokens</span><span class="p">.</span><span class="nx">concat</span> <span class="p">[</span><span class="s">&quot;predicate&quot;</span><span class="p">,</span> <span class="s">&quot;(&quot;</span><span class="p">,</span> <span class="nx">i</span><span class="p">,</span> <span class="s">&quot;)&quot;</span><span class="p">]</span>
+              </div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Register all sensors:</p></div></div><div class="code"><div class="wrapper">      <span class="k">for</span> <span class="nx">p</span> <span class="k">in</span> <span class="nx">predicates</span>
+        <span class="nx">p</span><span class="p">.</span><span class="nx">sensor</span><span class="p">.</span><span class="nx">notifyWhen</span> <span class="nx">p</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">token</span><span class="p">,</span> <span class="nf">-&gt;</span>
+          <span class="nx">self</span><span class="p">.</span><span class="nx">whenPredicateIsTrue</span> <span class="nx">id</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">id</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Ok now the easier part: the action</p></div></div><div class="code"><div class="wrapper">      <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">executeAction</span><span class="p">(</span><span class="nx">actions</span><span class="p">,</span> <span class="kc">true</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span> <span class="nf">-&gt;</span>
+        <span class="k">return</span> <span class="nv">rule = </span>
+          <span class="nv">id: </span><span class="nx">id</span>
+          <span class="nv">orgCondition: </span><span class="nx">condition</span>
+          <span class="nv">predicates: </span><span class="nx">predicates</span>
+          <span class="nv">tokens: </span><span class="nx">tokens</span>
+          <span class="nv">action: </span><span class="nx">actions</span>
+          <span class="nv">string: </span><span class="nx">ruleString</span>
 
-    <span class="p">).</span><span class="nx">catch</span><span class="p">(</span> <span class="nf">(error) -&gt;</span>
-      <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">debug</span> <span class="nx">error</span>
-      <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;Could not find a actuator to execute \&quot;</span><span class="si">#{</span><span class="nx">actions</span><span class="si">}</span><span class="s">\&quot;&quot;</span>
-    <span class="p">)</span>
+      <span class="p">).</span><span class="nx">catch</span><span class="p">(</span> <span class="nf">(error) -&gt;</span>
+        <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">debug</span> <span class="nx">error</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;Could not find a actuator to execute \&quot;</span><span class="si">#{</span><span class="nx">actions</span><span class="si">}</span><span class="s">\&quot;&quot;</span>
+      <span class="p">)</span>
 
   <span class="nv">addRuleByString: </span><span class="nf">(id, ruleString) -&gt;</span>
     <span class="nv">self = </span><span class="k">this</span>
     <span class="nx">assert</span> <span class="nx">id</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">id</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span> <span class="o">and</span> <span class="nx">id</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span>
     <span class="nx">assert</span> <span class="nx">ruleString</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">ruleString</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
 <li>Parse the rule to ower rules array</li>
-</ul></div></div><div class="code"><div class="wrapper">    <span class="nx">self</span><span class="p">.</span><span class="nx">parseRuleString</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">ruleString</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span> <span class="nf">(rule)-&gt;</span>
+</ul></div></div><div class="code"><div class="wrapper">    <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">parseRuleString</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">ruleString</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span> <span class="nf">(rule)-&gt;</span>
       <span class="nx">self</span><span class="p">.</span><span class="nx">rules</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span> <span class="nx">rule</span>
       <span class="nx">self</span><span class="p">.</span><span class="nx">emit</span> <span class="s">&quot;add&quot;</span><span class="p">,</span> <span class="nx">rule</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Check if the condition of the rule is allready true</p></div></div><div class="code"><div class="wrapper">      <span class="nx">self</span><span class="p">.</span><span class="nx">evaluateConditionOfRule</span><span class="p">(</span><span class="nx">rule</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span> <span class="nf">(isTrue) -&gt;</span>
         <span class="k">if</span> <span class="nx">isTrue</span> <span class="k">then</span> <span class="nx">self</span><span class="p">.</span><span class="nx">executeAction</span><span class="p">(</span><span class="nx">rule</span><span class="p">.</span><span class="nx">action</span><span class="p">,</span> <span class="kc">false</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span> <span class="nf">(message) -&gt;</span>
@@ -107,7 +109,7 @@ and remember the predicates in predicates
           <span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="s">&quot;Rule </span><span class="si">#{</span><span class="nx">ruleId</span><span class="si">}</span><span class="s"> error: </span><span class="si">#{</span><span class="nx">error</span><span class="si">}</span><span class="s">&quot;</span>
         <span class="p">)</span>
       <span class="p">)</span>
-    <span class="p">).</span><span class="nx">done</span><span class="p">()</span>
+    <span class="p">)</span>
 
   <span class="nv">removeRule: </span><span class="nf">(id) -&gt;</span>
     <span class="nx">assert</span> <span class="nx">id</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">id</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span> <span class="o">and</span> <span class="nx">id</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span>
@@ -124,7 +126,7 @@ and remember the predicates in predicates
     <span class="nx">assert</span> <span class="nx">ruleString</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">ruleString</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span>
     <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;Invalid ruleId: \&quot;</span><span class="si">#{</span><span class="nx">ruleId</span><span class="si">}</span><span class="s">\&quot;&quot;</span><span class="p">)</span> <span class="k">unless</span> <span class="nx">self</span><span class="p">.</span><span class="nx">rules</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span><span class="o">?</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
 <li>First try to parse the updated ruleString:</li>
-</ul></div></div><div class="code"><div class="wrapper">    <span class="nx">self</span><span class="p">.</span><span class="nx">parseRuleString</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">ruleString</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span> <span class="nf">(rule)-&gt;</span>
+</ul></div></div><div class="code"><div class="wrapper">    <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">parseRuleString</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">ruleString</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span> <span class="nf">(rule)-&gt;</span>
       <span class="nv">oldRule = </span><span class="nx">self</span><span class="p">.</span><span class="nx">rules</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
 <li>Then cancel all Notifier for all predicates</li>
 </ul></div></div><div class="code"><div class="wrapper">      <span class="nx">p</span><span class="p">.</span><span class="nx">sensor</span><span class="p">.</span><span class="nx">cancelNotify</span> <span class="nx">p</span><span class="p">.</span><span class="nx">id</span> <span class="k">for</span> <span class="nx">p</span> <span class="k">in</span> <span class="nx">oldRule</span><span class="p">.</span><span class="nx">predicates</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
@@ -139,7 +141,7 @@ and remember the predicates in predicates
           <span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="s">&quot;Rule </span><span class="si">#{</span><span class="nx">ruleId</span><span class="si">}</span><span class="s"> error: </span><span class="si">#{</span><span class="nx">error</span><span class="si">}</span><span class="s">&quot;</span>
         <span class="p">)</span>
       <span class="p">)</span>
-    <span class="p">).</span><span class="nx">done</span><span class="p">()</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Uses 'bet' to evaluate rule.tokens</p></div></div><div class="code"><div class="wrapper">  <span class="nv">evaluateConditionOfRule: </span><span class="nf">(rule, knownTruePredicates = []) -&gt;</span>
+    <span class="p">)</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Uses 'bet' to evaluate rule.tokens</p></div></div><div class="code"><div class="wrapper">  <span class="nv">evaluateConditionOfRule: </span><span class="nf">(rule, knownTruePredicates = []) -&gt;</span>
     <span class="nx">assert</span> <span class="nx">rule</span><span class="o">?</span> <span class="o">and</span> <span class="nx">rule</span> <span class="k">instanceof</span> <span class="nb">Object</span>
     <span class="nx">assert</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span> <span class="nx">knownTruePredicates</span>
 

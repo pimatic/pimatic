@@ -24,7 +24,7 @@ module.exports = (env) ->
 
       @client = new EverSocket(
         reconnectWait: 3000
-        timeout: 100
+        timeout: @config.timeout
         reconnectOnTimeout: true
       )
 
@@ -62,18 +62,19 @@ module.exports = (env) ->
         success = true
       return success
 
-    sendState: (jsonMsg) ->
+    sendState: (id, jsonMsg) ->
       deferred = Q.defer()
 
-      receiveTimeout = setTimeout( => 
+      onTimeout = => 
         for cb, i in @stateCallbacks
-          if cb.jsonMsg.code.location is jsonMsg.code.location and 
-             cb.jsonMsg.code.devie is jsonMsg.code.device
+          if cb.id is id
             @stateCallbacks.splice i, 1
-        deferred.recect "Request to pilight-daemon timeout"
-      , 3000)
+            deferred.reject "Request to pilight-daemon timeout"
+
+      receiveTimeout = setTimeout onTimeout, @config.timeout
 
       @stateCallbacks.push
+        id: id
         jsonMsg: jsonMsg
         deferred: deferred
         timeout: receiveTimeout
@@ -120,8 +121,7 @@ module.exports = (env) ->
       if actuator?
         actuator._setState if jsonMsg.values.state is 'on' then on else off
       for cb, i in @stateCallbacks
-        if cb.jsonMsg.code.location is location and 
-           cb.jsonMsg.code.device is device
+        if cb.id is id
           clearTimeout cb.timeout
           @stateCallbacks.splice i, 1
           cb.deferred.resolve()
@@ -150,7 +150,7 @@ module.exports = (env) ->
                 unless (@framework.getSensorById id)?
                   @framework.registerSensor new PilightTemperatureSensor id, deviceProbs
               else
-                env.logger.warn "Unimplemented pilight device type: #{deviceProbstype}" 
+                env.logger.warn "Unimplemented pilight device type: #{device.type}" 
       return
 
     createActuator: (config) =>
@@ -176,7 +176,7 @@ module.exports = (env) ->
           device: @probs.device
           state: if state then "on" else "off"
 
-      return backend.sendState jsonMsg
+      return backend.sendState @id, jsonMsg
 
   class PilightTemperatureSensor extends env.sensors.TemperatureSensor
     name: null

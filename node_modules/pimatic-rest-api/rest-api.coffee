@@ -19,7 +19,7 @@ module.exports = (env) ->
               env.logger.error e.message
               env.logger.debug e.stack
               res.send 500, e.message
-            )
+            ).done()
           else
             res.send 400, 'illegal action!'
         else res.send 400, 'illegal actuator!'
@@ -29,7 +29,7 @@ module.exports = (env) ->
         ruleText = req.body.rule
         error = null
         try
-          server.ruleManager.updateRuleByString ruleId, ruleText
+          server.ruleManager.updateRuleByString(ruleId, ruleText).done()
         catch e
           env.logger.error e.message
           env.logger.debug e.stack
@@ -43,7 +43,7 @@ module.exports = (env) ->
         ruleText = req.body.rule
         error = null
         try
-          server.ruleManager.addRuleByString ruleId, ruleText
+          server.ruleManager.addRuleByString(ruleId, ruleText).done()
         catch e
           env.logger.debug e.stack
           error = e

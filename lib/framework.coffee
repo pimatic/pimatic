@@ -215,7 +215,7 @@ module.exports = (env) ->
       initRules = ->
         for rule in self.config.rules
           try
-            self.ruleManager.addRuleByString(rule.id, rule.rule) 
+            self.ruleManager.addRuleByString(rule.id, rule.rule).done()
           catch err
             env.logger.error "Could not parse rule \"#{rule.rule}\": " + err.message 
             env.logger.debug err.stack        

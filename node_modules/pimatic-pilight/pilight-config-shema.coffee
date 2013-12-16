@@ -2,8 +2,8 @@
 
 # Defines a `node-convict` config-shema and exports it.
 module.exports =
-  ip:
-    doc: "The ip to connect to the piligt-daemon"
+  host:
+    doc: "The ip or host to connect to the piligt-daemon"
     format: String
     default: "127.0.0.1"
   port:
