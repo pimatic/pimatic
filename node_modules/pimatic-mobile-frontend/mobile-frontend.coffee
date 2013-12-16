@@ -106,6 +106,7 @@ module.exports = (env) ->
             server.ruleManager.removeListener "add", addRuleListener 
             server.ruleManager.removeListener "update", removeRuleListener
             memoryTransport.removeListener 'log', logListener
+      return
 
 
     addActiatorNotify: (socket, item) ->
@@ -122,6 +123,7 @@ module.exports = (env) ->
         actuator.on "state", stateListener = (state) ->
           self.emitSwitchState socket, actuator, state
         socket.on 'close', -> actuator.removeListener "state", stateListener
+      return
 
     addSensorNotify: (socket, item) ->
       sensor = self.server.getSensorById item.id
@@ -134,7 +136,7 @@ module.exports = (env) ->
               console.log name
               self.emitSensorValue socket, sensor, name, value
             socket.on 'close', -> sensor.removeListener name, valueListener
-
+      return
 
     getItemsWithData: () ->
       self = this
