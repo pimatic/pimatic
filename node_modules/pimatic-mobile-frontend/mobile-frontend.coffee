@@ -76,7 +76,16 @@ module.exports = (env) ->
       for webServer in [app.httpServer, app.httpsServer]
         continue unless webServer?
         # Listen for new websocket connections
-        io = socketIo.listen webServer, {logger: env.logger}
+        io = socketIo.listen webServer, {
+          logger: 
+            log: (type, args...) ->
+              if type isnt 'debug' then env.logger.log(type, 'socket.io:', args...)
+            debug: (args...) -> @log('debug', args...)
+            info: (args...) -> @log('info', args...)
+            warn: (args...) -> @log('warn', args...)
+            error: (args...) -> @log('error', args...)
+        }
+
         # When a new client connects
         io.sockets.on 'connection', (socket) ->
 

@@ -25,9 +25,9 @@ module.exports = (env) ->
       self.config = conf.get ""
 
       self.client = new EverSocket(
-        reconnectWait: 3000 # wait 100ms after close event before reconnecting
-        timeout: 100 # set the idle timeout to 100ms
-        reconnectOnTimeout: true # reconnect if the connection is idle
+        reconnectWait: 3000
+        timeout: 100
+        reconnectOnTimeout: true
       )
 
       self.client.on "reconnect", ->
@@ -46,6 +46,7 @@ module.exports = (env) ->
         env.logger.error "Error on connection to pilight-daemon: #{err}"
         env.logger.debug err.stack
       self.connect()
+      return
 
 
     connect: () ->
