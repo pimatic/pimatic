@@ -110,20 +110,26 @@ module.exports = (env) ->
                   id = "#{location}-#{device}"
                   switch jsonMsg.type
                     when 1
-                      actuator = @framework.getActuatorById id
-                      if actuator?
-                        actuator._setState if jsonMsg.values.state is 'on' then on else off
-                      for cb, i in @stateCallbacks
-                        if cb.jsonMsg.code.location is location and 
-                           cb.jsonMsg.code.device is device
-                          clearTimeout cb.timeout
-                          @stateCallbacks.splice i, 1
-                          cb.deferred.resolve()
+                      @updateSwitch id, jsonMsg
                     when 3
-                      sensor = @framework.getSensorById id
-                      if sensor?
-                        sensor.setValues jsonMsg.values
+                      @updateSensor id, jsonMsg
       return
+
+    updateSwitch: (id, jsonMsg) ->
+      actuator = @framework.getActuatorById id
+      if actuator?
+        actuator._setState if jsonMsg.values.state is 'on' then on else off
+      for cb, i in @stateCallbacks
+        if cb.jsonMsg.code.location is location and 
+           cb.jsonMsg.code.device is device
+          clearTimeout cb.timeout
+          @stateCallbacks.splice i, 1
+          cb.deferred.resolve()
+
+    updateSensor: (id, jsonMsg) ->
+      sensor = @framework.getSensorById id
+      if sensor?
+        sensor.setValues jsonMsg.values
 
     onReceiveConfig: (config) ->
       # iterate ´config = { living: { name: "Living", ... }, ...}´
