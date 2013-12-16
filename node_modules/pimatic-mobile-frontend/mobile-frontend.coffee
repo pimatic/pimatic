@@ -110,32 +110,32 @@ module.exports = (env) ->
 
 
     addActiatorNotify: (socket, item) ->
-      actuator = self.server.getActuatorById item.id
+      actuator = @server.getActuatorById item.id
       if actuator?
         # * First time push the state to the client
-        actuator.getState().then( (state) ->
-          self.emitSwitchState socket, actuator, state
-        ).catch( (error) ->
+        actuator.getState().then( (state) =>
+          @emitSwitchState socket, actuator, state
+        ).catch( (error) =>
           env.logger.error error.message
           env.logger.debug error.stack 
         )
         # * Then forward following state event to the client
-        actuator.on "state", stateListener = (state) ->
-          self.emitSwitchState socket, actuator, state
-        socket.on 'close', -> actuator.removeListener "state", stateListener
+        actuator.on "state", stateListener = (state) =>
+          @emitSwitchState socket, actuator, state
+        socket.on 'close', => actuator.removeListener "state", stateListener
       return
 
     addSensorNotify: (socket, item) ->
-      sensor = self.server.getSensorById item.id
+      sensor = @server.getSensorById item.id
       if sensor?
         names = sensor.getSensorValuesNames()
         for name in names 
-          do (name) ->
+          do (name) =>
             console.log name
-            sensor.on name, (value) ->
+            sensor.on name, (value) =>
               console.log name
-              self.emitSensorValue socket, sensor, name, value
-            socket.on 'close', -> sensor.removeListener name, valueListener
+              @emitSensorValue socket, sensor, name, value
+            socket.on 'close', => sensor.removeListener name, valueListener
       return
 
     getItemsWithData: () ->
