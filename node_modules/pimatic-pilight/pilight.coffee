@@ -9,102 +9,89 @@ Q = require 'q'
 module.exports = (env) ->
 
   class PilightBackend extends env.plugins.Plugin
-    server: null
+    framework: null
     config: null
     state: "unconnected"
     pilightConfig: null
     client: null
     stateCallbacks: []
 
-    init: (@app, @server, @config) =>
-
-      self = this
+    init: (@app, @framework, @config) =>
       conf = convict require("./pilight-config-shema")
       conf.load config
       conf.validate()
-      self.config = conf.get ""
+      @config = conf.get ""
 
-      self.client = new EverSocket(
+      @client = new EverSocket(
         reconnectWait: 3000
         timeout: 100
         reconnectOnTimeout: true
       )
 
-      self.client.on "reconnect", ->
+      @client.on "reconnect", =>
         env.logger.info "connected to pilight-daemon"
-        self.sendWelcome()
+        @sendWelcome()
 
-      self.client.on "data", (data) ->
+      @client.on "data", (data) =>
         for msg in data.toString().split "\n"
           if msg.length isnt 0
-            self.onReceive JSON.parse msg
+            @onReceive JSON.parse msg
 
-      self.client.on "end", ->
-        self.state = "unconnected"
+      @client.on "end", =>
+        @state = "unconnected"
 
-      self.client.on "error", (err) ->
+      @client.on "error", (err) =>
         env.logger.error "Error on connection to pilight-daemon: #{err}"
         env.logger.debug err.stack
-      self.connect()
+      
+      @client.connect(
+        @config.port,
+        @config.host
+      )
       return
 
-
-    connect: () ->
-      self = this
-      self.client.connect(
-        self.config.port,
-        self.config.host
-      # , -> #'connect' listener
-      #   env.logger.info "connected to pilight-daemon"
-      #   self.sendWelcome()
-      )
-
     sendWelcome: ->
-      self = this
-      self.state = "welcome"
-      self.send { message: "client gui" }
+      @state = "welcome"
+      @send { message: "client gui" }
 
     send: (jsonMsg) ->
-      self = this
       success = false
-      if self.state isnt "unconnected"
+      if @state isnt "unconnected"
         env.logger.debug "pilight send: ", JSON.stringify(jsonMsg, null, " ")
-        self.client.write JSON.stringify(jsonMsg) + "\n", 'utf8'
+        @client.write JSON.stringify(jsonMsg) + "\n", 'utf8'
         success = true
       return success
 
     sendState: (jsonMsg) ->
-      self = this
       deferred = Q.defer()
 
-      receiveTimeout = setTimeout( -> 
-        for cb, i in self.stateCallbacks
+      receiveTimeout = setTimeout( => 
+        for cb, i in @stateCallbacks
           if cb.jsonMsg.code.location is jsonMsg.code.location and 
              cb.jsonMsg.code.devie is jsonMsg.code.device
-            self.stateCallbacks.splice i, 1
+            @stateCallbacks.splice i, 1
         deferred.recect "Request to pilight-daemon timeout"
       , 3000)
 
-      self.stateCallbacks.push
+      @stateCallbacks.push
         jsonMsg: jsonMsg
         deferred: deferred
         timeout: receiveTimeout
 
-      success = self.send jsonMsg
+      success = @send jsonMsg
       unless success then deferred.recect "Could not send request to pilight-daemon"
       return deferred.promise
 
     onReceive: (jsonMsg) ->
-      self = this
       env.logger.debug "pilight received: ", JSON.stringify(jsonMsg, null, " ")
-      switch self.state
+      switch @state
         when "welcome"
           if jsonMsg.message is "accept client"
-            self.state = "connected"
-            self.send { message: "request config" }
+            @state = "connected"
+            @send { message: "request config" }
         else
           if jsonMsg.config?
-            self.onReceiveConfig jsonMsg.config
+            @onReceiveConfig jsonMsg.config
           else if jsonMsg.origin?
             # {
             #  "origin": "config",
@@ -123,22 +110,22 @@ module.exports = (env) ->
                   id = "#{location}-#{device}"
                   switch jsonMsg.type
                     when 1
-                      actuator = self.server.getActuatorById id
+                      actuator = @framework.getActuatorById id
                       if actuator?
                         actuator._setState if jsonMsg.values.state is 'on' then on else off
-                      for cb, i in self.stateCallbacks
+                      for cb, i in @stateCallbacks
                         if cb.jsonMsg.code.location is location and 
                            cb.jsonMsg.code.device is device
                           clearTimeout cb.timeout
-                          self.stateCallbacks.splice i, 1
+                          @stateCallbacks.splice i, 1
                           cb.deferred.resolve()
                     when 3
-                      sensor = self.server.getSensorById id
+                      sensor = @framework.getSensorById id
                       if sensor?
                         sensor.setValues jsonMsg.values
+      return
 
     onReceiveConfig: (config) ->
-      self = this
       # iterate ´config = { living: { name: "Living", ... }, ...}´
       for location, devices of config
         #   location = "tv"
@@ -151,13 +138,14 @@ module.exports = (env) ->
             deviceProbs.device = device
             switch deviceProbs.type
               when 1
-                unless (self.server.getActuatorById id)?
-                  self.server.registerActuator new PilightSwitch id, deviceProbs
+                unless (@framework.getActuatorById id)?
+                  @framework.registerActuator new PilightSwitch id, deviceProbs
               when 3
-                unless (self.server.getSensorById id)?
-                  self.server.registerSensor new PilightTemperatureSensor id, deviceProbs
+                unless (@framework.getSensorById id)?
+                  @framework.registerSensor new PilightTemperatureSensor id, deviceProbs
               else
                 env.logger.warn "Unimplemented pilight device type: #{deviceProbstype}" 
+      return
 
     createActuator: (config) =>
       return false
@@ -168,20 +156,18 @@ module.exports = (env) ->
     probs: null
 
     constructor: (@id, @probs) ->
-      self = this
-      self.name = probs.name
+      @name = probs.name
 
     # Run the pilight-send executable.
     changeStateTo: (state) ->
-      self = this
-      if self.state is state
-        return Q.fcall -> true
+      if @state is state
+        return Q.fcall => true
 
       jsonMsg =
         message: "send"
         code:
-          location: self.probs.location
-          device: self.probs.device
+          location: @probs.location
+          device: @probs.device
           state: if state then "on" else "off"
 
       return backend.sendState jsonMsg
@@ -192,36 +178,33 @@ module.exports = (env) ->
     humidity: null
 
     constructor: (@id, @probs) ->
-      self = this
-      self.name = probs.name
-      self.setValues
-        temperature: self.probs.temperature
-        humidity: self.probs.humidity
+      @name = probs.name
+      @setValues
+        temperature: @probs.temperature
+        humidity: @probs.humidity
 
     setValues: (values) ->
-      self = this
       if values.temperature?
-        self.temperature = values.temperature/(self.probs.settings.decimals*10)
-        self.emit "temperature", self.temperature
+        @temperature = values.temperature/(@probs.settings.decimals*10)
+        @emit "temperature", @temperature
       if values.humidity?
-        self.humidity = values.humidity/(self.probs.settings.decimals*10)
-        self.emit "temperature", self.humidity
+        @humidity = values.humidity/(@probs.settings.decimals*10)
+        @emit "temperature", @humidity
+      return
 
     getSensorValuesNames: ->
-      self = this
       names = []
-      if self.probs.settings.temperature is 1
+      if @probs.settings.temperature is 1
         names.push 'temperature' 
-      if self.probs.settings.humidity is 1
+      if @probs.settings.humidity is 1
         names.push 'humidity' 
       return names
 
     getSensorValue: (name) ->
-      self = this
-      Q.fcall -> 
+      Q.fcall => 
         switch name
-          when 'temperature' then return self.temperature
-          when 'humidity' then return self.humidity
+          when 'temperature' then return @temperature
+          when 'humidity' then return @humidity
         throw new Error "Unknown sensor value name"
 
     canDecide: (predicate) ->
