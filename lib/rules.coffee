@@ -99,7 +99,7 @@ class RuleManager extends require('events').EventEmitter
           string: ruleString
 
       ).catch( (error) ->
-        env.logger.debug error
+        logger.debug error
         throw new Error "Could not find a actuator to execute \"#{actions}\""
       )
 
@@ -124,7 +124,7 @@ class RuleManager extends require('events').EventEmitter
 
   removeRule: (id) ->
     assert id? and typeof id is "string" and id.length isnt 0
-    throw new Error("Invalid ruleId: \"#{ruleId}\"") unless @rules[id]?
+    throw new Error("Invalid ruleId: \"#{id}\"") unless @rules[id]?
     rule = @rules[id]
     # * Then cancel all Notifier for all predicates
     p.sensor.cancelNotify p.id for p in rule.predicates
@@ -135,7 +135,7 @@ class RuleManager extends require('events').EventEmitter
     self = this
     assert id? and typeof id is "string" and id.length isnt 0
     assert ruleString? and typeof ruleString is "string"
-    throw new Error("Invalid ruleId: \"#{ruleId}\"") unless self.rules[id]?
+    throw new Error("Invalid ruleId: \"#{id}\"") unless self.rules[id]?
 
     # * First try to parse the updated ruleString:
     return self.parseRuleString(id, ruleString).then( (rule)->
@@ -143,14 +143,14 @@ class RuleManager extends require('events').EventEmitter
       # * Then cancel all Notifier for all predicates
       p.sensor.cancelNotify p.id for p in oldRule.predicates
       # * Add the rule to the rules
-      selfrules[id] = rule
+      self.rules[id] = rule
       self.emit "update", rule
       # * Check if the condition of the rule is allready true and execute the actions
       return self.evaluateConditionOfRule(rule).then( (isTrue) ->
         if isTrue then self.executeAction(rule.action, false).then( (message) ->
-          logger.info "Rule #{ruleId}: #{message}"
+          logger.info "Rule #{id}: #{message}"
         ).catch( (error)->
-          logger.error "Rule #{ruleId} error: #{error}"
+          logger.error "Rule #{id} error: #{error}"
         )
       )
     )
