@@ -140,9 +140,7 @@ module.exports = (env) ->
         names = sensor.getSensorValuesNames()
         for name in names 
           do (name) =>
-            console.log name
             sensor.on name, (value) =>
-              console.log name
               @emitSensorValue socket, sensor, name, value
             socket.on 'close', => sensor.removeListener name, valueListener
       return

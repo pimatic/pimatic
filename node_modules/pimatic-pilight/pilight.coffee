@@ -195,7 +195,7 @@ module.exports = (env) ->
         @emit "temperature", @temperature
       if values.humidity?
         @humidity = values.humidity/(@probs.settings.decimals*10)
-        @emit "temperature", @humidity
+        @emit "humidity", @humidity
       return
 
     getSensorValuesNames: ->
