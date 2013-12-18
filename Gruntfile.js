@@ -33,14 +33,22 @@ module.exports = function(grunt) {
         dest: '/pimatic/pimatic/docs'
       }
     },
-    cafemocha: {
-      mainTests: {
-          src: 'test/**/*.coffee',
-          options: {
-              ui: 'bdd',
-              reporter: 'spec'
-              /*coverage: true*/
-          }
+    mochaTest: {
+      test: {
+        options: {
+          reporter: 'spec',
+          require: ['coffee-script', 'coverage/blanket']
+        },
+        src: ['test/**/*.coffee']
+      },
+      coverage: {
+        options: {
+          require: 'coffee-script',
+          reporter: 'html-cov',
+          quiet: true,
+          captureFile: 'coverage/coverage.html'
+        },
+        src: ['test/**/*.coffee']
       }
     }
   });
@@ -48,7 +56,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-coffeelint');
   grunt.loadNpmTasks('grunt-groc');
   grunt.loadNpmTasks('grunt-ftp-deploy');
-  grunt.loadNpmTasks('grunt-cafe-mocha');
+  grunt.loadNpmTasks('grunt-mocha-test');
   
   grunt.registerTask('publish-plugins', 'publish all pimatic-plugins', function() {
     var done = this.async();
@@ -56,7 +64,7 @@ module.exports = function(grunt) {
     var plugins = require('fs').readdirSync("./node_modules");
 
     require('async').eachSeries(plugins, function(file, cb){
-      if(file.indexOf("pimatic-") == 0) {
+      if(file.indexOf("pimatic-") === 0) {
         grunt.log.writeln("publishing: "+ file);
         process.chdir(cwd + "/node_modules/" + file);
         var child = grunt.util.spawn({
@@ -87,6 +95,7 @@ module.exports = function(grunt) {
   // });
 
   // Default task(s).
-  grunt.registerTask('default', ['coffeelint', 'cafemocha','groc']);
+  grunt.registerTask('default', ['coffeelint', 'mochaTest:test','groc']);
+  grunt.registerTask('coverage', ['mochaTest']);
   //grunt.registerTask('run', ['coffeelint', 'pimatic']);
 };

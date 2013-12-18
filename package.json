@@ -44,7 +44,8 @@
     "grunt-coffeelint": "~0.0.7",
     "grunt-groc": "~0.3.0",
     "grunt-ftp-deploy": "~0.0.10",
-    "grunt-cafe-mocha": "~0.1.8"
+    "grunt-mocha-test": "~0.8.1",
+    "blanket": "~1.1.5"
   },
   "engines": {
     "node": ">0.8.x",

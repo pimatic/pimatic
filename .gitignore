@@ -12,7 +12,8 @@ node_modules/convict/
 node_modules/cron/
 node_modules/entry/
 node_modules/express/
-node_modules/grunt-cafe-mocha/
+node_modules/grunt-mocha-test/
+node_modules/blanket/
 node_modules/grunt-coffeelint/
 node_modules/grunt-ftp-deploy/
 node_modules/grunt-groc/

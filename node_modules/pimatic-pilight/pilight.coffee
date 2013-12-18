@@ -71,6 +71,7 @@ module.exports = (env) ->
           if cb.id is id
             @stateCallbacks.splice i, 1
             deferred.reject "Request to pilight-daemon timeout"
+        return
 
       receiveTimeout = setTimeout onTimeout, @config.timeout
 
