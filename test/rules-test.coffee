@@ -174,3 +174,17 @@ describe "RuleManager", ->
         assert ruleManager.rules['test5'].string is 'if predicate 2 then action 1'
         finish()
       ).catch(finish).done()
+
+  describe '#removeRule()', ->
+
+    it 'should remove the rule', ->
+      cancleNotifyCalled = false
+      sensor.cancelNotify = (id) ->
+        assert id?
+        cancleNotifyCalled = true
+        return true
+
+      ruleManager.removeRule 'test5'
+      assert not ruleManager.rules['test5']?
+      assert cancleNotifyCalled
+
