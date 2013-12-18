@@ -16,6 +16,7 @@ module.exports = (env) ->
     app: null
     ruleManager: null
     pluginManager: null
+    config: null
 
     constructor: (@configFile) ->
       assert configFile?

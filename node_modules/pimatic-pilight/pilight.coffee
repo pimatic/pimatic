@@ -5,6 +5,7 @@ net = require "net"
 EverSocket = require("eversocket").EverSocket
 util = require 'util'
 Q = require 'q'
+assert = require 'cassert'
 
 module.exports = (env) ->
 
@@ -108,7 +109,7 @@ module.exports = (env) ->
             if jsonMsg.origin is 'config'
               for location, devices of jsonMsg.devices
                 for device in devices
-                  id = "#{location}-#{device}"
+                  id = "pilight-#{location}-#{device}"
                   switch jsonMsg.type
                     when 1
                       @updateSwitch id, jsonMsg
@@ -139,12 +140,19 @@ module.exports = (env) ->
         # iterate ´devices = { tv: { name: "TV", ...}, ... }´
         for device, deviceProbs of devices
           if typeof deviceProbs is "object"
-            id = "#{location}-#{device}"
+            id = "pilight-#{location}-#{device}"
             deviceProbs.location = location
             deviceProbs.device = device
             switch deviceProbs.type
               when 1
-                unless (@framework.getActuatorById id)?
+                actuator = @framework.getActuatorById id
+                if actuator?
+                  if actuator instanceof PilightSwitch
+                    actuator.updateFromPilightConfig deviceProbs
+                  else
+                    env.logger.error "actuator should be an PilightSwitch"
+                else
+                  # TODO: add to config.actuators
                   @framework.registerActuator new PilightSwitch id, deviceProbs
               when 3
                 unless (@framework.getSensorById id)?
@@ -162,7 +170,7 @@ module.exports = (env) ->
     probs: null
 
     constructor: (@id, @probs) ->
-      @name = probs.name
+      @updateFromPilightConfig(probs)
 
     # Run the pilight-send executable.
     changeStateTo: (state) ->
@@ -177,6 +185,12 @@ module.exports = (env) ->
           state: if state then "on" else "off"
 
       return backend.sendState @id, jsonMsg
+
+    updateFromPilightConfig: (@probs) ->
+      assert probs?
+      @name = probs.name
+      @_setState (if probs.state is 'on' then on else off)
+
 
   class PilightTemperatureSensor extends env.sensors.TemperatureSensor
     name: null

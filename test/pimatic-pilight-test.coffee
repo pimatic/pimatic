@@ -94,7 +94,7 @@ describe "pimatic-pilight", ->
 
       getActuatorByIdCalled = false
       framework.getActuatorById = (id) ->
-        assert id is "living-bookshelve"
+        assert id is "pilight-living-bookshelve"
         getActuatorByIdCalled = true
         return null
 
