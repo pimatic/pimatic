@@ -32,10 +32,13 @@ describe "pimatic", ->
   after ->
     fs.unlinkSync configFile
 
+  framework = null
+  actuatorConfig = null
+
   describe 'startup', ->
 
     it "should startup", ->
-      require '../startup'
+      framework = (require '../startup').framework
 
     it "httpServer should run", (done)->
       http = require 'http'
@@ -51,3 +54,44 @@ describe "pimatic", ->
         done()
       ).on "error", (e) ->
         throw e
+
+  describe '#addActuatorToConfig()', ->
+
+    actuatorConfig = 
+      id: 'test-actuator'
+      class: 'TestActuatorClass'
+
+    it 'should add the actuator to the config', ->
+
+      framework.addActuatorToConfig actuatorConfig
+      assert framework.config.actuators.length is 1
+      assert framework.config.actuators[0].id is actuatorConfig.id
+
+    it 'should throw an error if the actuator exists', ->
+      try
+        framework.addActuatorToConfig actuatorConfig
+        assert false
+      catch e
+        assert e.message is "an actuator with the id #{actuatorConfig.id} is already in the config"
+
+  describe '#isActuatorInConfig()', ->
+
+    it 'should find actuator in config', ->
+      assert framework.isActuatorInConfig actuatorConfig.id
+
+    it 'should not find antother actuator in config', ->
+      assert not framework.isActuatorInConfig 'a-not-present-id'
+
+
+  describe '#updateActuatorConfig()', ->
+
+    actuatorConfigNew = 
+      id: 'test-actuator'
+      class: 'TestActuatorClass'
+      test: 'bla'
+
+
+    it 'should update actuator in config', ->
+      framework.updateActuatorConfig actuatorConfigNew
+      assert framework.config.actuators[0].test is 'bla'
+

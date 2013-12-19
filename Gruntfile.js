@@ -96,6 +96,7 @@ module.exports = function(grunt) {
 
   // Default task(s).
   grunt.registerTask('default', ['coffeelint', 'mochaTest:test','groc']);
+  grunt.registerTask('test', ['coffeelint', 'mochaTest:test']);
   grunt.registerTask('coverage', ['mochaTest']);
   //grunt.registerTask('run', ['coffeelint', 'pimatic']);
 };

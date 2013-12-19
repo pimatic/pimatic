@@ -194,6 +194,39 @@ module.exports = (env) ->
     getActuatorById: (id) ->
       @actuators[id]
 
+
+    addActuatorToConfig: (config) ->
+      assert config.id?
+      assert config.class?
+
+      # Check if actuator is already in the config:
+      present = @isActuatorInConfig config.id
+      if present
+        message = "an actuator with the id #{config.id} is already in the config" 
+        throw new Error message
+      @config.actuators.push config
+      @saveConfig()
+
+    isActuatorInConfig: (id) ->
+      assert id?
+      for a in @config.actuators
+        if a.id is id then return true
+      return false
+
+    updateActuatorConfig: (config) ->
+      assert config.id?
+      assert config.class?
+
+      found = false
+      for a, i in @config.actuators
+        if a.id is config.id
+          @config.actuators[i] = config
+          found = true
+          break
+      if not found then throw new Error "no actuator with #{config.id} in config"
+      @saveConfig()
+      return
+
     getSensorById: (id) ->
       @sensors[id]
 

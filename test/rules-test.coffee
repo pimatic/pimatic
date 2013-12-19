@@ -140,7 +140,7 @@ describe "RuleManager", ->
 
       notifyCallback()
 
-  describe '#updateRuleByString', ->
+  describe '#updateRuleByString()', ->
 
     it 'should update the rule', (finish) ->
       canDecideCalled = false
