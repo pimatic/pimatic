@@ -40,5 +40,9 @@ class Plugin
   init: ->
     throw new Error("your plugin must implement init")
 
+  #createActuator: (config) ->
+
+  #createSensor: (config) ->
+
 module.exports.PluginManager = PluginManager
 module.exports.Plugin = Plugin

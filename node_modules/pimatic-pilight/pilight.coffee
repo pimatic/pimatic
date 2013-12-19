@@ -146,23 +146,41 @@ module.exports = (env) ->
             deviceProbs.device = device
             switch deviceProbs.type
               when 1
-                actuator = @framework.getActuatorById id
-                if actuator?
-                  if actuator instanceof PilightSwitch
-                    actuator.updateFromPilightConfig deviceProbs
-                  else
-                    env.logger.error "actuator should be an PilightSwitch"
-                else
-                  # TODO: add to config.actuators
-                  @framework.registerActuator new PilightSwitch id, deviceProbs
+                @actuatorConfigReceive id, deviceProbs
               when 3
-                unless (@framework.getSensorById id)?
-                  @framework.registerSensor new PilightTemperatureSensor id, deviceProbs
+                @sensorConfigReceived id, deviceProbs
               else
                 env.logger.warn "Unimplemented pilight device type: #{device.type}" 
       return
 
+    actuatorConfigReceive: (id, deviceProbs) ->
+      actuator = @framework.getActuatorById id
+      if actuator?
+        if actuator instanceof PilightSwitch
+          actuator.updateFromPilightConfig deviceProbs
+        else
+          env.logger.error "actuator should be an PilightSwitch"
+      else
+        actuator = new PilightSwitch id, deviceProbs
+        @framework.registerActuator actuator
+        actuatorConfig = actuator.getActuatorConfig()
+        if @framework.isActuatorInConfig id
+          @framework.updateActuatorConfig actuatorConfig
+        else
+          @framework.addActuatorToConfig actuatorConfig
+
+    sensorConfigReceived: (id, deviceProbs) ->
+      unless (@framework.getSensorById id)?
+        @framework.registerSensor new PilightTemperatureSensor id, deviceProbs
+
     createActuator: (config) =>
+      if config.class is 'PilightSwitch'
+        @framework.registerActuator new PilightSwitch config.id, deviceProbs =
+          names: config.name
+          location: config.location
+          device: config.device
+          state: lastState
+        return true
       return false
 
   backend = new PilightBackend
@@ -192,6 +210,20 @@ module.exports = (env) ->
       @name = probs.name
       @_setState (if probs.state is 'on' then on else off)
 
+    _setState: (state) ->
+      if state is @state then return
+      backend.framework.updateActuatorConfig @getActuatorConfig()
+      super state
+
+    getActuatorConfig: () ->
+      return config =
+        id: @id
+        class: 'PilightSwitch'
+        inPilightConfig: true
+        name: @name
+        location: @probs.location
+        device: @probs.device
+        lastState: @probs.state
 
   class PilightTemperatureSensor extends env.sensors.TemperatureSensor
     name: null

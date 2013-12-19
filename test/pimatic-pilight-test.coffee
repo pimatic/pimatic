@@ -104,10 +104,21 @@ describe "pimatic-pilight", ->
         assert a?
         actuator = a
 
+      addActuatorToConfigCalled = false
+      framework.addActuatorToConfig = (config) ->
+        assert config?
+        addActuatorToConfigCalled = true
+
+      framework.isActuatorInConfig = -> false
+      framework.updateActuatorConfig = (config) -> 
+        assert config.id is "pilight-living-bookshelve"
+        assert config.class is "PilightSwitch"
+
       pilightPlugin.client.emit 'data', JSON.stringify(sampleConfigMsg) + '\n'
 
       assert getActuatorByIdCalled
       assert registerActuatorCalled
+      assert addActuatorToConfigCalled
       assert actuator?
 
   describe "#turnOn()", ->

@@ -177,10 +177,10 @@
             <span class="k">if</span> <span class="nx">found</span> <span class="k">then</span> <span class="k">break</span>
         <span class="k">unless</span> <span class="nx">found</span>
           <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">warn</span> <span class="s">&quot;no plugin found for actuator \&quot;</span><span class="si">#{</span><span class="nx">acConfig</span><span class="p">.</span><span class="nx">id</span><span class="si">}</span><span class="s">\&quot;!&quot;</span>
+      <span class="k">return</span>
 
     <span class="nv">getActuatorById: </span><span class="nf">(id) -&gt;</span>
       <span class="nx">@actuators</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span>
-
 
     <span class="nv">addActuatorToConfig: </span><span class="nf">(config) -&gt;</span>
       <span class="nx">assert</span> <span class="nx">config</span><span class="p">.</span><span class="nx">id</span><span class="o">?</span>
@@ -202,17 +202,44 @@
       <span class="nx">assert</span> <span class="nx">config</span><span class="p">.</span><span class="nx">class</span><span class="o">?</span>
 
       <span class="nv">found = </span><span class="kc">false</span>
-      <span class="k">for</span> <span class="nx">i</span><span class="p">,</span><span class="nx">a</span> <span class="k">in</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">actuators</span>
+      <span class="k">for</span> <span class="nx">a</span><span class="p">,</span> <span class="nx">i</span> <span class="k">in</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">actuators</span>
         <span class="k">if</span> <span class="nx">a</span><span class="p">.</span><span class="nx">id</span> <span class="o">is</span> <span class="nx">config</span><span class="p">.</span><span class="nx">id</span>
-          <span class="nx">@config</span><span class="p">.</span><span class="nx">actuators</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span> <span class="nx">config</span>
+          <span class="nx">@config</span><span class="p">.</span><span class="nx">actuators</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">config</span>
           <span class="nv">found = </span><span class="kc">true</span>
           <span class="k">break</span>
       <span class="k">if</span> <span class="o">not</span> <span class="nx">found</span> <span class="k">then</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;no actuator with </span><span class="si">#{</span><span class="nx">config</span><span class="p">.</span><span class="nx">id</span><span class="si">}</span><span class="s"> in config&quot;</span>
       <span class="nx">@saveConfig</span><span class="p">()</span>
       <span class="k">return</span>
 
+    <span class="nv">loadSensors: </span><span class="nf">-&gt;</span>
+      <span class="k">for</span> <span class="nx">sensorConfig</span> <span class="k">in</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">sensors</span>
+        <span class="nv">found = </span><span class="kc">false</span>
+        <span class="k">for</span> <span class="nx">plugin</span> <span class="k">in</span> <span class="nx">@plugins</span>
+          <span class="k">if</span> <span class="nx">plugin</span><span class="p">.</span><span class="nx">plugin</span><span class="p">.</span><span class="nx">createSensor</span><span class="o">?</span>
+            <span class="nv">found = </span><span class="nx">plugin</span><span class="p">.</span><span class="nx">plugin</span><span class="p">.</span><span class="nx">createSensor</span> <span class="nx">sensorConfig</span>
+            <span class="k">if</span> <span class="nx">found</span> <span class="k">then</span> <span class="k">break</span>
+        <span class="k">unless</span> <span class="nx">found</span>
+          <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">warn</span> <span class="s">&quot;no plugin found for sensor \&quot;</span><span class="si">#{</span><span class="nx">sensorConfig</span><span class="p">.</span><span class="nx">id</span><span class="si">}</span><span class="s">\&quot;!&quot;</span>
+      <span class="k">return</span>
+
+    <span class="nv">addSensorToConfig: </span><span class="nf">(config) -&gt;</span>
+      <span class="nx">assert</span> <span class="nx">config</span><span class="p">.</span><span class="nx">id</span><span class="o">?</span>
+      <span class="nx">assert</span> <span class="nx">config</span><span class="p">.</span><span class="nx">class</span><span class="o">?</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Check if actuator is already in the config:</p></div></div><div class="code"><div class="wrapper">      <span class="nv">present = </span><span class="nx">@isSensorInConfig</span> <span class="nx">config</span><span class="p">.</span><span class="nx">id</span>
+      <span class="k">if</span> <span class="nx">present</span>
+        <span class="nv">message = </span><span class="s">&quot;an sensor with the id </span><span class="si">#{</span><span class="nx">config</span><span class="p">.</span><span class="nx">id</span><span class="si">}</span><span class="s"> is already in the config&quot;</span> 
+        <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="nx">message</span>
+      <span class="nx">@config</span><span class="p">.</span><span class="nx">sensors</span><span class="p">.</span><span class="nx">push</span> <span class="nx">config</span>
+      <span class="nx">@saveConfig</span><span class="p">()</span>
+
+    <span class="nv">isSensorInConfig: </span><span class="nf">(id) -&gt;</span>
+      <span class="nx">assert</span> <span class="nx">id</span><span class="o">?</span>
+      <span class="k">for</span> <span class="nx">s</span> <span class="k">in</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">sensors</span>
+        <span class="k">if</span> <span class="nx">s</span><span class="p">.</span><span class="nx">id</span> <span class="o">is</span> <span class="nx">id</span> <span class="k">then</span> <span class="k">return</span> <span class="kc">true</span>
+      <span class="k">return</span> <span class="kc">false</span>
+
     <span class="nv">getSensorById: </span><span class="nf">(id) -&gt;</span>
       <span class="nx">@sensors</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span>
+
 
     <span class="nv">init: </span><span class="nf">-&gt;</span>
       <span class="nv">self = </span><span class="k">this</span>
@@ -258,6 +285,7 @@
       <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">loadPlugins</span><span class="p">()</span>
         <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">initPlugins</span><span class="p">)</span>
         <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nf">-&gt;</span> <span class="nx">self</span><span class="p">.</span><span class="nx">loadActuators</span><span class="p">())</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nf">-&gt;</span> <span class="nx">self</span><span class="p">.</span><span class="nx">loadSensors</span><span class="p">())</span>
         <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">initActionHandler</span><span class="p">)</span>
         <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">initRules</span><span class="p">)</span>
         <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nf">-&gt;</span>         </div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Save the config on "config" event</p></div></div><div class="code"><div class="wrapper">          <span class="nx">self</span><span class="p">.</span><span class="nx">on</span> <span class="s">&quot;config&quot;</span><span class="p">,</span> <span class="nf">-&gt;</span>

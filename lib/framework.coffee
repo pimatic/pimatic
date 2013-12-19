@@ -190,10 +190,10 @@ module.exports = (env) ->
             if found then break
         unless found
           env.logger.warn "no plugin found for actuator \"#{acConfig.id}\"!"
+      return
 
     getActuatorById: (id) ->
       @actuators[id]
-
 
     addActuatorToConfig: (config) ->
       assert config.id?
@@ -227,8 +227,38 @@ module.exports = (env) ->
       @saveConfig()
       return
 
+    loadSensors: ->
+      for sensorConfig in @config.sensors
+        found = false
+        for plugin in @plugins
+          if plugin.plugin.createSensor?
+            found = plugin.plugin.createSensor sensorConfig
+            if found then break
+        unless found
+          env.logger.warn "no plugin found for sensor \"#{sensorConfig.id}\"!"
+      return
+
+    addSensorToConfig: (config) ->
+      assert config.id?
+      assert config.class?
+
+      # Check if actuator is already in the config:
+      present = @isSensorInConfig config.id
+      if present
+        message = "an sensor with the id #{config.id} is already in the config" 
+        throw new Error message
+      @config.sensors.push config
+      @saveConfig()
+
+    isSensorInConfig: (id) ->
+      assert id?
+      for s in @config.sensors
+        if s.id is id then return true
+      return false
+
     getSensorById: (id) ->
       @sensors[id]
+
 
     init: ->
       self = this
@@ -281,6 +311,7 @@ module.exports = (env) ->
       return self.loadPlugins()
         .then(initPlugins)
         .then(-> self.loadActuators())
+        .then(-> self.loadSensors())
         .then(initActionHandler)
         .then(initRules)
         .then(->         
