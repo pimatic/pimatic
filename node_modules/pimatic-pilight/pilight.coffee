@@ -127,6 +127,7 @@ module.exports = (env) ->
           clearTimeout cb.timeout
           @stateCallbacks.splice i, 1
           cb.deferred.resolve()
+      return
 
     updateSensor: (id, jsonMsg) ->
       sensor = @framework.getSensorById id
