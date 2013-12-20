@@ -5,6 +5,7 @@ socketIo = require 'socket.io'
 async = require 'async'
 assert = require 'cassert'
 Q = require 'q'
+convict = require 'convict'
 
 module.exports = (env) ->
 
@@ -16,6 +17,10 @@ module.exports = (env) ->
     # ###init the frontend:
     init: (app, @server, @config) =>
       self = @
+      conf = convict require("./mobile-frontend-config-shema")
+      conf.load config
+      conf.validate()
+      @config = conf.get ""
 
       # * Setup the coffeescript compiler
       app.use coffeescript(

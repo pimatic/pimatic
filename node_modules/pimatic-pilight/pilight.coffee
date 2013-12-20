@@ -66,23 +66,25 @@ module.exports = (env) ->
     sendState: (id, jsonMsg) ->
       deferred = Q.defer()
 
-      onTimeout = => 
-        for cb, i in @stateCallbacks
-          if cb.id is id
-            @stateCallbacks.splice i, 1
-            deferred.reject "Request to pilight-daemon timeout"
-        return
-
-      receiveTimeout = setTimeout onTimeout, @config.timeout
-
-      @stateCallbacks.push
-        id: id
-        jsonMsg: jsonMsg
-        deferred: deferred
-        timeout: receiveTimeout
-
       success = @send jsonMsg
-      unless success then deferred.recect "Could not send request to pilight-daemon"
+      if success
+
+        onTimeout = => 
+          for cb, i in @stateCallbacks
+            if cb.id is id
+              @stateCallbacks.splice i, 1
+              deferred.reject new Error "Request to pilight-daemon timeout"
+          return
+
+        receiveTimeout = setTimeout onTimeout, @config.timeout
+
+        @stateCallbacks.push
+          id: id
+          jsonMsg: jsonMsg
+          deferred: deferred
+          timeout: receiveTimeout
+      else
+        deferred.reject new Error "Could not send request to pilight-daemon"
       return deferred.promise
 
     onReceive: (jsonMsg) ->
@@ -177,10 +179,10 @@ module.exports = (env) ->
     createActuator: (config) =>
       if config.class is 'PilightSwitch'
         @framework.registerActuator new PilightSwitch config.id, deviceProbs =
-          names: config.name
+          name: config.name
           location: config.location
           device: config.device
-          state: lastState
+          state: if config.lastState is on then 'on' else 'off'
         return true
       return false
 
@@ -213,8 +215,9 @@ module.exports = (env) ->
 
     _setState: (state) ->
       if state is @state then return
-      backend.framework.updateActuatorConfig @getActuatorConfig()
       super state
+      if backend.framework.isActuatorInConfig @id
+        backend.framework.updateActuatorConfig @getActuatorConfig()
 
     getActuatorConfig: () ->
       return config =
@@ -224,7 +227,7 @@ module.exports = (env) ->
         name: @name
         location: @probs.location
         device: @probs.device
-        lastState: @probs.state
+        lastState: @_state
 
   class PilightTemperatureSensor extends env.sensors.TemperatureSensor
     name: null

@@ -63,7 +63,7 @@ class RuleManager extends require('events').EventEmitter
       predicates = []
       tokens = []
       for token in condition.split /(\sand\s|\sor\s|\)|\()/ 
-        do (token) ->
+        do (token) =>
           token = token.trim()
           if token in ["and", "or", ")", "("]
             tokens.push token

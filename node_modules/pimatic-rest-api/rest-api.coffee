@@ -38,16 +38,16 @@ module.exports = (env) ->
 
       app.post "/api/rule//add", (req, res, next) ->
         res.send 200, {success: false, error: __('Please enter a id')}
+        
       app.post "/api/rule/:ruleId/add", (req, res, next) ->
         ruleId = req.params.ruleId
         ruleText = req.body.rule
-        error = null
-        try
-          server.ruleManager.addRuleByString(ruleId, ruleText).done()
-        catch e
+        server.ruleManager.addRuleByString(ruleId, ruleText).then(
+          res.send 200, {success: true}  
+        ).catch( (e) ->
           env.logger.debug e.stack
-          error = e
-        res.send 200, {success: not error?, error: error?.message}
+          res.send 200, {success: false, error: error.message}
+        ).done()
 
       app.get "/api/rule/:ruleId/remove", (req, res, next) ->
         ruleId = req.params.ruleId

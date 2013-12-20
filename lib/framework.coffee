@@ -5,6 +5,7 @@ convict = require 'convict'
 i18n = require 'i18n'
 express = require "express"
 Q = require 'q'
+#Q.longStackSupport = on
 
 module.exports = (env) ->
 
@@ -277,36 +278,38 @@ module.exports = (env) ->
         self.ruleManager.actionHandlers.push new env.actions.LogActionHandler env, self
 
       initRules = ->
-        for rule in self.config.rules
-          try
-            self.ruleManager.addRuleByString(rule.id, rule.rule).done()
-          catch err
-            env.logger.error "Could not parse rule \"#{rule.rule}\": " + err.message 
-            env.logger.debug err.stack        
 
-        # Save rule updates to the config file:
-        # 
-        # * If a new rule was added then...
-        self.ruleManager.on "add", (rule) ->
-          # ...add it to the rules Array in the config.json file
-          for r in self.config.rules 
-            if r.id is rule.id then return
-          self.config.rules.push 
-            id: rule.id
-            rule: rule.string
-          self.emit "config"
-        # * If a rule was changed then...
-        self.ruleManager.on "update", (rule) ->
-          # ...change the rule with the right id in the config.json file
-          self.config.rules = for r in self.config.rules 
-            if r.id is rule.id then {id: rule.id, rule: rule.string}
-            else r
-          self.emit "config"
-        # * If a rule was removed then
-        self.ruleManager.on "remove", (rule) ->
-          # ...Remove the rule with the right id in the config.json file
-          self.config.rules = (r for r in self.config.rules when r.id isnt rule.id)
-          self.emit "config"
+        addRulePromises = for rule in self.config.rules
+          self.ruleManager.addRuleByString(rule.id, rule.rule).catch( (err) ->
+            env.logger.error "Could not parse rule \"#{rule.rule}\": " + err.message 
+            env.logger.debug err.stack
+          )        
+
+        return Q.all(addRulePromises).then(->
+          # Save rule updates to the config file:
+          # 
+          # * If a new rule was added then...
+          self.ruleManager.on "add", (rule) ->
+            # ...add it to the rules Array in the config.json file
+            for r in self.config.rules 
+              if r.id is rule.id then return
+            self.config.rules.push 
+              id: rule.id
+              rule: rule.string
+            self.emit "config"
+          # * If a rule was changed then...
+          self.ruleManager.on "update", (rule) ->
+            # ...change the rule with the right id in the config.json file
+            self.config.rules = for r in self.config.rules 
+              if r.id is rule.id then {id: rule.id, rule: rule.string}
+              else r
+            self.emit "config"
+          # * If a rule was removed then
+          self.ruleManager.on "remove", (rule) ->
+            # ...Remove the rule with the right id in the config.json file
+            self.config.rules = (r for r in self.config.rules when r.id isnt rule.id)
+            self.emit "config"
+        )
 
       return self.loadPlugins()
         .then(initPlugins)
@@ -325,7 +328,10 @@ module.exports = (env) ->
 
     saveConfig: ->
       self = this
-      if self.config?
-        fs.writeFile self.configFile, JSON.stringify(self.config, null, 2), (err) ->
-          if err? then throw err
-          else env.logger.info "config.json updated"
+      assert @config?
+      try
+        fs.writeFileSync self.configFile, JSON.stringify(self.config, null, 2)
+      catch err
+        env.logger.error "Could not write config file: ", err.message
+        env.logger.debug err
+        env.logger.info "config.json updated"
