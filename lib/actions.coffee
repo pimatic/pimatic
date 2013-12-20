@@ -1,5 +1,4 @@
 __ = require("i18n").__
-logger = require "./logger"
 Q = require 'q'
 assert = require 'cassert'
 
@@ -7,10 +6,12 @@ class ActionHandler
   executeAction: (actionString, simulate) =>
     throw new Error("unimplemented")  
 
+env = null
 
 class SwitchActionHandler extends ActionHandler
 
-  constructor: (@framework) ->
+  constructor: (_env, @framework) ->
+    env = _env
 
   runOnActuatorByNameOrId: (actuatorName, doCallback) ->
     self = this
@@ -53,8 +54,12 @@ class SwitchActionHandler extends ActionHandler
     return result
 
 class LogActionHandler extends ActionHandler
+
+  constructor: (_env, @framework) ->
+    env = _env
+
   executeAction: (actionString, simulate) =>
-    regExpString = '^log\\s+"(.*)?\"$'
+    regExpString = '^log\\s+"(.*)?"$'
     matches = actionString.match (new RegExp regExpString)
     if matches?
       stringToLog = matches[1]
@@ -62,7 +67,7 @@ class LogActionHandler extends ActionHandler
         return Q.fcall -> __("would log \"%s\"", stringToLog)
       else
         return Q.fcall -> 
-          logger.log stringToLog
+          env.logger.log stringToLog
           __("log: \"%s\"", stringToLog)
 
 module.exports.ActionHandler = ActionHandler

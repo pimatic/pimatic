@@ -273,8 +273,8 @@ module.exports = (env) ->
             env.logger.debug err.stack
 
       initActionHandler = ->
-        self.ruleManager.actionHandlers.push new env.actions.SwitchActionHandler self
-        self.ruleManager.actionHandlers.push new env.actions.LogActionHandler self
+        self.ruleManager.actionHandlers.push new env.actions.SwitchActionHandler env, self
+        self.ruleManager.actionHandlers.push new env.actions.LogActionHandler env, self
 
       initRules = ->
         for rule in self.config.rules

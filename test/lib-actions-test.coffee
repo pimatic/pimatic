@@ -12,10 +12,13 @@ i18n.configure(
 
 describe "SwitchActionHandler", ->
 
+  envDummy =
+    logger: {}
+
   frameworkDummy =
     actuators: {}
 
-  switchActionHandler = new actions.SwitchActionHandler frameworkDummy
+  switchActionHandler = new actions.SwitchActionHandler envDummy, frameworkDummy
 
   class DummySwitch extends actuators.SwitchActuator
     id: 'dummy-switch-id'
@@ -50,7 +53,7 @@ describe "SwitchActionHandler", ->
       do (rulePrefix) ->
 
         ruleWithOn = rulePrefix + ' on'
-        it "should execute \"#{ruleWithOn}\"", (finish) ->
+        it "should execute: #{ruleWithOn}", (finish) ->
           switchActionHandler.executeAction(ruleWithOn, false).then( (message) ->
             assert turnOnCalled
             assert message is "turned dummy switch on"
@@ -58,23 +61,42 @@ describe "SwitchActionHandler", ->
           ).done()
 
         ruleWithOff = rulePrefix + ' off'
-        it "should execute \"#{ruleWithOff}\"", (finish) ->
+        it "should execute: #{ruleWithOff}", (finish) ->
           switchActionHandler.executeAction(ruleWithOff, false).then( (message) ->
             assert turnOffCalled
             assert message is "turned dummy switch off"
             finish()
           ).done()
 
-    it 'should not execute "invalid-id on"', ->
+    it 'should not execute: invalid-id on', ->
       result = switchActionHandler.executeAction("invalid-id on", false)
       assert not result?
       assert not turnOnCalled
 
-    it 'should not execute "another dummy switch on"', ->
+    it 'should not execute: another dummy switch on', ->
       result = switchActionHandler.executeAction("another dummy switch on", false)
       assert not result?
       assert not turnOnCalled
 
 describe "LogActionHandler", ->
 
-  describe "#executeAction()", ->
+  envDummy =
+    logger: {}
+  frameworkDummy = {}
+
+  logActionHandler = new actions.LogActionHandler envDummy, frameworkDummy
+
+  describe "#executeAction()", =>
+
+    it 'should execute: log "a test message"', (finish)->
+
+      logCalled = false
+      envDummy.logger.log = (message) =>
+        logCalled = true
+        assert message is 'a test message'
+
+      logActionHandler.executeAction('log "a test message"', false).then( (message) ->
+        assert message is 'log: "a test message"'
+        assert logCalled
+        finish()
+      ).done()

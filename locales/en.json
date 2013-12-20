@@ -6,5 +6,6 @@
 	"Please enter a id": "Please enter a id",
 	"would turn %s on": "would turn %s on",
 	"would log \"%s\"": "would log \"%s\"",
-	"turned %s off": "turned %s off"
+	"turned %s off": "turned %s off",
+	"log: \"%s\"": "log: \"%s\""
 }
