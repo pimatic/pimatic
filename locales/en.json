@@ -5,5 +5,6 @@
 	"^(?:turn)?(?:\\s+the)?(.+?)(on|off)$": "^(?:turn)?(?:\\s+the)?(.+?)(on|off)$",
 	"Please enter a id": "Please enter a id",
 	"would turn %s on": "would turn %s on",
-	"would log \"%s\"": "would log \"%s\""
+	"would log \"%s\"": "would log \"%s\"",
+	"turned %s off": "turned %s off"
 }

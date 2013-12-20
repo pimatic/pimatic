@@ -19,12 +19,13 @@
 cp default_config.json config.json
 </code></pre>
 
-<p>The config is in the <a href="https://en.wikipedia.org/wiki/JSON">json</a> format and currently includes four sections:</p>
+<p>The config is in the <a href="https://en.wikipedia.org/wiki/JSON">json</a> format and currently includes five sections:</p>
 
 <pre><code>{ 
   "settings": { ... },
   "plugins": [ ... ],
   "actuators": [ ... ],
+  "sensors": [ ... ],
   "rules": []
 }
 </code></pre>
@@ -46,7 +47,7 @@ cp default_config.json config.json
 
 <h3 id="the-actuators-section">The "actuators"-section</h3>
 
-<p>The <code>"actuators"</code>-section should contain all actuators, you want to have registered in the framework. An actuator are typically provided by a backend, so take a look at the desired backend for more details about the configuration of your actuators. A actuator configuration has the form</p>
+<p>The <code>"actuators"</code>-section should contain all actuators, you want to have registered in the framework. An actuator is typically provided by a plugin, so take a look at the desired plugin for more details about the configuration of your actuators. A actuator configuration has the form</p>
 
 <pre><code>{ 
   "id": "light",
@@ -56,7 +57,21 @@ cp default_config.json config.json
 }
 </code></pre>
 
-<p>where the <code>"id"</code> should be unique, the <code>"name"</code> should be human readable description and <code>"class"</code> determines the backend and type of the actuator. </p>
+<p>where the <code>"id"</code> should be unique, the <code>"name"</code> should be human readable description and <code>"class"</code> determines the plugin and type of the actuator. </p>
+
+<h3 id="the-sensor-section">The "sensor"-section</h3>
+
+<p>The <code>"sensor"</code>-section should contain all sensors, you want to have registered in the framework. An sensor are typically provided by a plugin, so take a look at the desired plugin for more details about the configuration of your sensor. A actuator configuration has the form</p>
+
+<pre><code>{ 
+  "id": "temperature",
+  "class": "SomeSensor",
+  "name": "Temperature in the kitchen",
+  ...
+}
+</code></pre>
+
+<p>where the <code>"id"</code> should be unique, the <code>"name"</code> should be human readable description and <code>"class"</code> determines the plugin and type of the sensor. </p>
 
 <h3 id="the-rules-section">The "rules"-section</h3>
 
@@ -86,5 +101,5 @@ sudo coffee startup.coffee
 
 <h2 id="extensions-and-hacking">Extensions and Hacking</h2>
 
-<p>The framework is built to be extendable by frontends and backends. If you have devices that are currently not supported please fork the project and add a backend for your devices. 
-As well, if you have a nice Ideas for frontends or need support for specials actuators you are welcome to create a issue or submit a patch.</p></div></div></div></div></body></html>
+<p>The framework is built to be extendable by plugins. If you have devices that are currently not supported please add a plugin for your devices. 
+As well, if you have a nice Ideas for plugins or need support for specials actuators you are welcome to create a issue or submit a patch.</p></div></div></div></div></body></html>

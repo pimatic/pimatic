@@ -1,6 +1,7 @@
 __ = require("i18n").__
 logger = require "./logger"
 Q = require 'q'
+assert = require 'cassert'
 
 class ActionHandler
   executeAction: (actionString, simulate) =>
@@ -13,8 +14,8 @@ class SwitchActionHandler extends ActionHandler
 
   runOnActuatorByNameOrId: (actuatorName, doCallback) ->
     self = this
-    for id of self.framework.actuators
-      actuator = self.framework.actuators[id]
+    assert typeof self.framework.actuators is 'object'
+    for id, actuator of self.framework.actuators
       if id.toLowerCase() is actuatorName or actuator.name.toLowerCase() is actuatorName
         result = doCallback actuator
         #"break" when result was given by callback 
