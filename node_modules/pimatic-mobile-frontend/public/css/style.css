@@ -1,5 +1,5 @@
 div.ui-slider-switch {
-    margin: 6px 10px 10px 0 !important;
+    margin: 3px 10px 10px 0 !important;
     position: absolute;
     right: 0;
     top: 0;
@@ -38,6 +38,15 @@ fieldset .ui-block-b .ui-btn{
 
 #items .values > span{
   margin-left: 0.5em;
+}
+
+#items .unit {
+  color: #888888;
+  margin-left: 0.1em;
+}
+
+.added label {
+  color: #A0A0A0;
 }
 
 #log-messages li {

@@ -15,10 +15,10 @@ module.exports = (env) ->
     config: null
 
     # ###init the frontend:
-    init: (app, @server, @config) =>
+    init: (app, @server, @jsonConfig) =>
       self = @
       conf = convict require("./mobile-frontend-config-shema")
-      conf.load config
+      conf.load jsonConfig
       conf.validate()
       @config = conf.get ""
 
@@ -59,7 +59,7 @@ module.exports = (env) ->
       #       ]
       #     }
       # 
-      app.get '/data.json', (req,res) ->
+      app.get '/data.json', (req, res) ->
         self.getItemsWithData().then( (items) ->
           rules = []
           for id of server.ruleManager.rules
@@ -72,6 +72,47 @@ module.exports = (env) ->
             items: items
             rules: rules
         ).done()
+
+      app.get '/add-actuator/:actuatorId', (req, res) =>
+        actuatorId = req.params.actuatorId
+        if not acutatorId?
+          res.send 200, {success: false, message: 'no id given'}
+        found = false
+        for item in @config.items
+          if item.type is 'actuator' and item.id is actuatorId
+            found = true
+            break
+        if found 
+          res.send 200, {success: false, message: 'actuator already added'}
+          return
+
+        item = 
+          type: 'actuator'
+          id: actuatorId
+
+        @addNewItem item
+        res.send 200, {success: true}
+
+
+      app.get '/add-sensor/:sensorId', (req, res) =>
+        sensorId = req.params.sensorId
+        if not sensorId?
+          res.send 200, {success: false, message: 'no id given'}
+        found = false
+        for item in @config.items
+          if item.type is 'sensor' and item.id is sensorId
+            found = true
+            break
+        if found 
+          res.send 200, {success: false, message: 'sensor already added'}
+          return
+
+        item = 
+          type: 'sensor'
+          id: sensorId
+
+        @addNewItem item
+        res.send 200, {success: true}
 
       # * Static assets
       app.use express.static(__dirname + "/public")
@@ -92,10 +133,10 @@ module.exports = (env) ->
         }
 
         # When a new client connects
-        io.sockets.on 'connection', (socket) ->
+        io.sockets.on 'connection', (socket) =>
 
           for item in self.config.items 
-            do (item) ->
+            do (item) =>
               switch item.type
                 when "actuator" 
                   self.addActiatorNotify socket, item
@@ -116,14 +157,32 @@ module.exports = (env) ->
           memoryTransport.on 'log', logListener = (entry)->
             socket.emit 'log', entry
 
-          socket.on 'disconnect', -> 
+          @on 'item-add', addItemListener = (item) =>
+            socket.emit "item-add", item
+
+          socket.on 'disconnect', => 
             server.ruleManager.removeListener "update", updateRuleListener
             server.ruleManager.removeListener "add", addRuleListener 
             server.ruleManager.removeListener "update", removeRuleListener
             memoryTransport.removeListener 'log', logListener
+            @removeListener 'item-add', addItemListener
           return
 
       return
+
+    addNewItem: (item) ->
+      @config.items.push item
+      @jsonConfig.items = @config.items
+      @server.saveConfig()
+
+      p = switch item.type
+        when 'actuator'
+          @getActuatorWithData(item)
+        when 'sensor'
+          @getSensorWithData(item)
+      p.then( (item) =>
+        @emit 'item-add', item 
+      )
 
 
     addActiatorNotify: (socket, item) ->

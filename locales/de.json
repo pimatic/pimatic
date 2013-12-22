@@ -32,5 +32,13 @@
 	"Close menu": "Close menu",
 	"Log": "Log",
 	"Log messages": "Log messages",
-	"Back": "Back"
+	"Back": "Back",
+	"Add a a device to the list...": "Add a a device to the list...",
+	"Add a a item...": "Add a a item...",
+	"Add a item": "Add a item",
+	"Add a item...": "Add a item...",
+	"Add an item...": "Add an item...",
+	"Actuators": "Actuators",
+	"Sensors": "Sensors",
+	"Add": "Add"
 }

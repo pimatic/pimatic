@@ -3,19 +3,16 @@ sensors = []
 rules = []
 socket = null
 
+# index-page
+# ----------
+
 $(document).on "pagecreate", '#index', (event) ->
   $.get "/data.json", (data) ->
     for item in data.items
-      if item.template?
-        switch item.template 
-          when "switch" then addSwitch(item)
-          when "temperature" then addTemperature(item)
-          else addActuator(item)
-      else addActuator(item)
+      addItem item
 
 
     addRule(rule) for rule in data.rules
-
 
 $(document).on "pageinit", '#index', (event) ->
   if device?
@@ -33,6 +30,8 @@ $(document).on "pageinit", '#index', (event) ->
   socket.on "rule-add", (rule) -> addRule rule
   socket.on "rule-update", (rule) -> updateRule rule
   socket.on "rule-remove", (rule) -> removeRule rule
+  socket.on "item-add", (item) -> addItem item
+
 
   socket.on 'log', (entry) -> 
     console.log entry
@@ -56,6 +55,114 @@ $(document).on "pageinit", '#index', (event) ->
     $('#edit-rule-text').val("")
     $('#edit-rule-id').val("")
     return true
+
+addItem = (item) ->
+  if item.template?
+    switch item.template 
+      when "switch" then addSwitch(item)
+      when "temperature" then addTemperature(item)
+      else addActuator(item)
+  else addActuator(item)
+
+addSwitch = (actuator) ->
+  actuators[actuator.id] = actuator
+  li = $ $('#switch-template').html()
+  li.find('label')
+    .attr('for', "flip-#{actuator.id}")
+    .text(actuator.name)
+  select = li.find('select')
+    .attr('name', "flip-#{actuator.id}")
+    .attr('id', "flip-#{actuator.id}")             
+    .data('actuator-id', actuator.id)
+  if actuator.state?
+    val = if actuator.state then 'on' else 'off'
+    select.find("option[value=#{val}]").attr('selected', 'selected')
+  select
+    .slider() 
+  $('#add-a-item').before li
+  $('#items').listview('refresh')
+
+addActuator = (actuator) ->
+  actuators[actuator.id] = actuator
+  li = $ $('#actuator-template').html()
+  li.find('label').text(actuator.name)
+  if actuator.error?
+    li.find('.error').text(actuator.error)
+  $('#add-a-item').before li
+  $('#items').listview('refresh')
+
+addTemperature = (sensor) ->
+  sensors[sensor.id] = sensor
+  li = $ $('#temperature-template').html()
+  li.attr('id', "sensor-#{sensor.id}")     
+  li.find('label').text(sensor.name)
+  li.find('.temperature .val').text(sensor.values.temperature)
+  li.find('.humidity .val').text(sensor.values.humidity)
+  $('#add-a-item').before li
+  $('#items').listview('refresh')
+
+updateSensorValue = (sensorValue) ->
+  li = $("\#sensor-#{sensorValue.id}")
+  li.find(".#{sensorValue.name} .val").text(sensorValue.value)
+
+addRule = (rule) ->
+  rules[rule.id] = rule 
+  li = $ $('#rule-template').html()
+  li.attr('id', "rule-#{rule.id}")   
+  li.find('a').data('rule-id', rule.id)
+  li.find('.condition').text(rule.condition)
+  li.find('.action').text(rule.action)
+  $('#add-rule').before li
+  $('#rules').listview('refresh')
+
+
+# add-item-page
+# ----------
+
+$(document).on "pageinit", '#add-item', (event) ->
+  $.get "/api/list/actuators", (data) ->
+    for a in data.actuators
+      li = $ $('#item-add-template').html()
+      if actuators[a.id]? 
+        li.data('icon', 'check')
+        li.addClass('added')
+      li.find('label').text(a.name)
+      li.data 'actuator-id', a.id
+      $('#actuator-items').append li
+    $('#actuator-items').listview('refresh')
+
+  $.get "/api/list/sensors", (data) ->
+    for s in data.sensors
+      li = $ $('#item-add-template').html()
+      if sensors[s.id]? 
+        li.data('icon', 'check')
+        li.addClass('added')
+      li.find('label').text(s.name)
+      li.data 'sensor-id', s.id
+      $('#sensor-items').append li
+    $('#sensor-items').listview('refresh')
+
+  $('#actuator-items').on "click", 'li', ->
+    li = $ this
+    if li.hasClass 'added' then return
+    actuatorId = li.data('actuator-id')
+    $.get "/add-actuator/#{actuatorId}", (data) ->
+      li.data('icon', 'check')
+      li.addClass('added')
+      li.buttonMarkup({ icon: "check" });
+
+  $('#sensor-items').on "click", 'li', ->
+    li = $ this
+    if li.hasClass 'added' then return
+    sensorId = li.data('sensor-id')
+    $.get "/add-sensor/#{sensorId}", (data) ->
+      li.data('icon', 'check')
+      li.addClass('added')
+      li.buttonMarkup({ icon: "check" });
+
+
+# edit-rule-page
+# --------------
 
 $(document).on "pageinit", '#edit-rule', (event) ->
   $('#edit-rule').on "submit", '#edit-rule-form', ->
@@ -88,6 +195,20 @@ $(document).on "pageinit", '#edit-rule', (event) ->
         $('#edit-rule-id').textinput('disable')
         $('#edit-rule-advanced').show()
 
+updateRule = (rule) ->
+  rules[rule.id] = rule 
+  li = $("\#rule-#{rule.id}")   
+  li.find('.condition').text(rule.condition)
+  li.find('.action').text(rule.action)
+  $('#rules').listview('refresh')
+
+removeRule = (rule) ->
+  delete rules[rule.id]
+  $("\#rule-#{rule.id}").remove()
+  $('#rules').listview('refresh')  
+
+# log-page
+# ---------
 
 $(document).on "pageinit", '#log', (event) ->
   $.get "/api/messages"  , (data) ->
@@ -95,6 +216,18 @@ $(document).on "pageinit", '#log', (event) ->
       addLogMessage entry
     socket.on 'log', (entry) -> 
       addLogMessage entry
+
+
+addLogMessage = (entry) ->
+  li = $ $('#log-message-template').html()
+  li.find('.level').text(entry.level).addClass(entry.level)
+  li.find('.msg').text(entry.msg)
+  $('#log-messages').append li
+  $('#log-messages').listview('refresh') 
+
+
+# General
+# -------
 
 $.ajaxSetup timeout: 7000 #ms
 
@@ -115,69 +248,6 @@ $(document).ajaxError (event, jqxhr, settings, exception) ->
     error = "Ein Fehler ist aufgetreten."
   alert error
 
-addSwitch = (actuator) ->
-  actuators[actuator.id] = actuator
-  li = $ $('#switch-template').html()
-  li.find('label')
-    .attr('for', "flip-#{actuator.id}")
-    .text(actuator.name)
-  select = li.find('select')
-    .attr('name', "flip-#{actuator.id}")
-    .attr('id', "flip-#{actuator.id}")             
-    .data('actuator-id', actuator.id)
-  if actuator.state?
-    val = if actuator.state then 'on' else 'off'
-    select.find("option[value=#{val}]").attr('selected', 'selected')
-  select
-    .slider() 
-  $('#items').append li
-  $('#items').listview('refresh')
-
-addActuator = (actuator) ->
-  actuators[actuator.id] = actuator
-  li = $ $('#actuator-template').html()
-  li.find('label').text(actuator.name)
-  if actuator.error?
-    li.find('.error').text(actuator.error)
-  $('#items').append li
-  $('#items').listview('refresh')
-
-addTemperature = (sensor) ->
-  sensors[sensor.id] = sensor
-  li = $ $('#temperature-template').html()
-  li.attr('id', "sensor-#{sensor.id}")     
-  li.find('label').text(sensor.name)
-  li.find('.temperature .val').text(sensor.values.temperature)
-  li.find('.humidity .val').text(sensor.values.humidity)
-  $('#items').append li
-  $('#items').listview('refresh')
-
-updateSensorValue = (sensorValue) ->
-  li = $("\#sensor-#{sensorValue.id}")
-  li.find(".#{sensorValue.name} .val").text(sensorValue.value)
-
-addRule = (rule) ->
-  rules[rule.id] = rule 
-  li = $ $('#rule-template').html()
-  li.attr('id', "rule-#{rule.id}")   
-  li.find('a').data('rule-id', rule.id)
-  li.find('.condition').text(rule.condition)
-  li.find('.action').text(rule.action)
-  $('#add-rule').before li
-  $('#rules').listview('refresh')
-
-updateRule = (rule) ->
-  rules[rule.id] = rule 
-  li = $("\#rule-#{rule.id}")   
-  li.find('.condition').text(rule.condition)
-  li.find('.action').text(rule.action)
-  $('#rules').listview('refresh')
-
-removeRule = (rule) ->
-  delete rules[rule.id]
-  $("\#rule-#{rule.id}").remove()
-  $('#rules').listview('refresh')  
-
 voiceCallback = (matches) ->
   $.get "/api/speak",
     word: matches
@@ -185,9 +255,3 @@ voiceCallback = (matches) ->
     device.showToast data
     $("#talk").blur()
 
-addLogMessage = (entry) ->
-  li = $ $('#log-message-template').html()
-  li.find('.level').text(entry.level).addClass(entry.level)
-  li.find('.msg').text(entry.msg)
-  $('#log-messages').append li
-  $('#log-messages').listview('refresh') 

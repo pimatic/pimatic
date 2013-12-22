@@ -1,4 +1,4 @@
-var actuators, addActuator, addLogMessage, addRule, addSwitch, addTemperature, removeRule, rules, sensors, socket, updateRule, updateSensorValue, voiceCallback;
+var actuators, addActuator, addItem, addLogMessage, addRule, addSwitch, addTemperature, removeRule, rules, sensors, socket, updateRule, updateSensorValue, voiceCallback;
 
 actuators = [];
 
@@ -14,20 +14,7 @@ $(document).on("pagecreate", '#index', function(event) {
     _ref = data.items;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       item = _ref[_i];
-      if (item.template != null) {
-        switch (item.template) {
-          case "switch":
-            addSwitch(item);
-            break;
-          case "temperature":
-            addTemperature(item);
-            break;
-          default:
-            addActuator(item);
-        }
-      } else {
-        addActuator(item);
-      }
+      addItem(item);
     }
     _ref1 = data.rules;
     _results = [];
@@ -65,6 +52,9 @@ $(document).on("pageinit", '#index', function(event) {
   socket.on("rule-remove", function(rule) {
     return removeRule(rule);
   });
+  socket.on("item-add", function(item) {
+    return addItem(item);
+  });
   socket.on('log', function(entry) {
     return console.log(entry);
   });
@@ -90,6 +80,143 @@ $(document).on("pageinit", '#index', function(event) {
     $('#edit-rule-text').val("");
     $('#edit-rule-id').val("");
     return true;
+  });
+});
+
+addItem = function(item) {
+  if (item.template != null) {
+    switch (item.template) {
+      case "switch":
+        return addSwitch(item);
+      case "temperature":
+        return addTemperature(item);
+      default:
+        return addActuator(item);
+    }
+  } else {
+    return addActuator(item);
+  }
+};
+
+addSwitch = function(actuator) {
+  var li, select, val;
+  actuators[actuator.id] = actuator;
+  li = $($('#switch-template').html());
+  li.find('label').attr('for', "flip-" + actuator.id).text(actuator.name);
+  select = li.find('select').attr('name', "flip-" + actuator.id).attr('id', "flip-" + actuator.id).data('actuator-id', actuator.id);
+  if (actuator.state != null) {
+    val = actuator.state ? 'on' : 'off';
+    select.find("option[value=" + val + "]").attr('selected', 'selected');
+  }
+  select.slider();
+  $('#add-a-item').before(li);
+  return $('#items').listview('refresh');
+};
+
+addActuator = function(actuator) {
+  var li;
+  actuators[actuator.id] = actuator;
+  li = $($('#actuator-template').html());
+  li.find('label').text(actuator.name);
+  if (actuator.error != null) {
+    li.find('.error').text(actuator.error);
+  }
+  $('#add-a-item').before(li);
+  return $('#items').listview('refresh');
+};
+
+addTemperature = function(sensor) {
+  var li;
+  sensors[sensor.id] = sensor;
+  li = $($('#temperature-template').html());
+  li.attr('id', "sensor-" + sensor.id);
+  li.find('label').text(sensor.name);
+  li.find('.temperature .val').text(sensor.values.temperature);
+  li.find('.humidity .val').text(sensor.values.humidity);
+  $('#add-a-item').before(li);
+  return $('#items').listview('refresh');
+};
+
+updateSensorValue = function(sensorValue) {
+  var li;
+  li = $("\#sensor-" + sensorValue.id);
+  return li.find("." + sensorValue.name + " .val").text(sensorValue.value);
+};
+
+addRule = function(rule) {
+  var li;
+  rules[rule.id] = rule;
+  li = $($('#rule-template').html());
+  li.attr('id', "rule-" + rule.id);
+  li.find('a').data('rule-id', rule.id);
+  li.find('.condition').text(rule.condition);
+  li.find('.action').text(rule.action);
+  $('#add-rule').before(li);
+  return $('#rules').listview('refresh');
+};
+
+$(document).on("pageinit", '#add-item', function(event) {
+  $.get("/api/list/actuators", function(data) {
+    var a, li, _i, _len, _ref;
+    _ref = data.actuators;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      a = _ref[_i];
+      li = $($('#item-add-template').html());
+      if (actuators[a.id] != null) {
+        li.data('icon', 'check');
+        li.addClass('added');
+      }
+      li.find('label').text(a.name);
+      li.data('actuator-id', a.id);
+      $('#actuator-items').append(li);
+    }
+    return $('#actuator-items').listview('refresh');
+  });
+  $.get("/api/list/sensors", function(data) {
+    var li, s, _i, _len, _ref;
+    _ref = data.sensors;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      s = _ref[_i];
+      li = $($('#item-add-template').html());
+      if (sensors[s.id] != null) {
+        li.data('icon', 'check');
+        li.addClass('added');
+      }
+      li.find('label').text(s.name);
+      li.data('sensor-id', s.id);
+      $('#sensor-items').append(li);
+    }
+    return $('#sensor-items').listview('refresh');
+  });
+  $('#actuator-items').on("click", 'li', function() {
+    var actuatorId, li;
+    li = $(this);
+    if (li.hasClass('added')) {
+      return;
+    }
+    actuatorId = li.data('actuator-id');
+    return $.get("/add-actuator/" + actuatorId, function(data) {
+      li.data('icon', 'check');
+      li.addClass('added');
+      return li.buttonMarkup({
+        icon: "check"
+      });
+    });
+  });
+  return $('#sensor-items').on("click", 'li', function() {
+    var li, sensorId;
+    li = $(this);
+    if (li.hasClass('added')) {
+      return;
+    }
+    sensorId = li.data('sensor-id');
+    return $.get("/add-sensor/" + sensorId, function(data) {
+      li.data('icon', 'check');
+      li.addClass('added');
+      return li.buttonMarkup({
+        icon: "check"
+      });
+    });
   });
 });
 
@@ -146,6 +273,21 @@ $(document).on("pageinit", '#edit-rule', function(event) {
   });
 });
 
+updateRule = function(rule) {
+  var li;
+  rules[rule.id] = rule;
+  li = $("\#rule-" + rule.id);
+  li.find('.condition').text(rule.condition);
+  li.find('.action').text(rule.action);
+  return $('#rules').listview('refresh');
+};
+
+removeRule = function(rule) {
+  delete rules[rule.id];
+  $("\#rule-" + rule.id).remove();
+  return $('#rules').listview('refresh');
+};
+
 $(document).on("pageinit", '#log', function(event) {
   return $.get("/api/messages", function(data) {
     var entry, _i, _len;
@@ -158,6 +300,15 @@ $(document).on("pageinit", '#log', function(event) {
     });
   });
 });
+
+addLogMessage = function(entry) {
+  var li;
+  li = $($('#log-message-template').html());
+  li.find('.level').text(entry.level).addClass(entry.level);
+  li.find('.msg').text(entry.msg);
+  $('#log-messages').append(li);
+  return $('#log-messages').listview('refresh');
+};
 
 $.ajaxSetup({
   timeout: 7000
@@ -186,78 +337,6 @@ $(document).ajaxError(function(event, jqxhr, settings, exception) {
   return alert(error);
 });
 
-addSwitch = function(actuator) {
-  var li, select, val;
-  actuators[actuator.id] = actuator;
-  li = $($('#switch-template').html());
-  li.find('label').attr('for', "flip-" + actuator.id).text(actuator.name);
-  select = li.find('select').attr('name', "flip-" + actuator.id).attr('id', "flip-" + actuator.id).data('actuator-id', actuator.id);
-  if (actuator.state != null) {
-    val = actuator.state ? 'on' : 'off';
-    select.find("option[value=" + val + "]").attr('selected', 'selected');
-  }
-  select.slider();
-  $('#items').append(li);
-  return $('#items').listview('refresh');
-};
-
-addActuator = function(actuator) {
-  var li;
-  actuators[actuator.id] = actuator;
-  li = $($('#actuator-template').html());
-  li.find('label').text(actuator.name);
-  if (actuator.error != null) {
-    li.find('.error').text(actuator.error);
-  }
-  $('#items').append(li);
-  return $('#items').listview('refresh');
-};
-
-addTemperature = function(sensor) {
-  var li;
-  sensors[sensor.id] = sensor;
-  li = $($('#temperature-template').html());
-  li.attr('id', "sensor-" + sensor.id);
-  li.find('label').text(sensor.name);
-  li.find('.temperature .val').text(sensor.values.temperature);
-  li.find('.humidity .val').text(sensor.values.humidity);
-  $('#items').append(li);
-  return $('#items').listview('refresh');
-};
-
-updateSensorValue = function(sensorValue) {
-  var li;
-  li = $("\#sensor-" + sensorValue.id);
-  return li.find("." + sensorValue.name + " .val").text(sensorValue.value);
-};
-
-addRule = function(rule) {
-  var li;
-  rules[rule.id] = rule;
-  li = $($('#rule-template').html());
-  li.attr('id', "rule-" + rule.id);
-  li.find('a').data('rule-id', rule.id);
-  li.find('.condition').text(rule.condition);
-  li.find('.action').text(rule.action);
-  $('#add-rule').before(li);
-  return $('#rules').listview('refresh');
-};
-
-updateRule = function(rule) {
-  var li;
-  rules[rule.id] = rule;
-  li = $("\#rule-" + rule.id);
-  li.find('.condition').text(rule.condition);
-  li.find('.action').text(rule.action);
-  return $('#rules').listview('refresh');
-};
-
-removeRule = function(rule) {
-  delete rules[rule.id];
-  $("\#rule-" + rule.id).remove();
-  return $('#rules').listview('refresh');
-};
-
 voiceCallback = function(matches) {
   return $.get("/api/speak", {
     word: matches
@@ -265,13 +344,4 @@ voiceCallback = function(matches) {
     device.showToast(data);
     return $("#talk").blur();
   });
-};
-
-addLogMessage = function(entry) {
-  var li;
-  li = $($('#log-message-template').html());
-  li.find('.level').text(entry.level).addClass(entry.level);
-  li.find('.msg').text(entry.msg);
-  $('#log-messages').append(li);
-  return $('#log-messages').listview('refresh');
 };

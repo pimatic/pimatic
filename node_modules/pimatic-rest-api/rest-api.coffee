@@ -6,10 +6,10 @@ module.exports = (env) ->
   class RestFrontend extends env.plugins.Plugin
     config: null
 
-    init: (app, server, config) =>
+    init: (app, framework, config) =>
       @config = config
       app.get "/api/actuator/:actuatorId/:actionName", (req, res, next) ->
-        actuator = server.getActuatorById req.params.actuatorId
+        actuator = framework.getActuatorById req.params.actuatorId
         if actuator?
           #TODO: add parms support
           if actuator.hasAction req.params.actionName
@@ -29,7 +29,7 @@ module.exports = (env) ->
         ruleText = req.body.rule
         error = null
         try
-          server.ruleManager.updateRuleByString(ruleId, ruleText).done()
+          framework.ruleManager.updateRuleByString(ruleId, ruleText).done()
         catch e
           env.logger.error e.message
           env.logger.debug e.stack
@@ -42,7 +42,7 @@ module.exports = (env) ->
       app.post "/api/rule/:ruleId/add", (req, res, next) ->
         ruleId = req.params.ruleId
         ruleText = req.body.rule
-        server.ruleManager.addRuleByString(ruleId, ruleText).then(
+        framework.ruleManager.addRuleByString(ruleId, ruleText).then(
           res.send 200, {success: true}  
         ).catch( (e) ->
           env.logger.debug e.stack
@@ -53,7 +53,7 @@ module.exports = (env) ->
         ruleId = req.params.ruleId
         error = null
         try
-          server.ruleManager.removeRule ruleId
+          framework.ruleManager.removeRule ruleId
         catch e
           env.logger.debug e.stack
           error = e
@@ -62,6 +62,16 @@ module.exports = (env) ->
       app.get "/api/messages", (req, res, next) ->
         memoryTransport = env.logger.transports.memory
         res.send 200, memoryTransport.getBuffer()
+
+      app.get "/api/list/actuators", (req, res, next) ->
+        actuatorList = for id, a of framework.actuators 
+          id: a.id, name: a.name
+        res.send 200, {success: true, actuators: actuatorList}
+
+      app.get "/api/list/sensors", (req, res, next) ->
+        sensorList = for id, s of framework.sensors 
+          id: s.id, name: s.name
+        res.send 200, {success: true, sensors: sensorList}
 
         
   return new RestFrontend
