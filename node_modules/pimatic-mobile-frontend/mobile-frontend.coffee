@@ -114,6 +114,26 @@ module.exports = (env) ->
         @addNewItem item
         res.send 200, {success: true}
 
+      app.post '/update-order', (req, res) =>
+        order = req.body.order
+        newItems = []
+        for orderItem in order
+          assert orderItem.type?
+          assert orderItem.id?
+          for item in jsonConfig.items
+            if item.id is orderItem.id and item.type is orderItem.type
+              newItems.push item
+              break
+        if not (newItems.length is jsonConfig.items.length)
+          res.send 200, {success: false, message: 'items do not equal, reject order'}
+          return
+
+        @config.items = newItems
+        @jsonConfig.items = @config.items
+        @server.saveConfig()
+
+        res.send 200, {success: true}
+
       # * Static assets
       app.use express.static(__dirname + "/public")
 

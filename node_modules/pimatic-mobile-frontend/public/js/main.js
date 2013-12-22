@@ -75,27 +75,57 @@ $(document).on("pageinit", '#index', function(event) {
     $('#edit-rule-id').val(ruleId);
     return true;
   });
-  return $('#index #rules').on("click", "#add-rule", function(event, ui) {
+  $('#index #rules').on("click", "#add-rule", function(event, ui) {
     $('#edit-rule-form').data('action', 'add');
     $('#edit-rule-text').val("");
     $('#edit-rule-id').val("");
     return true;
   });
+  $("#items").sortable({
+    items: "li.sortable"
+  }).disableSelection();
+  return $("#items").bind("sortstop", function(event, ui) {
+    var item, order;
+    $('#items').listview('refresh');
+    order = (function() {
+      var _i, _len, _ref, _results;
+      _ref = $("#items li.sortable");
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        item = _ref[_i];
+        item = $(item);
+        _results.push({
+          type: item.data('item-type'),
+          id: item.data('item-id')
+        });
+      }
+      return _results;
+    })();
+    console.log(order);
+    return $.post("update-order", {
+      order: order
+    });
+  });
 });
 
 addItem = function(item) {
-  if (item.template != null) {
-    switch (item.template) {
-      case "switch":
-        return addSwitch(item);
-      case "temperature":
-        return addTemperature(item);
-      default:
-        return addActuator(item);
+  var li;
+  li = (function() {
+    if (item.template != null) {
+      switch (item.template) {
+        case "switch":
+          return addSwitch(item);
+        case "temperature":
+          return addTemperature(item);
+        default:
+          return addActuator(item);
+      }
+    } else {
+      return addActuator(item);
     }
-  } else {
-    return addActuator(item);
-  }
+  })();
+  li.data('item-type', item.type);
+  return li.data('item-id', item.id);
 };
 
 addSwitch = function(actuator) {
@@ -110,7 +140,8 @@ addSwitch = function(actuator) {
   }
   select.slider();
   $('#add-a-item').before(li);
-  return $('#items').listview('refresh');
+  $('#items').listview('refresh');
+  return li;
 };
 
 addActuator = function(actuator) {
@@ -122,7 +153,8 @@ addActuator = function(actuator) {
     li.find('.error').text(actuator.error);
   }
   $('#add-a-item').before(li);
-  return $('#items').listview('refresh');
+  $('#items').listview('refresh');
+  return li;
 };
 
 addTemperature = function(sensor) {
@@ -134,7 +166,8 @@ addTemperature = function(sensor) {
   li.find('.temperature .val').text(sensor.values.temperature);
   li.find('.humidity .val').text(sensor.values.humidity);
   $('#add-a-item').before(li);
-  return $('#items').listview('refresh');
+  $('#items').listview('refresh');
+  return li;
 };
 
 updateSensorValue = function(sensorValue) {

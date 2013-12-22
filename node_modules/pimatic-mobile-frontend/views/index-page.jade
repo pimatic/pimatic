@@ -1,16 +1,16 @@
 script#switch-template(type='text/template')
-  li(data-role="fieldcontain")
+  li.sortable(data-role="fieldcontain")
     label
     select.switch(data-role="slider")
       option(value="off")=__('Off')
       option(value="on")=__('On')
 script#actuator-template(type='text/template')     
-  li(data-role="fieldcontain")
+  li.sortable(data-role="fieldcontain")
     label
     | 
     span.error
 script#temperature-template(type='text/template')
-  li(data-role="fieldcontain")
+  li.sortable(data-role="fieldcontain")
     label
     | 
     span.values

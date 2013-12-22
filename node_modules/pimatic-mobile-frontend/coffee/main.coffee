@@ -56,13 +56,28 @@ $(document).on "pageinit", '#index', (event) ->
     $('#edit-rule-id').val("")
     return true
 
+  $("#items").sortable(
+    items: "li.sortable"
+  ).disableSelection()
+
+  $("#items").bind "sortstop", (event, ui) ->
+    $('#items').listview('refresh')
+    order = for item in $("#items li.sortable")
+      item = $ item
+      type: item.data('item-type'), id: item.data('item-id')
+    console.log order
+    $.post "update-order", order: order
+
+
 addItem = (item) ->
-  if item.template?
+  li = if item.template?
     switch item.template 
       when "switch" then addSwitch(item)
       when "temperature" then addTemperature(item)
       else addActuator(item)
   else addActuator(item)
+  li.data('item-type', item.type)
+  li.data('item-id', item.id)
 
 addSwitch = (actuator) ->
   actuators[actuator.id] = actuator
@@ -81,6 +96,7 @@ addSwitch = (actuator) ->
     .slider() 
   $('#add-a-item').before li
   $('#items').listview('refresh')
+  return li
 
 addActuator = (actuator) ->
   actuators[actuator.id] = actuator
@@ -90,6 +106,7 @@ addActuator = (actuator) ->
     li.find('.error').text(actuator.error)
   $('#add-a-item').before li
   $('#items').listview('refresh')
+  return li
 
 addTemperature = (sensor) ->
   sensors[sensor.id] = sensor
@@ -100,6 +117,7 @@ addTemperature = (sensor) ->
   li.find('.humidity .val').text(sensor.values.humidity)
   $('#add-a-item').before li
   $('#items').listview('refresh')
+  return li
 
 updateSensorValue = (sensorValue) ->
   li = $("\#sensor-#{sensorValue.id}")
