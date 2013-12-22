@@ -32,7 +32,7 @@ class SwitchActionHandler extends ActionHandler
     if matches?
       actuatorName = matches[1].trim()
       state = matches[2]
-      state =  (if state is __("on") then on else off)
+      state =  (if state is __("on") or state is "on" then on else off)
       actionName = (if state then "turnOn" else "turnOff")
       result = self.runOnActuatorByNameOrId actuatorName, (actuator)->
         if actuator.hasAction actionName
