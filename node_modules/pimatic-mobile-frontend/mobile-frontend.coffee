@@ -101,7 +101,8 @@ module.exports = (env) ->
                   self.addActiatorNotify socket, item
                 when 'sensor'
                   self.addSensorNotify socket, item
-              
+
+
           server.ruleManager.on "add", addRuleListener = (rule) ->
             self.emitRuleUpdate socket, "add", rule
           
@@ -115,11 +116,13 @@ module.exports = (env) ->
           memoryTransport.on 'log', logListener = (entry)->
             socket.emit 'log', entry
 
-          socket.on 'close', -> 
+          socket.on 'disconnect', -> 
             server.ruleManager.removeListener "update", updateRuleListener
             server.ruleManager.removeListener "add", addRuleListener 
             server.ruleManager.removeListener "update", removeRuleListener
             memoryTransport.removeListener 'log', logListener
+          return
+
       return
 
 
