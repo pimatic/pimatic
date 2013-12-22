@@ -116,6 +116,9 @@ module.exports = (env) ->
 
       app.post '/update-order', (req, res) =>
         order = req.body.order
+        unless order?
+          res.send 200, {success: false, message: 'no order given'}
+          return
         newItems = []
         for orderItem in order
           assert orderItem.type?
@@ -130,6 +133,21 @@ module.exports = (env) ->
 
         @config.items = newItems
         @jsonConfig.items = @config.items
+        @server.saveConfig()
+
+        res.send 200, {success: true}
+
+      app.post '/remove-item', (req, res) =>
+        item = req.body.item
+        unless item?
+          res.send 200, {success: false, message: 'no item given'}
+          return
+        for it, i in jsonConfig.items
+          if it.id is item.id and it.type is item.type
+            jsonConfig.items.splice i, 1
+            break
+
+        @config.items = @jsonConfig.items
         @server.saveConfig()
 
         res.send 200, {success: true}

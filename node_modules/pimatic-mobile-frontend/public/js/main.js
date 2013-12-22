@@ -1,4 +1,4 @@
-var actuators, addActuator, addItem, addLogMessage, addRule, addSwitch, addTemperature, removeRule, rules, sensors, socket, updateRule, updateSensorValue, voiceCallback;
+var actuators, addActuator, addItem, addLogMessage, addRule, addSensor, addSwitch, addTemperature, removeRule, rules, sensors, socket, updateRule, updateSensorValue, voiceCallback;
 
 actuators = [];
 
@@ -82,29 +82,60 @@ $(document).on("pageinit", '#index', function(event) {
     return true;
   });
   $("#items").sortable({
-    items: "li.sortable"
+    items: "li.sortable",
+    forcePlaceholderSize: true,
+    placeholder: "sortable-placeholder",
+    start: function(ev, ui) {
+      $("#delete-item").show();
+      $("#add-a-item").hide();
+      $('#items').listview('refresh');
+      return ui.item.css('border-bottom-width', '1px');
+    },
+    stop: function(ev, ui) {
+      var item, order;
+      $("#delete-item").hide();
+      $("#add-a-item").show();
+      $('#items').listview('refresh');
+      ui.item.css('border-bottom-width', '0');
+      order = (function() {
+        var _i, _len, _ref, _results;
+        _ref = $("#items li.sortable");
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          item = _ref[_i];
+          item = $(item);
+          _results.push({
+            type: item.data('item-type'),
+            id: item.data('item-id')
+          });
+        }
+        return _results;
+      })();
+      return $.post("update-order", {
+        order: order
+      });
+    }
   }).disableSelection();
-  return $("#items").bind("sortstop", function(event, ui) {
-    var item, order;
-    $('#items').listview('refresh');
-    order = (function() {
-      var _i, _len, _ref, _results;
-      _ref = $("#items li.sortable");
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        item = _ref[_i];
-        item = $(item);
-        _results.push({
-          type: item.data('item-type'),
-          id: item.data('item-id')
-        });
+  return $("#delete-item").droppable({
+    accept: "li.sortable",
+    hoverClass: "ui-state-hover",
+    drop: function(ev, ui) {
+      var item;
+      item = {
+        id: ui.draggable.data('item-id'),
+        type: ui.draggable.data('item-type')
+      };
+      $.post('remove-item', {
+        item: item
+      });
+      if (item.type === 'actuator') {
+        delete actuators[item.id];
       }
-      return _results;
-    })();
-    console.log(order);
-    return $.post("update-order", {
-      order: order
-    });
+      if (item.type === 'sensor') {
+        delete sensors[item.id];
+      }
+      return ui.draggable.remove();
+    }
   });
 });
 
@@ -117,11 +148,14 @@ addItem = function(item) {
           return addSwitch(item);
         case "temperature":
           return addTemperature(item);
-        default:
-          return addActuator(item);
       }
     } else {
-      return addActuator(item);
+      switch (item.type) {
+        case 'actuator':
+          return addActuator(item);
+        case 'sensor':
+          return addSensor(item);
+      }
     }
   })();
   li.data('item-type', item.type);
@@ -151,6 +185,19 @@ addActuator = function(actuator) {
   li.find('label').text(actuator.name);
   if (actuator.error != null) {
     li.find('.error').text(actuator.error);
+  }
+  $('#add-a-item').before(li);
+  $('#items').listview('refresh');
+  return li;
+};
+
+addSensor = function(sensor) {
+  var li;
+  sensors[sensor.id] = sensor;
+  li = $($('#actuator-template').html());
+  li.find('label').text(sensor.name);
+  if (sensor.error != null) {
+    li.find('.error').text(sensor.error);
   }
   $('#add-a-item').before(li);
   $('#items').listview('refresh');
@@ -189,38 +236,6 @@ addRule = function(rule) {
 };
 
 $(document).on("pageinit", '#add-item', function(event) {
-  $.get("/api/list/actuators", function(data) {
-    var a, li, _i, _len, _ref;
-    _ref = data.actuators;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      a = _ref[_i];
-      li = $($('#item-add-template').html());
-      if (actuators[a.id] != null) {
-        li.data('icon', 'check');
-        li.addClass('added');
-      }
-      li.find('label').text(a.name);
-      li.data('actuator-id', a.id);
-      $('#actuator-items').append(li);
-    }
-    return $('#actuator-items').listview('refresh');
-  });
-  $.get("/api/list/sensors", function(data) {
-    var li, s, _i, _len, _ref;
-    _ref = data.sensors;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      s = _ref[_i];
-      li = $($('#item-add-template').html());
-      if (sensors[s.id] != null) {
-        li.data('icon', 'check');
-        li.addClass('added');
-      }
-      li.find('label').text(s.name);
-      li.data('sensor-id', s.id);
-      $('#sensor-items').append(li);
-    }
-    return $('#sensor-items').listview('refresh');
-  });
   $('#actuator-items').on("click", 'li', function() {
     var actuatorId, li;
     li = $(this);
@@ -250,6 +265,45 @@ $(document).on("pageinit", '#add-item', function(event) {
         icon: "check"
       });
     });
+  });
+});
+
+$(document).on("pagebeforeshow", '#add-item', function(event) {
+  $.get("/api/list/actuators", function(data) {
+    var a, li, _i, _len, _ref;
+    console.log(actuators);
+    $('#actuator-items').empty();
+    _ref = data.actuators;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      a = _ref[_i];
+      li = $($('#item-add-template').html());
+      if (actuators[a.id] != null) {
+        li.data('icon', 'check');
+        li.addClass('added');
+      }
+      li.find('label').text(a.name);
+      li.data('actuator-id', a.id);
+      $('#actuator-items').append(li);
+    }
+    return $('#actuator-items').listview('refresh');
+  });
+  return $.get("/api/list/sensors", function(data) {
+    var li, s, _i, _len, _ref;
+    $('#sensor-items').empty();
+    console.log(sensors);
+    _ref = data.sensors;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      s = _ref[_i];
+      li = $($('#item-add-template').html());
+      if (sensors[s.id] != null) {
+        li.data('icon', 'check');
+        li.addClass('added');
+      }
+      li.find('label').text(s.name);
+      li.data('sensor-id', s.id);
+      $('#sensor-items').append(li);
+    }
+    return $('#sensor-items').listview('refresh');
   });
 });
 

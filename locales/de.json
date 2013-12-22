@@ -16,7 +16,6 @@
 	"Test": "Test",
 	"then": "then",
 	"Cancel": "Cancel",
-	"Add a rule...": "Add a rule...",
 	"Add a new rule...": "Add a new rule...",
 	"Add new rule": "Add new rule",
 	"Please enter a id": "Please enter a id",
@@ -33,12 +32,9 @@
 	"Log": "Log",
 	"Log messages": "Log messages",
 	"Back": "Back",
-	"Add a a device to the list...": "Add a a device to the list...",
-	"Add a a item...": "Add a a item...",
-	"Add a item": "Add a item",
-	"Add a item...": "Add a item...",
 	"Add an item...": "Add an item...",
 	"Actuators": "Actuators",
 	"Sensors": "Sensors",
-	"Add": "Add"
+	"Add": "Add",
+	"Drop here to remove item": "Drop here to remove item"
 }

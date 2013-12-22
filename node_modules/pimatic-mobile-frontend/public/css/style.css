@@ -32,6 +32,12 @@ fieldset .ui-block-b .ui-btn{
     margin-right: 0px;
 }
 
+li.sortable-placeholder{
+  /*height: 20px;*/
+  border-style: dashed;
+  border-width: 1px;
+}
+
 #items .values{
   float: right;
 }

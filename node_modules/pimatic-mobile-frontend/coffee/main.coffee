@@ -8,10 +8,7 @@ socket = null
 
 $(document).on "pagecreate", '#index', (event) ->
   $.get "/data.json", (data) ->
-    for item in data.items
-      addItem item
-
-
+    addItem(item) for item in data.items
     addRule(rule) for rule in data.rules
 
 $(document).on "pageinit", '#index', (event) ->
@@ -58,24 +55,51 @@ $(document).on "pageinit", '#index', (event) ->
 
   $("#items").sortable(
     items: "li.sortable"
+    forcePlaceholderSize: true
+    placeholder: "sortable-placeholder"
+    start: (ev, ui) ->
+      $("#delete-item").show()
+      $("#add-a-item").hide()
+      $('#items').listview('refresh')
+      ui.item.css('border-bottom-width', '1px')
+
+    stop: (ev, ui) ->
+      $("#delete-item").hide()
+      $("#add-a-item").show()
+      $('#items').listview('refresh')
+      ui.item.css('border-bottom-width', '0')
+      order = for item in $("#items li.sortable")
+        item = $ item
+        type: item.data('item-type'), id: item.data('item-id')
+      $.post "update-order", order: order
   ).disableSelection()
 
-  $("#items").bind "sortstop", (event, ui) ->
-    $('#items').listview('refresh')
-    order = for item in $("#items li.sortable")
-      item = $ item
-      type: item.data('item-type'), id: item.data('item-id')
-    console.log order
-    $.post "update-order", order: order
-
+  $("#delete-item").droppable(
+    accept: "li.sortable"
+    hoverClass: "ui-state-hover"
+    drop: (ev, ui) ->
+      item = {
+        id: ui.draggable.data('item-id')
+        type: ui.draggable.data('item-type')
+      }
+      $.post 'remove-item', item: item
+      if item.type is 'actuator'
+        delete actuators[item.id]
+      if item.type is 'sensor'
+        delete sensors[item.id]
+      ui.draggable.remove()
+  )
 
 addItem = (item) ->
   li = if item.template?
     switch item.template 
       when "switch" then addSwitch(item)
       when "temperature" then addTemperature(item)
-      else addActuator(item)
-  else addActuator(item)
+  else switch item.type
+    when 'actuator'
+      addActuator(item)
+    when 'sensor'
+      addSensor(item)
   li.data('item-type', item.type)
   li.data('item-id', item.id)
 
@@ -104,6 +128,16 @@ addActuator = (actuator) ->
   li.find('label').text(actuator.name)
   if actuator.error?
     li.find('.error').text(actuator.error)
+  $('#add-a-item').before li
+  $('#items').listview('refresh')
+  return li
+
+addSensor = (sensor) ->
+  sensors[sensor.id] = sensor
+  li = $ $('#actuator-template').html()
+  li.find('label').text(sensor.name)
+  if sensor.error?
+    li.find('.error').text(sensor.error)
   $('#add-a-item').before li
   $('#items').listview('refresh')
   return li
@@ -138,28 +172,6 @@ addRule = (rule) ->
 # ----------
 
 $(document).on "pageinit", '#add-item', (event) ->
-  $.get "/api/list/actuators", (data) ->
-    for a in data.actuators
-      li = $ $('#item-add-template').html()
-      if actuators[a.id]? 
-        li.data('icon', 'check')
-        li.addClass('added')
-      li.find('label').text(a.name)
-      li.data 'actuator-id', a.id
-      $('#actuator-items').append li
-    $('#actuator-items').listview('refresh')
-
-  $.get "/api/list/sensors", (data) ->
-    for s in data.sensors
-      li = $ $('#item-add-template').html()
-      if sensors[s.id]? 
-        li.data('icon', 'check')
-        li.addClass('added')
-      li.find('label').text(s.name)
-      li.data 'sensor-id', s.id
-      $('#sensor-items').append li
-    $('#sensor-items').listview('refresh')
-
   $('#actuator-items').on "click", 'li', ->
     li = $ this
     if li.hasClass 'added' then return
@@ -177,6 +189,34 @@ $(document).on "pageinit", '#add-item', (event) ->
       li.data('icon', 'check')
       li.addClass('added')
       li.buttonMarkup({ icon: "check" });
+
+
+$(document).on "pagebeforeshow", '#add-item', (event) ->
+  $.get "/api/list/actuators", (data) ->
+    console.log actuators
+    $('#actuator-items').empty()
+    for a in data.actuators
+      li = $ $('#item-add-template').html()
+      if actuators[a.id]? 
+        li.data('icon', 'check')
+        li.addClass('added')
+      li.find('label').text(a.name)
+      li.data 'actuator-id', a.id
+      $('#actuator-items').append li
+    $('#actuator-items').listview('refresh')
+
+  $.get "/api/list/sensors", (data) ->
+    $('#sensor-items').empty()
+    console.log sensors
+    for s in data.sensors
+      li = $ $('#item-add-template').html()
+      if sensors[s.id]? 
+        li.data('icon', 'check')
+        li.addClass('added')
+      li.find('label').text(s.name)
+      li.data 'sensor-id', s.id
+      $('#sensor-items').append li
+    $('#sensor-items').listview('refresh')
 
 
 # edit-rule-page
