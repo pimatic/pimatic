@@ -35,7 +35,7 @@ class PluginManager
   path: (name) ->
     return "#{process.cwd()}/node_modules/#{name}"
 
-class Plugin
+class Plugin extends require('events').EventEmitter
   name: null
   init: ->
     throw new Error("your plugin must implement init")

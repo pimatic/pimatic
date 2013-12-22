@@ -257,6 +257,20 @@ module.exports = (env) ->
         if s.id is id then return true
       return false
 
+    updateSensorConfig: (config) ->
+      assert config.id?
+      assert config.class?
+
+      found = false
+      for a, i in @config.sensors
+        if a.id is config.id
+          @config.sensors[i] = config
+          found = true
+          break
+      if not found then throw new Error "no sensor with #{config.id} in config"
+      @saveConfig()
+      return
+
     getSensorById: (id) ->
       @sensors[id]
 

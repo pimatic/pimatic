@@ -9,13 +9,12 @@ assert = require 'cassert'
 
 module.exports = (env) ->
 
-  class PilightBackend extends env.plugins.Plugin
+  class PilightPlugin extends env.plugins.Plugin
     framework: null
     config: null
     state: "unconnected"
     pilightConfig: null
     client: null
-    stateCallbacks: []
 
     init: (@app, @framework, @config) =>
       conf = convict require("./pilight-config-shema")
@@ -69,20 +68,25 @@ module.exports = (env) ->
       success = @send jsonMsg
       if success
 
+        event = "state callback #{id}"
+        onStateCallback = null
+
+        # register a timeout if we dont get a awnser from pilight-daemon
         onTimeout = => 
-          for cb, i in @stateCallbacks
-            if cb.id is id
-              @stateCallbacks.splice i, 1
-              deferred.reject new Error "Request to pilight-daemon timeout"
+          @removeListener event, onStateCallback
+          deferred.reject new Error "Request to pilight-daemon timeout"
           return
 
         receiveTimeout = setTimeout onTimeout, @config.timeout
 
-        @stateCallbacks.push
-          id: id
-          jsonMsg: jsonMsg
-          deferred: deferred
-          timeout: receiveTimeout
+        # if we get a awnser this function get called:
+        onStateCallback = (state) =>
+          clearTimeout receiveTimeout
+          @removeListener event, onStateCallback
+          deferred.resolve()
+
+        @on event, onStateCallback
+
       else
         deferred.reject new Error "Could not send request to pilight-daemon"
       return deferred.promise
@@ -123,12 +127,9 @@ module.exports = (env) ->
     updateSwitch: (id, jsonMsg) ->
       actuator = @framework.getActuatorById id
       if actuator?
-        actuator._setState if jsonMsg.values.state is 'on' then on else off
-      for cb, i in @stateCallbacks
-        if cb.id is id
-          clearTimeout cb.timeout
-          @stateCallbacks.splice i, 1
-          cb.deferred.resolve()
+        state = (if jsonMsg.values.state is 'on' then on else off)
+        actuator._setState state
+        @emit "state callback #{id}", state
       return
 
     updateSensor: (id, jsonMsg) ->
@@ -173,8 +174,21 @@ module.exports = (env) ->
           @framework.addActuatorToConfig actuatorConfig
 
     sensorConfigReceived: (id, deviceProbs) ->
-      unless (@framework.getSensorById id)?
-        @framework.registerSensor new PilightTemperatureSensor id, deviceProbs
+      sensor = @framework.getSensorById id
+      if sensor?
+        if sensor instanceof PilightTemperatureSensor
+          sensor.updateFromPilightConfig deviceProbs
+        else 
+          env.logger.error "sensor should be an PilightTemperatureSensor"
+      else
+        sensor = new PilightTemperatureSensor id, deviceProbs
+        @framework.registerSensor sensor
+        sensorConfig = sensor.getSensorConfig()
+        if @framework.isSensorInConfig id
+          @framework.updateSensorConfig sensorConfig
+        else
+          @framework.addSensorToConfig sensorConfig
+
 
     createActuator: (config) =>
       if config.class is 'PilightSwitch'
@@ -186,7 +200,19 @@ module.exports = (env) ->
         return true
       return false
 
-  backend = new PilightBackend
+    createSensor: (config) =>
+      if config.class is 'PilightTemperatureSensor'
+        @framework.registerSensor new PilightTemperatureSensor config.id, deviceProbs =
+          name: config.name
+          location: config.location
+          device: config.device
+          humidity: config.lastHumidity
+          temperature: config.lastTemperature
+          settings: config.settings
+        return true
+      return false
+
+  plugin = new PilightPlugin
 
   class PilightSwitch extends env.actuators.PowerSwitch
     probs: null
@@ -206,7 +232,7 @@ module.exports = (env) ->
           device: @probs.device
           state: if state then "on" else "off"
 
-      return backend.sendState @id, jsonMsg
+      return plugin.sendState @id, jsonMsg
 
     updateFromPilightConfig: (@probs) ->
       assert probs?
@@ -216,8 +242,8 @@ module.exports = (env) ->
     _setState: (state) ->
       if state is @state then return
       super state
-      if backend.framework.isActuatorInConfig @id
-        backend.framework.updateActuatorConfig @getActuatorConfig()
+      if plugin.framework.isActuatorInConfig @id
+        plugin.framework.updateActuatorConfig @getActuatorConfig()
 
     getActuatorConfig: () ->
       return config =
@@ -235,6 +261,9 @@ module.exports = (env) ->
     humidity: null
 
     constructor: (@id, @probs) ->
+      @updateFromPilightConfig probs
+
+    updateFromPilightConfig: (@probs) ->
       @name = probs.name
       @setValues
         temperature: @probs.temperature
@@ -247,7 +276,21 @@ module.exports = (env) ->
       if values.humidity?
         @humidity = values.humidity/(@probs.settings.decimals*10)
         @emit "humidity", @humidity
+      if plugin.framework.isSensorInConfig @id
+        plugin.framework.updateSensorConfig @getSensorConfig()
       return
+
+    getSensorConfig: () ->
+      return config =
+        id: @id
+        class: 'PilightTemperatureSensor'
+        inPilightConfig: true
+        name: @name
+        location: @probs.location
+        device: @probs.device
+        lastTemperature: @probs.temperature
+        lastHumidity: @probs.humidity
+        settings: @probs.settings
 
     getSensorValuesNames: ->
       names = []
@@ -276,4 +319,4 @@ module.exports = (env) ->
     cancelNotify: (id) ->
       throw new Error("no predicates implemented")
 
-  return backend
+  return plugin

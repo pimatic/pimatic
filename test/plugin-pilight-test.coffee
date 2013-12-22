@@ -125,6 +125,11 @@ describe "pimatic-pilight", ->
 
     it "should send turnOn", (finish)->
       this.timeout 1000
+
+      framework.getActuatorById = (id) ->
+        assert id is actuator.id
+        return actuator
+
       gotData = false
       pilightPlugin.client.write = (data) ->
         gotData = true
