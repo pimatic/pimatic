@@ -1,30 +1,41 @@
 winston = require 'winston'
 events = require("events")
 util = require("util")
+CBuffer = require 'CBuffer'
 
 
 class MemoryTransport extends winston.Transport
 
-  __constructor: (options) ->
-    self = this
-    Transport.call self, options
+  name: "memory"
+  bufferLength: 100
+  errorCount: 0
+
+  constructor: (options) ->
+    console.log this
+    @buffer = new CBuffer(@bufferLength)
+    winston.Transport.call @, options
 
   getBuffer: ->
-    self = this
-    return self.buffer
+    return @buffer.toArray()
 
-MemoryTransport::name = "memory"
-MemoryTransport::buffer = []
-MemoryTransport::log = (level, msg, meta, callback) ->
-  self = this
-  msg =   
-    level: level
-    msg: msg
-    meta: meta
-  self.buffer.push msg
-  self.emit "logged"
-  self.emit "log", msg
-  callback null, true
+  getErrorCount: -> @errorCount
+
+  clearErrorCount: -> 
+    @errorCount = 0
+    return
+
+  log: (level, msg, meta, callback) ->
+    if level is 'error' then @errorCount++
+    msg =   
+      level: level
+      msg: msg
+      meta: meta
+    @buffer.push msg
+    @emit "logged"
+    @emit "log", msg
+    callback null, true
+
+
 
 logger = new (winston.Logger)(
   transports: [

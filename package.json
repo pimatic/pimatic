@@ -37,7 +37,8 @@
     "npm": "~1.3.14",
     "lodash": "~2.4.1",
     "q": "~0.9.7",
-    "proxyquire": "~0.5.2"
+    "proxyquire": "~0.5.2",
+    "CBuffer": "~0.1.4"
   },
   "devDependencies": {
     "grunt": "~0.4.1",
