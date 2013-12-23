@@ -1,4 +1,4 @@
-var actuators, addActuator, addItem, addLogMessage, addRule, addSensor, addSwitch, addTemperature, errorCount, removeRule, rules, sensors, socket, updateErrorCount, updateRule, updateSensorValue, voiceCallback;
+var actuators, addItem, addLogMessage, addRule, buildActuator, buildSensor, buildSwitch, buildTemperature, errorCount, loadData, removeRule, rules, sensors, socket, updateErrorCount, updateRule, updateSensorValue, voiceCallback;
 
 actuators = [];
 
@@ -11,21 +11,7 @@ errorCount = 0;
 socket = null;
 
 $(document).on("pagecreate", '#index', function(event) {
-  return $.get("/data.json", function(data) {
-    var item, rule, _i, _j, _len, _len1, _ref, _ref1;
-    _ref = data.items;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      item = _ref[_i];
-      addItem(item);
-    }
-    _ref1 = data.rules;
-    for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-      rule = _ref1[_j];
-      addRule(rule);
-    }
-    errorCount = data.errorCount;
-    return updateErrorCount();
-  });
+  return loadData();
 });
 
 $(document).on("pageinit", '#index', function(event) {
@@ -34,7 +20,9 @@ $(document).on("pageinit", '#index', function(event) {
       return device.startVoiceRecognition("voiceCallback");
     });
   }
-  socket = io.connect("/");
+  socket = io.connect("/", {
+    'connect timeout': 5000
+  });
   socket.on("switch-status", function(data) {
     var value;
     if (data.state != null) {
@@ -63,6 +51,24 @@ $(document).on("pageinit", '#index', function(event) {
       updateErrorCount();
     }
     return console.log(entry);
+  });
+  socket.on('reconnect', function() {
+    $.mobile.loading("hide");
+    return loadData();
+  });
+  socket.on('disconnect', function() {
+    return $.mobile.loading("show", {
+      text: "No Connection",
+      textVisible: true,
+      textonly: true
+    });
+  });
+  socket.on('connect_failed', function() {
+    return $.mobile.loading("show", {
+      text: "Could not connect",
+      textVisible: true,
+      textonly: true
+    });
   });
   $('#index #items').on("change", ".switch", function(event, ui) {
     var actuatorAction, actuatorId;
@@ -145,6 +151,29 @@ $(document).on("pageinit", '#index', function(event) {
   });
 });
 
+loadData = function() {
+  return $.get("/data.json", function(data) {
+    var item, rule, _i, _j, _len, _len1, _ref, _ref1;
+    actuators = [];
+    sensors = [];
+    rules = [];
+    $('#items .item').remove();
+    _ref = data.items;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      item = _ref[_i];
+      addItem(item);
+    }
+    $('#rules .rule').remove();
+    _ref1 = data.rules;
+    for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+      rule = _ref1[_j];
+      addRule(rule);
+    }
+    errorCount = data.errorCount;
+    return updateErrorCount();
+  });
+};
+
 updateErrorCount = function() {
   var e;
   if ($('#error-count').find('.ui-btn-text').length > 0) {
@@ -170,24 +199,27 @@ addItem = function(item) {
     if (item.template != null) {
       switch (item.template) {
         case "switch":
-          return addSwitch(item);
+          return buildSwitch(item);
         case "temperature":
-          return addTemperature(item);
+          return buildTemperature(item);
       }
     } else {
       switch (item.type) {
         case 'actuator':
-          return addActuator(item);
+          return buildActuator(item);
         case 'sensor':
-          return addSensor(item);
+          return buildSensor(item);
       }
     }
   })();
   li.data('item-type', item.type);
-  return li.data('item-id', item.id);
+  li.data('item-id', item.id);
+  li.addClass('item');
+  $('#add-a-item').before(li);
+  return $('#items').listview('refresh');
 };
 
-addSwitch = function(actuator) {
+buildSwitch = function(actuator) {
   var li, select, val;
   actuators[actuator.id] = actuator;
   li = $($('#switch-template').html());
@@ -198,12 +230,10 @@ addSwitch = function(actuator) {
     select.find("option[value=" + val + "]").attr('selected', 'selected');
   }
   select.slider();
-  $('#add-a-item').before(li);
-  $('#items').listview('refresh');
   return li;
 };
 
-addActuator = function(actuator) {
+buildActuator = function(actuator) {
   var li;
   actuators[actuator.id] = actuator;
   li = $($('#actuator-template').html());
@@ -211,12 +241,10 @@ addActuator = function(actuator) {
   if (actuator.error != null) {
     li.find('.error').text(actuator.error);
   }
-  $('#add-a-item').before(li);
-  $('#items').listview('refresh');
   return li;
 };
 
-addSensor = function(sensor) {
+buildSensor = function(sensor) {
   var li;
   sensors[sensor.id] = sensor;
   li = $($('#actuator-template').html());
@@ -224,12 +252,10 @@ addSensor = function(sensor) {
   if (sensor.error != null) {
     li.find('.error').text(sensor.error);
   }
-  $('#add-a-item').before(li);
-  $('#items').listview('refresh');
   return li;
 };
 
-addTemperature = function(sensor) {
+buildTemperature = function(sensor) {
   var li;
   sensors[sensor.id] = sensor;
   li = $($('#temperature-template').html());
@@ -237,8 +263,6 @@ addTemperature = function(sensor) {
   li.find('label').text(sensor.name);
   li.find('.temperature .val').text(sensor.values.temperature);
   li.find('.humidity .val').text(sensor.values.humidity);
-  $('#add-a-item').before(li);
-  $('#items').listview('refresh');
   return li;
 };
 
@@ -256,6 +280,7 @@ addRule = function(rule) {
   li.find('a').data('rule-id', rule.id);
   li.find('.condition').text(rule.condition);
   li.find('.action').text(rule.action);
+  li.addClass('rule');
   $('#add-rule').before(li);
   return $('#rules').listview('refresh');
 };
@@ -433,7 +458,7 @@ $.ajaxSetup({
 
 $(document).ajaxStart(function() {
   return $.mobile.loading("show", {
-    text: "Lade...",
+    text: "Loading...",
     textVisible: true,
     textonly: false
   });
@@ -445,11 +470,12 @@ $(document).ajaxStop(function() {
 
 $(document).ajaxError(function(event, jqxhr, settings, exception) {
   var error;
+  console.log(exception);
   error = void 0;
   if (exception) {
-    error = "Fehler: " + exception;
+    error = "Error: " + exception;
   } else {
-    error = "Ein Fehler ist aufgetreten.";
+    error = "No Connection";
   }
   return alert(error);
 });

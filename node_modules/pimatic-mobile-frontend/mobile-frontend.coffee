@@ -46,6 +46,17 @@ module.exports = (env) ->
           {
             dir: __dirname + '/public/js'
             prefix: "/js/"
+            ignore: (f) -> /main\.js/.test f
+          }
+          {
+            file: __dirname + "/coffee/main.coffee"
+            path: '/js/main.js'
+          }
+          {
+            # add socket.io.js: A file must be given, but the file is
+            # served by socket.io so just give another file...
+            file: __dirname + "/coffee/main.coffee"
+            path: '/socket.io/socket.io.js'
           }
           {
             dir: __dirname + '/public/themes/graphite/generated/water'

@@ -8,18 +8,14 @@ socket = null
 # ----------
 
 $(document).on "pagecreate", '#index', (event) ->
-  $.get "/data.json", (data) ->
-    addItem(item) for item in data.items
-    addRule(rule) for rule in data.rules
-    errorCount = data.errorCount
-    updateErrorCount()
+  loadData()
 
 $(document).on "pageinit", '#index', (event) ->
   if device?
     $("#talk").show().bind "vclick", (event, ui) ->
       device.startVoiceRecognition "voiceCallback"
 
-  socket = io.connect("/")
+  socket = io.connect("/", 'connect timeout': 5000)
   socket.on "switch-status", (data) ->
     if data.state?
       value = (if data.state then "on" else "off")
@@ -38,6 +34,23 @@ $(document).on "pageinit", '#index', (event) ->
       errorCount++
       updateErrorCount()
     console.log entry
+
+  socket.on 'reconnect', ->
+    $.mobile.loading "hide"
+    loadData()
+
+  socket.on 'disconnect', ->
+   $.mobile.loading "show",
+    text: "No Connection"
+    textVisible: true
+    textonly: true
+
+  socket.on 'connect_failed', ->
+    $.mobile.loading "show",
+      text: "Could not connect"
+      textVisible: true
+      textonly: true
+
 
   $('#index #items').on "change", ".switch",(event, ui) ->
     actuatorId = $(this).data('actuator-id')
@@ -96,6 +109,18 @@ $(document).on "pageinit", '#index', (event) ->
       ui.draggable.remove()
   )
 
+loadData = () ->
+  $.get "/data.json", (data) ->
+    actuators = []
+    sensors = []
+    rules = []
+    $('#items .item').remove()
+    addItem(item) for item in data.items
+    $('#rules .rule').remove()
+    addRule(rule) for rule in data.rules
+    errorCount = data.errorCount
+    updateErrorCount()
+
 updateErrorCount = ->
   if $('#error-count').find('.ui-btn-text').length > 0
     $('#error-count').find('.ui-btn-text').text(errorCount)
@@ -112,17 +137,20 @@ updateErrorCount = ->
 addItem = (item) ->
   li = if item.template?
     switch item.template 
-      when "switch" then addSwitch(item)
-      when "temperature" then addTemperature(item)
+      when "switch" then buildSwitch(item)
+      when "temperature" then buildTemperature(item)
   else switch item.type
     when 'actuator'
-      addActuator(item)
+      buildActuator(item)
     when 'sensor'
-      addSensor(item)
+      buildSensor(item)
   li.data('item-type', item.type)
   li.data('item-id', item.id)
+  li.addClass 'item'
+  $('#add-a-item').before li
+  $('#items').listview('refresh')
 
-addSwitch = (actuator) ->
+buildSwitch = (actuator) ->
   actuators[actuator.id] = actuator
   li = $ $('#switch-template').html()
   li.find('label')
@@ -137,39 +165,31 @@ addSwitch = (actuator) ->
     select.find("option[value=#{val}]").attr('selected', 'selected')
   select
     .slider() 
-  $('#add-a-item').before li
-  $('#items').listview('refresh')
   return li
 
-addActuator = (actuator) ->
+buildActuator = (actuator) ->
   actuators[actuator.id] = actuator
   li = $ $('#actuator-template').html()
   li.find('label').text(actuator.name)
   if actuator.error?
     li.find('.error').text(actuator.error)
-  $('#add-a-item').before li
-  $('#items').listview('refresh')
   return li
 
-addSensor = (sensor) ->
+buildSensor = (sensor) ->
   sensors[sensor.id] = sensor
   li = $ $('#actuator-template').html()
   li.find('label').text(sensor.name)
   if sensor.error?
     li.find('.error').text(sensor.error)
-  $('#add-a-item').before li
-  $('#items').listview('refresh')
   return li
 
-addTemperature = (sensor) ->
+buildTemperature = (sensor) ->
   sensors[sensor.id] = sensor
   li = $ $('#temperature-template').html()
   li.attr('id', "sensor-#{sensor.id}")     
   li.find('label').text(sensor.name)
   li.find('.temperature .val').text(sensor.values.temperature)
   li.find('.humidity .val').text(sensor.values.humidity)
-  $('#add-a-item').before li
-  $('#items').listview('refresh')
   return li
 
 updateSensorValue = (sensorValue) ->
@@ -183,6 +203,7 @@ addRule = (rule) ->
   li.find('a').data('rule-id', rule.id)
   li.find('.condition').text(rule.condition)
   li.find('.action').text(rule.action)
+  li.addClass 'rule'
   $('#add-rule').before li
   $('#rules').listview('refresh')
 
@@ -314,7 +335,7 @@ $.ajaxSetup timeout: 7000 #ms
 
 $(document).ajaxStart ->
   $.mobile.loading "show",
-    text: "Lade..."
+    text: "Loading..."
     textVisible: true
     textonly: false
 
@@ -322,11 +343,12 @@ $(document).ajaxStop ->
   $.mobile.loading "hide"
 
 $(document).ajaxError (event, jqxhr, settings, exception) ->
+  console.log exception
   error = undefined
   if exception
-    error = "Fehler: " + exception
+    error = "Error: " + exception
   else
-    error = "Ein Fehler ist aufgetreten."
+    error = "No Connection"
   alert error
 
 voiceCallback = (matches) ->
