@@ -131,11 +131,10 @@ module.exports = (env) ->
         if not (newItems.length is jsonConfig.items.length)
           res.send 200, {success: false, message: 'items do not equal, reject order'}
           return
+        res.send 200, {success: true}
 
-        @config.items = newItems
-        @jsonConfig.items = @config.items
-        @server.saveConfig()
-
+      app.get '/clear-log', (req, res) =>
+        env.logger.transports.memory.clearLog()
         res.send 200, {success: true}
 
       app.post '/remove-item', (req, res) =>

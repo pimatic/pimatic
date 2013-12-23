@@ -97,9 +97,13 @@ $(document).on "pageinit", '#index', (event) ->
   )
 
 updateErrorCount = ->
-  if $('#error-count').find('.ui-btn-text').length
+  if $('#error-count').find('.ui-btn-text').length > 0
     $('#error-count').find('.ui-btn-text').text(errorCount)
-    $('#error-count').button('refresh')
+    try
+      $('#error-count').button('refresh')
+    catch e
+      # ignore: Uncaught Error: cannot call methods on button prior 
+      # to initialization; attempted to call method 'refresh' 
   else
     $('#error-count').text(errorCount)
   if errorCount is 0 then $('#error-count').hide()
@@ -208,7 +212,6 @@ $(document).on "pageinit", '#add-item', (event) ->
 
 $(document).on "pagebeforeshow", '#add-item', (event) ->
   $.get "/api/list/actuators", (data) ->
-    console.log actuators
     $('#actuator-items').empty()
     for a in data.actuators
       li = $ $('#item-add-template').html()
@@ -221,7 +224,6 @@ $(document).on "pagebeforeshow", '#add-item', (event) ->
     $('#actuator-items').listview('refresh')
 
   $.get "/api/list/sensors", (data) ->
-    $('#sensor-items').empty()
     console.log sensors
     for s in data.sensors
       li = $ $('#item-add-template').html()
@@ -289,6 +291,12 @@ $(document).on "pageinit", '#log', (event) ->
       addLogMessage entry
     socket.on 'log', (entry) -> 
       addLogMessage entry
+
+  $('#log').on "click", '#clear-log', (event, ui) ->
+    $.get "/clear-log", ->
+      $('#log-messages').empty()
+      errorCount = 0
+      updateErrorCount()
 
 
 addLogMessage = (entry) ->

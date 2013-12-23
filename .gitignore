@@ -40,6 +40,7 @@ node_modules/lodash/
 node_modules/q/
 node_modules/proxyquire/
 node_modules/coffee-errors/
+node_modules/CBuffer/
 npm-debug.log
 node.log
 *.sublime-workspace

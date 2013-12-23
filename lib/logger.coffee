@@ -19,6 +19,10 @@ class MemoryTransport extends winston.Transport
 
   getErrorCount: -> @errorCount
 
+  clearLog: ->
+    @buffer.empty()
+    @errorCount = 0
+
   clearErrorCount: -> 
     @errorCount = 0
     return

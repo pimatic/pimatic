@@ -146,9 +146,14 @@ $(document).on("pageinit", '#index', function(event) {
 });
 
 updateErrorCount = function() {
-  if ($('#error-count').find('.ui-btn-text').length) {
+  var e;
+  if ($('#error-count').find('.ui-btn-text').length > 0) {
     $('#error-count').find('.ui-btn-text').text(errorCount);
-    $('#error-count').button('refresh');
+    try {
+      $('#error-count').button('refresh');
+    } catch (_error) {
+      e = _error;
+    }
   } else {
     $('#error-count').text(errorCount);
   }
@@ -291,7 +296,6 @@ $(document).on("pageinit", '#add-item', function(event) {
 $(document).on("pagebeforeshow", '#add-item', function(event) {
   $.get("/api/list/actuators", function(data) {
     var a, li, _i, _len, _ref;
-    console.log(actuators);
     $('#actuator-items').empty();
     _ref = data.actuators;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -309,7 +313,6 @@ $(document).on("pagebeforeshow", '#add-item', function(event) {
   });
   return $.get("/api/list/sensors", function(data) {
     var li, s, _i, _len, _ref;
-    $('#sensor-items').empty();
     console.log(sensors);
     _ref = data.sensors;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -396,7 +399,7 @@ removeRule = function(rule) {
 };
 
 $(document).on("pageinit", '#log', function(event) {
-  return $.get("/api/messages", function(data) {
+  $.get("/api/messages", function(data) {
     var entry, _i, _len;
     for (_i = 0, _len = data.length; _i < _len; _i++) {
       entry = data[_i];
@@ -404,6 +407,13 @@ $(document).on("pageinit", '#log', function(event) {
     }
     return socket.on('log', function(entry) {
       return addLogMessage(entry);
+    });
+  });
+  return $('#log').on("click", '#clear-log', function(event, ui) {
+    return $.get("/clear-log", function() {
+      $('#log-messages').empty();
+      errorCount = 0;
+      return updateErrorCount();
     });
   });
 });

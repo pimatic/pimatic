@@ -38,5 +38,6 @@
 	"Add": "Add",
 	"Drop here to remove item": "Drop here to remove item",
 	"Add a item": "Add a item",
-	"would turn %s on": "would turn %s on"
+	"would turn %s on": "would turn %s on",
+	"Clear": "Clear"
 }
