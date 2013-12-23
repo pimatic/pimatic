@@ -349,16 +349,155 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "type": "heading",
               "data": {
                 "level": 1,
-                "title": "RuleManager",
-                "slug": "rulemanager",
+                "title": "rules handling",
+                "slug": "rules-handling",
                 "isFileHeader": true
               },
-              "depth": 1
+              "depth": 1,
+              "children": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "RuleManager",
+                    "slug": "rulemanager"
+                  },
+                  "depth": 2,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "whenPredicateIsTrue",
+                        "slug": "whenpredicateistrue"
+                      },
+                      "depth": 3
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "parseRuleString",
+                        "slug": "parserulestring"
+                      },
+                      "depth": 3
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "AddRuleByString",
+                        "slug": "addrulebystring"
+                      },
+                      "depth": 3
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "removeRule",
+                        "slug": "removerule"
+                      },
+                      "depth": 3
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "updateRuleByString",
+                        "slug": "updaterulebystring"
+                      },
+                      "depth": 3
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "evaluateConditionOfRule",
+                        "slug": "evaluateconditionofrule"
+                      },
+                      "depth": 3
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "executeAction",
+                        "slug": "executeaction"
+                      },
+                      "depth": 3
+                    }
+                  ]
+                }
+              ]
             },
-            "title": "RuleManager"
+            "title": "rules handling"
           },
           "depth": 2,
-          "outline": []
+          "outline": [
+            {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "RuleManager",
+                "slug": "rulemanager"
+              },
+              "depth": 2,
+              "children": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "whenPredicateIsTrue",
+                    "slug": "whenpredicateistrue"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "parseRuleString",
+                    "slug": "parserulestring"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "AddRuleByString",
+                    "slug": "addrulebystring"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "removeRule",
+                    "slug": "removerule"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "updateRuleByString",
+                    "slug": "updaterulebystring"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "evaluateConditionOfRule",
+                    "slug": "evaluateconditionofrule"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "executeAction",
+                    "slug": "executeaction"
+                  },
+                  "depth": 3
+                }
+              ]
+            }
+          ]
         }, {
           "type": "file",
           "data": {
