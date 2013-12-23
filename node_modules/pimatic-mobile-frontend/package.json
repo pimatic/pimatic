@@ -1,4 +1,5 @@
-{ "name": "pimatic-mobile-frontend",
+{
+  "name": "pimatic-mobile-frontend",
   "description": "mobile-frontend plugin for pimatic",
   "author": "Oliver Schneider <oliverschneider89+sweetpi@gmail.com> (http://sweetpi.de)",
   "main": "mobile-frontend.coffee",
@@ -15,7 +16,8 @@
     "connect-coffee-script": "0.1.*",
     "connect-offline": "1.0.*",
     "jade": "0.27.*",
-    "socket.io": "0.9.*"
+    "socket.io": "0.9.*",
+    "connect-cache-manifest": "~0.2.0"
   },
   "peerDependencies": {
     "pimatic": "~0.2.0"

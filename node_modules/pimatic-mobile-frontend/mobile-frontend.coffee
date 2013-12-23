@@ -25,11 +25,37 @@ module.exports = (env) ->
       # * Setup the coffeescript compiler
       app.use coffeescript(
         prefix: '/js'
-        src: __dirname + "/coffee",
-        dest: __dirname + '/public/js',
-        bare: true,
-        force: true
+        src: __dirname + "/coffee"
+        dest: __dirname + '/public/js'
+        bare: true
       )
+
+      # * Setup html5 manifest
+      cacheManifest = require("connect-cache-manifest")
+      app.use cacheManifest(
+        manifestPath: "/application.manifest"
+        files: [
+          {
+            file: __dirname + "/views/index.jade"
+            path: '/'
+          }
+          {
+            dir: __dirname + "/public/css"
+            prefix: "/css/"
+          }
+          {
+            dir: __dirname + '/public/js'
+            prefix: "/js/"
+          }
+          {
+            dir: __dirname + '/public/themes/graphite/generated/water'
+            prefix: '/themes/graphite/generated/water/'
+          }
+        ]
+        networks: ["*"]
+        fallbacks: []
+      )
+
 
       # * Setup jade-templates
       app.engine 'jade', require('jade').__express
