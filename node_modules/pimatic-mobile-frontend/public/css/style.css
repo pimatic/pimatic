@@ -53,8 +53,18 @@ li.sortable-placeholder{
 
 #error-count .ui-btn-text {
   font-weight: bold;
-  top: 1px;
+  top: -1px;
 }
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {  
+/* CSS Statements that only apply on webkit-based browsers (Chrome, Safari, etc.) */  
+  #error-count .ui-btn-text {
+    font-weight: bold;
+    top: 1px;
+  }
+}
+
+
 
 #error-count .ui-btn-inner {
     padding-left: 26px;
