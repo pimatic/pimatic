@@ -7,7 +7,7 @@ CBuffer = require 'CBuffer'
 class MemoryTransport extends winston.Transport
 
   name: "memory"
-  bufferLength: 100
+  bufferLength: 1000
   errorCount: 0
 
   constructor: (options) ->

@@ -69,6 +69,7 @@ module.exports = (env) ->
               condition: rule.orgCondition
               action: rule.action
           res.send 
+            errorCount: env.logger.transports.memory.getErrorCount()
             items: items
             rules: rules
         ).done()

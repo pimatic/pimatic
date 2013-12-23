@@ -1,6 +1,7 @@
 actuators = []
 sensors = []
 rules = []
+errorCount = 0
 socket = null
 
 # index-page
@@ -10,6 +11,8 @@ $(document).on "pagecreate", '#index', (event) ->
   $.get "/data.json", (data) ->
     addItem(item) for item in data.items
     addRule(rule) for rule in data.rules
+    errorCount = data.errorCount
+    updateErrorCount()
 
 $(document).on "pageinit", '#index', (event) ->
   if device?
@@ -31,6 +34,9 @@ $(document).on "pageinit", '#index', (event) ->
 
 
   socket.on 'log', (entry) -> 
+    if entry.level is 'error' 
+      errorCount++
+      updateErrorCount()
     console.log entry
 
   $('#index #items').on "change", ".switch",(event, ui) ->
@@ -89,6 +95,15 @@ $(document).on "pageinit", '#index', (event) ->
         delete sensors[item.id]
       ui.draggable.remove()
   )
+
+updateErrorCount = ->
+  if $('#error-count').find('.ui-btn-text').length
+    $('#error-count').find('.ui-btn-text').text(errorCount)
+    $('#error-count').button('refresh')
+  else
+    $('#error-count').text(errorCount)
+  if errorCount is 0 then $('#error-count').hide()
+  else $('#error-count').show()
 
 addItem = (item) ->
   li = if item.template?

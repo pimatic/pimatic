@@ -24,8 +24,10 @@ script#temperature-template(type='text/template')
 //- Actuators and rules page
 div#index(data-role='page')
   div(data-theme='a', data-role='header', data-position='fixed')
+    div(class="ui-btn-left", data-role="controlgroup", data-type="horizontal")
+      a#nav-button(data-role="button", href='#nav-panel', data-icon='bars', data-iconpos='notext')=__('Menu')
+      a#error-count(data-role="button",href='#log', data-icon="alert")
     h3 pimatic
-    a#nav-button(href='#nav-panel', data-icon='bars', data-iconpos='notext')=__('Menu')
     a#talk.ui-btn-right(data-role='button', href='#outlet-control', 
                 style='display: none;')=__('Speak')
   div(data-role='content')

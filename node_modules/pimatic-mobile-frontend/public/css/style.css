@@ -38,6 +38,28 @@ li.sortable-placeholder{
   border-width: 1px;
 }
 
+#index .ui-header .ui-btn .ui-btn-inner {
+  height: 16px;
+}
+
+/* Bubble style:;
+#error-count .ui-btn-text {
+  background-color: #eee;
+  padding: 2px 6px;
+  -moz-border-radius: 10px;
+  border-radius: 9px;
+  color: #222;
+}*/
+
+#error-count .ui-btn-text {
+  font-weight: bold;
+  top: 1px;
+}
+
+#error-count .ui-btn-inner {
+    padding-left: 26px;
+}
+
 #items .values{
   float: right;
 }

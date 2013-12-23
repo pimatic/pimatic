@@ -1,4 +1,4 @@
-var actuators, addActuator, addItem, addLogMessage, addRule, addSensor, addSwitch, addTemperature, removeRule, rules, sensors, socket, updateRule, updateSensorValue, voiceCallback;
+var actuators, addActuator, addItem, addLogMessage, addRule, addSensor, addSwitch, addTemperature, errorCount, removeRule, rules, sensors, socket, updateErrorCount, updateRule, updateSensorValue, voiceCallback;
 
 actuators = [];
 
@@ -6,23 +6,25 @@ sensors = [];
 
 rules = [];
 
+errorCount = 0;
+
 socket = null;
 
 $(document).on("pagecreate", '#index', function(event) {
   return $.get("/data.json", function(data) {
-    var item, rule, _i, _j, _len, _len1, _ref, _ref1, _results;
+    var item, rule, _i, _j, _len, _len1, _ref, _ref1;
     _ref = data.items;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       item = _ref[_i];
       addItem(item);
     }
     _ref1 = data.rules;
-    _results = [];
     for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
       rule = _ref1[_j];
-      _results.push(addRule(rule));
+      addRule(rule);
     }
-    return _results;
+    errorCount = data.errorCount;
+    return updateErrorCount();
   });
 });
 
@@ -56,6 +58,10 @@ $(document).on("pageinit", '#index', function(event) {
     return addItem(item);
   });
   socket.on('log', function(entry) {
+    if (entry.level === 'error') {
+      errorCount++;
+      updateErrorCount();
+    }
     return console.log(entry);
   });
   $('#index #items').on("change", ".switch", function(event, ui) {
@@ -138,6 +144,20 @@ $(document).on("pageinit", '#index', function(event) {
     }
   });
 });
+
+updateErrorCount = function() {
+  if ($('#error-count').find('.ui-btn-text').length) {
+    $('#error-count').find('.ui-btn-text').text(errorCount);
+    $('#error-count').button('refresh');
+  } else {
+    $('#error-count').text(errorCount);
+  }
+  if (errorCount === 0) {
+    return $('#error-count').hide();
+  } else {
+    return $('#error-count').show();
+  }
+};
 
 addItem = function(item) {
   var li;
