@@ -293,11 +293,13 @@ module.exports = (env) ->
 
       initRules = ->
 
-        addRulePromises = for rule in self.config.rules
-          self.ruleManager.addRuleByString(rule.id, rule.rule).catch( (err) ->
-            env.logger.error "Could not parse rule \"#{rule.rule}\": " + err.message 
-            env.logger.debug err.stack
-          )        
+        addRulePromises = (for rule in self.config.rules
+          do(rule) ->
+            self.ruleManager.addRuleByString(rule.id, rule.rule).catch( (err) ->
+              env.logger.error "Could not parse rule \"#{rule.rule}\": " + err.message 
+              env.logger.debug err.stack
+            )        
+        )
 
         return Q.all(addRulePromises).then(->
           # Save rule updates to the config file:
