@@ -11,7 +11,6 @@ class MemoryTransport extends winston.Transport
   errorCount: 0
 
   constructor: (options) ->
-    console.log this
     @buffer = new CBuffer(@bufferLength)
     winston.Transport.call @, options
 

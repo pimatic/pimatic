@@ -1,30 +1,41 @@
 <!DOCTYPE html><html lang="en"><head><title>lib/logger</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="lib/logger"><meta name="groc-project-path" content="lib/logger.coffee"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path">lib/logger.coffee</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="nv">winston = </span><span class="nx">require</span> <span class="s">&#39;winston&#39;</span>
 <span class="nv">events = </span><span class="nx">require</span><span class="p">(</span><span class="s">&quot;events&quot;</span><span class="p">)</span>
 <span class="nv">util = </span><span class="nx">require</span><span class="p">(</span><span class="s">&quot;util&quot;</span><span class="p">)</span>
+<span class="nv">CBuffer = </span><span class="nx">require</span> <span class="s">&#39;CBuffer&#39;</span>
 
 
 <span class="k">class</span> <span class="nx">MemoryTransport</span> <span class="k">extends</span> <span class="nx">winston</span><span class="p">.</span><span class="nx">Transport</span>
 
-  <span class="nv">__constructor: </span><span class="nf">(options) -&gt;</span>
-    <span class="nv">self = </span><span class="k">this</span>
-    <span class="nx">Transport</span><span class="p">.</span><span class="nx">call</span> <span class="nx">self</span><span class="p">,</span> <span class="nx">options</span>
+  <span class="nv">name: </span><span class="s">&quot;memory&quot;</span>
+  <span class="nv">bufferLength: </span><span class="mi">100</span>
+  <span class="nv">errorCount: </span><span class="mi">0</span>
+
+  <span class="nv">constructor: </span><span class="nf">(options) -&gt;</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="k">this</span>
+    <span class="vi">@buffer = </span><span class="k">new</span> <span class="nx">CBuffer</span><span class="p">(</span><span class="nx">@bufferLength</span><span class="p">)</span>
+    <span class="nx">winston</span><span class="p">.</span><span class="nx">Transport</span><span class="p">.</span><span class="nx">call</span> <span class="nx">@</span><span class="p">,</span> <span class="nx">options</span>
 
   <span class="nv">getBuffer: </span><span class="nf">-&gt;</span>
-    <span class="nv">self = </span><span class="k">this</span>
-    <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">buffer</span>
+    <span class="k">return</span> <span class="nx">@buffer</span><span class="p">.</span><span class="nx">toArray</span><span class="p">()</span>
 
-<span class="nv">MemoryTransport::name = </span><span class="s">&quot;memory&quot;</span>
-<span class="nv">MemoryTransport::buffer = </span><span class="p">[]</span>
-<span class="nv">MemoryTransport::log = </span><span class="nf">(level, msg, meta, callback) -&gt;</span>
-  <span class="nv">self = </span><span class="k">this</span>
-  <span class="nv">msg = </span>  
-    <span class="nv">level: </span><span class="nx">level</span>
-    <span class="nv">msg: </span><span class="nx">msg</span>
-    <span class="nv">meta: </span><span class="nx">meta</span>
-  <span class="nx">self</span><span class="p">.</span><span class="nx">buffer</span><span class="p">.</span><span class="nx">push</span> <span class="nx">msg</span>
-  <span class="nx">self</span><span class="p">.</span><span class="nx">emit</span> <span class="s">&quot;logged&quot;</span>
-  <span class="nx">self</span><span class="p">.</span><span class="nx">emit</span> <span class="s">&quot;log&quot;</span><span class="p">,</span> <span class="nx">msg</span>
-  <span class="nx">callback</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">true</span>
+  <span class="nv">getErrorCount: </span><span class="nf">-&gt;</span> <span class="nx">@errorCount</span>
+
+  <span class="nv">clearErrorCount: </span><span class="nf">-&gt;</span> 
+    <span class="vi">@errorCount = </span><span class="mi">0</span>
+    <span class="k">return</span>
+
+  <span class="nv">log: </span><span class="nf">(level, msg, meta, callback) -&gt;</span>
+    <span class="k">if</span> <span class="nx">level</span> <span class="o">is</span> <span class="s">&#39;error&#39;</span> <span class="k">then</span> <span class="nx">@errorCount</span><span class="o">++</span>
+    <span class="nv">msg = </span>  
+      <span class="nv">level: </span><span class="nx">level</span>
+      <span class="nv">msg: </span><span class="nx">msg</span>
+      <span class="nv">meta: </span><span class="nx">meta</span>
+    <span class="nx">@buffer</span><span class="p">.</span><span class="nx">push</span> <span class="nx">msg</span>
+    <span class="nx">@emit</span> <span class="s">&quot;logged&quot;</span>
+    <span class="nx">@emit</span> <span class="s">&quot;log&quot;</span><span class="p">,</span> <span class="nx">msg</span>
+    <span class="nx">callback</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">true</span>
+
+
 
 <span class="nv">logger = </span><span class="k">new</span> <span class="p">(</span><span class="nx">winston</span><span class="p">.</span><span class="nx">Logger</span><span class="p">)(</span>
   <span class="nv">transports: </span><span class="p">[</span>
