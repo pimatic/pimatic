@@ -345,7 +345,17 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/lib/rules.coffee",
             "projectPath": "lib/rules.coffee",
             "targetPath": "lib/rules",
-            "title": "rules"
+            "firstHeader": {
+              "type": "heading",
+              "data": {
+                "level": 1,
+                "title": "RuleManager",
+                "slug": "rulemanager",
+                "isFileHeader": true
+              },
+              "depth": 1
+            },
+            "title": "RuleManager"
           },
           "depth": 2,
           "outline": []

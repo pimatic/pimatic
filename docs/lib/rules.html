@@ -1,19 +1,40 @@
-<!DOCTYPE html><html lang="en"><head><title>lib/rules</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="lib/rules"><meta name="groc-project-path" content="lib/rules.coffee"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path">lib/rules.coffee</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="nv">assert = </span><span class="nx">require</span> <span class="s">&#39;cassert&#39;</span>
+<!DOCTYPE html><html lang="en"><head><title>lib/rules</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="lib/rules"><meta name="groc-project-path" content="lib/rules.coffee"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path">lib/rules.coffee</div></div><div id="document"><div class="segment"><div class="comments"><div class="wrapper"><h1 id="rulemanager">RuleManager</h1></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="nv">assert = </span><span class="nx">require</span> <span class="s">&#39;cassert&#39;</span>
 <span class="nv">logger = </span><span class="nx">require</span> <span class="s">&quot;./logger&quot;</span>
 <span class="nv">util = </span><span class="nx">require</span> <span class="s">&#39;util&#39;</span>
 <span class="nv">Q = </span><span class="nx">require</span> <span class="s">&#39;q&#39;</span>
 
-<span class="k">class</span> <span class="nx">RuleManager</span> <span class="k">extends</span> <span class="nx">require</span><span class="p">(</span><span class="s">&#39;events&#39;</span><span class="p">).</span><span class="nx">EventEmitter</span>
-  <span class="nv">rules: </span><span class="p">[]</span>
-  <span class="nv">server: </span><span class="kc">null</span>
-  <span class="nv">actionHandlers: </span><span class="p">[]</span>
+<span class="k">class</span> <span class="nx">RuleManager</span> <span class="k">extends</span> <span class="nx">require</span><span class="p">(</span><span class="s">&#39;events&#39;</span><span class="p">).</span><span class="nx">EventEmitter</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Array of the added rules
+If a rule was successfully added, the rule has the form:</p>
 
-  <span class="nv">constructor: </span><span class="nf">(@server) -&gt;</span>
+<pre><code>id: 'some-id'
+string: 'if its 10pm and light is on then turn the light off'
+orgCondition: 'its 10pm and light is on'
+predicates: [
+  { id: 'some-id0'
+    sensor: the corresponding sensor },
+  { id: 'some-id1'
+    sensor: the corresponding sensor }
+]
+tokens: ['predicate', '(', 0, ')', 'and', 
+         'predicate', '(', 1, ')' ] 
+action: 'turn the light off'
+active: false or true
+</code></pre>
+
+<p>If the rule had an error:</p>
+
+<pre><code>id: id
+string: 'if bla then blub'
+error: 'Could not find a sensor that decides bla'
+active: false 
+</code></pre></div></div><div class="code"><div class="wrapper">  <span class="nv">rules: </span><span class="p">[]</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Array of ActionHandlers: see <a href="actions.html">actions.coffee</a></p></div></div><div class="code"><div class="wrapper">  <span class="nv">actionHandlers: </span><span class="p">[]</span>
+
+  <span class="nv">constructor: </span><span class="nf">(@framework) -&gt;</span>
 
   <span class="nv">findSensorForPredicate: </span><span class="nf">(predicate) -&gt;</span>
     <span class="nx">assert</span> <span class="nx">predicate</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">predicate</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span> <span class="o">and</span> <span class="nx">predicate</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span>
 
-    <span class="k">for</span> <span class="nx">sensorId</span><span class="p">,</span> <span class="nx">sensor</span> <span class="k">of</span> <span class="nx">@server</span><span class="p">.</span><span class="nx">sensors</span>
+    <span class="k">for</span> <span class="nx">sensorId</span><span class="p">,</span> <span class="nx">sensor</span> <span class="k">of</span> <span class="nx">@framework</span><span class="p">.</span><span class="nx">sensors</span>
       <span class="k">if</span> <span class="nx">sensor</span><span class="p">.</span><span class="nx">canDecide</span> <span class="nx">predicate</span>
         <span class="k">return</span> <span class="nx">sensor</span>
     <span class="k">return</span> <span class="kc">null</span>
@@ -95,20 +116,33 @@ and remember the predicates in predicates
         <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;Could not find a actuator to execute \&quot;</span><span class="si">#{</span><span class="nx">actions</span><span class="si">}</span><span class="s">\&quot;&quot;</span>
       <span class="p">)</span>
 
-  <span class="nv">addRuleByString: </span><span class="nf">(id, ruleString) -&gt;</span>
+  <span class="nv">addRuleByString: </span><span class="nf">(id, ruleString, active=yes, force=false) -&gt;</span>
     <span class="nv">self = </span><span class="k">this</span>
     <span class="nx">assert</span> <span class="nx">id</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">id</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span> <span class="o">and</span> <span class="nx">id</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span>
     <span class="nx">assert</span> <span class="nx">ruleString</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">ruleString</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><ul>
 <li>Parse the rule to ower rules array</li>
 </ul></div></div><div class="code"><div class="wrapper">    <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">parseRuleString</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">ruleString</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span> <span class="nf">(rule)-&gt;</span>
+      <span class="nv">rule.active = </span><span class="nx">active</span>
       <span class="nx">self</span><span class="p">.</span><span class="nx">rules</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span> <span class="nx">rule</span>
-      <span class="nx">self</span><span class="p">.</span><span class="nx">emit</span> <span class="s">&quot;add&quot;</span><span class="p">,</span> <span class="nx">rule</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Check if the condition of the rule is allready true</p></div></div><div class="code"><div class="wrapper">      <span class="nx">self</span><span class="p">.</span><span class="nx">evaluateConditionOfRule</span><span class="p">(</span><span class="nx">rule</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span> <span class="nf">(isTrue) -&gt;</span>
-        <span class="k">if</span> <span class="nx">isTrue</span> <span class="k">then</span> <span class="nx">self</span><span class="p">.</span><span class="nx">executeAction</span><span class="p">(</span><span class="nx">rule</span><span class="p">.</span><span class="nx">action</span><span class="p">,</span> <span class="kc">false</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span> <span class="nf">(message) -&gt;</span>
-          <span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="s">&quot;Rule </span><span class="si">#{</span><span class="nx">ruleId</span><span class="si">}</span><span class="s">: </span><span class="si">#{</span><span class="nx">message</span><span class="si">}</span><span class="s">&quot;</span>
-        <span class="p">).</span><span class="nx">catch</span><span class="p">(</span> <span class="nf">(error)-&gt;</span>
-          <span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="s">&quot;Rule </span><span class="si">#{</span><span class="nx">ruleId</span><span class="si">}</span><span class="s"> error: </span><span class="si">#{</span><span class="nx">error</span><span class="si">}</span><span class="s">&quot;</span>
+      <span class="nx">self</span><span class="p">.</span><span class="nx">emit</span> <span class="s">&quot;add&quot;</span><span class="p">,</span> <span class="nx">rule</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Check if the condition of the rule is allready true</p></div></div><div class="code"><div class="wrapper">      <span class="k">if</span> <span class="nx">active</span>
+        <span class="nx">self</span><span class="p">.</span><span class="nx">evaluateConditionOfRule</span><span class="p">(</span><span class="nx">rule</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span> <span class="nf">(isTrue) -&gt;</span>
+          <span class="k">if</span> <span class="nx">isTrue</span> <span class="k">then</span> <span class="nx">self</span><span class="p">.</span><span class="nx">executeAction</span><span class="p">(</span><span class="nx">rule</span><span class="p">.</span><span class="nx">action</span><span class="p">,</span> <span class="kc">false</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span> <span class="nf">(message) -&gt;</span>
+            <span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="s">&quot;Rule </span><span class="si">#{</span><span class="nx">ruleId</span><span class="si">}</span><span class="s">: </span><span class="si">#{</span><span class="nx">message</span><span class="si">}</span><span class="s">&quot;</span>
+          <span class="p">).</span><span class="nx">catch</span><span class="p">(</span> <span class="nf">(error)-&gt;</span>
+            <span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="s">&quot;Rule </span><span class="si">#{</span><span class="nx">ruleId</span><span class="si">}</span><span class="s"> error: </span><span class="si">#{</span><span class="nx">error</span><span class="si">}</span><span class="s">&quot;</span>
+          <span class="p">)</span>
         <span class="p">)</span>
-      <span class="p">)</span>
+      <span class="k">return</span>
+    <span class="p">).</span><span class="nx">catch</span><span class="p">(</span> <span class="nf">(error) -&gt;</span>
+      <span class="k">if</span> <span class="nx">force</span>
+        <span class="nv">rule = </span>
+          <span class="nv">id: </span><span class="nx">id</span>
+          <span class="nv">string: </span><span class="nx">ruleString</span>
+          <span class="nv">error: </span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span>
+          <span class="nv">active: </span><span class="kc">false</span>
+        <span class="nx">self</span><span class="p">.</span><span class="nx">rules</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span> <span class="nx">rule</span>
+        <span class="nx">rule</span><span class="p">.</span><span class="nx">emit</span> <span class="s">&#39;add&#39;</span><span class="p">,</span> <span class="nx">rule</span>
+      <span class="k">throw</span> <span class="nx">error</span>
     <span class="p">)</span>
 
   <span class="nv">removeRule: </span><span class="nf">(id) -&gt;</span>

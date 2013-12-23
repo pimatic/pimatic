@@ -1,19 +1,45 @@
+# #RuleManager
+
 assert = require 'cassert'
 logger = require "./logger"
 util = require 'util'
 Q = require 'q'
 
 class RuleManager extends require('events').EventEmitter
+  # Array of the added rules
+  # If a rule was successfully added, the rule has the form:
+  # 
+  #     id: 'some-id'
+  #     string: 'if its 10pm and light is on then turn the light off'
+  #     orgCondition: 'its 10pm and light is on'
+  #     predicates: [
+  #       { id: 'some-id0'
+  #         sensor: the corresponding sensor },
+  #       { id: 'some-id1'
+  #         sensor: the corresponding sensor }
+  #     ]
+  #     tokens: ['predicate', '(', 0, ')', 'and', 
+  #              'predicate', '(', 1, ')' ] 
+  #     action: 'turn the light off'
+  #     active: false or true
+  # 
+  # If the rule had an error:
+  # 
+  #     id: id
+  #     string: 'if bla then blub'
+  #     error: 'Could not find a sensor that decides bla'
+  #     active: false 
+  # 
   rules: []
-  server: null
+  # Array of ActionHandlers: see [actions.coffee](actions.html)
   actionHandlers: []
 
-  constructor: (@server) ->
+  constructor: (@framework) ->
 
   findSensorForPredicate: (predicate) ->
     assert predicate? and typeof predicate is "string" and predicate.length isnt 0
 
-    for sensorId, sensor of @server.sensors
+    for sensorId, sensor of @framework.sensors
       if sensor.canDecide predicate
         return sensor
     return null
@@ -103,23 +129,36 @@ class RuleManager extends require('events').EventEmitter
         throw new Error "Could not find a actuator to execute \"#{actions}\""
       )
 
-  addRuleByString: (id, ruleString) ->
+  addRuleByString: (id, ruleString, active=yes, force=false) ->
     self = this
     assert id? and typeof id is "string" and id.length isnt 0
     assert ruleString? and typeof ruleString is "string"
 
     # * Parse the rule to ower rules array
     return self.parseRuleString(id, ruleString).then( (rule)->
+      rule.active = active
       self.rules[id] = rule
       self.emit "add", rule
       # Check if the condition of the rule is allready true
-      self.evaluateConditionOfRule(rule).then( (isTrue) ->
-        if isTrue then self.executeAction(rule.action, false).then( (message) ->
-          logger.info "Rule #{ruleId}: #{message}"
-        ).catch( (error)->
-          logger.error "Rule #{ruleId} error: #{error}"
+      if active
+        self.evaluateConditionOfRule(rule).then( (isTrue) ->
+          if isTrue then self.executeAction(rule.action, false).then( (message) ->
+            logger.info "Rule #{ruleId}: #{message}"
+          ).catch( (error)->
+            logger.error "Rule #{ruleId} error: #{error}"
+          )
         )
-      )
+      return
+    ).catch( (error) ->
+      if force
+        rule = 
+          id: id
+          string: ruleString
+          error: error.message
+          active: false
+        self.rules[id] = rule
+        rule.emit 'add', rule
+      throw error
     )
 
   removeRule: (id) ->

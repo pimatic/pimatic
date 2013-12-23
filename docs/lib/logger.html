@@ -19,6 +19,10 @@
 
   <span class="nv">getErrorCount: </span><span class="nf">-&gt;</span> <span class="nx">@errorCount</span>
 
+  <span class="nv">clearLog: </span><span class="nf">-&gt;</span>
+    <span class="nx">@buffer</span><span class="p">.</span><span class="nx">empty</span><span class="p">()</span>
+    <span class="vi">@errorCount = </span><span class="mi">0</span>
+
   <span class="nv">clearErrorCount: </span><span class="nf">-&gt;</span> 
     <span class="vi">@errorCount = </span><span class="mi">0</span>
     <span class="k">return</span>

@@ -274,11 +274,13 @@
 
       <span class="nv">initRules = </span><span class="nf">-&gt;</span>
 
-        <span class="nv">addRulePromises = </span><span class="k">for</span> <span class="nx">rule</span> <span class="k">in</span> <span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">rules</span>
-          <span class="nx">self</span><span class="p">.</span><span class="nx">ruleManager</span><span class="p">.</span><span class="nx">addRuleByString</span><span class="p">(</span><span class="nx">rule</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">rule</span><span class="p">).</span><span class="nx">catch</span><span class="p">(</span> <span class="nf">(err) -&gt;</span>
-            <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="s">&quot;Could not parse rule \&quot;</span><span class="si">#{</span><span class="nx">rule</span><span class="p">.</span><span class="nx">rule</span><span class="si">}</span><span class="s">\&quot;: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span> 
-            <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">debug</span> <span class="nx">err</span><span class="p">.</span><span class="nx">stack</span>
-          <span class="p">)</span>        
+        <span class="nv">addRulePromises = </span><span class="p">(</span><span class="k">for</span> <span class="nx">rule</span> <span class="k">in</span> <span class="nx">self</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">rules</span>
+          <span class="nx">do</span><span class="nf">(rule) -&gt;</span>
+            <span class="nx">self</span><span class="p">.</span><span class="nx">ruleManager</span><span class="p">.</span><span class="nx">addRuleByString</span><span class="p">(</span><span class="nx">rule</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">rule</span><span class="p">).</span><span class="nx">catch</span><span class="p">(</span> <span class="nf">(err) -&gt;</span>
+              <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="s">&quot;Could not parse rule \&quot;</span><span class="si">#{</span><span class="nx">rule</span><span class="p">.</span><span class="nx">rule</span><span class="si">}</span><span class="s">\&quot;: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span> 
+              <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">debug</span> <span class="nx">err</span><span class="p">.</span><span class="nx">stack</span>
+            <span class="p">)</span>        
+        <span class="p">)</span>
 
         <span class="k">return</span> <span class="nx">Q</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">addRulePromises</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="nf">-&gt;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Save rule updates to the config file:</p>
 
