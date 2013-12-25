@@ -12,10 +12,10 @@ You can load the backend by editing your `config.json` to include:
     }
 
 in the `backend` section. For all configuration options see 
-[sisomctl-config-shema](sisomctl-config-shema.html)
+[sispmctl-config-shema](sispmctl-config-shema.html)
 
 Actuators can be added bei adding them to the `actuators` section in the config file.
-Set the `class` attribute to `PilightOutlet`. For example:
+Set the `class` attribute to `SispmctlSwitch`. For example:
 
     { 
       "id": "light",
@@ -25,4 +25,4 @@ Set the `class` attribute to `PilightOutlet`. For example:
     }
 
 For actuator configuration options see the 
-[actuator-config-shema.coffee](actuator-config-shema.html) file.
+[actuator-config-shema](actuator-config-shema.html) file.
