@@ -1,15 +1,27 @@
 <!DOCTYPE html><html lang="en"><head><title>index</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="index"><meta name="groc-project-path" content="README.md"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path">README.md</div></div><div id="document"><div class="segment"><div class="comments"><div class="wrapper"><h1 id="pimatic">pimatic</h1>
 
-<p>pimatic is a home automation server and framework that runs on <a href="http://nodejs.org">node.js</a>. It provied a simple web frontend using <a href="http://expressjs.com">express</a> and <a href="jquerymobile.com/‎">jQuery Mobile</a>. It is built to run on the raspberry pi, but should be runnable on any device that can run node.js.</p>
+<p>pimatic is a home automation framework that runs on <a href="http://nodejs.org">node.js</a>. It provides a 
+common extensible platform for home control and automation tasks.  </p>
+
+<p>It defines several shemata for different home devices and sensors, so that all devices can be 
+controled uniform and presented in a common interface.</p>
+
+<p>Automation tasks can be defined by rules in the form of "if this then that", where the "this" and 
+the "that" part can be fully custimized by plugins. See <a href="#rules">rules</a> for more details.</p>
+
+<p>The mobile frontend plugin provieds a nice web frontend with a sensor overview, device control and
+rule definition. The web interface is built using <a href="http://expressjs.com">express</a> and 
+<a href="jquerymobile.com/‎">jQuery Mobile</a>.</p>
 
 <h2 id="installation">Installation</h2>
 
-<p>First you need to install <a href="http://nodejs.org">node.js</a> that comes with the package manager <a href="https://npmjs.org/">npm</a>. Then you can run</p>
+<p>First you need to install <a href="http://nodejs.org">node.js</a> that comes with the package manager 
+<a href="https://npmjs.org/">npm</a>. Then you can run</p>
 
 <pre><code>npm install pimatic
 </code></pre>
 
-<p>to install the pimatic.</p>
+<p>to install the pimatic framework.</p>
 
 <h2 id="configuration">Configuration</h2>
 
@@ -19,7 +31,8 @@
 cp default_config.json config.json
 </code></pre>
 
-<p>The config is in the <a href="https://en.wikipedia.org/wiki/JSON">json</a> format and currently includes five sections:</p>
+<p>The config is in the <a href="https://en.wikipedia.org/wiki/JSON">json</a> format and currently includes five 
+sections:</p>
 
 <pre><code>{ 
   "settings": { ... },
@@ -32,7 +45,12 @@ cp default_config.json config.json
 
 <h3 id="the-settings-section">The "settings"-section</h3>
 
-<p>The <code>"settings"</code>-section contains the configuration for the http- and https-server. You have to set <code>"username"</code> and <code>"password"</code> for the authentication or disable it. In the default config just the http-server is enabled and configurated to run on port 80.</p>
+<p>The <code>"settings"</code>-section contains the configuration for the http- and https-server. You have 
+to set <code>"username"</code> and <code>"password"</code> for the authentication or disable it. In the default config 
+just the http-server is enabled and configurated to run on port 80.</p>
+
+<p>See the <a href="http://sweetpi.de/pimatic/docs/config-shema.html">config-shema</a> for more details and
+all configuration options.</p>
 
 <h3 id="the-plugins-section">The "plugins"-section</h3>
 
@@ -43,11 +61,32 @@ cp default_config.json config.json
 }
 </code></pre>
 
-<p>where <code>"plugin-name"</code> ist the name and directory of the plugin you want to load. All plugins are in the <code>node_modules</code> directory and there prefixed with <code>pimatic-</code>. </p>
+<p>where <code>"plugin-name"</code> ist the name and directory of the plugin you want to load. All plugins are in 
+the <code>node_modules</code> directory and there prefixed with <code>pimatic-</code>. </p>
+
+<h4 id="available-plugins">Available Plugins:</h4>
+
+<ul>
+<li>devices and sensors:
+<ul><li><a href="http://sweetpi.de/pimatic/docs/node_modules/pimatic-pilight/README.html">pilight plugin</a></li>
+<li><a href="http://sweetpi.de/pimatic/docs/node_modules/pimatic-sispmctl/README.html">sispmctl plugin</a></li></ul></li>
+<li>frontend or api:
+<ul><li><a href="http://sweetpi.de/pimatic/docs/node_modules/pimatic-mobile-frontend/README.html">mobile-frontend plugin</a></li>
+<li><a href="http://sweetpi.de/pimatic/docs/node_modules/pimatic-filebrowser/README.html">filebrowser plugin</a></li>
+<li><a href="http://sweetpi.de/pimatic/docs/node_modules/pimatic-redirect/README.html">redirect plugin</a></li>
+<li><a href="http://sweetpi.de/pimatic/docs/node_modules/pimatic-rest-api/README.html">rest-api plugin</a></li>
+<li><a href="http://sweetpi.de/pimatic/docs/node_modules/pimatic-speak-api/README.html">speak-api plugin</a>  </li></ul></li>
+<li>rule predicates:
+<ul><li><a href="http://sweetpi.de/pimatic/docs/node_modules/pimatic-cron/README.html">cron plugin</a></li>
+<li><a href="http://sweetpi.de/pimatic/docs/node_modules/pimatic-ping/README.html">ping plugin</a></li>
+<li><a href="http://sweetpi.de/pimatic/docs/node_modules/pimatic-log-reader/README.html">log-reader plugin</a></li></ul></li>
+</ul>
 
 <h3 id="the-actuators-section">The "actuators"-section</h3>
 
-<p>The <code>"actuators"</code>-section should contain all actuators, you want to have registered in the framework. An actuator is typically provided by a plugin, so take a look at the desired plugin for more details about the configuration of your actuators. A actuator configuration has the form</p>
+<p>The <code>"actuators"</code>-section should contain all actuators, you want to have registered in the 
+framework. An actuator is typically provided by a plugin, so take a look at the desired plugin 
+for more details about the configuration of your actuators. A actuator configuration has the form</p>
 
 <pre><code>{ 
   "id": "light",
@@ -57,11 +96,14 @@ cp default_config.json config.json
 }
 </code></pre>
 
-<p>where the <code>"id"</code> should be unique, the <code>"name"</code> should be human readable description and <code>"class"</code> determines the plugin and type of the actuator. </p>
+<p>where the <code>"id"</code> should be unique, the <code>"name"</code> should be human readable description and <code>"class"</code>
+determines the plugin and type of the actuator. </p>
 
 <h3 id="the-sensor-section">The "sensor"-section</h3>
 
-<p>The <code>"sensor"</code>-section should contain all sensors, you want to have registered in the framework. An sensor are typically provided by a plugin, so take a look at the desired plugin for more details about the configuration of your sensor. A actuator configuration has the form</p>
+<p>The <code>"sensor"</code>-section should contain all sensors, you want to have registered in the framework. 
+A sensor is typically provided by a plugin, so take a look at the desired plugin for more details 
+about the configuration of your sensor. A sensor configuration has the form</p>
 
 <pre><code>{ 
   "id": "temperature",
@@ -71,7 +113,8 @@ cp default_config.json config.json
 }
 </code></pre>
 
-<p>where the <code>"id"</code> should be unique, the <code>"name"</code> should be human readable description and <code>"class"</code> determines the plugin and type of the sensor. </p>
+<p>where the <code>"id"</code> should be unique, the <code>"name"</code> should be human readable description and <code>"class"</code> 
+determines the plugin and type of the sensor. </p>
 
 <h3 id="the-rules-section">The "rules"-section</h3>
 

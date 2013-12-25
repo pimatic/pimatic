@@ -58,7 +58,18 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                     "title": "The \"plugins\"-section",
                     "slug": "the-plugins-section"
                   },
-                  "depth": 3
+                  "depth": 3,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 4,
+                        "title": "Available Plugins:",
+                        "slug": "available-plugins"
+                      },
+                      "depth": 4
+                    }
+                  ]
                 }, {
                   "type": "heading",
                   "data": {
@@ -140,7 +151,18 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                 "title": "The \"plugins\"-section",
                 "slug": "the-plugins-section"
               },
-              "depth": 3
+              "depth": 3,
+              "children": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 4,
+                    "title": "Available Plugins:",
+                    "slug": "available-plugins"
+                  },
+                  "depth": 4
+                }
+              ]
             }, {
               "type": "heading",
               "data": {
@@ -832,6 +854,52 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "type": "file",
               "data": {
                 "language": {
+                  "nameMatchers": [".md"],
+                  "commentsOnly": true,
+                  "name": "Markdown"
+                },
+                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-mobile-frontend/README.md",
+                "projectPath": "node_modules/pimatic-mobile-frontend/README.md",
+                "targetPath": "node_modules/pimatic-mobile-frontend/README",
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "mobile frontend plugin",
+                    "slug": "mobile-frontend-plugin",
+                    "isFileHeader": true
+                  },
+                  "depth": 1,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Example config:",
+                        "slug": "example-config"
+                      },
+                      "depth": 2
+                    }
+                  ]
+                },
+                "title": "mobile frontend plugin"
+              },
+              "depth": 3,
+              "outline": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Example config:",
+                    "slug": "example-config"
+                  },
+                  "depth": 2
+                }
+              ]
+            }, {
+              "type": "file",
+              "data": {
+                "language": {
                   "nameMatchers": [".coffee", "Cakefile"],
                   "pygmentsLexer": "coffee-script",
                   "singleLineComment": ["#"],
@@ -921,6 +989,52 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "type": "file",
               "data": {
                 "language": {
+                  "nameMatchers": [".md"],
+                  "commentsOnly": true,
+                  "name": "Markdown"
+                },
+                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-pilight/README.md",
+                "projectPath": "node_modules/pimatic-pilight/README.md",
+                "targetPath": "node_modules/pimatic-pilight/README",
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "pimatic pilight plugin",
+                    "slug": "pimatic-pilight-plugin",
+                    "isFileHeader": true
+                  },
+                  "depth": 1,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Configuration",
+                        "slug": "configuration"
+                      },
+                      "depth": 2
+                    }
+                  ]
+                },
+                "title": "pimatic pilight plugin"
+              },
+              "depth": 3,
+              "outline": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Configuration",
+                    "slug": "configuration"
+                  },
+                  "depth": 2
+                }
+              ]
+            }, {
+              "type": "file",
+              "data": {
+                "language": {
                   "nameMatchers": [".coffee", "Cakefile"],
                   "pygmentsLexer": "coffee-script",
                   "singleLineComment": ["#"],
@@ -970,6 +1084,52 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "depth": 2,
           "children": [
             {
+              "type": "file",
+              "data": {
+                "language": {
+                  "nameMatchers": [".md"],
+                  "commentsOnly": true,
+                  "name": "Markdown"
+                },
+                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-ping/README.md",
+                "projectPath": "node_modules/pimatic-ping/README.md",
+                "targetPath": "node_modules/pimatic-ping/README",
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "pimatic ping plugin",
+                    "slug": "pimatic-ping-plugin",
+                    "isFileHeader": true
+                  },
+                  "depth": 1,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Providided predicates",
+                        "slug": "providided-predicates"
+                      },
+                      "depth": 2
+                    }
+                  ]
+                },
+                "title": "pimatic ping plugin"
+              },
+              "depth": 3,
+              "outline": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Providided predicates",
+                    "slug": "providided-predicates"
+                  },
+                  "depth": 2
+                }
+              ]
+            }, {
               "type": "file",
               "data": {
                 "language": {

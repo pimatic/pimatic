@@ -47,6 +47,9 @@ The `"settings"`-section contains the configuration for the http- and https-serv
 to set `"username"` and `"password"` for the authentication or disable it. In the default config 
 just the http-server is enabled and configurated to run on port 80.
 
+See the [config-shema](http://sweetpi.de/pimatic/docs/config-shema.html) for more details and
+all configuration options.
+
 ### The "plugins"-section
 In the `"plugins"`-section you have to list all plugins to load in the form of
 
@@ -56,6 +59,22 @@ In the `"plugins"`-section you have to list all plugins to load in the form of
 
 where `"plugin-name"` ist the name and directory of the plugin you want to load. All plugins are in 
 the `node_modules` directory and there prefixed with `pimatic-`. 
+
+#### Available Plugins:
+
+  * devices and sensors:
+    * [pilight plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-pilight/README.html)
+    * [sispmctl plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-sispmctl/README.html)
+  * frontend or api:
+    * [mobile-frontend plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-mobile-frontend/README.html)
+    * [filebrowser plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-filebrowser/README.html)
+    * [redirect plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-redirect/README.html)
+    * [rest-api plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-rest-api/README.html)
+    * [speak-api plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-speak-api/README.html)  
+  * rule predicates:
+    * [cron plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-cron/README.html)
+    * [ping plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-ping/README.html)
+    * [log-reader plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-log-reader/README.html)
 
 ### The "actuators"-section
 The `"actuators"`-section should contain all actuators, you want to have registered in the 
@@ -110,8 +129,6 @@ or if you have [CoffeeScript](http://coffeescript.org/) globally installed, you 
     cd node_modules/pimatic
     sudo coffee startup.coffee
 
-Plugins
--------
 
 
 Extensions and Hacking

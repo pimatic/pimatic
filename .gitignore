@@ -43,6 +43,7 @@ node_modules/coffee-errors/
 node_modules/CBuffer/
 npm-debug.log
 node.log
+.ftppass
 *.sublime-workspace
 *.sublime-project
 
