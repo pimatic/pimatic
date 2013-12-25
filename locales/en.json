@@ -32,5 +32,6 @@
 	"Advanced Options:": "Advanced Options:",
 	"Delete this rule": "Delete this rule",
 	"Clear": "Clear",
-	"Log messages": "Log messages"
+	"Log messages": "Log messages",
+	"would turn %s off": "would turn %s off"
 }
