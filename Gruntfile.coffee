@@ -28,15 +28,15 @@ module.exports = (grunt) ->
         "./node_modules/pimatic-cron/*.coffee"
         "./node_modules/pimatic-cron/README.md"
         "./node_modules/pimatic-ping/*.coffee"
-        "./node_modules/pimatic-ping/README.coffee"
+        "./node_modules/pimatic-ping/README.md"
         "./node_modules/pimatic-filebrowser/*.coffee"
         "./node_modules/pimatic-filebrowser/README.md"
         "./node_modules/pimatic-log-reader/*.coffee"
         "./node_modules/pimatic-log-reader/README.md"
         "./node_modules/pimatic-mobile-frontend/*.coffee"
-        "./node_modules/pimatic-mobile-frontend/README.coffee"
+        "./node_modules/pimatic-mobile-frontend/README.md"
         "./node_modules/pimatic-pilight/*.coffee"
-        "./node_modules/pimatic-pilight/README.coffee"
+        "./node_modules/pimatic-pilight/README.md"
         "./node_modules/pimatic-redirect/*.coffee"
         "./node_modules/pimatic-redirect/README.md"
         "./node_modules/pimatic-rest-api/*.coffee"
@@ -56,11 +56,10 @@ module.exports = (grunt) ->
       build:
         auth:
           host: "sweetpi.de"
-          port: 21 #,
-
-        #authKey: 'key1'
+          port: 21
+        authKey: 'sweetpi.de'
         src: "docs"
-        dest: "/pimatic/pimatic/docs"
+        dest: "/sweetpi/pimatic/docs"
 
     mochaTest:
       test:
