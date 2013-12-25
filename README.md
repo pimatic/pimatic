@@ -12,7 +12,7 @@ the "that" part can be fully custimized by plugins. See [rules](#rules) for more
 
 The mobile frontend plugin provieds a nice web frontend with a sensor overview, device control and
 rule definition. The web interface is built using [express](http://expressjs.com) and 
-[jQuery Mobile](jquerymobile.com/‎).
+[jQuery Mobile](http://jquerymobile.com/‎).
 
 
 Installation
