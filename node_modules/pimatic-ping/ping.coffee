@@ -9,107 +9,107 @@ module.exports = (env) ->
 
   # ##The DevicePresentsBackend
   class DevicePresentsBackend extends env.plugins.Plugin
-    server: null
+    framework: null
     config: null
 
     # The `init` function just registers the clock actuator.
-    init: (app, @server, @config) =>
-      self = this
+    init: (app, @framework, @config) =>
       # ping package needs root access...
       if process.getuid() != 0
         throw new Error "ping-plugins needs root privilegs. Please restart the framework as root!"
-      session = ping.createSession()
-      assert Array.isArray self.config.devices
-      for dc in config.devices
-        assert dc.id?
-        assert dc.name?
-        assert dc.host? 
-        device = new NetworkDevicePresents(dc.id, dc.name, dc.host, 
-          (if dc.delay then dc.delay else 3000), session)
-        server.registerSensor device
+      @session = ping.createSession()
+
+    createSensor: (config) ->
+      if @session? and config.class is 'PingPresents'
+        assert config.id?
+        assert config.name?
+        assert config.host? 
+        config.delay = (if config.delay then config.delay else 3000)
+        sensor = new PingPresents config, @session
+        @framework.registerSensor sensor
+        return true
+      return false
+
 
   backend = new DevicePresentsBackend
 
-  # ##NetworkDevicePresents Sensor
-  class NetworkDevicePresents extends env.sensors.Sensor
+  # ##PingPresents Sensor
+  class PingPresents extends env.sensors.Sensor
     config: null
     listener: []
     present: null
     interval: null
 
-    constructor: (@id, @name, @host, @delay, @session) ->
-      self = this
-      self.interval = setInterval(self.ping, delay)
+    constructor: (@config, @session) ->
+      @id = config.id
+      @name = config.name
+      @interval = setInterval( => 
+        @ping()
+      , 
+        @config.delay
+      )
 
     getSensorValuesNames: ->
       "present"
 
     getSensorValue: (name)->
-      self = this
       switch name
-        when "present" then return Q.fcall -> self.present
+        when "present" then return Q.fcall => @present
         else throw new Error("Illegal sensor value name")
 
     canDecide: (predicate) ->
-      self = this
-      info = self.parsePredicate predicate
+      info = @parsePredicate predicate
       return info?
 
     isTrue: (id, predicate) ->
-      self = this
-      info = self.parsePredicate predicate
-      if info? then return Q.fcall -> info.present is self.present
-      else throw new Error "NetworkDevicePresents sensor can not decide \"#{predicate}\"!"
+      info = @parsePredicate predicate
+      if info? then return Q.fcall => info.present is @present
+      else throw new Error "PingPresents sensor can not decide \"#{predicate}\"!"
 
     # Removes the notification for an with `notifyWhen` registered predicate. 
     cancelNotify: (id) ->
-      self = this
-      if self.listener[id]?
-        delete self.listener[id]
+      if @listener[id]?
+        delete @listener[id]
 
     # Registers notification for time events. 
     notifyWhen: (id, predicate, callback) ->
-      self = this
-      info = self.parsePredicate predicate
+      info = @parsePredicate predicate
       if info?
-        self.listener[id] =
+        @listener[id] =
           id: id
           callback: callback
           present: info.present
-      else throw new Error "NetworkDevicePresents sensor can not decide \"#{predicate}\"!"
+      else throw new Error "PingPresents sensor can not decide \"#{predicate}\"!"
 
     notifyListener: ->
-      self = this
-      for id of self.listener
-        l = self.listener[id]
-        if l.present is self.present
+      for id of @listener
+        l = @listener[id]
+        if l.present is @present
           l.callback()
 
-    ping: => 
-      self = this
-      this.session.pingHost self.host, (error, target) ->
+    ping: -> 
+      @session.pingHost @config.host, (error, target) =>
         if error
-          if self.present isnt false
-            self.present = false
-            self.notifyListener()
+          if @present isnt false
+            @present = false
+            @notifyListener()
         else
-          if self.present isnt true  
-            self.present = true
-            self.notifyListener()
+          if @present isnt true  
+            @present = true
+            @notifyListener()
 
     parsePredicate: (predicate) ->
-      self = this
       regExpString = '^(.+)\\s+is\\s+(not\\s+)?present$'
       matches = predicate.match (new RegExp regExpString)
       if matches?
         deviceName = matches[1].trim()
-        if deviceName is self.name or deviceName is self.id
+        if deviceName is @name or deviceName is @id
           return info =
-            deviceId: self.id
+            deviceId: @id
             present: (if matches[2]? then no else yes) 
       return null
 
   # For testing...
-  backend.NetworkDevicePresents = NetworkDevicePresents
+  backend.PingPresents = PingPresents
 
   return backend

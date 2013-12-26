@@ -6,18 +6,20 @@ if a wifi device is (or is not) present.
 
 Providided predicates
 ---------------------
-Add your device to the backend config:
+Add the plugin to the plugin section:
 
     { 
-      "module": "device-presents",
-      "devices": [
-        {
-          "id": "my-phone",
-          "name": "my smartphone",
-          "host": "192.168.1.26",
-          "delay": 5000
-        }
-      ]
+      "plugin": "ping"
+    }
+
+Then add a sensor for your device to the sensors section:
+
+    {
+      "id": "my-phone",
+      "name": "my smartphone",
+      "class": "PingPresents",
+      "host": "192.168.1.26",
+      "delay": 5000
     }
 
 Then you can use the predicates:

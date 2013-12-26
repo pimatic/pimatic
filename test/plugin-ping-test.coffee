@@ -12,15 +12,19 @@ describe "pimatic-ping", ->
     plugins: require '../lib/plugins'
 
   backend = (require 'pimatic-ping') env
-  NetworkDevicePresents = backend.NetworkDevicePresents
+  PingPresents = backend.PingPresents
   sessionDummy = null
   sensor = null
 
   beforeEach ->
     sessionDummy = 
       pingHost: (host, callback) ->
-    sensor = new NetworkDevicePresents("test", "test device" 
-      "localhost", 200, sessionDummy)
+    config =
+      id: 'test'
+      name: 'test device'
+      host: 'localhost'
+      delay: 200
+    sensor = new PingPresents(config, sessionDummy)
 
   describe '#parsePredicate()', ->
 
