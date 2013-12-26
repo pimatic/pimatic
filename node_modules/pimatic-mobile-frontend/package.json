@@ -12,6 +12,10 @@
   ],
   "version": "0.2.0-git",
   "homepage": "http://github.com/sweetpi/pimatic",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sweetpi/pimatic.git"
+  },
   "dependencies": {
     "connect-coffee-script": "0.1.*",
     "connect-offline": "1.0.*",
