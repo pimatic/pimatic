@@ -32,6 +32,10 @@ class Sensor extends require('events').EventEmitter
 class TemperatureSensor extends Sensor
   type: 'TemperatureSensor'
 
+class PresentsSensor extends Sensor
+  type: 'PresentsSensor'
+
 
 module.exports.Sensor = Sensor
 module.exports.TemperatureSensor = TemperatureSensor
+module.exports.PresentsSensor = PresentsSensor

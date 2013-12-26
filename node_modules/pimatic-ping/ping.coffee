@@ -34,7 +34,7 @@ module.exports = (env) ->
   backend = new DevicePresentsBackend
 
   # ##PingPresents Sensor
-  class PingPresents extends env.sensors.Sensor
+  class PingPresents extends env.sensors.PresentsSensor
     config: null
     listener: []
     present: null
