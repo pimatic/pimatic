@@ -1,67 +1,108 @@
 # ##Dependencies
 convict = require "convict"
 util = require 'util'
-ping = require "net-ping"
 assert = require 'cassert'
 Tail = require('tail').Tail
 Q = require 'q'
+assert = require 'cassert'
 
 module.exports = (env) ->
 
-  # ##The LogNotificationsBackend
-  class LogNotificationsBackend extends env.plugins.Plugin
-    server: null
-    config: null
+  # ##The LogReaderPlugin
+  class LogReaderPlugin extends env.plugins.Plugin
 
-    # The `init` function just registers the clock actuator.
-    init: (app, @server, @config) =>
-      assert Array.isArray @config.logs
-      for log in config.logs
-        watcher = new LogWatcher("logwatcher-#{log.file}", log.file, log.lines)
-        server.registerSensor watcher
+    init: (app, @framework, @config) ->
 
-  backend = new LogNotificationsBackend
+    createSensor: (config) ->
+      switch config.class
+        when 'LogWatcher'
+          assert config.name?
+          assert config.id?
+          watcher = new LogWatcher(config)
+          @framework.registerSensor watcher
+          return true
+        else
+          return false
+
+  plugin = new LogReaderPlugin
 
   # ##LogWatcher Sensor
-  class LogWatcher extends sensors.Sensor
+  class LogWatcher extends env.sensors.Sensor
     listener: []
-    name: "log-watcher"
 
-    constructor: (@id, @file, @lines) ->
-      self = this
-      self.tail = new Tail(file)
+    constructor: (@config) ->
+      @id = config.id
+      @name = config.name
+      @tail = new Tail(config.file)
+      @states = {}
+
+      # initialise all states with unknown
+      for name in @config.states
+        @states[name] = 'unknown'
+
+      # On ervery new line in the log file
+      @tail.on 'line', (data) =>
+        # check all lines in config
+        for line in @config.lines
+          # for a match.
+          if data.match(new RegExp line.match)
+            # If a match occures then emit a "match"-event.
+            @emit 'match', line, data
+
+      # When a match event occures
+      @on 'match', (line, data) =>
+        # then check for each state in the config
+        for state in @config.states
+          # if the state is registed for the log line.
+          if state of line
+            # When a value for the state is define, then set the value
+            # and emit the event.
+            @states[state] = line[state]
+            @emit state, line[state]
+
+        for listener in @listener
+          if line.match is listener.match
+            listener.callback()
+
+
+    getSensorValuesNames: ->
+      return @config.states
 
     getSensorValue: (name)->
-      self = this
+      if name in @config.states
+        return Q.fcall => @states[name]
       throw new Error("Illegal sensor value name")
 
     isTrue: (id, predicate) ->
-      self = this
       return Q.fcall -> false
 
     # Removes the notification for an with `notifyWhen` registered predicate. 
     cancelNotify: (id) ->
-      self = this
-      if self.listener[id]?
-        self.tail.removeListener 'data', self.listener[id]
-        delete self.listener[id]
+      if @listener[id]?
+        delete @listener[id]
+
+    _getLineWithPredicate: (predicate) ->
+      for line in @config.lines
+        if line.predicate? and predicate.match(new RegExp(line.predicate))
+          return line
+      return null
+
+    canDecide: (predicate) ->
+      line = @_getLineWithPredicate predicate
+      return line?
 
     notifyWhen: (id, predicate, callback) ->
-      self = this
-      found = false
-      for line in self.lines
-        do (line) ->
-          if not found and predicate.match(new RegExp(line.predicate))
-            regex = new RegExp(line.match)
-            lineCallback = (data) ->
-              if data.match regex
-                callback()
-            self.tail.on 'line', lineCallback
-            self.listener[id] = lineCallback
-            found = true
-      return found
+      line = @_getLineWithPredicate predicate
+      unless line?
+        throw new Error 'Can not decide the predicate!'
+
+      @listener[id] =
+        match: line.match
+        callback: callback
+
+
 
   # For testing...
-  @LogNotificationsBackend = LogNotificationsBackend
-  # Export the Backendmodule.
-  return backend
+  @LogReaderPlugin = LogReaderPlugin
+  # Export the plugin.
+  return plugin
