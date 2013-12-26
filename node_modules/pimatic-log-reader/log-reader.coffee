@@ -48,6 +48,7 @@ module.exports = (env) ->
           if data.match(new RegExp line.match)
             # If a match occures then emit a "match"-event.
             @emit 'match', line, data
+        return
 
       # When a match event occures
       @on 'match', (line, data) =>
@@ -63,6 +64,7 @@ module.exports = (env) ->
         for listener in @listener
           if line.match is listener.match
             listener.callback()
+        return
 
 
     getSensorValuesNames: ->
