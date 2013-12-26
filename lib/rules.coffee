@@ -139,13 +139,16 @@ class RuleManager extends require('events').EventEmitter
             predicates.push(predicate)
             tokens = tokens.concat ["predicate", "(", i, ")"]
               
-      # Register all sensors:
-      for p in predicates
-        p.sensor.notifyWhen p.id, p.token, =>
-          @whenPredicateIsTrue id, p.id
 
       # Simulate the action execution to try if it can be executed-
       return @executeAction(actions, true).then( =>
+
+        # Register all sensors:
+        for p in predicates
+          do (p) =>
+            p.sensor.notifyWhen p.id, p.token, =>
+              @whenPredicateIsTrue id, p.id
+
         # If the execution was sussessful then return the rule object.
         return rule = 
           id: id
