@@ -50,7 +50,7 @@ module.exports = (env) ->
       )
 
     getSensorValuesNames: ->
-      "present"
+      ["present"]
 
     getSensorValue: (name)->
       switch name
@@ -93,10 +93,12 @@ module.exports = (env) ->
           if @present isnt false
             @present = false
             @notifyListener()
+            @emit 'present', false
         else
           if @present isnt true  
             @present = true
             @notifyListener()
+            @emit 'present', true
 
     parsePredicate: (predicate) ->
       regExpString = '^(.+)\\s+is\\s+(not\\s+)?present$'

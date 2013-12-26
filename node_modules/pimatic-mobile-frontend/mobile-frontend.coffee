@@ -349,9 +349,9 @@ module.exports = (env) ->
           nameValues = []
           for name in sensor.getSensorValuesNames()
             do (name) ->
-              nameValues.push sensor.getSensorValue(name).then (value) ->
+              nameValues.push sensor.getSensorValue(name).then (value) =>
                 return name: name, value: value
-          return Q.all(nameValues).then( (nameValues)->
+          return Q.all(nameValues).then( (nameValues) =>
             for nameValue in nameValues
               item.values[nameValue.name] = nameValue.value
             return item
@@ -360,6 +360,12 @@ module.exports = (env) ->
             env.logger.debug error.stack
             return item
           ) 
+        else if sensor instanceof env.sensors.PresentsSensor
+          item.template = "presents"
+          return sensor.getSensorValue('present').then (value) =>
+            item.values =
+              present: value
+            return item
         else 
           return Q.fcall -> item
       else

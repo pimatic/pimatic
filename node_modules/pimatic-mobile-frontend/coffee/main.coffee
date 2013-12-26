@@ -139,6 +139,7 @@ addItem = (item) ->
     switch item.template 
       when "switch" then buildSwitch(item)
       when "temperature" then buildTemperature(item)
+      when "presents" then buildPresents(item)
   else switch item.type
     when 'actuator'
       buildActuator(item)
@@ -192,9 +193,33 @@ buildTemperature = (sensor) ->
   li.find('.humidity .val').text(sensor.values.humidity)
   return li
 
+
+buildPresents = (sensor) ->
+  sensors[sensor.id] = sensor
+  li = $ $('#presents-template').html()
+  li.attr('id', "sensor-#{sensor.id}")     
+  li.find('label').text(sensor.name)
+  if sensor.values.present is true
+    li.find('.present .val').text('present').addClass('val-present')
+  else 
+    li.find('.present .val').text('not present').addClass('val-not-present')
+  return li
+
 updateSensorValue = (sensorValue) ->
   li = $("\#sensor-#{sensorValue.id}")
-  li.find(".#{sensorValue.name} .val").text(sensorValue.value)
+  if sensorValue.name is 'present'
+    if sensorValue.value is true
+      li.find(".#{sensorValue.name} .val")
+        .text('present')
+        .addClass('val-present')
+        .removeClass('val-not-present')
+    else 
+      li.find(".#{sensorValue.name} .val")
+        .text('not present')
+        .addClass('val-not-resent')
+        .removeClass('val-present')
+  else
+    li.find(".#{sensorValue.name} .val").text(sensorValue.value)
 
 addRule = (rule) ->
   rules[rule.id] = rule 

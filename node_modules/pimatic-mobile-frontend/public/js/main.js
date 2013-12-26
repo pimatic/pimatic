@@ -1,4 +1,4 @@
-var actuators, addItem, addLogMessage, addRule, buildActuator, buildSensor, buildSwitch, buildTemperature, errorCount, loadData, removeRule, rules, sensors, socket, updateErrorCount, updateRule, updateSensorValue, voiceCallback;
+var actuators, addItem, addLogMessage, addRule, buildActuator, buildPresents, buildSensor, buildSwitch, buildTemperature, errorCount, loadData, removeRule, rules, sensors, socket, updateErrorCount, updateRule, updateSensorValue, voiceCallback;
 
 actuators = [];
 
@@ -202,6 +202,8 @@ addItem = function(item) {
           return buildSwitch(item);
         case "temperature":
           return buildTemperature(item);
+        case "presents":
+          return buildPresents(item);
       }
     } else {
       switch (item.type) {
@@ -266,10 +268,32 @@ buildTemperature = function(sensor) {
   return li;
 };
 
+buildPresents = function(sensor) {
+  var li;
+  sensors[sensor.id] = sensor;
+  li = $($('#presents-template').html());
+  li.attr('id', "sensor-" + sensor.id);
+  li.find('label').text(sensor.name);
+  if (sensor.values.present === true) {
+    li.find('.present .val').text('present').addClass('val-present');
+  } else {
+    li.find('.present .val').text('not present').addClass('val-not-present');
+  }
+  return li;
+};
+
 updateSensorValue = function(sensorValue) {
   var li;
   li = $("\#sensor-" + sensorValue.id);
-  return li.find("." + sensorValue.name + " .val").text(sensorValue.value);
+  if (sensorValue.name === 'present') {
+    if (sensorValue.value === true) {
+      return li.find("." + sensorValue.name + " .val").text('present').addClass('val-present').removeClass('val-not-present');
+    } else {
+      return li.find("." + sensorValue.name + " .val").text('not present').addClass('val-not-resent').removeClass('val-present');
+    }
+  } else {
+    return li.find("." + sensorValue.name + " .val").text(sensorValue.value);
+  }
 };
 
 addRule = function(rule) {

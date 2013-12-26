@@ -20,7 +20,13 @@ script#temperature-template(type='text/template')
       span.humidity
         span.val
         span.unit %
-
+script#presents-template(type='text/template')
+  li.sortable(data-role="fieldcontain")
+    label
+    | 
+    span.values
+      span.present
+        span.val
 //- Actuators and rules page
 div#index(data-role='page')
   div(data-theme='a', data-role='header', data-position='fixed')
