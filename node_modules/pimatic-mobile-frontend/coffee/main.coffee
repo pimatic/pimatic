@@ -233,7 +233,7 @@ $(document).on "pageinit", '#add-item', (event) ->
 
 $(document).on "pagebeforeshow", '#add-item', (event) ->
   $.get "/api/list/actuators", (data) ->
-    $('#actuator-items').empty()
+    $('#actuator-items .item').remove()
     for a in data.actuators
       li = $ $('#item-add-template').html()
       if actuators[a.id]? 
@@ -241,11 +241,12 @@ $(document).on "pagebeforeshow", '#add-item', (event) ->
         li.addClass('added')
       li.find('label').text(a.name)
       li.data 'actuator-id', a.id
+      li.addClass 'item'
       $('#actuator-items').append li
     $('#actuator-items').listview('refresh')
 
   $.get "/api/list/sensors", (data) ->
-    console.log sensors
+    $('#sensor-items .item').remove()
     for s in data.sensors
       li = $ $('#item-add-template').html()
       if sensors[s.id]? 
@@ -253,6 +254,7 @@ $(document).on "pagebeforeshow", '#add-item', (event) ->
         li.addClass('added')
       li.find('label').text(s.name)
       li.data 'sensor-id', s.id
+      li.addClass 'item'
       $('#sensor-items').append li
     $('#sensor-items').listview('refresh')
 

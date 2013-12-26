@@ -321,7 +321,7 @@ $(document).on("pageinit", '#add-item', function(event) {
 $(document).on("pagebeforeshow", '#add-item', function(event) {
   $.get("/api/list/actuators", function(data) {
     var a, li, _i, _len, _ref;
-    $('#actuator-items').empty();
+    $('#actuator-items .item').remove();
     _ref = data.actuators;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       a = _ref[_i];
@@ -332,13 +332,14 @@ $(document).on("pagebeforeshow", '#add-item', function(event) {
       }
       li.find('label').text(a.name);
       li.data('actuator-id', a.id);
+      li.addClass('item');
       $('#actuator-items').append(li);
     }
     return $('#actuator-items').listview('refresh');
   });
   return $.get("/api/list/sensors", function(data) {
     var li, s, _i, _len, _ref;
-    console.log(sensors);
+    $('#sensor-items .item').remove();
     _ref = data.sensors;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       s = _ref[_i];
@@ -349,6 +350,7 @@ $(document).on("pagebeforeshow", '#add-item', function(event) {
       }
       li.find('label').text(s.name);
       li.data('sensor-id', s.id);
+      li.addClass('item');
       $('#sensor-items').append(li);
     }
     return $('#sensor-items').listview('refresh');
