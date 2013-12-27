@@ -67,7 +67,7 @@ module.exports = (env) ->
       @gpio = new Gpio config.gpio, 'in', 'both'
 
       Q.ninvoke(@gpio, 'read').then( (value) =>
-        @_setPesent (if value is 1 then yes else no)
+        @_setPresent (if value is 1 then yes else no)
       ).catch( (err) ->
         env.logger.error err.message
         env.logger.debug err.stack
@@ -78,7 +78,7 @@ module.exports = (env) ->
           env.logger.error err.message
           env.logger.debug err.stack
         else
-          @_setPesent (if value is 1 then yes else no)
+          @_setPresent (if value is 1 then yes else no)
 
   # For testing...
   plugin.GpioSwitch = GpioSwitch
