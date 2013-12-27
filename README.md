@@ -5,10 +5,11 @@ pimatic is a home automation framework that runs on [node.js](http://nodejs.org)
 common extensible platform for home control and automation tasks.  
 
 It defines several shemata for different home devices and sensors, so that all devices can be 
-controled uniform and presented in a common interface.
+controled uniform and are presented in a common interface.
 
 Automation tasks can be defined by rules in the form of "if this then that", where the "this" and 
-the "that" part can be fully custimized by plugins. See [rules](#rules) for more details.
+the "that" part can be fully custimized by plugins. See [the rules section](#the-rules-section) for 
+more details.
 
 The mobile frontend plugin provieds a nice web frontend with a sensor overview, device control and
 rule definition. The web interface is built using [express](http://expressjs.com) and 
@@ -39,7 +40,7 @@ sections:
       "plugins": [ ... ],
       "actuators": [ ... ],
       "sensors": [ ... ],
-      "rules": []
+      "rules": [ ... ]
     }
 
 ### The "settings"-section
