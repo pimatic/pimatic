@@ -23,12 +23,12 @@ Then add a sensor for your device to the sensors section:
         {
           "match": "TransportState: PLAYING",
           "predicate": "music starts",
-          "music-state": 'playing' 
+          "music-state": "playing" 
         },
         {
           "match": "TransportState: STOPPED",
           "predicate": "music stops",
-          "music-state": 'stopped'
+          "music-state": "stopped"
         }
       ]
     }

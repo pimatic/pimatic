@@ -61,7 +61,7 @@ module.exports = (env) ->
             @states[state] = line[state]
             @emit state, line[state]
 
-        for listener in @listener
+        for i, listener of @listener
           if line.match is listener.match
             listener.callback()
         return

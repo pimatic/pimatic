@@ -108,7 +108,7 @@ describe "pimatic-log-reader", ->
           finish()
         ).catch(finish).done()
 
-    describe '#canDecide()', (finish) ->
+    describe '#canDecide()', ->
 
       it 'should decide: test predicate 1', ->
         result = sensor.canDecide 'test predicate 1'
@@ -122,9 +122,9 @@ describe "pimatic-log-reader", ->
         result = sensor.canDecide 'test predicate 3'
         assert result is no
 
-    describe '#notifyWhen()', (finish) ->
+    describe '#notifyWhen()', ->
 
-      it 'should decide: test predicate 1', ->
+      it 'should notify: test predicate 1', (finish) ->
 
         sensor.notifyWhen 't1', 'test predicate 1', ->
           finish()
