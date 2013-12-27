@@ -66,6 +66,7 @@ the `node_modules` directory and there prefixed with `pimatic-`.
   * devices and sensors:
     * [pilight plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-pilight/README.html)
     * [sispmctl plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-sispmctl/README.html)
+    * [gpio plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-gpio/README.html)
   * frontend or api:
     * [mobile-frontend plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-mobile-frontend/README.html)
     * [filebrowser plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-filebrowser/README.html)
