@@ -11,12 +11,10 @@ module.exports = (env) ->
 
   # ##The MobileFrontend
   class MobileFrontend extends env.plugins.Plugin
-    server: null
     config: null
 
     # ###init the frontend:
-    init: (app, @server, @jsonConfig) =>
-      self = @
+    init: (app, @framework, @jsonConfig) ->
       conf = convict require("./mobile-frontend-config-shema")
       conf.load jsonConfig
       conf.validate()
@@ -46,7 +44,7 @@ module.exports = (env) ->
           {
             dir: __dirname + '/public/js'
             prefix: "/js/"
-            ignore: (f) -> /main\.js/.test f
+            ignore: (f) => /main\.js/.test f
           }
           {
             file: __dirname + "/coffee/main.coffee"
@@ -74,7 +72,7 @@ module.exports = (env) ->
       app.set 'view engine', 'jade'
 
       # * Delivers the index-page
-      app.get '/', (req,res) ->
+      app.get '/', (req,res) =>
         res.render 'index',
           theme: 
             cssFiles: ['themes/graphite/generated/water/jquery.mobile-1.3.1.css']
@@ -96,11 +94,11 @@ module.exports = (env) ->
       #       ]
       #     }
       # 
-      app.get '/data.json', (req, res) ->
-        self.getItemsWithData().then( (items) ->
+      app.get '/data.json', (req, res) =>
+        @getItemsWithData().then( (items) =>
           rules = []
-          for id of server.ruleManager.rules
-            rule = server.ruleManager.rules[id]
+          for id of framework.ruleManager.rules
+            rule = framework.ruleManager.rules[id]
             rules.push
               id: id
               condition: rule.orgCondition
@@ -185,7 +183,7 @@ module.exports = (env) ->
             break
 
         @config.items = @jsonConfig.items
-        @server.saveConfig()
+        @framework.saveConfig()
 
         res.send 200, {success: true}
 
@@ -199,46 +197,46 @@ module.exports = (env) ->
         # Listen for new websocket connections
         io = socketIo.listen webServer, {
           logger: 
-            log: (type, args...) ->
+            log: (type, args...) =>
               if type isnt 'debug' then env.logger.log(type, 'socket.io:', args...)
-            debug: (args...) -> @log('debug', args...)
-            info: (args...) -> @log('info', args...)
-            warn: (args...) -> @log('warn', args...)
-            error: (args...) -> @log('error', args...)
+            debug: (args...) => @log('debug', args...)
+            info: (args...) => @log('info', args...)
+            warn: (args...) => @log('warn', args...)
+            error: (args...) => @log('error', args...)
         }
 
         # When a new client connects
         io.sockets.on 'connection', (socket) =>
 
-          for item in self.config.items 
+          for item in @config.items 
             do (item) =>
               switch item.type
                 when "actuator" 
-                  self.addActiatorNotify socket, item
+                  @addActuatorNotify socket, item
                 when 'sensor'
-                  self.addSensorNotify socket, item
+                  @addSensorNotify socket, item
 
 
-          server.ruleManager.on "add", addRuleListener = (rule) ->
-            self.emitRuleUpdate socket, "add", rule
+          framework.ruleManager.on "add", addRuleListener = (rule) =>
+            @emitRuleUpdate socket, "add", rule
           
-          server.ruleManager.on "update", updateRuleListener = (rule) ->
-            self.emitRuleUpdate socket, "update", rule
+          framework.ruleManager.on "update", updateRuleListener = (rule) =>
+            @emitRuleUpdate socket, "update", rule
          
-          server.ruleManager.on "remove", removeRuleListener = (rule) ->
-            self.emitRuleUpdate socket, "remove", rule
+          framework.ruleManager.on "remove", removeRuleListener = (rule) =>
+            @emitRuleUpdate socket, "remove", rule
 
           memoryTransport = env.logger.transports.memory
-          memoryTransport.on 'log', logListener = (entry)->
+          memoryTransport.on 'log', logListener = (entry)=>
             socket.emit 'log', entry
 
           @on 'item-add', addItemListener = (item) =>
             socket.emit "item-add", item
 
           socket.on 'disconnect', => 
-            server.ruleManager.removeListener "update", updateRuleListener
-            server.ruleManager.removeListener "add", addRuleListener 
-            server.ruleManager.removeListener "update", removeRuleListener
+            framework.ruleManager.removeListener "update", updateRuleListener
+            framework.ruleManager.removeListener "add", addRuleListener 
+            framework.ruleManager.removeListener "update", removeRuleListener
             memoryTransport.removeListener 'log', logListener
             @removeListener 'item-add', addItemListener
           return
@@ -248,7 +246,7 @@ module.exports = (env) ->
     addNewItem: (item) ->
       @config.items.push item
       @jsonConfig.items = @config.items
-      @server.saveConfig()
+      @framework.saveConfig()
 
       p = switch item.type
         when 'actuator'
@@ -260,8 +258,8 @@ module.exports = (env) ->
       )
 
 
-    addActiatorNotify: (socket, item) ->
-      actuator = @server.getActuatorById item.id
+    addActuatorNotify: (socket, item) ->
+      actuator = @framework.getActuatorById item.id
       if actuator?
         # * First time push the state to the client
         actuator.getState().then( (state) =>
@@ -277,7 +275,7 @@ module.exports = (env) ->
       return
 
     addSensorNotify: (socket, item) ->
-      sensor = @server.getSensorById item.id
+      sensor = @framework.getSensorById item.id
       if sensor?
         names = sensor.getSensorValuesNames()
         for name in names 
@@ -288,24 +286,21 @@ module.exports = (env) ->
       return
 
     getItemsWithData: () ->
-      self = this
-
       items = []
-      for item in self.config.items
+      for item in @config.items
         switch item.type
           when "actuator"
-            items.push self.getActuatorWithData item
+            items.push @getActuatorWithData item
           when "sensor"
-            items.push self.getSensorWithData item
+            items.push @getSensorWithData item
           else
             errorMsg = "Unknown item type \"#{item.type}\""
             env.logger.error errorMsg
       return Q.all items
 
     getActuatorWithData: (item) ->
-      self = this
       assert item.id?
-      actuator = self.server.getActuatorById item.id
+      actuator = @framework.getActuatorById item.id
       if actuator?
         item =
           type: "actuator"
@@ -314,20 +309,20 @@ module.exports = (env) ->
           state: null
         if actuator instanceof env.actuators.SwitchActuator
           item.template = "switch"
-          return actuator.getState().then( (state) ->
+          return actuator.getState().then( (state) =>
             item.state = state
             return item
-          ).catch( (error) ->
+          ).catch( (error) =>
             env.logger.error error.message
             env.logger.debug error.stack
             return item
           ) 
         else 
-          return Q.fcall -> item
+          return Q.fcall => item
       else
         errorMsg = "No actuator to display with id \"#{item.id}\" found"
         env.logger.error errorMsg
-        return Q.fcall ->
+        return Q.fcall =>
           type: "actuator"
           id: item.id
           name: "Unknown"
@@ -337,7 +332,7 @@ module.exports = (env) ->
     getSensorWithData: (item) ->
       self = this
       assert item.id?
-      sensor = self.server.getSensorById item.id
+      sensor = @framework.getSensorById item.id
       if sensor?
         item =
           type: "sensor"
@@ -348,14 +343,14 @@ module.exports = (env) ->
           item.template = "temperature"
           nameValues = []
           for name in sensor.getSensorValuesNames()
-            do (name) ->
+            do (name) =>
               nameValues.push sensor.getSensorValue(name).then (value) =>
                 return name: name, value: value
           return Q.all(nameValues).then( (nameValues) =>
             for nameValue in nameValues
               item.values[nameValue.name] = nameValue.value
             return item
-          ).catch( (error) ->
+          ).catch( (error) =>
             env.logger.error error.message
             env.logger.debug error.stack
             return item
@@ -367,11 +362,11 @@ module.exports = (env) ->
               present: value
             return item
         else 
-          return Q.fcall -> item
+          return Q.fcall => item
       else
         errorMsg = "No sensor to display with id \"#{item.id}\" found"
         env.logger.error errorMsg
-        return Q.fcall ->
+        return Q.fcall =>
           type: "sensor"
           id: item.id
           name: "Unknown"
