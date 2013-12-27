@@ -1,3 +1,6 @@
+#
+Q = require 'q'
+
 # #Sensor
 # A sensor can decide predicates. 
 class Sensor extends require('events').EventEmitter
@@ -34,6 +37,62 @@ class TemperatureSensor extends Sensor
 
 class PresentsSensor extends Sensor
   type: 'PresentsSensor'
+  _present: undefined
+  _listener: {}
+
+  getSensorValuesNames: -> ["present"]
+
+  getSensorValue: (name) ->
+    switch name
+      when "present" then return Q.fcall => @_present
+      else throw new Error "Illegal sensor value name"
+
+  canDecide: (predicate) ->
+    info = @_parsePredicate predicate
+    return info?
+
+  isTrue: (id, predicate) ->
+    info = @_parsePredicate predicate
+    if info? then return Q.fcall => info.present is @_present
+    else throw new Error "Sensor can not decide \"#{predicate}\"!"
+
+  # Removes the notification for an with `notifyWhen` registered predicate. 
+  cancelNotify: (id) ->
+    if @_listener[id]?
+      delete @_listener[id]
+
+  # Registers notification. 
+  notifyWhen: (id, predicate, callback) ->
+    info = @_parsePredicate predicate
+    if info?
+      @_listener[id] =
+        id: id
+        callback: callback
+        present: info.present
+    else throw new Error "PingPresents sensor can not decide \"#{predicate}\"!"
+
+  _setPresent: (value) ->
+    if @_present is value then return
+    @_present = value
+    @_notifyListener()
+    @emit 'present', value
+
+  _notifyListener: ->
+    for id, l of @_listener
+      if l.present is @_present
+        l.callback()
+
+
+  _parsePredicate: (predicate) ->
+    regExpString = '^(.+)\\s+is\\s+(not\\s+)?present$'
+    matches = predicate.match (new RegExp regExpString)
+    if matches?
+      deviceName = matches[1].trim()
+      if deviceName is @name or deviceName is @id
+        return info =
+          deviceId: @id
+          present: (if matches[2]? then no else yes) 
+    return null
 
 
 module.exports.Sensor = Sensor

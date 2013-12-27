@@ -35,81 +35,17 @@ module.exports = (env) ->
 
   # ##PingPresents Sensor
   class PingPresents extends env.sensors.PresentsSensor
-    config: null
-    listener: []
-    present: null
-    interval: null
 
-    constructor: (@config, @session) ->
+    constructor: (@config, session) ->
       @id = config.id
       @name = config.name
-      @interval = setInterval( => 
-        @ping()
-      , 
-        @config.delay
-      )
 
-    getSensorValuesNames: ->
-      ["present"]
+      ping = => session.pingHost @config.host, (error, target) =>
+        @_setPresent (if error then no else yes)
 
-    getSensorValue: (name)->
-      switch name
-        when "present" then return Q.fcall => @present
-        else throw new Error("Illegal sensor value name")
+      @interval = setInterval(ping, config.delay)
 
-    canDecide: (predicate) ->
-      info = @parsePredicate predicate
-      return info?
 
-    isTrue: (id, predicate) ->
-      info = @parsePredicate predicate
-      if info? then return Q.fcall => info.present is @present
-      else throw new Error "PingPresents sensor can not decide \"#{predicate}\"!"
-
-    # Removes the notification for an with `notifyWhen` registered predicate. 
-    cancelNotify: (id) ->
-      if @listener[id]?
-        delete @listener[id]
-
-    # Registers notification for time events. 
-    notifyWhen: (id, predicate, callback) ->
-      info = @parsePredicate predicate
-      if info?
-        @listener[id] =
-          id: id
-          callback: callback
-          present: info.present
-      else throw new Error "PingPresents sensor can not decide \"#{predicate}\"!"
-
-    notifyListener: ->
-      for id of @listener
-        l = @listener[id]
-        if l.present is @present
-          l.callback()
-
-    ping: -> 
-      @session.pingHost @config.host, (error, target) =>
-        if error
-          if @present isnt false
-            @present = false
-            @notifyListener()
-            @emit 'present', false
-        else
-          if @present isnt true  
-            @present = true
-            @notifyListener()
-            @emit 'present', true
-
-    parsePredicate: (predicate) ->
-      regExpString = '^(.+)\\s+is\\s+(not\\s+)?present$'
-      matches = predicate.match (new RegExp regExpString)
-      if matches?
-        deviceName = matches[1].trim()
-        if deviceName is @name or deviceName is @id
-          return info =
-            deviceId: @id
-            present: (if matches[2]? then no else yes) 
-      return null
 
   # For testing...
   backend.PingPresents = PingPresents

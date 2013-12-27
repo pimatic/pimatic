@@ -26,28 +26,28 @@ describe "pimatic-ping", ->
       delay: 200
     sensor = new PingPresents(config, sessionDummy)
 
-  describe '#parsePredicate()', ->
+  describe '#_parsePredicate()', ->
 
     it 'should parse "test is present"', ->
-      info = sensor.parsePredicate "test is present"
+      info = sensor._parsePredicate "test is present"
       assert info?
       assert info.deviceId is "test"
       assert info.present is yes
 
     it 'should parse "test device is present"', ->
-      info = sensor.parsePredicate "test device is present"
+      info = sensor._parsePredicate "test device is present"
       assert info?
       assert info.deviceId is "test"
       assert info.present is yes
 
     it 'should parse "test is not present"', ->
-      info = sensor.parsePredicate "test is not present"
+      info = sensor._parsePredicate "test is not present"
       assert info?
       assert info.deviceId is "test"
       assert info.present is no
 
     it 'should return null if id is wrong', ->
-      info = sensor.parsePredicate "foo is present"
+      info = sensor._parsePredicate "foo is present"
       assert(not info?)
 
   describe '#notifyWhen()', ->
@@ -79,12 +79,12 @@ describe "pimatic-ping", ->
     it "should cancel notify test-id-1", ->
 
       sensor.cancelNotify "test-id-1"
-      assert not sensor.listener['test-id-1']?
-      assert sensor.listener['test-id-2']?
+      assert not sensor._listener['test-id-1']?
+      assert sensor._listener['test-id-2']?
 
     it "should cancel notify test-id-2", ->
 
       sensor.cancelNotify "test-id-2"
-      assert not sensor.listener['test-id-1']?
-      assert not sensor.listener['test-id-2']?
+      assert not sensor._listener['test-id-1']?
+      assert not sensor._listener['test-id-2']?
 
