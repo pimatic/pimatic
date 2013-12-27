@@ -82,6 +82,8 @@ $(document).on "pageinit", '#index', (event) ->
     items: "li.sortable"
     forcePlaceholderSize: true
     placeholder: "sortable-placeholder"
+    handle: ".handle"
+    cursorAt: { left: 15, top: 15}
     start: (ev, ui) ->
       $("#delete-item").show()
       $("#add-a-item").hide()
@@ -97,7 +99,9 @@ $(document).on "pageinit", '#index', (event) ->
         item = $ item
         type: item.data('item-type'), id: item.data('item-id')
       $.post "update-order", order: order
-  ).disableSelection()
+  )
+
+  $("#items .handle").disableSelection()
 
   $("#delete-item").droppable(
     accept: "li.sortable"
@@ -155,6 +159,9 @@ addItem = (item) ->
   li.data('item-id', item.id)
   li.addClass 'item'
   $('#add-a-item').before li
+  li.append $('<div class="ui-icon-alt handle">
+    <div class="ui-icon ui-icon-bars"></div>
+  </div>')
   $('#items').listview('refresh')
 
 buildSwitch = (actuator) ->

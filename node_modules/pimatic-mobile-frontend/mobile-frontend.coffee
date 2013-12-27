@@ -197,12 +197,12 @@ module.exports = (env) ->
         # Listen for new websocket connections
         io = socketIo.listen webServer, {
           logger: 
-            log: (type, args...) =>
+            log: (type, args...) ->
               if type isnt 'debug' then env.logger.log(type, 'socket.io:', args...)
-            debug: (args...) => @log('debug', args...)
-            info: (args...) => @log('info', args...)
-            warn: (args...) => @log('warn', args...)
-            error: (args...) => @log('error', args...)
+            debug: (args...) -> this.log('debug', args...)
+            info: (args...) -> this.log('info', args...)
+            warn: (args...) -> this.log('warn', args...)
+            error: (args...) -> this.log('error', args...)
         }
 
         # When a new client connects

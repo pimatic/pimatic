@@ -25,6 +25,16 @@ span.if, span.then {
     -webkit-animation-duration: 120ms !important;
 }
 
+ul#items li.sortable {
+  padding-left: 0px;
+}
+
+ul#items li.sortable .handle {
+  float: left;
+  padding: 0 5px;
+  opacity:0.5;
+}
+
 fieldset .ui-block-a .ui-btn{
     margin-left: 0px;
 }

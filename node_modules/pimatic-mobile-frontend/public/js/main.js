@@ -100,6 +100,11 @@ $(document).on("pageinit", '#index', function(event) {
     items: "li.sortable",
     forcePlaceholderSize: true,
     placeholder: "sortable-placeholder",
+    handle: ".handle",
+    cursorAt: {
+      left: 15,
+      top: 15
+    },
     start: function(ev, ui) {
       $("#delete-item").show();
       $("#add-a-item").hide();
@@ -130,7 +135,8 @@ $(document).on("pageinit", '#index', function(event) {
         order: order
       });
     }
-  }).disableSelection();
+  });
+  $("#items .handle").disableSelection();
   return $("#delete-item").droppable({
     accept: "li.sortable",
     hoverClass: "ui-state-hover",
@@ -221,6 +227,9 @@ addItem = function(item) {
   li.data('item-id', item.id);
   li.addClass('item');
   $('#add-a-item').before(li);
+  li.append($('<div class="ui-icon-alt handle">\
+    <div class="ui-icon ui-icon-bars"></div>\
+  </div>'));
   return $('#items').listview('refresh');
 };
 
