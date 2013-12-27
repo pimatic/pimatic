@@ -42,6 +42,7 @@ node_modules/proxyquire/
 node_modules/coffee-errors/
 node_modules/CBuffer/
 node_modules/supertest/
+node_modules/pimatic-gpio/node_modules/
 npm-debug.log
 node.log
 .ftppass
