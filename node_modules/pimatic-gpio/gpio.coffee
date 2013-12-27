@@ -6,7 +6,7 @@ Gpio = require('onoff').Gpio
 
 module.exports = (env) ->
 
-  class Gpio extends env.plugins.Plugin
+  class GpioPlugin extends env.plugins.Plugin
 
     init: (app, @framework, @config) ->
 
@@ -22,7 +22,7 @@ module.exports = (env) ->
         when 'GpioPresents'
           @framework.registerSensor(new GpioPresents config)
 
-  plugin = new Gpio
+  plugin = new GpioPlugin
 
   actuatorConfigShema = require("./actuator-config-shema")
 
