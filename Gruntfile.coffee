@@ -45,6 +45,8 @@ module.exports = (grunt) ->
         "./node_modules/pimatic-sispmctl/README.md"
         "./node_modules/pimatic-speak-api/*.coffee"
         "./node_modules/pimatic-speak-api/README.md"
+        "./node_modules/pimatic-gpio/*.coffee"
+        "./node_modules/pimatic-gpio/README.md"
       ]
       options: 
         root: "."

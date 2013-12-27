@@ -1,6 +1,7 @@
 # 
 convict = require "convict"
 Q = require 'q'
+assert = require 'cassert'
 Gpio = require('onoff').Gpio
 
 module.exports = (env) ->

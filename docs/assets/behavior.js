@@ -779,6 +779,114 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         }, {
           "type": "folder",
           "data": {
+            "path": "node_modules/pimatic-gpio",
+            "title": "pimatic-gpio"
+          },
+          "depth": 2,
+          "children": [
+            {
+              "type": "file",
+              "data": {
+                "language": {
+                  "nameMatchers": [".md"],
+                  "commentsOnly": true,
+                  "name": "Markdown"
+                },
+                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-gpio/README.md",
+                "projectPath": "node_modules/pimatic-gpio/README.md",
+                "targetPath": "node_modules/pimatic-gpio/README",
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "pimatic gpio plugin",
+                    "slug": "pimatic-gpio-plugin",
+                    "isFileHeader": true
+                  },
+                  "depth": 1,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Configuration",
+                        "slug": "configuration"
+                      },
+                      "depth": 2
+                    }
+                  ]
+                },
+                "title": "pimatic gpio plugin"
+              },
+              "depth": 3,
+              "outline": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Configuration",
+                    "slug": "configuration"
+                  },
+                  "depth": 2
+                }
+              ]
+            }, {
+              "type": "file",
+              "data": {
+                "language": {
+                  "nameMatchers": [".coffee", "Cakefile"],
+                  "pygmentsLexer": "coffee-script",
+                  "singleLineComment": ["#"],
+                  "name": "CoffeeScript"
+                },
+                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-gpio/actuator-config-shema.coffee",
+                "projectPath": "node_modules/pimatic-gpio/actuator-config-shema.coffee",
+                "targetPath": "node_modules/pimatic-gpio/actuator-config-shema",
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "gpio actuator configuration options",
+                    "slug": "gpio-actuator-configuration-options",
+                    "isFileHeader": true
+                  },
+                  "depth": 1
+                },
+                "title": "gpio actuator configuration options"
+              },
+              "depth": 3,
+              "outline": []
+            }, {
+              "type": "file",
+              "data": {
+                "language": {
+                  "nameMatchers": [".coffee", "Cakefile"],
+                  "pygmentsLexer": "coffee-script",
+                  "singleLineComment": ["#"],
+                  "name": "CoffeeScript"
+                },
+                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-gpio/gpio.coffee",
+                "projectPath": "node_modules/pimatic-gpio/gpio.coffee",
+                "targetPath": "node_modules/pimatic-gpio/gpio",
+                "title": "gpio"
+              },
+              "depth": 3,
+              "outline": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "GpioPresents Sensor",
+                    "slug": "gpiopresents-sensor"
+                  },
+                  "depth": 2
+                }
+              ]
+            }
+          ]
+        }, {
+          "type": "folder",
+          "data": {
             "path": "node_modules/pimatic-log-reader",
             "title": "pimatic-log-reader"
           },
