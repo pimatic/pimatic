@@ -21,6 +21,8 @@ module.exports = (env) ->
       return switch config.class
         when 'GpioPresents'
           @framework.registerSensor(new GpioPresents config)
+          true
+        else false
 
   plugin = new GpioPlugin
 
@@ -63,6 +65,14 @@ module.exports = (env) ->
       @name = config.name
 
       @gpio = new Gpio config.gpio, 'in', 'both'
+
+      Q.ninvoke(@gpio, 'read').then( (value) =>
+        @_setPesent (if value is 1 then yes else no)
+      ).catch( (err) ->
+        env.logger.error err.message
+        env.logger.debug err.stack
+      ).done()
+
       @gpio.watch (err, value) =>
         if err?
           env.logger.error err.message
