@@ -143,12 +143,6 @@ class RuleManager extends require('events').EventEmitter
       # Simulate the action execution to try if it can be executed-
       return @executeAction(actions, true).then( =>
 
-        # Register all sensors:
-        for p in predicates
-          do (p) =>
-            p.sensor.notifyWhen p.id, p.token, =>
-              @whenPredicateIsTrue id, p.id
-
         # If the execution was sussessful then return the rule object.
         return rule = 
           id: id
@@ -163,6 +157,23 @@ class RuleManager extends require('events').EventEmitter
         throw new Error "Could not find a actuator to execute \"#{actions}\""
       )
 
+  _registerPredicateSensorNotify: (rule) ->
+    assert rule?
+    assert rule.predicates?
+    
+    # Register all sensors:
+    for p in rule.predicates
+      do (p) =>
+        p.sensor.notifyWhen p.id, p.token, =>
+          @whenPredicateIsTrue rule.id, p.id
+
+  _cancelPredicateSensorNotify: (rule) ->
+    assert rule?
+    assert rule.predicates?
+
+    # Then cancel the notifier for all predicates
+    p.sensor.cancelNotify p.id for p in rule.predicates
+
   # ###AddRuleByString
   addRuleByString: (id, ruleString, active=yes, force=false) ->
     assert id? and typeof id is "string" and id.length isnt 0
@@ -170,6 +181,8 @@ class RuleManager extends require('events').EventEmitter
 
     # First parse the rule.
     return @parseRuleString(id, ruleString).then( (rule)=>
+
+      @_registerPredicateSensorNotify rule
       # If the rules was successful parsed add it to the rule array.
       rule.active = active
       @rules[id] = rule
@@ -207,8 +220,8 @@ class RuleManager extends require('events').EventEmitter
 
     # First get the rule from the rule array.
     rule = @rules[id]
-    # Then cancel the notifier for all predicates
-    p.sensor.cancelNotify p.id for p in rule.predicates
+    # Then get cancel all notifies
+    @_cancelPredicateSensorNotify rule
     # and delete the rule from the array
     delete @rules[id]
     # and emit the event.
@@ -226,7 +239,10 @@ class RuleManager extends require('events').EventEmitter
       # If the rule was successfully parsed then get the old rule
       oldRule = @rules[id]
       # and cancel the notifier for the old predicates.
-      p.sensor.cancelNotify p.id for p in oldRule.predicates
+      @_cancelPredicateSensorNotify rule
+      # and register the new ones:
+      @_registerPredicateSensorNotify rule
+
       # Then add the rule to the rules array
       @rules[id] = rule
       # and emit the event.

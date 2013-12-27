@@ -21,7 +21,10 @@ $(document).on("pageinit", '#index', function(event) {
     });
   }
   socket = io.connect("/", {
-    'connect timeout': 5000
+    'connect timeout': 5000,
+    'reconnection delay': 2000,
+    'reconnection limit': Infinity,
+    'max reconnection attempts': Infinity
   });
   socket.on("switch-status", function(data) {
     var value;

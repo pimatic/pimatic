@@ -15,7 +15,13 @@ $(document).on "pageinit", '#index', (event) ->
     $("#talk").show().bind "vclick", (event, ui) ->
       device.startVoiceRecognition "voiceCallback"
 
-  socket = io.connect("/", 'connect timeout': 5000)
+  socket = io.connect("/", 
+    'connect timeout': 5000
+    'reconnection delay': 2000
+    'reconnection limit': Infinity
+    'max reconnection attempts': Infinity
+  )
+  
   socket.on "switch-status", (data) ->
     if data.state?
       value = (if data.state then "on" else "off")

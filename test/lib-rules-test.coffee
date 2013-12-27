@@ -130,7 +130,7 @@ describe "RuleManager", ->
         finish()
       ).catch(finish).done()
 
-    it 'should execute the action', (finish) ->
+    it 'should react to notifies', (finish) ->
 
       actionHandler.executeAction = (actionString, simulate) =>
         assert actionString is "action 1"
@@ -142,11 +142,24 @@ describe "RuleManager", ->
 
   describe '#updateRuleByString()', ->
 
+    notfyCallback = null
+    i = 1
+
     it 'should update the rule', (finish) ->
+
       canDecideCalled = false
       sensor.canDecide = (predicate) ->
         assert predicate is 'predicate 2'
-        canDecideCalled = true
+        canDecideCalled = i
+        i++
+        return true
+
+      cancleNotifyCalled = false
+      sensor.cancelNotify = (id) ->
+        assert id?
+        assert id is notifyId
+        cancleNotifyCalled = i
+        i++
         return true
 
       notifyWhenCalled = false
@@ -154,26 +167,36 @@ describe "RuleManager", ->
         assert id?
         assert predicate is 'predicate 2'
         assert typeof callback is 'function'
-        notifyWhenCalled = true
+        notfyCallback = callback
+        notifyWhenCalled = i
+        i++
         return true
 
-      cancleNotifyCalled = false
-      sensor.cancelNotify = (id) ->
-        assert id?
-        assert id is notifyId
-        cancleNotifyCalled = true
-        return true
+
 
       actionHandler.executeAction = (actionString, simulate) => Q.fcall -> "execute action"
 
       ruleManager.updateRuleByString('test5', 'if predicate 2 then action 1').then( ->
-        assert canDecideCalled
-        assert notifyWhenCalled
-        assert cancleNotifyCalled
+        assert canDecideCalled is 1
+        assert cancleNotifyCalled is 2
+        assert notifyWhenCalled is 3
+
         assert ruleManager.rules['test5']?
         assert ruleManager.rules['test5'].string is 'if predicate 2 then action 1'
         finish()
       ).catch(finish).done()
+
+
+    it 'should react to notifies', (finish) ->
+
+      actionHandler.executeAction = (actionString, simulate) =>
+        assert actionString is "action 1"
+        assert not simulate
+        finish()
+        return Q.fcall -> "execute action"
+
+      notfyCallback()
+
 
   describe '#removeRule()', ->
 

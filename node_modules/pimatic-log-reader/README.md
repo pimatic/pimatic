@@ -43,7 +43,7 @@ Then you can use the predicates defined in your config.
 Examples:
 ---------
 
-##turn a speacker on and off when a music player starts or stops playing:
+###turn a speacker on and off when a music player starts or stops playing:
 
 Assuming that you are using [gmediarender](https://github.com/hzeller/gmrender-resurrect) and the 
 log is written to "/var/log/gmediarender". Then define following sensor:
@@ -76,7 +76,7 @@ and add the following rules for a existing speaker actuator:
 
     if music stops then turn the speacker off
 
-##turn the printer on when you start printing:
+###turn the printer on when you start printing:
 
 Define the following sensor:
 

@@ -781,6 +781,33 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                         "slug": "configutation"
                       },
                       "depth": 2
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 2,
+                        "title": "Examples:",
+                        "slug": "examples"
+                      },
+                      "depth": 2,
+                      "children": [
+                        {
+                          "type": "heading",
+                          "data": {
+                            "level": 3,
+                            "title": "turn a speacker on and off when a music player starts or stops playing:",
+                            "slug": "turn-a-speacker-on-and-off-when-a-music-player-starts-or-stops-playing"
+                          },
+                          "depth": 3
+                        }, {
+                          "type": "heading",
+                          "data": {
+                            "level": 3,
+                            "title": "turn the printer on when you start printing:",
+                            "slug": "turn-the-printer-on-when-you-start-printing"
+                          },
+                          "depth": 3
+                        }
+                      ]
                     }
                   ]
                 },
@@ -796,6 +823,33 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                     "slug": "configutation"
                   },
                   "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Examples:",
+                    "slug": "examples"
+                  },
+                  "depth": 2,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "turn a speacker on and off when a music player starts or stops playing:",
+                        "slug": "turn-a-speacker-on-and-off-when-a-music-player-starts-or-stops-playing"
+                      },
+                      "depth": 3
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "turn the printer on when you start printing:",
+                        "slug": "turn-the-printer-on-when-you-start-printing"
+                      },
+                      "depth": 3
+                    }
+                  ]
                 }
               ]
             }, {

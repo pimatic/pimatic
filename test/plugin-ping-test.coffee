@@ -11,8 +11,8 @@ describe "pimatic-ping", ->
     rules: require '../lib/rules'
     plugins: require '../lib/plugins'
 
-  backend = (require 'pimatic-ping') env
-  PingPresents = backend.PingPresents
+  plugin = (require 'pimatic-ping') env
+  PingPresents = plugin.PingPresents
   sessionDummy = null
   sensor = null
 
@@ -52,22 +52,39 @@ describe "pimatic-ping", ->
 
   describe '#notifyWhen()', ->
 
-    it "should notify when device is present", (done) ->
+    it "should notify when device is present", (finish) ->
       sessionDummy.pingHost = (host, callback) ->
         assert host is "localhost"
         setTimeout ->
           callback null, host
         ,22
 
-      success = sensor.notifyWhen "test-id", "test is present", done
+      success = sensor.notifyWhen "test-id-1", "test is present", ->
+        finish()
       assert success
 
-    it "should notify when device is not present", (done) ->
+    it "should notify when device is not present", (finish) ->
       sessionDummy.pingHost = (host, callback) ->
         assert host is "localhost"
         setTimeout ->
           callback new Error('foo'), host
         ,22
 
-      success = sensor.notifyWhen "test-id", "test is not present", done
+      success = sensor.notifyWhen "test-id-2", "test is not present", ->
+        finish()
       assert success
+
+  describe '#cancelNotify()', ->
+
+    it "should cancel notify test-id-1", ->
+
+      sensor.cancelNotify "test-id-1"
+      assert not sensor.listener['test-id-1']?
+      assert sensor.listener['test-id-2']?
+
+    it "should cancel notify test-id-2", ->
+
+      sensor.cancelNotify "test-id-2"
+      assert not sensor.listener['test-id-1']?
+      assert not sensor.listener['test-id-2']?
+
