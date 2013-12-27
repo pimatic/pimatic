@@ -85,7 +85,7 @@ module.exports = (env) ->
     _setPresentValue: (value) ->
       assert value is 1 or value is 0
       state = (if value is 1 then yes else no)
-      if inverted then state = not state
+      if @inverted then state = not state
       @_setPresent state
 
   # For testing...
