@@ -51,23 +51,25 @@ module.exports = (env) ->
         @_setState(state)
       )
 
+  sensorConfigShema = require("./sensor-config-shema")
+
   # ##GpioPresents Sensor
   class GpioPresents extends env.sensors.PresentsSensor
 
     constructor: (@config) ->
       # TODO:
-      # conf = convict sensorConfigShema.GpioPresents
-      # conf.load config
-      # conf.validate()
+      conf = convict sensorConfigShema.GpioPresents
+      conf.load config
+      conf.validate()
       assert config.gpio?
 
       @id = config.id
       @name = config.name
-
+      @inverted = conf.get 'inverted'
       @gpio = new Gpio config.gpio, 'in', 'both'
 
       Q.ninvoke(@gpio, 'read').then( (value) =>
-        @_setPresent (if value is 1 then yes else no)
+        @_setPresentValue value 
       ).catch( (err) ->
         env.logger.error err.message
         env.logger.debug err.stack
@@ -78,7 +80,13 @@ module.exports = (env) ->
           env.logger.error err.message
           env.logger.debug err.stack
         else
-          @_setPresent (if value is 1 then yes else no)
+          _setPresentValue value
+
+    _setPresentValue: (value) ->
+      assert value is 1 or value is 0
+      state = (if value is 1 then yes else no)
+      if inverted then state = not state
+      @_setPresent state
 
   # For testing...
   plugin.GpioSwitch = GpioSwitch

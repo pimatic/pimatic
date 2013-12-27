@@ -2,7 +2,7 @@
 
 # Defines a `node-convict` config-shema and exports it.
 module.exports =
-  GpioPresents:
+  GpioSwitch:
     gpio:
       doc: "The gpio pin"
       format: "int"
