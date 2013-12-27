@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><title>lib/sensors</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="lib/sensors"><meta name="groc-project-path" content="lib/sensors.coffee"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path">lib/sensors.coffee</div></div><div id="document"><div class="segment"><div class="comments"><div class="wrapper"><h1 id="sensor">Sensor</h1>
+<!DOCTYPE html><html lang="en"><head><title>lib/sensors</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="lib/sensors"><meta name="groc-project-path" content="lib/sensors.coffee"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path">lib/sensors.coffee</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="c1">#</span>
+<span class="nv">Q = </span><span class="nx">require</span> <span class="s">&#39;q&#39;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><h1 id="sensor">Sensor</h1>
 
 <p>A sensor can decide predicates. </p></div></div><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">Sensor</span> <span class="k">extends</span> <span class="nx">require</span><span class="p">(</span><span class="s">&#39;events&#39;</span><span class="p">).</span><span class="nx">EventEmitter</span>
   <span class="nv">type: </span><span class="s">&#39;unknwon&#39;</span>
@@ -22,6 +23,56 @@ If the sensor can not decide the predicate this function should throw an Error.<
 
 <span class="k">class</span> <span class="nx">PresentsSensor</span> <span class="k">extends</span> <span class="nx">Sensor</span>
   <span class="nv">type: </span><span class="s">&#39;PresentsSensor&#39;</span>
+  <span class="nv">_present: </span><span class="kc">undefined</span>
+  <span class="nv">_listener: </span><span class="p">{}</span>
+
+  <span class="nv">getSensorValuesNames: </span><span class="nf">-&gt;</span> <span class="p">[</span><span class="s">&quot;present&quot;</span><span class="p">]</span>
+
+  <span class="nv">getSensorValue: </span><span class="nf">(name) -&gt;</span>
+    <span class="k">switch</span> <span class="nx">name</span>
+      <span class="k">when</span> <span class="s">&quot;present&quot;</span> <span class="k">then</span> <span class="k">return</span> <span class="nx">Q</span><span class="p">.</span><span class="nx">fcall</span> <span class="o">=&gt;</span> <span class="nx">@_present</span>
+      <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;Illegal sensor value name&quot;</span>
+
+  <span class="nv">canDecide: </span><span class="nf">(predicate) -&gt;</span>
+    <span class="nv">info = </span><span class="nx">@_parsePredicate</span> <span class="nx">predicate</span>
+    <span class="k">return</span> <span class="nx">info</span><span class="o">?</span>
+
+  <span class="nv">isTrue: </span><span class="nf">(id, predicate) -&gt;</span>
+    <span class="nv">info = </span><span class="nx">@_parsePredicate</span> <span class="nx">predicate</span>
+    <span class="k">if</span> <span class="nx">info</span><span class="o">?</span> <span class="k">then</span> <span class="k">return</span> <span class="nx">Q</span><span class="p">.</span><span class="nx">fcall</span> <span class="o">=&gt;</span> <span class="nx">info</span><span class="p">.</span><span class="nx">present</span> <span class="o">is</span> <span class="nx">@_present</span>
+    <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;Sensor can not decide \&quot;</span><span class="si">#{</span><span class="nx">predicate</span><span class="si">}</span><span class="s">\&quot;!&quot;</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Removes the notification for an with <code>notifyWhen</code> registered predicate. </p></div></div><div class="code"><div class="wrapper">  <span class="nv">cancelNotify: </span><span class="nf">(id) -&gt;</span>
+    <span class="k">if</span> <span class="nx">@_listener</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span><span class="o">?</span>
+      <span class="k">delete</span> <span class="nx">@_listener</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Registers notification. </p></div></div><div class="code"><div class="wrapper">  <span class="nv">notifyWhen: </span><span class="nf">(id, predicate, callback) -&gt;</span>
+    <span class="nv">info = </span><span class="nx">@_parsePredicate</span> <span class="nx">predicate</span>
+    <span class="k">if</span> <span class="nx">info</span><span class="o">?</span>
+      <span class="nx">@_listener</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span>
+        <span class="nv">id: </span><span class="nx">id</span>
+        <span class="nv">callback: </span><span class="nx">callback</span>
+        <span class="nv">present: </span><span class="nx">info</span><span class="p">.</span><span class="nx">present</span>
+    <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;PingPresents sensor can not decide \&quot;</span><span class="si">#{</span><span class="nx">predicate</span><span class="si">}</span><span class="s">\&quot;!&quot;</span>
+
+  <span class="nv">_setPresent: </span><span class="nf">(value) -&gt;</span>
+    <span class="k">if</span> <span class="nx">@_present</span> <span class="o">is</span> <span class="nx">value</span> <span class="k">then</span> <span class="k">return</span>
+    <span class="vi">@_present = </span><span class="nx">value</span>
+    <span class="nx">@_notifyListener</span><span class="p">()</span>
+    <span class="nx">@emit</span> <span class="s">&#39;present&#39;</span><span class="p">,</span> <span class="nx">value</span>
+
+  <span class="nv">_notifyListener: </span><span class="nf">-&gt;</span>
+    <span class="k">for</span> <span class="nx">id</span><span class="p">,</span> <span class="nx">l</span> <span class="k">of</span> <span class="nx">@_listener</span>
+      <span class="k">if</span> <span class="nx">l</span><span class="p">.</span><span class="nx">present</span> <span class="o">is</span> <span class="nx">@_present</span>
+        <span class="nx">l</span><span class="p">.</span><span class="nx">callback</span><span class="p">()</span>
+
+
+  <span class="nv">_parsePredicate: </span><span class="nf">(predicate) -&gt;</span>
+    <span class="nv">regExpString = </span><span class="s">&#39;^(.+)\\s+is\\s+(not\\s+)?present$&#39;</span>
+    <span class="nv">matches = </span><span class="nx">predicate</span><span class="p">.</span><span class="nx">match</span> <span class="p">(</span><span class="k">new</span> <span class="nb">RegExp</span> <span class="nx">regExpString</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">matches</span><span class="o">?</span>
+      <span class="nv">deviceName = </span><span class="nx">matches</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">trim</span><span class="p">()</span>
+      <span class="k">if</span> <span class="nx">deviceName</span> <span class="o">is</span> <span class="nx">@name</span> <span class="o">or</span> <span class="nx">deviceName</span> <span class="o">is</span> <span class="nx">@id</span>
+        <span class="k">return</span> <span class="nv">info =</span>
+          <span class="nv">deviceId: </span><span class="nx">@id</span>
+          <span class="nv">present: </span><span class="p">(</span><span class="k">if</span> <span class="nx">matches</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">?</span> <span class="k">then</span> <span class="kc">no</span> <span class="k">else</span> <span class="kc">yes</span><span class="p">)</span> 
+    <span class="k">return</span> <span class="kc">null</span>
 
 
 <span class="nv">module.exports.Sensor = </span><span class="nx">Sensor</span>

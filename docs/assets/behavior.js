@@ -564,20 +564,20 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/lib/sensors.coffee",
             "projectPath": "lib/sensors.coffee",
             "targetPath": "lib/sensors",
-            "firstHeader": {
+            "title": "sensors"
+          },
+          "depth": 2,
+          "outline": [
+            {
               "type": "heading",
               "data": {
                 "level": 1,
                 "title": "Sensor",
-                "slug": "sensor",
-                "isFileHeader": true
+                "slug": "sensor"
               },
               "depth": 1
-            },
-            "title": "Sensor"
-          },
-          "depth": 2,
-          "outline": []
+            }
+          ]
         }
       ]
     }, {
