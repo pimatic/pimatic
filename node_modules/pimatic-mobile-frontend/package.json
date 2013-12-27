@@ -18,7 +18,6 @@
   },
   "dependencies": {
     "connect-coffee-script": "0.1.*",
-    "connect-offline": "1.0.*",
     "jade": "0.27.*",
     "socket.io": "0.9.*",
     "connect-cache-manifest": "~0.2.0"
