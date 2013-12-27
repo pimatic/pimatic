@@ -454,9 +454,10 @@ removeRule = function(rule) {
 
 $(document).on("pageinit", '#log', function(event) {
   $.get("/api/messages", function(data) {
-    var entry, _i, _len;
-    for (_i = 0, _len = data.length; _i < _len; _i++) {
-      entry = data[_i];
+    var entry, _i, _len, _ref;
+    _ref = data.messages;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      entry = _ref[_i];
       addLogMessage(entry);
     }
     return socket.on('log', function(entry) {

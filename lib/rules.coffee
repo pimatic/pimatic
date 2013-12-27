@@ -37,27 +37,6 @@ class RuleManager extends require('events').EventEmitter
 
   constructor: (@framework) ->
 
-  # ###whenPredicateIsTrue
-  # This function should be called by a sensor if a predicate becomes true
-  whenPredicateIsTrue: (ruleId, predicateId) =>
-    assert ruleId? and typeof ruleId is "string" and ruleId.length isnt 0
-    assert predicateId? and typeof predicateId is "string" and predicateId.length isnt 0
-
-    # First mark the given predicate as true, so wie dont check the predicate again.
-    knownTruePredicates = [predicateId]
-    # Then get the corresponding rule
-    rule = @rules[ruleId]
-
-    # and check if the rule is now true.
-    @evaluateConditionOfRule(rule, knownTruePredicates).then( (isTrue) =>
-      # if the rule is now true, then execute its action
-      if isTrue then @executeAction(rule.action, false).then( (message) =>
-        logger.info "Rule #{ruleId}: #{message}"
-      ).catch( (error)=>
-        logger.error "Rule #{ruleId} error: #{error}"
-      ).done()
-    )
-    return
 
   # ###parseRuleString
   # This function parses a rule given by a string and returns a rule object.
@@ -157,16 +136,44 @@ class RuleManager extends require('events').EventEmitter
         throw new Error "Could not find a actuator to execute \"#{actions}\""
       )
 
+  # ###_whenPredicateIsTrue
+  # Register for every predicate the callback function that should be called
+  # when the predicate becomes true.
   _registerPredicateSensorNotify: (rule) ->
     assert rule?
     assert rule.predicates?
+
+    # ###whenPredicateIsTrue
+    # This function should be called by a sensor if a predicate becomes true
+    whenPredicateIsTrue = (ruleId, predicateId) =>
+      assert ruleId? and typeof ruleId is "string" and ruleId.length isnt 0
+      assert predicateId? and typeof predicateId is "string" and predicateId.length isnt 0
+
+      # First mark the given predicate as true, so wie dont check the predicate again.
+      knownTruePredicates = [predicateId]
+      # Then get the corresponding rule
+      rule = @rules[ruleId]
+
+      # and check if the rule is now true.
+      @evaluateConditionOfRule(rule, knownTruePredicates).then( (isTrue) =>
+        # if the rule is now true, then execute its action
+        if isTrue then @executeAction(rule.action, false).then( (message) =>
+          logger.info "Rule #{ruleId}: #{message}"
+        ).catch( (error)=>
+          logger.error "Rule #{ruleId} error: #{error}"
+        ).done()
+      )
+      return
     
-    # Register all sensors:
+    # Register the whenPredicateIsTrue for all sensors:
     for p in rule.predicates
       do (p) =>
         p.sensor.notifyWhen p.id, p.token, =>
-          @whenPredicateIsTrue rule.id, p.id
-
+          whenPredicateIsTrue rule.id, p.id
+          
+  # ###_cancelPredicateSensorNotify
+  # Cancels for every predicate the callback that should be called
+  # when the predicate becomes true.
   _cancelPredicateSensorNotify: (rule) ->
     assert rule?
     assert rule.predicates?

@@ -8,74 +8,79 @@ module.exports = (env) ->
 
     init: (app, framework, @config) =>
       
+      sendSuccessResponse = (res, data = {}) =>
+        data.success = true
+        res.send 200, data
 
-      handleSuccess = (res) =>
-        res.send 200, {success: true}  
+      sendErrorResponse = (res, error, statusCode = 400) =>
+        message = null
+        if error instanceof Error
+          env.logger.error error.message
+          env.logger.debug error.stack
+        else
+          message = error
+        res.send statusCode, {success: false, error: message}
 
-      handleError = (res, error) =>
-        env.logger.error error.message
-        env.logger.debug error.stack
-        res.send 200, {success: false, error: error.message}
-
-      returnErrorHandler = (res) =>
-        return (error) => handleError(res, error)
-
-      app.get "/api/actuator/:actuatorId/:actionName", (req, res, next) ->
+      app.get "/api/actuator/:actuatorId/:actionName", (req, res, next) =>
         actuator = framework.getActuatorById req.params.actuatorId
         if actuator?
           #TODO: add parms support
           if actuator.hasAction req.params.actionName
-            actuator[req.params.actionName]().then( ->
-              handleSuccess res
-            ).catch( (e) ->
-              env.logger.error e.message
-              env.logger.debug e.stack
-              res.send 500, e.message
+            result = actuator[req.params.actionName]() 
+            Q.when(result,  =>
+              sendSuccessResponse res
+            ).catch( (error) =>
+              sendErrorResponse res, error, 500
             ).done()
           else
-            res.send 400, 'illegal action!'
-        else res.send 400, 'illegal actuator!'
+            sendErrorResponse res, 'actuator hasn\'t that action'
+        else sendErrorResponse res, 'actuator not found'
 
 
-      app.post "/api/rule/:ruleId/update", (req, res, next) ->
+      app.post "/api/rule/:ruleId/update", (req, res, next) =>
         ruleId = req.params.ruleId
-        ruleText = req.body.rule
-        framework.ruleManager.updateRuleByString(ruleId, ruleText).then(
-          handleSuccess res
-        ).catch(returnErrorHandler res).done()
+        ruleString = req.body.rule
+        unless ruleId? then return sendErrorResponse res, 'No ruleId given', 400
+        unless ruleString? then return sendErrorResponse res, 'No rule given', 400
+        framework.ruleManager.updateRuleByString(ruleId, ruleString).then( =>
+          sendSuccessResponse res
+        ).catch( (error) =>
+          sendErrorResponse res, error, 406
+        ).done()
 
 
-      app.post "/api/rule//add", (req, res, next) ->
-        res.send 200, {success: false, error: __('Please enter a id')}
+      app.post "/api/rule//add", (req, res, next) =>
+        sendErrorResponse res, 400, 'No id given'
         
-      app.post "/api/rule/:ruleId/add", (req, res, next) ->
+      app.post "/api/rule/:ruleId/add", (req, res, next) =>
         ruleId = req.params.ruleId
         ruleText = req.body.rule
-        framework.ruleManager.addRuleByString(ruleId, ruleText).then(
-          handleSuccess res
-        ).catch(returnErrorHandler res).done()
+        framework.ruleManager.addRuleByString(ruleId, ruleText).then( =>
+          sendSuccessResponse res
+        ).catch( (error) =>
+          sendErrorResponse res, error, 406
+        ).done()
 
-      app.get "/api/rule/:ruleId/remove", (req, res, next) ->
+      app.get "/api/rule/:ruleId/remove", (req, res, next) =>
         ruleId = req.params.ruleId
         try
           framework.ruleManager.removeRule ruleId
-          handleSuccess res
-        catch e
-          (returnErrorHandler res) e
+          sendSuccessResponse res
+        catch error
+          sendErrorResponse res, error, 500
 
-      app.get "/api/messages", (req, res, next) ->
+      app.get "/api/messages", (req, res, next) =>
         memoryTransport = env.logger.transports.memory
-        res.send 200, memoryTransport.getBuffer()
+        sendSuccessResponse res, { messages: memoryTransport.getBuffer() }
 
-      app.get "/api/list/actuators", (req, res, next) ->
+      app.get "/api/list/actuators", (req, res, next) =>
         actuatorList = for id, a of framework.actuators 
           id: a.id, name: a.name
-        res.send 200, {success: true, actuators: actuatorList}
+        sendSuccessResponse res, { actuators: actuatorList }
 
-      app.get "/api/list/sensors", (req, res, next) ->
+      app.get "/api/list/sensors", (req, res, next) =>
         sensorList = for id, s of framework.sensors 
           id: s.id, name: s.name
-        res.send 200, {success: true, sensors: sensorList}
-
+        sendSuccessResponse res, { sensors: sensorList}
         
   return new RestFrontend

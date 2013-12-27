@@ -390,6 +390,22 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                       "type": "heading",
                       "data": {
                         "level": 3,
+                        "title": "parseRuleString",
+                        "slug": "parserulestring"
+                      },
+                      "depth": 3
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "_whenPredicateIsTrue",
+                        "slug": "-whenpredicateistrue"
+                      },
+                      "depth": 3
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
                         "title": "whenPredicateIsTrue",
                         "slug": "whenpredicateistrue"
                       },
@@ -398,8 +414,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                       "type": "heading",
                       "data": {
                         "level": 3,
-                        "title": "parseRuleString",
-                        "slug": "parserulestring"
+                        "title": "_cancelPredicateSensorNotify",
+                        "slug": "-cancelpredicatesensornotify"
                       },
                       "depth": 3
                     }, {
@@ -464,6 +480,22 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "type": "heading",
                   "data": {
                     "level": 3,
+                    "title": "parseRuleString",
+                    "slug": "parserulestring"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "_whenPredicateIsTrue",
+                    "slug": "-whenpredicateistrue"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
                     "title": "whenPredicateIsTrue",
                     "slug": "whenpredicateistrue"
                   },
@@ -472,8 +504,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "type": "heading",
                   "data": {
                     "level": 3,
-                    "title": "parseRuleString",
-                    "slug": "parserulestring"
+                    "title": "_cancelPredicateSensorNotify",
+                    "slug": "-cancelpredicatesensornotify"
                   },
                   "depth": 3
                 }, {

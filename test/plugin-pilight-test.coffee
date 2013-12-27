@@ -6,18 +6,14 @@ describe "pimatic-pilight", ->
 
     # Setup the environment
   env =
-    logger: require '../lib/logger'
     helper: require '../lib/helper'
+    logger: require '../lib/logger'
     actuators: require '../lib/actuators'
     sensors: require '../lib/sensors'
     rules: require '../lib/rules'
     plugins: require '../lib/plugins'
 
   connected = false
-
-  env.logger.info = () ->
-  env.logger.debug = () ->
-  env.logger.error = () -> assert false
 
   class EverSocketDummy extends require('events').EventEmitter
     connect: (port, host) -> 

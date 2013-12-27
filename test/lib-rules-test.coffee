@@ -3,7 +3,7 @@ Q = require 'q'
 
 describe "RuleManager", ->
 
-    # Setup the environment
+  # Setup the environment
   env =
     logger: require '../lib/logger'
     helper: require '../lib/helper'
@@ -11,6 +11,9 @@ describe "RuleManager", ->
     sensors: require '../lib/sensors'
     rules: require '../lib/rules'
     plugins: require '../lib/plugins'
+
+  before ->
+    env.logger.transports.console.level = 'error'
 
   ruleManager = null
 

@@ -341,7 +341,7 @@ removeRule = (rule) ->
 
 $(document).on "pageinit", '#log', (event) ->
   $.get "/api/messages"  , (data) ->
-    for entry in data
+    for entry in data.messages
       addLogMessage entry
     socket.on 'log', (entry) -> 
       addLogMessage entry
