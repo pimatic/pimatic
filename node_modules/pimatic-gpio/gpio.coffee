@@ -80,7 +80,7 @@ module.exports = (env) ->
           env.logger.error err.message
           env.logger.debug err.stack
         else
-          _setPresentValue value
+          @_setPresentValue value
 
     _setPresentValue: (value) ->
       assert value is 1 or value is 0
