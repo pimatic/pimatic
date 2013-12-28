@@ -53,6 +53,7 @@ $(document).on("pageinit", '#index', function(event) {
       errorCount++;
       updateErrorCount();
     }
+    showToast(entry.msg);
     return console.log(entry);
   });
   socket.on('reconnect', function() {
@@ -101,6 +102,9 @@ $(document).on("pageinit", '#index', function(event) {
     forcePlaceholderSize: true,
     placeholder: "sortable-placeholder",
     handle: ".handle",
+    cursor: "move",
+    revert: 100,
+    scroll: true,
     cursorAt: {
       left: 15,
       top: 15
@@ -529,16 +533,5 @@ voiceCallback = function(matches) {
 };
 
 showToast = (typeof device !== "undefined" && device !== null) && (device.showToast != null) ? device.showToast : function(msg) {
-  return $("<div class='ui-loader ui-overlay-shadow ui-body-e ui-corner-all'><h3>" + msg + "</h3></div>").css({
-    display: "block",
-    opacity: 0.90,
-    position: "fixed",
-    padding: "7px",
-    "text-align": "center",
-    width: "270px",
-    left: ($(window).width() - 284) / 2,
-    top: $(window).height() / 2
-  }).appendTo($.mobile.pageContainer).delay(1500).fadeOut(400, function() {
-    return $(this).remove();
-  });
+  return $('#toast').text(msg).toast().toast('show');
 };

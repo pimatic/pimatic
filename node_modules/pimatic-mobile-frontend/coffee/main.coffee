@@ -39,6 +39,7 @@ $(document).on "pageinit", '#index', (event) ->
     if entry.level is 'error' 
       errorCount++
       updateErrorCount()
+    showToast entry.msg
     console.log entry
 
   socket.on 'reconnect', ->
@@ -83,6 +84,9 @@ $(document).on "pageinit", '#index', (event) ->
     forcePlaceholderSize: true
     placeholder: "sortable-placeholder"
     handle: ".handle"
+    cursor: "move"
+    revert: 100
+    scroll: true
     cursorAt: { left: 15, top: 15}
     start: (ev, ui) ->
       $("#delete-item").show()
@@ -402,15 +406,4 @@ showToast =
   if device? and device.showToast?
     device.showToast
   else
-    (msg) ->
-      $("<div class='ui-loader ui-overlay-shadow ui-body-e ui-corner-all'><h3>#{msg}</h3></div>").css(
-        display: "block"
-        opacity: 0.90
-        position: "fixed"
-        padding: "7px"
-        "text-align": "center"
-        width: "270px"
-        left: ($(window).width() - 284) / 2
-        top: $(window).height() / 2
-      ).appendTo($.mobile.pageContainer).delay(1500).fadeOut 400, ->
-        $(this).remove()
+    (msg) -> $('#toast').text(msg).toast().toast('show')
