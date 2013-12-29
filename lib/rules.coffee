@@ -364,7 +364,7 @@ class RuleManager extends require('events').EventEmitter
                 deferred.resolve true
                 return
 
-              idNew = pred.id + "-for"
+              idNew = pred.id + "-for-" + (new Date().getTime())
 
               timeout = setTimeout =>
                 deferred.resolve true
