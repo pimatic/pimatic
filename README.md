@@ -15,6 +15,15 @@ The mobile frontend plugin provieds a nice web frontend with a sensor overview, 
 rule definition. The web interface is built using [express](http://expressjs.com) and 
 [jQuery Mobile](http://jquerymobile.com/‎).
 
+Screenshots
+-----------
+![Screenshot 1][screen1_thumb] ![Screenshot 2][screen2_thumb] ![Screenshot 3][screen3_thumb] ![Screenshot 4][screen4_thumb]
+
+[screen1_thumb]: http://www.sweetpi.de/pimatic/screens/screen1_thumb.png
+[screen2_thumb]: http://www.sweetpi.de/pimatic/screens/screen2_thumb.png
+[screen3_thumb]: http://www.sweetpi.de/pimatic/screens/screen3_thumb.png
+[screen4_thumb]: http://www.sweetpi.de/pimatic/screens/screen4_thumb.png
+
 
 Installation
 ------------
