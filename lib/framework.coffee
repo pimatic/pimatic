@@ -64,7 +64,7 @@ module.exports = (env) ->
       @app.use( (req, res, next) =>
         # force to use language settings
         i18n.setLocale req, @config.settings.locale
-        next();
+        next()
       )
       #@app.use express.logger()
       @app.use express.bodyParser()

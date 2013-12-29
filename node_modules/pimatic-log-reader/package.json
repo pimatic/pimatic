@@ -6,7 +6,7 @@
     "log-reader.coffee",
     "README.md"
   ],
-  "version": "0.2.0-git",
+  "version": "0.3.0",
   "homepage": "http://github.com/sweetpi/pimatic",
   "repository": {
     "type": "git",
@@ -16,7 +16,7 @@
     "tail": "~0.3.1"
   },
   "peerDependencies": {
-    "pimatic": "~0.2.0"
+    "pimatic": "~0.3.0"
   },
   "engines": {
     "node": ">0.8.x",

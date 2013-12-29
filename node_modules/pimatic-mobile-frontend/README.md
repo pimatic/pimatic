@@ -1,4 +1,4 @@
-mobile frontend plugin
+pimatic mobile-frontend plugin
 ======================
 
 Provides a [jQuery mobile](http://jquerymobile.com/) page, witch let you control
