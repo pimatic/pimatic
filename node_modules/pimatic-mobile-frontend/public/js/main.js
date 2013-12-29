@@ -1,4 +1,4 @@
-var actuators, addItem, addLogMessage, addRule, buildActuator, buildPresents, buildSensor, buildSwitch, buildTemperature, errorCount, loadData, removeRule, rules, sensors, showToast, socket, updateErrorCount, updateRule, updateSensorValue, voiceCallback;
+var actuators, addItem, addLogMessage, addRule, ajaxAlertFail, ajaxShowToast, buildActuator, buildPresents, buildSensor, buildSwitch, buildTemperature, errorCount, loadData, removeRule, rules, sensors, showToast, socket, updateErrorCount, updateRule, updateSensorValue, voiceCallback;
 
 actuators = [];
 
@@ -15,6 +15,7 @@ $(document).on("pagecreate", '#index', function(event) {
 });
 
 $(document).on("pageinit", '#index', function(event) {
+  var onConnectionError;
   if (typeof device !== "undefined" && device !== null) {
     $("#talk").show().bind("vclick", function(event, ui) {
       return device.startVoiceRecognition("voiceCallback");
@@ -22,8 +23,8 @@ $(document).on("pageinit", '#index', function(event) {
   }
   socket = io.connect("/", {
     'connect timeout': 5000,
-    'reconnection delay': 2000,
-    'reconnection limit': Infinity,
+    'reconnection delay': 500,
+    'reconnection limit': 2000,
     'max reconnection attempts': Infinity
   });
   socket.on("switch-status", function(data) {
@@ -62,25 +63,31 @@ $(document).on("pageinit", '#index', function(event) {
   });
   socket.on('disconnect', function() {
     return $.mobile.loading("show", {
-      text: "No Connection",
+      text: "connection lost, retying...",
       textVisible: true,
-      textonly: true
+      textonly: false
     });
   });
-  socket.on('connect_failed', function() {
-    return $.mobile.loading("show", {
-      text: "Could not connect",
+  onConnectionError = function() {
+    $.mobile.loading("show", {
+      text: "could not connect, retying...",
       textVisible: true,
-      textonly: true
+      textonly: false
     });
-  });
+    return setTimeout(function() {
+      return socket.socket.connect(function() {
+        $.mobile.loading("hide");
+        return loadData();
+      });
+    }, 2000);
+  };
+  socket.on('error', onConnectionError);
+  socket.on('connect_error', onConnectionError);
   $('#index #items').on("change", ".switch", function(event, ui) {
     var actuatorAction, actuatorId;
     actuatorId = $(this).data('actuator-id');
     actuatorAction = $(this).val() === 'on' ? 'turnOn' : 'turnOff';
-    return $.get("/api/actuator/" + actuatorId + "/" + actuatorAction, function(data) {
-      return showToast("done");
-    });
+    return $.get("/api/actuator/" + actuatorId + "/" + actuatorAction).done(ajaxShowToast).fail(ajaxAlertFail);
   });
   $('#index #rules').on("click", ".rule", function(event, ui) {
     var rule, ruleId;
@@ -89,12 +96,14 @@ $(document).on("pageinit", '#index', function(event) {
     $('#edit-rule-form').data('action', 'update');
     $('#edit-rule-text').val("if " + rule.condition + " then " + rule.action);
     $('#edit-rule-id').val(ruleId);
+    event.stopPropagation();
     return true;
   });
   $('#index #rules').on("click", "#add-rule", function(event, ui) {
     $('#edit-rule-form').data('action', 'add');
     $('#edit-rule-text').val("");
     $('#edit-rule-id').val("");
+    event.stopPropagation();
     return true;
   });
   $("#items").sortable({
@@ -105,10 +114,6 @@ $(document).on("pageinit", '#index', function(event) {
     cursor: "move",
     revert: 100,
     scroll: true,
-    cursorAt: {
-      left: 15,
-      top: 15
-    },
     start: function(ev, ui) {
       $("#delete-item").show();
       $("#add-a-item").hide();
@@ -141,7 +146,7 @@ $(document).on("pageinit", '#index', function(event) {
     }
   });
   $("#items .handle").disableSelection();
-  return $("#delete-item").droppable({
+  $("#delete-item").droppable({
     accept: "li.sortable",
     hoverClass: "ui-state-hover",
     drop: function(ev, ui) {
@@ -165,7 +170,7 @@ $(document).on("pageinit", '#index', function(event) {
 });
 
 loadData = function() {
-  return $.get("/data.json", function(data) {
+  return $.get("/data.json").done(function(data) {
     var item, rule, _i, _j, _len, _len1, _ref, _ref1;
     actuators = [];
     sensors = [];
@@ -333,13 +338,13 @@ $(document).on("pageinit", '#add-item', function(event) {
       return;
     }
     actuatorId = li.data('actuator-id');
-    return $.get("/add-actuator/" + actuatorId, function(data) {
+    return $.get("/add-actuator/" + actuatorId).done(function(data) {
       li.data('icon', 'check');
       li.addClass('added');
       return li.buttonMarkup({
         icon: "check"
       });
-    });
+    }).fail(ajaxAlertFail);
   });
   return $('#sensor-items').on("click", 'li', function() {
     var li, sensorId;
@@ -348,18 +353,14 @@ $(document).on("pageinit", '#add-item', function(event) {
       return;
     }
     sensorId = li.data('sensor-id');
-    return $.get("/add-sensor/" + sensorId, function(data) {
-      li.data('icon', 'check');
-      li.addClass('added');
-      return li.buttonMarkup({
-        icon: "check"
-      });
-    });
+    return $.get("/add-sensor/" + sensorId).done(function(data) {}, li.data('icon', 'check'), li.addClass('added'), li.buttonMarkup({
+      icon: "check"
+    })).fail(ajaxAlertFail);
   });
 });
 
 $(document).on("pagebeforeshow", '#add-item', function(event) {
-  $.get("/api/list/actuators", function(data) {
+  $.get("/api/list/actuators").done(function(data) {
     var a, li, _i, _len, _ref;
     $('#actuator-items .item').remove();
     _ref = data.actuators;
@@ -376,8 +377,8 @@ $(document).on("pagebeforeshow", '#add-item', function(event) {
       $('#actuator-items').append(li);
     }
     return $('#actuator-items').listview('refresh');
-  });
-  return $.get("/api/list/sensors", function(data) {
+  }).fail(ajaxAlertFail);
+  return $.get("/api/list/sensors").done(function(data) {
     var li, s, _i, _len, _ref;
     $('#sensor-items .item').remove();
     _ref = data.sensors;
@@ -394,7 +395,7 @@ $(document).on("pagebeforeshow", '#add-item', function(event) {
       $('#sensor-items').append(li);
     }
     return $('#sensor-items').listview('refresh');
-  });
+  }).fail(ajaxAlertFail);
 });
 
 $(document).on("pageinit", '#edit-rule', function(event) {
@@ -405,7 +406,7 @@ $(document).on("pageinit", '#edit-rule', function(event) {
     action = $('#edit-rule-form').data('action');
     $.post("/api/rule/" + ruleId + "/" + action, {
       rule: ruleText
-    }, function(data) {
+    }).done(function(data) {
       if (data.success) {
         return $.mobile.changePage('#index', {
           transition: 'slide',
@@ -414,13 +415,13 @@ $(document).on("pageinit", '#edit-rule', function(event) {
       } else {
         return alert(data.error);
       }
-    });
+    }).fail(ajaxAlertFail);
     return false;
   });
   $('#edit-rule').on("click", '#edit-rule-remove', function() {
     var ruleId;
     ruleId = $('#edit-rule-id').val();
-    $.get("/api/rule/" + ruleId + "/remove", function(data) {
+    $.get("/api/rule/" + ruleId + "/remove").done(function(data) {
       if (data.success) {
         return $.mobile.changePage('#index', {
           transition: 'slide',
@@ -429,7 +430,7 @@ $(document).on("pageinit", '#edit-rule', function(event) {
       } else {
         return alert(data.error);
       }
-    });
+    }).fail(ajaxAlertFail);
     return false;
   });
   return $(document).on("pagebeforeshow", '#edit-rule', function(event) {
@@ -466,7 +467,7 @@ removeRule = function(rule) {
 };
 
 $(document).on("pageinit", '#log', function(event) {
-  $.get("/api/messages", function(data) {
+  $.get("/api/messages").done(function(data) {
     var entry, _i, _len, _ref;
     _ref = data.messages;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -476,13 +477,13 @@ $(document).on("pageinit", '#log', function(event) {
     return socket.on('log', function(entry) {
       return addLogMessage(entry);
     });
-  });
+  }).fail(ajaxAlertFail);
   return $('#log').on("click", '#clear-log', function(event, ui) {
-    return $.get("/clear-log", function() {
+    return $.get("/clear-log").done(function() {
       $('#log-messages').empty();
       errorCount = 0;
       return updateErrorCount();
-    });
+    }).fail(ajaxAlertFail);
   });
 });
 
@@ -511,17 +512,21 @@ $(document).ajaxStop(function() {
   return $.mobile.loading("hide");
 });
 
-$(document).ajaxError(function(event, jqxhr, settings, exception) {
-  var error;
-  console.log(exception);
-  error = void 0;
-  if (exception) {
-    error = "Error: " + exception;
-  } else {
-    error = "No Connection";
+ajaxShowToast = function(data, textStatus, jqXHR) {
+  return showToast((data.message != null ? message : 'done'));
+};
+
+ajaxAlertFail = function(jqXHR, textStatus, errorThrown) {
+  var data, e, message;
+  data = null;
+  try {
+    data = $.parseJSON(jqXHR.responseText);
+  } catch (_error) {
+    e = _error;
   }
-  return alert(error);
-});
+  message = (data != null ? data.error : void 0) != null ? data.error : (errorThrown != null) && errorThrown !== "" ? message = errorThrown : textStatus === 'error' ? message = 'no connection' : message = textStatus;
+  return alert(message);
+};
 
 voiceCallback = function(matches) {
   return $.get("/api/speak", {

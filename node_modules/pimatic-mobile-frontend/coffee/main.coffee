@@ -17,11 +17,11 @@ $(document).on "pageinit", '#index', (event) ->
 
   socket = io.connect("/", 
     'connect timeout': 5000
-    'reconnection delay': 2000
-    'reconnection limit': Infinity
+    'reconnection delay': 500
+    'reconnection limit': 2000 # the max delay
     'max reconnection attempts': Infinity
   )
-  
+
   socket.on "switch-status", (data) ->
     if data.state?
       value = (if data.state then "on" else "off")
@@ -33,7 +33,6 @@ $(document).on "pageinit", '#index', (event) ->
   socket.on "rule-update", (rule) -> updateRule rule
   socket.on "rule-remove", (rule) -> removeRule rule
   socket.on "item-add", (item) -> addItem item
-
 
   socket.on 'log', (entry) -> 
     if entry.level is 'error' 
@@ -48,22 +47,32 @@ $(document).on "pageinit", '#index', (event) ->
 
   socket.on 'disconnect', ->
    $.mobile.loading "show",
-    text: "No Connection"
+    text: "connection lost, retying..."
     textVisible: true
-    textonly: true
+    textonly: false
 
-  socket.on 'connect_failed', ->
+  onConnectionError = ->
     $.mobile.loading "show",
-      text: "Could not connect"
+      text: "could not connect, retying..."
       textVisible: true
-      textonly: true
+      textonly: false
+    setTimeout ->
+      socket.socket.connect(->
+        $.mobile.loading "hide"
+        loadData()
+      )
+    , 2000
 
+  socket.on 'error', onConnectionError
+  socket.on 'connect_error', onConnectionError
 
   $('#index #items').on "change", ".switch",(event, ui) ->
     actuatorId = $(this).data('actuator-id')
     actuatorAction = if $(this).val() is 'on' then 'turnOn' else 'turnOff'
-    $.get "/api/actuator/#{actuatorId}/#{actuatorAction}"  , (data) ->
-      showToast "done"
+    $.get("/api/actuator/#{actuatorId}/#{actuatorAction}")
+      .done(ajaxShowToast)
+      .fail(ajaxAlertFail)
+
 
   $('#index #rules').on "click", ".rule", (event, ui) ->
     ruleId = $(this).data('rule-id')
@@ -71,12 +80,14 @@ $(document).on "pageinit", '#index', (event) ->
     $('#edit-rule-form').data('action', 'update')
     $('#edit-rule-text').val("if " + rule.condition + " then " + rule.action)
     $('#edit-rule-id').val(ruleId)
+    event.stopPropagation()
     return true
 
   $('#index #rules').on "click", "#add-rule", (event, ui) ->
     $('#edit-rule-form').data('action', 'add')
     $('#edit-rule-text').val("")
     $('#edit-rule-id').val("")
+    event.stopPropagation()
     return true
 
   $("#items").sortable(
@@ -87,7 +98,6 @@ $(document).on "pageinit", '#index', (event) ->
     cursor: "move"
     revert: 100
     scroll: true
-    cursorAt: { left: 15, top: 15}
     start: (ev, ui) ->
       $("#delete-item").show()
       $("#add-a-item").hide()
@@ -122,18 +132,21 @@ $(document).on "pageinit", '#index', (event) ->
         delete sensors[item.id]
       ui.draggable.remove()
   )
+  return
 
 loadData = () ->
-  $.get "/data.json", (data) ->
-    actuators = []
-    sensors = []
-    rules = []
-    $('#items .item').remove()
-    addItem(item) for item in data.items
-    $('#rules .rule').remove()
-    addRule(rule) for rule in data.rules
-    errorCount = data.errorCount
-    updateErrorCount()
+  $.get("/data.json")
+    .done( (data) ->
+      actuators = []
+      sensors = []
+      rules = []
+      $('#items .item').remove()
+      addItem(item) for item in data.items
+      $('#rules .rule').remove()
+      addRule(rule) for rule in data.rules
+      errorCount = data.errorCount
+      updateErrorCount()
+    ) #.fail(ajaxAlertFail)
 
 updateErrorCount = ->
   if $('#error-count').find('.ui-btn-text').length > 0
@@ -258,47 +271,55 @@ $(document).on "pageinit", '#add-item', (event) ->
     li = $ this
     if li.hasClass 'added' then return
     actuatorId = li.data('actuator-id')
-    $.get "/add-actuator/#{actuatorId}", (data) ->
-      li.data('icon', 'check')
-      li.addClass('added')
-      li.buttonMarkup({ icon: "check" });
+    $.get("/add-actuator/#{actuatorId}")
+      .done( (data) ->
+        li.data('icon', 'check')
+        li.addClass('added')
+        li.buttonMarkup({ icon: "check" })
+      ).fail(ajaxAlertFail)
 
   $('#sensor-items').on "click", 'li', ->
     li = $ this
     if li.hasClass 'added' then return
     sensorId = li.data('sensor-id')
-    $.get "/add-sensor/#{sensorId}", (data) ->
+    $.get("/add-sensor/#{sensorId}")
+      .done( (data) ->
       li.data('icon', 'check')
       li.addClass('added')
-      li.buttonMarkup({ icon: "check" });
-
+      li.buttonMarkup({ icon: "check" })
+    ).fail(ajaxAlertFail)
 
 $(document).on "pagebeforeshow", '#add-item', (event) ->
-  $.get "/api/list/actuators", (data) ->
-    $('#actuator-items .item').remove()
-    for a in data.actuators
-      li = $ $('#item-add-template').html()
-      if actuators[a.id]? 
-        li.data('icon', 'check')
-        li.addClass('added')
-      li.find('label').text(a.name)
-      li.data 'actuator-id', a.id
-      li.addClass 'item'
-      $('#actuator-items').append li
-    $('#actuator-items').listview('refresh')
+  $.get("/api/list/actuators")
+    .done( (data) ->
+      $('#actuator-items .item').remove()
+      for a in data.actuators
+        li = $ $('#item-add-template').html()
+        if actuators[a.id]? 
+          li.data('icon', 'check')
+          li.addClass('added')
+        li.find('label').text(a.name)
+        li.data 'actuator-id', a.id
+        li.addClass 'item'
+        $('#actuator-items').append li
+      $('#actuator-items').listview('refresh')
+    ).fail(ajaxAlertFail)
 
-  $.get "/api/list/sensors", (data) ->
-    $('#sensor-items .item').remove()
-    for s in data.sensors
-      li = $ $('#item-add-template').html()
-      if sensors[s.id]? 
-        li.data('icon', 'check')
-        li.addClass('added')
-      li.find('label').text(s.name)
-      li.data 'sensor-id', s.id
-      li.addClass 'item'
-      $('#sensor-items').append li
-    $('#sensor-items').listview('refresh')
+
+  $.get("/api/list/sensors")
+    .done( (data) ->
+      $('#sensor-items .item').remove()
+      for s in data.sensors
+        li = $ $('#item-add-template').html()
+        if sensors[s.id]? 
+          li.data('icon', 'check')
+          li.addClass('added')
+        li.find('label').text(s.name)
+        li.data 'sensor-id', s.id
+        li.addClass 'item'
+        $('#sensor-items').append li
+      $('#sensor-items').listview('refresh')
+    ).fail(ajaxAlertFail)
 
 
 # edit-rule-page
@@ -309,16 +330,20 @@ $(document).on "pageinit", '#edit-rule', (event) ->
     ruleId = $('#edit-rule-id').val()
     ruleText = $('#edit-rule-text').val()
     action = $('#edit-rule-form').data('action')
-    $.post "/api/rule/#{ruleId}/#{action}", rule: ruleText, (data) ->
-      if data.success then $.mobile.changePage('#index',{transition: 'slide', reverse: true})    
-      else alert data.error
+    $.post("/api/rule/#{ruleId}/#{action}", rule: ruleText)
+      .done( (data) ->
+        if data.success then $.mobile.changePage('#index',{transition: 'slide', reverse: true})    
+        else alert data.error
+      ).fail(ajaxAlertFail)
     return false
 
   $('#edit-rule').on "click", '#edit-rule-remove', ->
     ruleId = $('#edit-rule-id').val()
-    $.get "/api/rule/#{ruleId}/remove", (data) ->
-      if data.success then $.mobile.changePage('#index',{transition: 'slide', reverse: true})    
-      else alert data.error
+    $.get("/api/rule/#{ruleId}/remove")
+      .done( (data) ->
+        if data.success then $.mobile.changePage('#index',{transition: 'slide', reverse: true})    
+        else alert data.error
+      ).fail(ajaxAlertFail)
     return false
 
   $(document).on "pagebeforeshow", '#edit-rule', (event) ->
@@ -351,17 +376,21 @@ removeRule = (rule) ->
 # ---------
 
 $(document).on "pageinit", '#log', (event) ->
-  $.get "/api/messages"  , (data) ->
-    for entry in data.messages
-      addLogMessage entry
-    socket.on 'log', (entry) -> 
-      addLogMessage entry
+  $.get("/api/messages")
+    .done( (data) ->
+      for entry in data.messages
+        addLogMessage entry
+      socket.on 'log', (entry) -> 
+        addLogMessage entry
+    ).fail(ajaxAlertFail)
 
   $('#log').on "click", '#clear-log', (event, ui) ->
-    $.get "/clear-log", ->
-      $('#log-messages').empty()
-      errorCount = 0
-      updateErrorCount()
+    $.get("/clear-log")
+      .done( ->
+        $('#log-messages').empty()
+        errorCount = 0
+        updateErrorCount()
+      ).fail(ajaxAlertFail)
 
 
 addLogMessage = (entry) ->
@@ -386,14 +415,27 @@ $(document).ajaxStart ->
 $(document).ajaxStop ->
   $.mobile.loading "hide"
 
-$(document).ajaxError (event, jqxhr, settings, exception) ->
-  console.log exception
-  error = undefined
-  if exception
-    error = "Error: " + exception
-  else
-    error = "No Connection"
-  alert error
+
+ajaxShowToast = (data, textStatus, jqXHR) -> 
+  showToast (if data.message? then message else 'done')
+
+ajaxAlertFail = (jqXHR, textStatus, errorThrown) ->
+  data = null
+  try
+    data = $.parseJSON jqXHR.responseText
+  catch e 
+    #ignore error
+  message =
+    if data?.error?
+      data.error
+    else if errorThrown? and errorThrown != ""
+      message = errorThrown
+    else if textStatus is 'error'
+      message = 'no connection'
+    else
+      message = textStatus
+
+  alert message
 
 voiceCallback = (matches) ->
   $.get "/api/speak",
