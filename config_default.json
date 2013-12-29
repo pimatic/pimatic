@@ -17,6 +17,9 @@
       "plugin": "speak-api" 
     }, 
     { 
+      "plugin": "clock" 
+    }, 
+    { 
       "plugin": "mobile-frontend",
       "items": [ 
       ] 
