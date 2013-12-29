@@ -17,12 +17,19 @@ rule definition. The web interface is built using [express](http://expressjs.com
 
 Screenshots
 -----------
-![Screenshot 1][screen1_thumb] ![Screenshot 2][screen2_thumb] ![Screenshot 3][screen3_thumb] ![Screenshot 4][screen4_thumb]
+[![Screenshot 1][screen1_thumb]](screen1) 
+[![Screenshot 2][screen2_thumb]](screen2) 
+[![Screenshot 3][screen3_thumb]](screen3) 
+[![Screenshot 4][screen4_thumb]](screen4)
 
-[screen1_thumb]: http://www.sweetpi.de/pimatic/screens/screen1.png
-[screen2_thumb]: http://www.sweetpi.de/pimatic/screens/screen2.png
-[screen3_thumb]: http://www.sweetpi.de/pimatic/screens/screen3.png
-[screen4_thumb]: http://www.sweetpi.de/pimatic/screens/screen4.png
+[screen1_thumb]: http://www.sweetpi.de/pimatic/screens/screen1_thumb.png
+[screen2_thumb]: http://www.sweetpi.de/pimatic/screens/screen2_thumb.png
+[screen3_thumb]: http://www.sweetpi.de/pimatic/screens/screen3_thumb.png
+[screen4_thumb]: http://www.sweetpi.de/pimatic/screens/screen4_thumb.png
+[screen1]: http://www.sweetpi.de/pimatic/screens/screen1.png
+[screen2]: http://www.sweetpi.de/pimatic/screens/screen2.png
+[screen3]: http://www.sweetpi.de/pimatic/screens/screen3.png
+[screen4]: http://www.sweetpi.de/pimatic/screens/screen4.png
 
 
 Installation
