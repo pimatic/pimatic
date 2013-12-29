@@ -52,7 +52,7 @@ module.exports = (env) ->
 
     canDecide: (predicate) ->
       parsedDate = @parseNaturalTextDate predicate
-      return parsedDate?
+      return if parsedDate? then 'event' else no
 
     # Returns `true` if the given predicate string is considert to be true. For example the 
     # predicate `"Sep 12-13"` is considert to be true if it is the 12th of october, 2013 from 0 to 
@@ -108,7 +108,7 @@ module.exports = (env) ->
         #console.log cronFormat
         job = new CronJob(
           cronTime: cronFormat
-          onTick: callback
+          onTick: => callback 'event'
           start: false
           timezone: @config.timezone
         )

@@ -59,7 +59,9 @@ describe "pimatic-ping", ->
           callback null, host
         ,22
 
-      success = sensor.notifyWhen "test-id-1", "test is present", ->
+      success = sensor.notifyWhen "test-id-1", "test is present", (state)->
+        assert state is true
+        sensor.cancelNotify "test-id-1"
         finish()
       assert success
 
@@ -70,21 +72,26 @@ describe "pimatic-ping", ->
           callback new Error('foo'), host
         ,22
 
-      success = sensor.notifyWhen "test-id-2", "test is not present", ->
+      success = sensor.notifyWhen "test-id-2", "test is not present", (state)->
+        assert state is true
+        sensor.cancelNotify "test-id-2"
         finish()
       assert success
 
   describe '#cancelNotify()', ->
 
-    it "should cancel notify test-id-1", ->
+    it "should cancel notify test-id-3", ->
 
-      sensor.cancelNotify "test-id-1"
-      assert not sensor._listener['test-id-1']?
-      assert sensor._listener['test-id-2']?
+      sensor.notifyWhen "test-id-3", "test is present", ->
+      sensor.notifyWhen "test-id-4", "test is not present", ->
 
-    it "should cancel notify test-id-2", ->
+      sensor.cancelNotify "test-id-3"
+      assert not sensor._listener['test-id-3']?
+      assert sensor._listener['test-id-4']?
 
-      sensor.cancelNotify "test-id-2"
-      assert not sensor._listener['test-id-1']?
-      assert not sensor._listener['test-id-2']?
+    it "should cancel notify test-id-4", ->
+
+      sensor.cancelNotify "test-id-4"
+      assert not sensor._listener['test-id-3']?
+      assert not sensor._listener['test-id-4']?
 

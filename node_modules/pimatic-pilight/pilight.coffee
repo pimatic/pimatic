@@ -308,7 +308,7 @@ module.exports = (env) ->
         throw new Error "Unknown sensor value name"
 
     canDecide: (predicate) ->
-      return false
+      return no
 
     isTrue: (id, predicate) ->
       throw new Error("no predicate implemented")

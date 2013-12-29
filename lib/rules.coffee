@@ -82,9 +82,11 @@ class RuleManager extends require('events').EventEmitter
       findSensorForPredicate = (predicate) =>
         assert predicate? and typeof predicate is "string" and predicate.length isnt 0
         for sensorId, sensor of @framework.sensors
-          if sensor.canDecide predicate
-            return sensor
-        return null
+          type = sensor.canDecide predicate
+          assert type is 'event' or type is 'state' or type is no
+          if type is 'event' or type is 'state'
+            return [type, sensor]
+        return [null, null]
 
       # Now split the condition in a token stream.
       # For example: `"12:30 and temperature > 10"` becomes 
@@ -104,13 +106,35 @@ class RuleManager extends require('events').EventEmitter
             tokens.push token
           else
             i = predicates.length
-            predId = id+i
-            predSensor = findSensorForPredicate token
+            predId = id+
+            [type, predSensor] = findSensorForPredicate token
+
+            forSuffix = null
+            forTime = null
+            unless predSensor?
+              # no predicate found yet. Try to split the predicate at `for` to handle 
+              # predicates in the form `"the light is on for 10 seconds"`
+              parts = token.split /\sfor\s/
+              if parts.length is 2
+                realPredicate = parts[0].trim()
+                maybeForSuffix = parts[1].trim().toLowerCase()
+                [type, predSensor] = findSensorForPredicate realPredicate
+                matches = maybeForSuffix.match(/^(\d+)\s+seconds?$/)
+                if predSensor? and matches?
+                  token = realPredicate
+                  forSuffix = maybeForSuffix
+                  forTime = (parseInt matches[1], 10) * 1000
+
+            if type is 'event' and forSuffix?
+              throw new Error "\"#{token}\" is an event it can not be true for \"#{forSuffix}\""
 
             predicate =
               id: predId
               token: token
+              type: type
               sensor: predSensor
+              forToken: forSuffix
+              for: forTime
 
             if not predicate.sensor?
               throw new Error "Could not find an sensor that decides \"#{predicate.token}\""
@@ -145,17 +169,21 @@ class RuleManager extends require('events').EventEmitter
 
     # ###whenPredicateIsTrue
     # This function should be called by a sensor if a predicate becomes true
-    whenPredicateIsTrue = (ruleId, predicateId) =>
+    whenPredicateIsTrue = (ruleId, predicateId, state) =>
       assert ruleId? and typeof ruleId is "string" and ruleId.length isnt 0
       assert predicateId? and typeof predicateId is "string" and predicateId.length isnt 0
+      assert state is 'event' or state is true or state is false
 
       # First mark the given predicate as true, so wie dont check the predicate again.
-      knownTruePredicates = [predicateId]
+      knownPredicates = [
+        id: predicateId
+        state: true
+      ]
       # Then get the corresponding rule
       rule = @rules[ruleId]
 
       # and check if the rule is now true.
-      @evaluateConditionOfRule(rule, knownTruePredicates).then( (isTrue) =>
+      @doesRuleCondtionHold(rule, knownPredicates).then( (isTrue) =>
         # if the rule is now true, then execute its action
         if isTrue then @executeAction(rule.action, false).then( (message) =>
           logger.info "Rule #{ruleId}: #{message}"
@@ -168,8 +196,10 @@ class RuleManager extends require('events').EventEmitter
     # Register the whenPredicateIsTrue for all sensors:
     for p in rule.predicates
       do (p) =>
-        p.sensor.notifyWhen p.id, p.token, =>
-          whenPredicateIsTrue rule.id, p.id
+        p.sensor.notifyWhen p.id, p.token, (state) =>
+          assert state is 'event' or state is true or state is false
+          if state is true or state is 'event'
+            whenPredicateIsTrue rule.id, p.id, state
           
   # ###_cancelPredicateSensorNotify
   # Cancels for every predicate the callback that should be called
@@ -196,7 +226,7 @@ class RuleManager extends require('events').EventEmitter
       @emit "add", rule
       # Check if the condition of the rule is allready true.
       if active
-        @evaluateConditionOfRule(rule).then( (isTrue) ->
+        @doesRuleCondtionHold(rule).then( (isTrue) ->
           # If the confition is true then execute the action.
           if isTrue then @executeAction(rule.action, false).then( (message) =>
             logger.info "Rule #{ruleId}: #{message}"
@@ -255,7 +285,7 @@ class RuleManager extends require('events').EventEmitter
       # and emit the event.
       @emit "update", rule
       # Then check if the condition of the rule is now true.
-      return @evaluateConditionOfRule(rule).then( (isTrue) =>
+      return @doesRuleCondtionHold(rule).then( (isTrue) =>
         # If the condition is true then exectue the action.
         if isTrue then @executeAction(rule.action, false).then( (message) =>
           logger.info "Rule #{id}: #{message}"
@@ -267,15 +297,19 @@ class RuleManager extends require('events').EventEmitter
 
   # ###evaluateConditionOfRule
   # Uses 'bet' to evaluate rule.tokens
-  evaluateConditionOfRule: (rule, knownTruePredicates = []) ->
+  evaluateConditionOfRule: (rule, knownPredicates = []) ->
     assert rule? and rule instanceof Object
-    assert Array.isArray knownTruePredicates
+    assert Array.isArray knownPredicates
 
     predicateValues = []
     for pred in rule.predicates
-      if pred.id in knownTruePredicates
-        predicateValues.push (Q.fcall => true)
-      else
+      known = no
+      for kpred in knownPredicates
+        if pred.id is kpred.id
+          do (kpred) =>
+            predicateValues.push (Q.fcall => kpred.state)
+            known = yes
+      unless known
         predicateValues.push (pred.sensor.isTrue pred.id, pred.token)
 
     return Q.all(predicateValues).then( (predicateValues) =>
@@ -296,8 +330,76 @@ class RuleManager extends require('events').EventEmitter
       argc: 1
       exec: (args) => if predicateValues[args[0]] then 1 else 0
 
-      return bet.evaluateSync rule.tokens
+      isTrue = (bet.evaluateSync(rule.tokens) is 1)
+      return isTrue
     )
+
+
+  doesRuleCondtionHold: (rule, knownPredicates = []) ->
+    assert rule? and rule instanceof Object   
+    assert Array.isArray knownPredicates
+
+    return @evaluateConditionOfRule(rule, knownPredicates).then( (isTrue) =>
+      unless isTrue then return false
+
+      # Some predicates could have a 'for'-Suffix like 'for 10 seconds' then the predicates 
+      # must at least hold for 10 seconds to be true, so we have to wait 10 seconds
+
+      awaiting = []
+      # Check for eacht predicate
+      for pred in rule.predicates
+        do (pred) => 
+          # if it has a for suffix:
+          if pred.for?
+            deferred = Q.defer()
+            # if its an event something gone wrong, because an event can't hold 
+            # because it is one time event
+            assert pred.type is 'state'
+            # Check what would be if the condition would change
+            knownPredicatesNew = knownPredicates.slice() # make a copy
+            # and mark the predicate as false
+            knownPredicatesNew.push 
+              id: pred.id
+              state: false
+
+            # and reevaluate the confiton of the rule
+            @evaluateConditionOfRule(rule, knownPredicatesNew).then( (isTrueNew) =>
+              # if the rule is true without this predicate we don't have to check it.
+              if isTrueNew 
+                # so the predicates holds:
+                deferred.resolve true
+                return
+
+              idNew = pred.id + "-for"
+
+              timeout = setTimeout =>
+                deferred.resolve true
+                pred.sensor.cancelNotify idNew
+              , pred.for
+
+              # else let us be notified when it becomes false
+              pred.sensor.notifyWhen idNew, pred.token, (state) =>
+                assert state is true or state is false
+                # if it changes to false
+                if state is false
+                  # then the condition doesn't hold
+                  deferred.resolve false
+                  pred.sensor.cancelNotify idNew
+                  clearTimeout timeout
+            )
+            awaiting.push deferred.promise
+            return
+
+      return Q.all(awaiting).then( (resolved) =>
+        # If one needed predicate becomes false
+        for r in resolved
+          # then the condition becomes false
+          unless r then return false
+        # year all were holding, so return true
+        return true
+      )
+    )
+    
 
   # ###executeAction
   executeAction: (actionString, simulate) ->

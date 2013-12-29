@@ -63,7 +63,7 @@ module.exports = (env) ->
 
         for i, listener of @listener
           if line.match is listener.match
-            listener.callback()
+            listener.callback 'event'
         return
 
 
@@ -91,7 +91,7 @@ module.exports = (env) ->
 
     canDecide: (predicate) ->
       line = @_getLineWithPredicate predicate
-      return line?
+      return if line? then 'event' else no 
 
     notifyWhen: (id, predicate, callback) ->
       line = @_getLineWithPredicate predicate

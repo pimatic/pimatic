@@ -112,11 +112,11 @@ describe "pimatic-log-reader", ->
 
       it 'should decide: test predicate 1', ->
         result = sensor.canDecide 'test predicate 1'
-        assert result is yes
+        assert result is 'event'
 
       it 'should decide: test predicate 2', ->
         result = sensor.canDecide 'test predicate 2'
-        assert result is yes
+        assert result is 'event'
 
       it 'should not decide: test predicate 3', ->
         result = sensor.canDecide 'test predicate 3'

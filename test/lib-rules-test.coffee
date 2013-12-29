@@ -24,7 +24,7 @@ describe "RuleManager", ->
     getSensorValue: (name) -> throw new Error("no name available")
     canDecide: (predicate) -> 
       assert predicate is "predicate 1"
-      return true
+      return 'event'
     isTrue: (id, predicate) -> Q.fcall -> false
     notifyWhen: (id, predicate, callback) -> true
     cancelNotify: (id) -> true
@@ -42,6 +42,7 @@ describe "RuleManager", ->
   actionHandler = new DummyActionHandler
   ruleManager.actionHandlers = [actionHandler]
 
+  # ###Tests for `parseRuleString()`
   describe '#parseRuleString()', ->
 
     it 'should parse valid rule', (finish) ->
@@ -50,10 +51,31 @@ describe "RuleManager", ->
         assert rule.id is 'test1'
         assert rule.orgCondition is 'predicate 1'
         assert rule.tokens.length > 0
+        assert rule.predicates.length is 1
         assert rule.action is 'action 1'
         assert rule.string is 'if predicate 1 then action 1'
         finish() 
       ).catch(finish).done()
+
+    it 'should parse rule with for suffix', (finish) ->
+
+      sensor.canDecide = (predicate) -> 
+        assert predicate is "predicate 1" or predicate is 'predicate 1 for 10 seconds'
+        return if predicate is "predicate 1" then 'state' else no
+
+      ruleManager.parseRuleString("test1", "if predicate 1 for 10 seconds then action 1")
+      .then( (rule) -> 
+        assert rule.id is 'test1'
+        assert rule.orgCondition is 'predicate 1 for 10 seconds'
+        assert rule.tokens.length > 0
+        assert rule.predicates.length is 1
+        assert rule.predicates[0].forToken is '10 seconds'
+        assert rule.predicates[0].for is 10000
+        assert rule.action is 'action 1'
+        assert rule.string is 'if predicate 1 for 10 seconds then action 1'
+        finish() 
+      ).catch(finish).done()
+
 
     it 'should reject wrong rule format', (finish) ->
       # Missing `then`:
@@ -85,7 +107,7 @@ describe "RuleManager", ->
       sensor.canDecide = (predicate) ->
         assert predicate is "predicate 1"
         canDecideCalled = true
-        return true
+        return 'event'
 
       executeActionCalled = false
       actionHandler.executeAction = (actionString, simulate) =>
@@ -106,6 +128,7 @@ describe "RuleManager", ->
 
   notifyId = null
 
+  # ###Tests for `addRuleByString()`
   describe '#addRuleByString()', ->
 
     notifyCallback = null
@@ -141,8 +164,239 @@ describe "RuleManager", ->
         finish()
         return Q.fcall -> "execute action"
 
-      notifyCallback()
+      notifyCallback('event')
 
+  # ###Tests for `updateRuleByString()`
+  describe '#doesRuleCondtionHold', ->
+
+    it 'should decide predicate 1', (finish)->
+
+      sensor.canDecide = (predicate) -> 
+        assert predicate is "predicate 1"
+        return 'state'
+
+      sensor.isTrue = (id, predicate) -> Q.fcall -> true
+      sensor.notifyWhen = (id, predicate, callback) -> true
+
+      rule =
+        id: "test1"
+        orgCondition: "predicate 1"
+        predicates: [
+          id: "test1,"
+          token: "predicate 1"
+          type: "state"
+          sensor: sensor
+          for: null
+        ]
+        tokens: [
+          "predicate"
+          "("
+          0
+          ")"
+        ]
+        action: "action 1"
+        string: "if predicate 1 then action 1"
+
+
+      ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
+        assert isTrue is true
+      ).then( -> 
+        sensor.isTrue = (id, predicate) -> Q.fcall -> false 
+      ).then( -> ruleManager.doesRuleCondtionHold rule).then( (isTrue) ->
+        assert isTrue is false
+        finish()
+      ).catch(finish).done()
+
+    it 'should decide predicate 1 and predicate 2', (finish)->
+
+      sensor.canDecide = (predicate) -> 
+        assert predicate is "predicate 1" or predicate is "predicate 2"
+        return 'state'
+
+      sensor.isTrue = (id, predicate) -> Q.fcall -> true
+      sensor.notifyWhen = (id, predicate, callback) -> true
+
+      rule =
+        id: "test1"
+        orgCondition: "predicate 1 and predicate 2"
+        predicates: [
+          {
+            id: "test1,"
+            token: "predicate 1"
+            type: "state"
+            sensor: sensor
+            for: null
+          }
+          {
+            id: "test2,"
+            token: "predicate 2"
+            type: "state"
+            sensor: sensor
+            for: null
+          }
+        ]
+        tokens: [
+          "predicate"
+          "("
+          0
+          ")"
+          "and"
+          "predicate"
+          "("
+          1
+          ")"
+        ]
+        action: "action 1"
+        string: "if predicate 1 and predicate 2 then action 1"
+
+
+      ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
+        assert isTrue is true
+      ).then( -> 
+        sensor.isTrue = (id, predicate) -> Q.fcall -> (predicate is 'predicate 1') 
+      ).then( -> ruleManager.doesRuleCondtionHold rule ).then( (isTrue) ->
+        assert isTrue is false
+        finish()
+      ).catch(finish).done()
+
+    it 'should decide predicate 1 or predicate 2', (finish)->
+
+      sensor.canDecide = (predicate) -> 
+        assert predicate is "predicate 1" or predicate is "predicate 2"
+        return 'state'
+
+      sensor.isTrue = (id, predicate) -> Q.fcall -> true
+      sensor.notifyWhen = (id, predicate, callback) -> true
+
+      rule =
+        id: "test1"
+        orgCondition: "predicate 1 or predicate 2"
+        predicates: [
+          {
+            id: "test1,"
+            token: "predicate 1"
+            type: "state"
+            sensor: sensor
+            for: null
+          }
+          {
+            id: "test2,"
+            token: "predicate 2"
+            type: "state"
+            sensor: sensor
+            for: null
+          }
+        ]
+        tokens: [
+          "predicate"
+          "("
+          0
+          ")"
+          "or"
+          "predicate"
+          "("
+          1
+          ")"
+        ]
+        action: "action 1"
+        string: "if predicate 1 or predicate 2 then action 1"
+
+
+      ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
+        assert isTrue is true
+      ).then( -> 
+        sensor.isTrue = (id, predicate) -> Q.fcall -> (predicate is 'predicate 1') 
+      ).then( -> ruleManager.doesRuleCondtionHold rule ).then( (isTrue) ->
+        assert isTrue is true
+        finish()
+      ).catch(finish).done()
+
+
+    it 'should decide predicate 1 for 1 second (holds)', (finish)->
+      this.timeout 2000
+
+      sensor.canDecide = (predicate) -> 
+        assert predicate is "predicate 1"
+        return 'state'
+
+      sensor.isTrue = (id, predicate) -> Q.fcall -> true
+      sensor.notifyWhen = (id, predicate, callback) -> 
+        assert predicate is "predicate 1"
+        return true
+
+      rule =
+        id: "test1"
+        orgCondition: "predicate 1 for 1 second"
+        predicates: [
+          id: "test1,"
+          token: "predicate 1"
+          type: "state"
+          sensor: sensor
+          forToken: "1 second"
+          for: 1000
+        ]
+        tokens: [
+          "predicate"
+          "("
+          0
+          ")"
+        ]
+        action: "action 1"
+        string: "if predicate 1 for 1 second then action 1"
+
+
+      ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
+        assert isTrue is true
+        finish()
+      ).done()
+
+    it 'should decide predicate 1 for 1 second (does not hold)', (finish)->
+      this.timeout 2000
+
+      sensor.canDecide = (predicate) -> 
+        assert predicate is "predicate 1"
+        return 'state'
+
+      sensor.isTrue = (id, predicate) -> Q.fcall -> true
+
+      notifyCallback = null
+      sensor.notifyWhen = (id, predicate, callback) -> 
+        assert predicate is "predicate 1"
+        notifyCallback = callback
+        return true
+
+      rule =
+        id: "test1"
+        orgCondition: "predicate 1 for 1 second"
+        predicates: [
+          id: "test1,"
+          token: "predicate 1"
+          type: "state"
+          sensor: sensor
+          forToken: "1 second"
+          for: 1000
+        ]
+        tokens: [
+          "predicate"
+          "("
+          0
+          ")"
+        ]
+        action: "action 1"
+        string: "if predicate 1 for 1 second then action 1"
+
+      setTimeout ->
+        notifyCallback false
+      , 500
+
+
+      ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
+        assert isTrue is false
+        finish()
+      ).done()
+
+
+  # ###Tests for `updateRuleByString()`
   describe '#updateRuleByString()', ->
 
     notfyCallback = null
@@ -155,7 +409,7 @@ describe "RuleManager", ->
         assert predicate is 'predicate 2'
         canDecideCalled = i
         i++
-        return true
+        return 'event'
 
       cancleNotifyCalled = false
       sensor.cancelNotify = (id) ->
@@ -175,7 +429,7 @@ describe "RuleManager", ->
         i++
         return true
 
-
+      sensor.isTrue = -> Q.fcall -> true
 
       actionHandler.executeAction = (actionString, simulate) => Q.fcall -> "execute action"
 
@@ -198,9 +452,9 @@ describe "RuleManager", ->
         finish()
         return Q.fcall -> "execute action"
 
-      notfyCallback()
+      notfyCallback 'event'
 
-
+  # ###Tests for `removeRule()`
   describe '#removeRule()', ->
 
     it 'should remove the rule', ->

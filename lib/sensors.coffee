@@ -13,12 +13,18 @@ class Sensor extends require('events').EventEmitter
   getSensorValue: (name) ->
     throw new Error("your sensor must implement getSensorValue")
 
-  # This function should return true if the sensor can decide the given predicate.
+  # This function should return 'event' or 'state' if the sensor can decide the given predicate.
+  # If the sensor can decide the predicate and it is a one shot event like 'its 10pm' then the
+  # canDecide should return `'event'`
+  # If the sensor can decide the predicate and it can be true or false like 'x is present' then 
+  # canDecide should return `'state'`
+  # If the sensor can not decide the given predicate then canDecide should return `false`
   canDecide: (predicate) ->
     throw new Error("your sensor must implement canDecide")
 
   # The sensor should return `true` if the predicate is true and `false` if it is false.
-  # If the sensor can not decide the predicate this function should throw an Error.
+  # If the sensor can not decide the predicate or the predicate is an eventthis function 
+  # should throw an Error.
   isTrue: (id, predicate) ->
     throw new Error("your sensor must implement itTrue")
 
@@ -49,7 +55,7 @@ class PresentsSensor extends Sensor
 
   canDecide: (predicate) ->
     info = @_parsePredicate predicate
-    return info?
+    return if info? then 'state' else no 
 
   isTrue: (id, predicate) ->
     info = @_parsePredicate predicate
@@ -79,8 +85,7 @@ class PresentsSensor extends Sensor
 
   _notifyListener: ->
     for id, l of @_listener
-      if l.present is @_present
-        l.callback()
+      l.callback(l.present is @_present)
 
 
   _parsePredicate: (predicate) ->

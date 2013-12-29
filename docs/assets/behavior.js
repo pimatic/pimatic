@@ -882,6 +882,32 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "depth": 2
                 }
               ]
+            }, {
+              "type": "file",
+              "data": {
+                "language": {
+                  "nameMatchers": [".coffee", "Cakefile"],
+                  "pygmentsLexer": "coffee-script",
+                  "singleLineComment": ["#"],
+                  "name": "CoffeeScript"
+                },
+                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-gpio/sensor-config-shema.coffee",
+                "projectPath": "node_modules/pimatic-gpio/sensor-config-shema.coffee",
+                "targetPath": "node_modules/pimatic-gpio/sensor-config-shema",
+                "firstHeader": {
+                  "type": "heading",
+                  "data": {
+                    "level": 1,
+                    "title": "gpio actuator configuration options",
+                    "slug": "gpio-actuator-configuration-options",
+                    "isFileHeader": true
+                  },
+                  "depth": 1
+                },
+                "title": "gpio actuator configuration options"
+              },
+              "depth": 3,
+              "outline": []
             }
           ]
         }, {

@@ -9,9 +9,15 @@
     <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement getSensorValuesNames&quot;</span><span class="p">)</span>
 
   <span class="nv">getSensorValue: </span><span class="nf">(name) -&gt;</span>
-    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement getSensorValue&quot;</span><span class="p">)</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>This function should return true if the sensor can decide the given predicate.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">canDecide: </span><span class="nf">(predicate) -&gt;</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement getSensorValue&quot;</span><span class="p">)</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>This function should return 'event' or 'state' if the sensor can decide the given predicate.
+If the sensor can decide the predicate and it is a one shot event like 'its 10pm' then the
+canDecide should return <code>'event'</code>
+If the sensor can decide the predicate and it can be true or false like 'x is present' then 
+canDecide should return <code>'state'</code>
+If the sensor can not decide the given predicate then canDecide should return <code>false</code></p></div></div><div class="code"><div class="wrapper">  <span class="nv">canDecide: </span><span class="nf">(predicate) -&gt;</span>
     <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement canDecide&quot;</span><span class="p">)</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>The sensor should return <code>true</code> if the predicate is true and <code>false</code> if it is false.
-If the sensor can not decide the predicate this function should throw an Error.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">isTrue: </span><span class="nf">(id, predicate) -&gt;</span>
+If the sensor can not decide the predicate or the predicate is an eventthis function 
+should throw an Error.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">isTrue: </span><span class="nf">(id, predicate) -&gt;</span>
     <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement itTrue&quot;</span><span class="p">)</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>The sensor should call the callback if the state of the predicate changes (it becomes true or 
 false).
 If the sensor can not decide the predicate this function should throw an Error.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">notifyWhen: </span><span class="nf">(id, predicate, callback) -&gt;</span>
@@ -35,7 +41,7 @@ If the sensor can not decide the predicate this function should throw an Error.<
 
   <span class="nv">canDecide: </span><span class="nf">(predicate) -&gt;</span>
     <span class="nv">info = </span><span class="nx">@_parsePredicate</span> <span class="nx">predicate</span>
-    <span class="k">return</span> <span class="nx">info</span><span class="o">?</span>
+    <span class="k">return</span> <span class="k">if</span> <span class="nx">info</span><span class="o">?</span> <span class="k">then</span> <span class="s">&#39;state&#39;</span> <span class="k">else</span> <span class="kc">no</span> 
 
   <span class="nv">isTrue: </span><span class="nf">(id, predicate) -&gt;</span>
     <span class="nv">info = </span><span class="nx">@_parsePredicate</span> <span class="nx">predicate</span>
@@ -59,8 +65,7 @@ If the sensor can not decide the predicate this function should throw an Error.<
 
   <span class="nv">_notifyListener: </span><span class="nf">-&gt;</span>
     <span class="k">for</span> <span class="nx">id</span><span class="p">,</span> <span class="nx">l</span> <span class="k">of</span> <span class="nx">@_listener</span>
-      <span class="k">if</span> <span class="nx">l</span><span class="p">.</span><span class="nx">present</span> <span class="o">is</span> <span class="nx">@_present</span>
-        <span class="nx">l</span><span class="p">.</span><span class="nx">callback</span><span class="p">()</span>
+      <span class="nx">l</span><span class="p">.</span><span class="nx">callback</span><span class="p">(</span><span class="nx">l</span><span class="p">.</span><span class="nx">present</span> <span class="o">is</span> <span class="nx">@_present</span><span class="p">)</span>
 
 
   <span class="nv">_parsePredicate: </span><span class="nf">(predicate) -&gt;</span>
