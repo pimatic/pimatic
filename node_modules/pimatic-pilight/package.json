@@ -5,7 +5,6 @@
   "main": "pilight.coffee",
   "files": [
     "pilight.coffee",
-    "actuator-config-shema.coffee",
     "pilight-config-shema.coffee",
     "README.md"
   ],

@@ -5,6 +5,7 @@
   "main": "mobile-frontend.coffee",
   "files": [
     "mobile-frontend.coffee",
+    "mobile-frontend-config-shema.coffee",
     "coffee",
     "public",
     "views",
