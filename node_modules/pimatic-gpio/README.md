@@ -10,9 +10,7 @@ You can load the plugin by editing your `config.json` to include:
        "plugin": "gpio"
     }
 
-in the `plugins` Array. For all configuration options see 
-[sispmctl-config-shema](sispmctl-config-shema.html)
-
+in the `plugins` Array. 
 Actuators can be added bei adding them to the `actuators` Array in the config file.
 Set the `class` attribute to `GpioSwitch`. For example:
 
@@ -20,7 +18,7 @@ Set the `class` attribute to `GpioSwitch`. For example:
       "id": "led-light",
       "class": "GpioSwitch", 
       "name": "led light",
-      "gpio": 25 
+      "gpio": 17 
     }
 
 For actuator configuration options see the 
@@ -32,5 +30,8 @@ Sensors are added to the `sensors` Array.
       "id": "presents-sensor",
       "class": "GpioPresents", 
       "name": "motion detector",
-      "gpio": 21 
+      "gpio": 18 
     }
+
+For sensor configuration options see the 
+[sensor-config-shema](actuator-config-shema.html) file.
