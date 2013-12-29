@@ -34,9 +34,11 @@
 	"Add": "Hinzufügen",
 	"Drop here to remove item": "Zum Löschen hier hinziehen",
 	"Clear": "Bereinigen",
-	"Add a item": "Einen Eintrag hinzufügen",
-	"Add new rule": "Eine Regel hinzufügen...",
-	"Advanced Options:": "Erweiterte Einstellungen:",
-	"Add an item...": "Add an item...",
-	"Add a new rule...": "Add a new rule..."
+	"Advanced Options": "Erweiterte Einstellungen",
+	"could not connect": "Konnte keine Verbindung herstellen, versuche neu zu verbinden",
+	"connection lost, retying": "Verbindung unterbrochen, versuche neu zu verbinden",
+	"The rule must start with \"if\" and contain a \"then\" part!": "Die Regel muss mit \"if\" beginnen und ein \"then\" enthalten!",
+	"No id given": "Keine ID eingegeben",
+	"Add an item": "Einen Eintrag hinzufügen",
+	"Add a new rule": "Eine Regel hinzufügen"
 }

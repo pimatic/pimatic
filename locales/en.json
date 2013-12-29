@@ -1,5 +1,4 @@
 {
-	"^(?:turn)?(?:s+the)?(.+?)(on|off)$": "^(?:turn)?(?:s+the)?(.+?)(on|off)$",
 	"on": "on",
 	"turned %s on": "turned %s on",
 	"^(?:turn)?(?:\\s+the)?(.+?)(on|off)$": "^(?:turn)?(?:\\s+the)?(.+?)(on|off)$",
@@ -13,10 +12,8 @@
 	"Menu": "Menu",
 	"Speak": "Speak",
 	"Devices": "Devices",
-	"Add an item...": "Add an item...",
 	"Drop here to remove item": "Drop here to remove item",
 	"Rules": "Rules",
-	"Add a new rule...": "Add a new rule...",
 	"Close menu": "Close menu",
 	"Log": "Log",
 	"Back": "Back",
@@ -29,9 +26,15 @@
 	"Add new rule": "Add new rule",
 	"Cancel": "Cancel",
 	"Save": "Save",
-	"Advanced Options:": "Advanced Options:",
 	"Delete this rule": "Delete this rule",
 	"Clear": "Clear",
 	"Log messages": "Log messages",
-	"would turn %s off": "would turn %s off"
+	"would turn %s off": "would turn %s off",
+	"Add an item": "Add an item",
+	"Add a new rule": "Add a new rule",
+	"Advanced Options": "Advanced Options",
+	"connection lost, retying": "connection lost, retying",
+	"connection lost, retying": "connection lost, retying",
+	"The rule must start with \"if\" and contain a \"then\" part!": "The rule must start with \"if\" and contain a \"then\" part!",
+	"No id given": "No id given"
 }

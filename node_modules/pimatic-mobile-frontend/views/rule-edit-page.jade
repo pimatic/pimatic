@@ -1,18 +1,17 @@
 script#rule-template(type='text/template')
   li
     a.rule(data-transition='slide', href='#edit-rule')
-      span.if=__('if')
+      span.if='if'
       | 
       span.condition
       | 
-      span.then=__('then')
+      span.then='then'
       | 
       span.action
     //- Rule edit page 
 div#edit-rule(data-role='page')
   div(data-theme='a', data-role='header', data-position='fixed')
-    h3.edit=__('Edit rule')
-    h3.add=__('Add new rule')
+    h3
   div(data-role='content')
     form#edit-rule-form
       input#edit-rule-id(type="text", placeholder="id")
@@ -24,6 +23,6 @@ div#edit-rule(data-role='page')
         div.ui-block-b
           input#edit-rule-save(data-icon="check", data-theme="a",value=__('Save'), type="submit")
       div#edit-rule-advanced
-        span=__('Advanced Options:') 
+        span=__('Advanced Options')+':'
         a#edit-rule-remove(data-icon="delete", data-transition='slide', data-direction="reverse"
                                data-role="button", href='#index')=__('Delete this rule')

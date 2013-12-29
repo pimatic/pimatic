@@ -15,8 +15,9 @@ html(manifest='application.manifest')
     script(src='js/jquery.mobile.toast.min.js')
     script(src='js/jquery-ui-1.10.3.custom.min.js')  
     script(src='js/jquery.ui.touch-punch.min.js')
-
     script(src='socket.io/socket.io.js')
+    script(type='text/javascript') 
+        locale = !{JSON.stringify(getCatalog())};
     script(src='js/main.js')
   body
     include index-page

@@ -10,7 +10,8 @@ class PluginManager
     onComplete = (err) ->
       if (err) 
         env.logger.error err
-      else plugin = (require name) env
+      else 
+        plugin = (require name) env
       process.chdir cwd
       cb err, plugin
 

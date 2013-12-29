@@ -6,11 +6,15 @@ async = require 'async'
 assert = require 'cassert'
 Q = require 'q'
 convict = require 'convict'
+i18n = require 'i18n'
+util = require 'util'
+fs = require 'fs'
 
 module.exports = (env) ->
 
   # ##The MobileFrontend
   class MobileFrontend extends env.plugins.Plugin
+    pluginDependencies: ['rest-api', 'speak-api']
     config: null
 
     # ###init the frontend:
@@ -30,9 +34,9 @@ module.exports = (env) ->
 
       # * Setup html5 manifest
       cacheManifest = require("connect-cache-manifest")
-      app.use cacheManifest(
-        manifestPath: "/application.manifest"
-        files: [
+
+      filesToCache =
+        [
           {
             file: __dirname + "/views/index.jade"
             path: '/'
@@ -61,15 +65,31 @@ module.exports = (env) ->
             prefix: '/themes/graphite/generated/water/'
           }
         ]
+
+      # localeFile = "#{@framework.maindir}/locales/#{@framework.config.settings.locale}.json"
+
+      # if fs.existsSync localeFile
+      #   filesToCache.push
+      #     file: localeFile
+      #     path: '/locale.json'
+      # else
+      #   env.logger.warn "locales file did not exist: #{localeFile}" 
+
+
+      app.use cacheManifest(
+        manifestPath: "/application.manifest"
+        files: filesToCache
         networks: ["*"]
         fallbacks: []
       )
-
 
       # * Setup jade-templates
       app.engine 'jade', require('jade').__express
       app.set 'views', __dirname + '/views'
       app.set 'view engine', 'jade'
+
+      # app.get '/locale.json', (req,res) =>
+      #   res.send res.getCatalog()
 
       # * Delivers the index-page
       app.get '/', (req,res) =>

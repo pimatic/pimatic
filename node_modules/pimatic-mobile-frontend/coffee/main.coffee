@@ -47,13 +47,13 @@ $(document).on "pageinit", '#index', (event) ->
 
   socket.on 'disconnect', ->
    $.mobile.loading "show",
-    text: "connection lost, retying..."
+    text: __("connection lost, retying")+'...'
     textVisible: true
     textonly: false
 
   onConnectionError = ->
     $.mobile.loading "show",
-      text: "could not connect, retying..."
+      text: __("could not connect, retying")+'...'
       textVisible: true
       textonly: false
     setTimeout ->
@@ -350,13 +350,11 @@ $(document).on "pageinit", '#edit-rule', (event) ->
     action = $('#edit-rule-form').data('action')
     switch action
       when 'add'
-        $('#edit-rule h3.add').show()
-        $('#edit-rule h3.edit').hide()
+        $('#edit-rule h3').text __('Edit rule')
         $('#edit-rule-id').textinput('enable')
         $('#edit-rule-advanced').hide()
       when 'update'
-        $('#edit-rule h3.add').hide()
-        $('#edit-rule h3.edit').show()
+        $('#edit-rule h3').text __('Add new rule')
         $('#edit-rule-id').textinput('disable')
         $('#edit-rule-advanced').show()
 
@@ -435,7 +433,7 @@ ajaxAlertFail = (jqXHR, textStatus, errorThrown) ->
     else
       message = textStatus
 
-  alert message
+  alert __(message)
 
 voiceCallback = (matches) ->
   $.get "/api/speak",
@@ -449,3 +447,9 @@ showToast =
     device.showToast
   else
     (msg) -> $('#toast').text(msg).toast().toast('show')
+
+__ = (text) -> 
+  if locale[text]? then locale[text]
+  else 
+    console.log 'no translation yet:', text
+    text

@@ -1,4 +1,4 @@
-var actuators, addItem, addLogMessage, addRule, ajaxAlertFail, ajaxShowToast, buildActuator, buildPresents, buildSensor, buildSwitch, buildTemperature, errorCount, loadData, removeRule, rules, sensors, showToast, socket, updateErrorCount, updateRule, updateSensorValue, voiceCallback;
+var actuators, addItem, addLogMessage, addRule, ajaxAlertFail, ajaxShowToast, buildActuator, buildPresents, buildSensor, buildSwitch, buildTemperature, errorCount, loadData, removeRule, rules, sensors, showToast, socket, updateErrorCount, updateRule, updateSensorValue, voiceCallback, __;
 
 actuators = [];
 
@@ -63,14 +63,14 @@ $(document).on("pageinit", '#index', function(event) {
   });
   socket.on('disconnect', function() {
     return $.mobile.loading("show", {
-      text: "connection lost, retying...",
+      text: __("connection lost, retying") + '...',
       textVisible: true,
       textonly: false
     });
   });
   onConnectionError = function() {
     $.mobile.loading("show", {
-      text: "could not connect, retying...",
+      text: __("could not connect, retying") + '...',
       textVisible: true,
       textonly: false
     });
@@ -438,13 +438,11 @@ $(document).on("pageinit", '#edit-rule', function(event) {
     action = $('#edit-rule-form').data('action');
     switch (action) {
       case 'add':
-        $('#edit-rule h3.add').show();
-        $('#edit-rule h3.edit').hide();
+        $('#edit-rule h3').text(__('Edit rule'));
         $('#edit-rule-id').textinput('enable');
         return $('#edit-rule-advanced').hide();
       case 'update':
-        $('#edit-rule h3.add').hide();
-        $('#edit-rule h3.edit').show();
+        $('#edit-rule h3').text(__('Add new rule'));
         $('#edit-rule-id').textinput('disable');
         return $('#edit-rule-advanced').show();
     }
@@ -525,7 +523,7 @@ ajaxAlertFail = function(jqXHR, textStatus, errorThrown) {
     e = _error;
   }
   message = (data != null ? data.error : void 0) != null ? data.error : (errorThrown != null) && errorThrown !== "" ? message = errorThrown : textStatus === 'error' ? message = 'no connection' : message = textStatus;
-  return alert(message);
+  return alert(__(message));
 };
 
 voiceCallback = function(matches) {
@@ -539,4 +537,13 @@ voiceCallback = function(matches) {
 
 showToast = (typeof device !== "undefined" && device !== null) && (device.showToast != null) ? device.showToast : function(msg) {
   return $('#toast').text(msg).toast().toast('show');
+};
+
+__ = function(text) {
+  if (locale[text] != null) {
+    return locale[text];
+  } else {
+    console.log('no translation yet:', text);
+    return text;
+  }
 };
