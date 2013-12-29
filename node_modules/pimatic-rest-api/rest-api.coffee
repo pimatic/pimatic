@@ -15,6 +15,7 @@ module.exports = (env) ->
       sendErrorResponse = (res, error, statusCode = 400) =>
         message = null
         if error instanceof Error
+          message = error.message
           env.logger.error error.message
           env.logger.debug error.stack
         else
@@ -50,7 +51,7 @@ module.exports = (env) ->
 
 
       app.post "/api/rule//add", (req, res, next) =>
-        sendErrorResponse res, 400, 'No id given'
+        sendErrorResponse res, 'No id given', 400
         
       app.post "/api/rule/:ruleId/add", (req, res, next) =>
         ruleId = req.params.ruleId
