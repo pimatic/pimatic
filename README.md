@@ -42,7 +42,7 @@ Configuration
 I recommend to start with the default config:
 
     cd node_modules/pimatic
-    cp default_config.json config.json
+    cp config_default.json config.json
 
 The config is in the [json](https://en.wikipedia.org/wiki/JSON) format and currently includes five 
 sections:
