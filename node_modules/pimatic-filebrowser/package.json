@@ -6,7 +6,7 @@
     "filebrowser.coffee",
     "README.md"
   ],
-  "version": "0.3.0",
+  "version": "0.3.1-git",
   "homepage": "http://github.com/sweetpi/pimatic",
   "repository": {
     "type": "git",
@@ -15,7 +15,7 @@
   "dependencies": {
   },
   "peerDependencies": {
-    "pimatic": "~0.3.0"
+    "pimatic": "~0.3.1-git"
   },
   "engines": {
     "node": ">0.8.x",

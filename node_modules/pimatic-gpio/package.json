@@ -9,7 +9,7 @@
     "actuator-config-shema.coffee",
     "sensor-config-shema.coffee"
   ],
-  "version": "0.3.0",
+  "version": "0.3.1-git",
   "homepage": "http://github.com/sweetpi/pimatic",
   "repository": {
     "type": "git",
@@ -19,7 +19,7 @@
     "onoff": "~0.3.0"
   },
   "peerDependencies": {
-    "pimatic": "~0.3.0"
+    "pimatic": "~0.3.1-git"
   },
   "engines": {
     "node": ">0.8.x",
