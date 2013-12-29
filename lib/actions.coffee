@@ -67,8 +67,8 @@ class LogActionHandler extends ActionHandler
         return Q.fcall -> __("would log \"%s\"", stringToLog)
       else
         return Q.fcall -> 
-          env.logger.log stringToLog
-          __("log: \"%s\"", stringToLog)
+          env.logger.info stringToLog
+          return null
 
 module.exports.ActionHandler = ActionHandler
 module.exports.SwitchActionHandler = SwitchActionHandler

@@ -65,8 +65,8 @@
         <span class="k">return</span> <span class="nx">Q</span><span class="p">.</span><span class="nx">fcall</span> <span class="nf">-&gt;</span> <span class="nx">__</span><span class="p">(</span><span class="s">&quot;would log \&quot;%s\&quot;&quot;</span><span class="p">,</span> <span class="nx">stringToLog</span><span class="p">)</span>
       <span class="k">else</span>
         <span class="k">return</span> <span class="nx">Q</span><span class="p">.</span><span class="nx">fcall</span> <span class="nf">-&gt;</span> 
-          <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">log</span> <span class="nx">stringToLog</span>
-          <span class="nx">__</span><span class="p">(</span><span class="s">&quot;log: \&quot;%s\&quot;&quot;</span><span class="p">,</span> <span class="nx">stringToLog</span><span class="p">)</span>
+          <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="nx">stringToLog</span>
+          <span class="k">return</span> <span class="kc">null</span>
 
 <span class="nv">module.exports.ActionHandler = </span><span class="nx">ActionHandler</span>
 <span class="nv">module.exports.SwitchActionHandler = </span><span class="nx">SwitchActionHandler</span>

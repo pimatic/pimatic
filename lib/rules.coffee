@@ -172,25 +172,25 @@ class RuleManager extends require('events').EventEmitter
     whenPredicateIsTrue = (ruleId, predicateId, state) =>
       assert ruleId? and typeof ruleId is "string" and ruleId.length isnt 0
       assert predicateId? and typeof predicateId is "string" and predicateId.length isnt 0
-      assert state is 'event' or state is true or state is false
+      assert state is 'event' or state is true
 
-      # First mark the given predicate as true, so wie dont check the predicate again.
-      knownPredicates = [
-        id: predicateId
-        state: true
-      ]
-      # Then get the corresponding rule
+      # First get get the corresponding rule
       rule = @rules[ruleId]
+
+      # Then mark the given predicate as true, if it is an event
+      knownPredicates = (if state is 'event' 
+        [
+          id: predicateId
+          state: true
+        ]
+      else [] )
 
       # and check if the rule is now true.
       @doesRuleCondtionHold(rule, knownPredicates).then( (isTrue) =>
         # if the rule is now true, then execute its action
-        if isTrue then @executeAction(rule.action, false).then( (message) =>
-          logger.info "Rule #{ruleId}: #{message}"
-        ).catch( (error)=>
-          logger.error "Rule #{ruleId} error: #{error}"
-        ).done()
-      )
+        if isTrue then @executeActionAndLogResult(rule).done()
+        return
+      ).done()
       return
     
     # Register the whenPredicateIsTrue for all sensors:
@@ -218,7 +218,6 @@ class RuleManager extends require('events').EventEmitter
 
     # First parse the rule.
     return @parseRuleString(id, ruleString).then( (rule)=>
-
       @_registerPredicateSensorNotify rule
       # If the rules was successful parsed add it to the rule array.
       rule.active = active
@@ -226,18 +225,16 @@ class RuleManager extends require('events').EventEmitter
       @emit "add", rule
       # Check if the condition of the rule is allready true.
       if active
-        @doesRuleCondtionHold(rule).then( (isTrue) ->
+        @doesRuleCondtionHold(rule).then( (isTrue) =>
           # If the confition is true then execute the action.
-          if isTrue then @executeAction(rule.action, false).then( (message) =>
-            logger.info "Rule #{ruleId}: #{message}"
-          ).catch( (error)=>
-            logger.error "Rule #{ruleId} error: #{error}"
-          )
-        )
+          if isTrue 
+            @executeActionAndLogResult(rule).done()
+          return
+        ).done()
       return
     ).catch( (error) =>
       # If there was an error pasring the rule, but the rule is forced to be added, then add
-      # the rule with an error.
+      # the rule with an error.1
       if force
         rule = 
           id: id
@@ -285,14 +282,11 @@ class RuleManager extends require('events').EventEmitter
       # and emit the event.
       @emit "update", rule
       # Then check if the condition of the rule is now true.
-      return @doesRuleCondtionHold(rule).then( (isTrue) =>
+      @doesRuleCondtionHold(rule).then( (isTrue) =>
         # If the condition is true then exectue the action.
-        if isTrue then @executeAction(rule.action, false).then( (message) =>
-          logger.info "Rule #{id}: #{message}"
-        ).catch( (error)=>
-          logger.error "Rule #{id} error: #{error}"
-        )
-      )
+        return if isTrue then @executeActionAndLogResult(rule).done()
+      ).done()
+      return
     )
 
   # ###evaluateConditionOfRule
@@ -400,6 +394,12 @@ class RuleManager extends require('events').EventEmitter
       )
     )
     
+  executeActionAndLogResult: (rule) ->
+    return @executeAction(rule.action, false).then( (message) =>
+      if message? then logger.info "Rule #{rule.id}: #{message}"
+    ).catch( (error)=>
+      logger.error "Rule #{rule.id} error: #{error}"
+    )
 
   # ###executeAction
   executeAction: (actionString, simulate) ->
