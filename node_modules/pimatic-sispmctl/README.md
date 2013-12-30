@@ -21,7 +21,7 @@ Set the `class` attribute to `SispmctlSwitch`. For example:
       "id": "light",
       "class": "SispmctlSwitch", 
       "name": "Lamp",
-      "outletId": 1 
+      "outletUnit": 1 
     }
 
 For actuator configuration options see the 
