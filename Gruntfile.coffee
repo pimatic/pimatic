@@ -87,7 +87,7 @@ module.exports = (grunt) ->
         tagName: "v%VERSION%"
         tagMessage: "version %VERSION%"
         push: true
-        pushTo: "upstream"
+        pushTo: "origin"
         gitDescribeOptions: "--tags --always --abbrev=1 --dirty=-d"
 
 
