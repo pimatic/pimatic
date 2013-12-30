@@ -6,7 +6,7 @@
     "redirect.coffee",
     "README.md"
   ],
-  "version": "0.3.1-git",
+  "version": "0.3.2",
   "homepage": "http://github.com/sweetpi/pimatic",
   "repository": {
     "type": "git",
@@ -15,7 +15,7 @@
   "dependencies": {
   },
   "peerDependencies": {
-    "pimatic": "~0.3.1-git"
+    "pimatic": "~0.3.2"
   },
   "engines": {
     "node": ">0.8.x",
