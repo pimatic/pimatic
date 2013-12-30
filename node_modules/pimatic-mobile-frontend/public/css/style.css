@@ -25,6 +25,12 @@ span.if, span.then {
     -webkit-animation-duration: 120ms !important;
 }
 
+[data-role=listview].checkbox-list a.ui-link-inherit {
+  padding: 0 0 0 0;
+}
+[data-role=listview].checkbox-list label {
+  border: none; margin: 0;
+}
 
 .ui-loader-background {
     width:100%;

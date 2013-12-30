@@ -65,6 +65,11 @@ class PluginManager
         return Q.ninvoke(npm, 'search', 'pimatic-')
     )
 
+  getInstalledPlugins: ->
+    return Q.nfcall(fs.readdir, "./node_modules").then( (modules) =>
+      return plugins = (module for module in modules when module.match(/^pimatic-.*/)?)
+    ) 
+
 
 class Plugin extends require('events').EventEmitter
   name: null

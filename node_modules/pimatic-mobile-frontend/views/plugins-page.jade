@@ -1,0 +1,20 @@
+script#plugin-template(type='text/template')
+  li
+    a(href='#')
+      label
+        h2
+          span.name
+          | 
+          span.version
+        //-p
+        //-  a.homepage(data-role="none")
+        p.description
+        p.active
+        input(type='checkbox')
+div#plugins(data-role='page')
+  div(data-theme='a', data-role='header', data-position='fixed')
+    a(href='#index', data-role='button', data-icon='arrow-l', data-iconpos='left', data-inline='true')=__('Back')
+    h3=__('Installed Plugins')
+  div(data-role='content')
+    form
+      ul#plugin-list.checkbox-list(data-role='listview', data-inset='true')

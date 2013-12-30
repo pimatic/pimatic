@@ -378,14 +378,17 @@ $(document).on "pageinit", '#log', (event) ->
     .done( (data) ->
       for entry in data.messages
         addLogMessage entry
+      $('#log-messages').listview('refresh') 
       socket.on 'log', (entry) -> 
         addLogMessage entry
+        $('#log-messages').listview('refresh') 
     ).fail(ajaxAlertFail)
 
   $('#log').on "click", '#clear-log', (event, ui) ->
     $.get("/clear-log")
       .done( ->
         $('#log-messages').empty()
+       $('#log-messages').listview('refresh') 
         errorCount = 0
         updateErrorCount()
       ).fail(ajaxAlertFail)
@@ -396,7 +399,31 @@ addLogMessage = (entry) ->
   li.find('.level').text(entry.level).addClass(entry.level)
   li.find('.msg').text(entry.msg)
   $('#log-messages').append li
-  $('#log-messages').listview('refresh') 
+
+
+# plugins-page
+# ---------
+
+$(document).on "pageinit", '#plugins', (event) ->
+  $.get("/api/plugins/installed")
+    .done( (data) ->
+      addPlugin(p) for p in data.plugins
+      $('#plugin-list').listview("refresh")
+      $("#plugin-list input[type='checkbox']").checkboxradio()
+    ).fail(ajaxAlertFail)
+
+addPlugin= (plugin) ->
+  id = "plugin-#{plugin.name}"
+  li = $ $('#plugin-template').html()
+  li.attr('id', id)
+  checkBoxId = "cb-#{id}"
+  li.find('.name').text(plugin.name)
+  li.find('.description').text(plugin.description)
+  li.find('.version').text(plugin.version)
+  li.find('.homepage').text(plugin.homepage).attr('href', plugin.homepage)
+  li.find('.active').text(if plugin.active then __('activated') else __('deactived'))
+  li.find("input[type='checkbox']").attr('id', checkBoxId).attr('name', checkBoxId)
+  $('#plugin-list').append li
 
 
 # General

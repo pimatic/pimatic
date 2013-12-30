@@ -34,7 +34,8 @@
 	"Add a new rule": "Add a new rule",
 	"Advanced Options": "Advanced Options",
 	"connection lost, retying": "connection lost, retying",
-	"connection lost, retying": "connection lost, retying",
 	"The rule must start with \"if\" and contain a \"then\" part!": "The rule must start with \"if\" and contain a \"then\" part!",
-	"No id given": "No id given"
+	"No id given": "No id given",
+	"Plugins": "Plugins",
+	"Installed Plugins": "Installed Plugins"
 }

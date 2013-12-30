@@ -1,4 +1,4 @@
-var actuators, addItem, addLogMessage, addRule, ajaxAlertFail, ajaxShowToast, buildActuator, buildPresents, buildSensor, buildSwitch, buildTemperature, errorCount, loadData, removeRule, rules, sensors, showToast, socket, updateErrorCount, updateRule, updateSensorValue, voiceCallback, __;
+var actuators, addItem, addLogMessage, addPlugin, addRule, ajaxAlertFail, ajaxShowToast, buildActuator, buildPresents, buildSensor, buildSwitch, buildTemperature, errorCount, loadData, removeRule, rules, sensors, showToast, socket, updateErrorCount, updateRule, updateSensorValue, voiceCallback, __;
 
 actuators = [];
 
@@ -472,16 +472,16 @@ $(document).on("pageinit", '#log', function(event) {
       entry = _ref[_i];
       addLogMessage(entry);
     }
+    $('#log-messages').listview('refresh');
     return socket.on('log', function(entry) {
-      return addLogMessage(entry);
+      addLogMessage(entry);
+      return $('#log-messages').listview('refresh');
     });
   }).fail(ajaxAlertFail);
   return $('#log').on("click", '#clear-log', function(event, ui) {
     return $.get("/clear-log").done(function() {
-      $('#log-messages').empty();
-      errorCount = 0;
-      return updateErrorCount();
-    }).fail(ajaxAlertFail);
+      return $('#log-messages').empty();
+    }, $('#log-messages').listview('refresh'), errorCount = 0, updateErrorCount()).fail(ajaxAlertFail);
   });
 });
 
@@ -490,8 +490,35 @@ addLogMessage = function(entry) {
   li = $($('#log-message-template').html());
   li.find('.level').text(entry.level).addClass(entry.level);
   li.find('.msg').text(entry.msg);
-  $('#log-messages').append(li);
-  return $('#log-messages').listview('refresh');
+  return $('#log-messages').append(li);
+};
+
+$(document).on("pageinit", '#plugins', function(event) {
+  return $.get("/api/plugins/installed").done(function(data) {
+    var p, _i, _len, _ref;
+    _ref = data.plugins;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      p = _ref[_i];
+      addPlugin(p);
+    }
+    $('#plugin-list').listview("refresh");
+    return $("#plugin-list input[type='checkbox']").checkboxradio();
+  }).fail(ajaxAlertFail);
+});
+
+addPlugin = function(plugin) {
+  var checkBoxId, id, li;
+  id = "plugin-" + plugin.name;
+  li = $($('#plugin-template').html());
+  li.attr('id', id);
+  checkBoxId = "cb-" + id;
+  li.find('.name').text(plugin.name);
+  li.find('.description').text(plugin.description);
+  li.find('.version').text(plugin.version);
+  li.find('.homepage').text(plugin.homepage).attr('href', plugin.homepage);
+  li.find('.active').text(plugin.active ? __('activated') : __('deactived'));
+  li.find("input[type='checkbox']").attr('id', checkBoxId).attr('name', checkBoxId);
+  return $('#plugin-list').append(li);
 };
 
 $.ajaxSetup({

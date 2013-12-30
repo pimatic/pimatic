@@ -135,8 +135,6 @@ module.exports = (env) ->
 
     loadPlugins: -> 
 
-      @pluginManager.searchForPlugins()
-
       checkPluginDependencies = (pConf, plugin) =>
         if plugin.pluginDependencies?
           pluginNames = (p.plugin for p in @config.plugins) 
@@ -175,6 +173,14 @@ module.exports = (env) ->
 
       @plugins.push {plugin: plugin, config: config}
       @emit "plugin", plugin
+
+    getPlugin: (name) ->
+      assert name?
+      assert typeof name is "string"
+
+      for p in @plugins
+        if p.config.plugin is name then return p
+      return null
 
     registerActuator: (actuator) ->
       assert actuator?

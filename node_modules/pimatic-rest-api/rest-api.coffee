@@ -1,5 +1,6 @@
 __ = require('i18n').__
 Q = require 'q'
+fs = require 'fs'
 
 module.exports = (env) ->
 
@@ -83,5 +84,28 @@ module.exports = (env) ->
         sensorList = for id, s of framework.sensors 
           id: s.id, name: s.name
         sendSuccessResponse res, { sensors: sensorList}
+
+      app.get "/api/plugins/installed", (req, res, next) =>
+        framework.pluginManager.getInstalledPlugins().then( (plugins) =>
+
+          pluginList = 
+            for name in plugins
+              packageJson = JSON.parse(
+                fs.readFileSync("./node_modules/#{name}/package.json", 'utf-8')
+              )
+              name = name.replace 'pimatic-', ''
+              loadedPlugin = framework.getPlugin name
+              listEntry = 
+                name: name
+                active: loadedPlugin?
+                description: packageJson.description
+                version: packageJson.version
+                homepage: packageJson.homepage
+
+          sendSuccessResponse res, { plugins: pluginList}
+        ).catch( (error) =>
+          sendErrorResponse res, error, 406
+        ).done()
+        
         
   return new RestFrontend
