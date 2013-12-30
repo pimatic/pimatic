@@ -11,6 +11,7 @@
     "coverage/blanket.js",
     "main.js",
     "startup.coffee",
+    "Cuntfile.coffee",
     "config-shema.coffee",
     "config_default.json",
     "README.md",
@@ -49,7 +50,8 @@
     "grunt-mocha-test": "~0.8.1",
     "blanket": "~1.1.5",
     "coffee-errors": "~0.8.4",
-    "supertest": "~0.8.2"
+    "supertest": "~0.8.2",
+    "grunt-bump": "0.0.13"
   },
   "engines": {
     "node": ">0.8.x",

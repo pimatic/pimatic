@@ -43,6 +43,7 @@ node_modules/coffee-errors/
 node_modules/CBuffer/
 node_modules/supertest/
 node_modules/pimatic-gpio/node_modules/
+node_modules/grunt-bump/
 npm-debug.log
 node.log
 .ftppass

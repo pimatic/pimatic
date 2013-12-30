@@ -1,8 +1,29 @@
 module.exports = (grunt) ->
 
+  # all node_modules:
+  modules = require("fs").readdirSync "./node_modules"
+  # just the pimatic-* modules:
+  plugins = (module for module in modules when module.match(/^pimatic-.*/)?)
+
+  # files for generating documentation:
+  grocFiles = [
+    "./README.md"
+    "./startup.coffee"
+    "./config-shema.coffee"
+    "./lib/*.coffee"
+  ]
+  for plugin in plugins
+    grocFiles.push "./node_modules/#{plugin}/README.md"
+    grocFiles.push "./node_modules/#{plugin}/*.coffee"
+
+  # package.json files of plugins
+  pluginPackageJson = ("node_modules/#{plugin}/package.json" for plugin in plugins)
+  # and main package.json files
+  bumpFiles = ["package.json"].concat pluginPackageJson
+
   # Project configuration.
   grunt.initConfig
-    pkg: grunt.file.readJSON("package.json")
+    pkg: grunt.file.readJSON "package.json"
     coffeelint:
       app: [
         "*.coffee"
@@ -20,34 +41,7 @@ module.exports = (grunt) ->
           level: "error"
 
     groc:
-      files: [
-        "./README.md"
-        "./startup.coffee"
-        "./config-shema.coffee"
-        "./lib/*.coffee"
-        "./node_modules/pimatic-cron/*.coffee"
-        "./node_modules/pimatic-cron/README.md"
-        "./node_modules/pimatic-ping/*.coffee"
-        "./node_modules/pimatic-ping/README.md"
-        "./node_modules/pimatic-filebrowser/*.coffee"
-        "./node_modules/pimatic-filebrowser/README.md"
-        "./node_modules/pimatic-log-reader/*.coffee"
-        "./node_modules/pimatic-log-reader/README.md"
-        "./node_modules/pimatic-mobile-frontend/*.coffee"
-        "./node_modules/pimatic-mobile-frontend/README.md"
-        "./node_modules/pimatic-pilight/*.coffee"
-        "./node_modules/pimatic-pilight/README.md"
-        "./node_modules/pimatic-redirect/*.coffee"
-        "./node_modules/pimatic-redirect/README.md"
-        "./node_modules/pimatic-rest-api/*.coffee"
-        "./node_modules/pimatic-rest-api/README.md"
-        "./node_modules/pimatic-sispmctl/*.coffee"
-        "./node_modules/pimatic-sispmctl/README.md"
-        "./node_modules/pimatic-speak-api/*.coffee"
-        "./node_modules/pimatic-speak-api/README.md"
-        "./node_modules/pimatic-gpio/*.coffee"
-        "./node_modules/pimatic-gpio/README.md"
-      ]
+      files: grocFiles
       options: 
         root: "."
         out: "docs"
@@ -82,7 +76,22 @@ module.exports = (grunt) ->
           captureFile: "coverage/coverage.html"
 
         src: ["test/**/*."]
+    bump:
+      options:
+        files: bumpFiles
+        updateConfigs: []
+        commit: true
+        commitMessage: "version %VERSION%"
+        commitFiles: ["-a"] # '-a' for all files
+        createTag: true
+        tagName: "v%VERSION%"
+        tagMessage: "version %VERSION%"
+        push: true
+        pushTo: "upstream"
+        gitDescribeOptions: "--tags --always --abbrev=1 --dirty=-d"
 
+
+  grunt.loadNpmTasks 'grunt-bump'
   grunt.loadNpmTasks "grunt-coffeelint"
   grunt.loadNpmTasks "grunt-groc"
   grunt.loadNpmTasks "grunt-ftp-deploy"
@@ -92,25 +101,22 @@ module.exports = (grunt) ->
     cwd = process.cwd()
     plugins = require("fs").readdirSync("./node_modules")
     require("async").eachSeries plugins, ((file, cb) ->
-      if file.indexOf("pimatic-") is 0
-        grunt.log.writeln "publishing: " + file
-        process.chdir cwd + "/node_modules/" + file
-        child = grunt.util.spawn(
-          opts:
-            stdio: "inherit"
-          cmd: "npm"
-          args: ["publish"]
-        , (err) ->
-          console.log err.message  if err
-          cb()
-        )
-      else
+      grunt.log.writeln "publishing: " + file
+      process.chdir cwd + "/node_modules/" + file
+      child = grunt.util.spawn(
+        opts:
+          stdio: "inherit"
+        cmd: "npm"
+        args: ["publish"]
+      , (err) ->
+        console.log err.message  if err
         cb()
+      )
     ), (err) ->
       process.chdir cwd
       done()
 
-  
+
   # Default task(s).
   grunt.registerTask "default", ["coffeelint", "mochaTest:test", "groc"]
   grunt.registerTask "test", ["coffeelint", "mochaTest:test"]

@@ -30,6 +30,14 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "type": "heading",
               "data": {
                 "level": 2,
+                "title": "Screenshots",
+                "slug": "screenshots"
+              },
+              "depth": 2
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
                 "title": "Installation",
                 "slug": "installation"
               },
@@ -120,6 +128,14 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
       "depth": 1,
       "outline": [
         {
+          "type": "heading",
+          "data": {
+            "level": 2,
+            "title": "Screenshots",
+            "slug": "screenshots"
+          },
+          "depth": 2
+        }, {
           "type": "heading",
           "data": {
             "level": 2,
