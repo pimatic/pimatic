@@ -107,5 +107,28 @@ module.exports = (env) ->
           sendErrorResponse res, error, 406
         ).done()
         
+      app.post "/api/plugins/add", (req, res, next) =>
+        plugins = req.body.plugins
+        unless plugins? then return sendErrorResponse res, "No plugins given", 400
+        pluginNames = (p.plugin for p in framework.config.plugins)
+        added = []
+        for p in plugins
+          unless p in pluginNames
+            framework.config.plugins.push
+              plugin: p
+            added.push p
+        framework.saveConfig()
+        sendSuccessResponse res, added: added
+
+      app.post "/api/plugins/remove", (req, res, next) =>
+        plugins = req.body.plugins
+        unless plugins? then return sendErrorResponse res, "No plugins given", 400
+        removed = []
+        for p, i in framework.config.plugins
+          if p.plugin in plugins
+            framework.config.plugins.splice(i, 1)
+            removed.push p.plugin
+        framework.saveConfig()
+        sendSuccessResponse res, removed: removed
         
   return new RestFrontend

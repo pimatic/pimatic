@@ -18,3 +18,13 @@ div#plugins(data-role='page')
   div(data-role='content')
     form
       ul#plugin-list.checkbox-list(data-role='listview', data-inset='true')
+      fieldset.ui-grid-a
+        div.ui-block-a
+          select#select-plugin-action(name='select-plugin-action')
+            option(value="select")=__('Select an action')
+            option(value="add")=__('Add to config')
+            option(value="remove")=__('Remove from config')
+        div.ui-block-b
+          a#plugin-do-action(data-icon="arrow-r", data-theme="a", data-role="button")=__('Do it!')
+      fieldset
+          a#plugin-install(data-icon="plus", data-role="button")=__('Install a Plugin')

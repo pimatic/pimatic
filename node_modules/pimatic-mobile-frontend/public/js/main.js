@@ -1,4 +1,4 @@
-var actuators, addItem, addLogMessage, addPlugin, addRule, ajaxAlertFail, ajaxShowToast, buildActuator, buildPresents, buildSensor, buildSwitch, buildTemperature, errorCount, loadData, removeRule, rules, sensors, showToast, socket, updateErrorCount, updateRule, updateSensorValue, voiceCallback, __;
+var actuators, addItem, addLogMessage, addPlugin, addRule, ajaxAlertFail, ajaxShowToast, buildActuator, buildPresents, buildSensor, buildSwitch, buildTemperature, errorCount, loadData, removeRule, rules, sensors, showToast, socket, uncheckAllPlugins, updateErrorCount, updateRule, updateSensorValue, voiceCallback, __;
 
 actuators = [];
 
@@ -494,7 +494,7 @@ addLogMessage = function(entry) {
 };
 
 $(document).on("pageinit", '#plugins', function(event) {
-  return $.get("/api/plugins/installed").done(function(data) {
+  $.get("/api/plugins/installed").done(function(data) {
     var p, _i, _len, _ref;
     _ref = data.plugins;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -504,7 +504,42 @@ $(document).on("pageinit", '#plugins', function(event) {
     $('#plugin-list').listview("refresh");
     return $("#plugin-list input[type='checkbox']").checkboxradio();
   }).fail(ajaxAlertFail);
+  return $('#plugins').on("click", '#plugin-do-action', function(event, ui) {
+    var ele, selected, val, _i, _len, _ref;
+    val = $('#select-plugin-action').val();
+    if (val === 'select') {
+      return alert(__('Please select a action first'));
+    }
+    selected = [];
+    _ref = $('#plugin-list input[type="checkbox"]');
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      ele = _ref[_i];
+      ele = $(ele);
+      if (ele.is(':checked')) {
+        selected.push(ele.data('plugin-name'));
+      }
+    }
+    return $.post("/api/plugins/" + val, {
+      plugins: selected
+    }).done(function(data) {
+      var past;
+      past = (val === 'add' ? 'added' : 'removed');
+      showToast(data[past].length + __(" plugins " + past) + "." + (data[past].length > 0 ? " " + __("Please restart pimatic.") : ""));
+      uncheckAllPlugins();
+    }).fail(ajaxAlertFail);
+  });
 });
+
+uncheckAllPlugins = function() {
+  var ele, _i, _len, _ref, _results;
+  _ref = $('#plugin-list input[type="checkbox"]');
+  _results = [];
+  for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+    ele = _ref[_i];
+    _results.push($(ele).prop("checked", false).checkboxradio("refresh"));
+  }
+  return _results;
+};
 
 addPlugin = function(plugin) {
   var checkBoxId, id, li;
@@ -517,9 +552,13 @@ addPlugin = function(plugin) {
   li.find('.version').text(plugin.version);
   li.find('.homepage').text(plugin.homepage).attr('href', plugin.homepage);
   li.find('.active').text(plugin.active ? __('activated') : __('deactived'));
-  li.find("input[type='checkbox']").attr('id', checkBoxId).attr('name', checkBoxId);
+  li.find("input[type='checkbox']").attr('id', checkBoxId).attr('name', checkBoxId).data('plugin-name', plugin.name);
   return $('#plugin-list').append(li);
 };
+
+$(document).on("pagebeforeshow", '#plugins', function(event) {
+  return $('#select-plugin-action').val('select').selectmenu('refresh');
+});
 
 $.ajaxSetup({
   timeout: 7000

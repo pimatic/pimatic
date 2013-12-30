@@ -412,7 +412,29 @@ $(document).on "pageinit", '#plugins', (event) ->
       $("#plugin-list input[type='checkbox']").checkboxradio()
     ).fail(ajaxAlertFail)
 
-addPlugin= (plugin) ->
+  $('#plugins').on "click", '#plugin-do-action', (event, ui) ->
+    val = $('#select-plugin-action').val()
+    if val is 'select' then return alert __('Please select a action first')
+    selected = []
+    for ele in $ '#plugin-list input[type="checkbox"]'
+      ele = $ ele
+      if ele.is(':checked')
+        selected.push(ele.data 'plugin-name')
+    $.post("/api/plugins/#{val}", plugins: selected)
+      .done( (data) ->
+        past = (if val is 'add' then 'added' else 'removed')
+        showToast data[past].length + __(" plugins #{past}") + "." +
+         (if data[past].length > 0 then " " + __("Please restart pimatic.") else "")
+        uncheckAllPlugins()
+        return
+      ).fail(ajaxAlertFail)
+
+uncheckAllPlugins = () ->
+  for ele in $ '#plugin-list input[type="checkbox"]'
+    $(ele).prop("checked", false).checkboxradio("refresh")
+
+
+addPlugin = (plugin) ->
   id = "plugin-#{plugin.name}"
   li = $ $('#plugin-template').html()
   li.attr('id', id)
@@ -423,7 +445,11 @@ addPlugin= (plugin) ->
   li.find('.homepage').text(plugin.homepage).attr('href', plugin.homepage)
   li.find('.active').text(if plugin.active then __('activated') else __('deactived'))
   li.find("input[type='checkbox']").attr('id', checkBoxId).attr('name', checkBoxId)
+    .data('plugin-name', plugin.name)
   $('#plugin-list').append li
+
+$(document).on "pagebeforeshow", '#plugins', (event) ->
+  $('#select-plugin-action').val('select').selectmenu('refresh')
 
 
 # General

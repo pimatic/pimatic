@@ -37,5 +37,18 @@
 	"The rule must start with \"if\" and contain a \"then\" part!": "The rule must start with \"if\" and contain a \"then\" part!",
 	"No id given": "No id given",
 	"Plugins": "Plugins",
-	"Installed Plugins": "Installed Plugins"
+	"Installed Plugins": "Installed Plugins",
+	"Install new Plugin": "Install new Plugin",
+	"Do Action": "Do Action",
+	"select a action": "select a action",
+	"add to config": "add to config",
+	"remove from config": "remove from config",
+	"do it": "do it",
+	"Select a action": "Select a action",
+	"Add to config": "Add to config",
+	"Remove from config": "Remove from config",
+	"Do it!": "Do it!",
+	"Install a new Plugin": "Install a new Plugin",
+	"Install a Plugin": "Install a Plugin",
+	"Select an action": "Select an action"
 }
