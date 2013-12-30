@@ -99,7 +99,6 @@ module.exports = (grunt) ->
   grunt.registerTask "publish-plugins", "publish all pimatic-plugins", ->
     done = @async()
     cwd = process.cwd()
-    plugins = require("fs").readdirSync("./node_modules")
     require("async").eachSeries plugins, ((file, cb) ->
       grunt.log.writeln "publishing: " + file
       process.chdir cwd + "/node_modules/" + file
