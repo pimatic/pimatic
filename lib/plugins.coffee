@@ -31,15 +31,15 @@ class PluginManager
   # Install the plugin dependencies for an existing plugin folder
   installDependencies: (name, cwd) ->
     return @_loadNpm().then( (npm) =>
-        npm.prefix = @path name
-        return Q.ninvoke(npm, 'install')
-      )
+      npm.prefix = @path name
+      return Q.ninvoke(npm, 'install')
+    )
 
   # Install a plugin from the npm repository
   installPlugin: (name, cwd) ->
     return @_loadNpm().then( (npm) =>
-        return Q.ninvoke(npm, 'install', name)
-      )
+      return Q.ninvoke(npm, 'install', name)
+    )
 
   path: (name) ->
     return "#{process.cwd()}/node_modules/#{name}"
