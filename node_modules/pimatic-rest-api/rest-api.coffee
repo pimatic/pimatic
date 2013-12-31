@@ -106,6 +106,21 @@ module.exports = (env) ->
         ).catch( (error) =>
           sendErrorResponse res, error, 406
         ).done()
+
+
+      app.get "/api/plugins/search", (req, res, next) =>
+        framework.pluginManager.searchForPlugins().then( (plugins) =>
+          pluginList =
+            for k, p of plugins 
+              listEntry =
+                name: p.name
+                description: p.description
+                version: p.version
+
+          sendSuccessResponse res, { plugins: pluginList}
+        ).catch( (error) =>
+          sendErrorResponse res, error, 406
+        ).done()
         
       app.post "/api/plugins/add", (req, res, next) =>
         plugins = req.body.plugins

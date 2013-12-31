@@ -1,6 +1,8 @@
 npm = require 'npm'
 fs = require 'fs'
 Q = require 'q'
+util = require 'util'
+logger = require './logger'
 
 class PluginManager
 
@@ -28,14 +30,14 @@ class PluginManager
 
   # Install the plugin dependencies for an existing plugin folder
   installDependencies: (name, cwd) ->
-    return Q.ninvoke(npm, 'load', options = {}).then( (npm) =>
+    return @_loadNpm().then( (npm) =>
         npm.prefix = @path name
         return Q.ninvoke(npm, 'install')
       )
 
   # Install a plugin from the npm repository
   installPlugin: (name, cwd) ->
-    return Q.ninvoke(npm, 'load', options = {}).then( (npm) =>
+    return @_loadNpm().then( (npm) =>
         return Q.ninvoke(npm, 'install', name)
       )
 
@@ -61,8 +63,29 @@ class PluginManager
   #     }
   # 
   searchForPlugins: ->
+    return @_loadNpm().then( (npm) =>
+      return Q.ninvoke(npm, 'search', 'pimatic-')
+    )
+
+  _loadNpm : ->
     return Q.ninvoke(npm, 'load', options = {}).then( (npm) =>
-        return Q.ninvoke(npm, 'search', 'pimatic-')
+
+      # console.log util.inspect(npm,
+      #   showHidden: true
+      #   depth: 2
+      # )
+
+      # Don't log to stdout or stderror:
+      npm.registry.log.pause()
+      # Proxy the log stream to our own log:
+      npm.registry.log.on 'log', (msg) ->
+        if msg.level is 'info' or msg.level is 'verbose' or msg.level is 'silly' then return
+        if msg.level is 'error' 
+          logger.log(msg.level, msg.prefix, msg.message)
+        else
+          logger.info("npm #{msg.level}", msg.prefix, msg.message)
+
+      return npm
     )
 
   getInstalledPlugins: ->

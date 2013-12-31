@@ -1,4 +1,4 @@
-var actuators, addItem, addLogMessage, addPlugin, addRule, ajaxAlertFail, ajaxShowToast, buildActuator, buildPresents, buildSensor, buildSwitch, buildTemperature, errorCount, loadData, removeRule, rules, sensors, showToast, socket, uncheckAllPlugins, updateErrorCount, updateRule, updateSensorValue, voiceCallback, __;
+var actuators, addBrowsePlugin, addItem, addLogMessage, addPlugin, addRule, ajaxAlertFail, ajaxShowToast, buildActuator, buildPresents, buildSensor, buildSwitch, buildTemperature, errorCount, loadData, removeRule, rules, sensors, showToast, socket, uncheckAllPlugins, updateErrorCount, updateRule, updateSensorValue, voiceCallback, __;
 
 actuators = [];
 
@@ -560,11 +560,38 @@ $(document).on("pagebeforeshow", '#plugins', function(event) {
   return $('#select-plugin-action').val('select').selectmenu('refresh');
 });
 
+$(document).on("pageinit", '#plugins-browse', function(event) {
+  return $.ajax({
+    url: "/api/plugins/search",
+    timeout: 20000
+  }).done(function(data) {
+    var p, _i, _len, _ref;
+    _ref = data.plugins;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      p = _ref[_i];
+      addBrowsePlugin(p);
+    }
+    return $('#plugin-browse-list').listview("refresh");
+  }).fail(ajaxAlertFail);
+});
+
+addBrowsePlugin = function(plugin) {
+  var id, li;
+  id = "plugin-browse-" + plugin.name;
+  li = $($('#plugin-browse-template').html());
+  li.attr('id', id);
+  li.find('.name').text(plugin.name);
+  li.find('.description').text(plugin.description);
+  li.find('.version').text(plugin.version);
+  return $('#plugin-browse-list').append(li);
+};
+
 $.ajaxSetup({
   timeout: 7000
 });
 
 $(document).ajaxStart(function() {
+  console.log('ajax start');
   return $.mobile.loading("show", {
     text: "Loading...",
     textVisible: true,

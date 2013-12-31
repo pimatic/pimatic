@@ -452,12 +452,37 @@ $(document).on "pagebeforeshow", '#plugins', (event) ->
   $('#select-plugin-action').val('select').selectmenu('refresh')
 
 
+# plugins-browse-page
+# ---------
+
+$(document).on "pageinit", '#plugins-browse', (event) ->
+  $.ajax(
+    url: "/api/plugins/search"
+    timeout: 20000 #ms
+  ).done( (data) ->
+      addBrowsePlugin(p) for p in data.plugins
+      $('#plugin-browse-list').listview("refresh")
+    ).fail(ajaxAlertFail)
+
+
+addBrowsePlugin = (plugin) ->
+  id = "plugin-browse-#{plugin.name}"
+  li = $ $('#plugin-browse-template').html()
+  li.attr('id', id)
+  li.find('.name').text(plugin.name)
+  li.find('.description').text(plugin.description)
+  li.find('.version').text(plugin.version)
+  #li.find('.installed').text(if plugin.active then __('activated') else __('deactived'))
+  $('#plugin-browse-list').append li
+
+
 # General
 # -------
 
 $.ajaxSetup timeout: 7000 #ms
 
 $(document).ajaxStart ->
+  console.log 'ajax start'
   $.mobile.loading "show",
     text: "Loading..."
     textVisible: true
