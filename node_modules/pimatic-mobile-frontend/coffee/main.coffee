@@ -464,16 +464,34 @@ $(document).on "pageinit", '#plugins-browse', (event) ->
       $('#plugin-browse-list').listview("refresh")
     ).fail(ajaxAlertFail)
 
+  $('#plugin-browse-list').on "click", '#add-to-config', (event, ui) ->
+    plugin = $(this).parent('li').data('plugin')
+    $.post("/api/plugins/add", plugins: [plugin.name])
+      .done( (data) ->
+        text = null
+        if data.added.length > 0
+          text = __('Added %s to the config. Plugin will be auto installed on next start.', 
+                    plugin.name)
+          text +=  " " + __("Please restart pimatic.")
+        else
+          text = __('The plugin %s was already in the config.', plugin.name)
+        showToast text
+        return
+      ).fail(ajaxAlertFail)
 
 addBrowsePlugin = (plugin) ->
   id = "plugin-browse-#{plugin.name}"
   li = $ $('#plugin-browse-template').html()
+  li.data('plugin', plugin)
   li.attr('id', id)
   li.find('.name').text(plugin.name)
   li.find('.description').text(plugin.description)
   li.find('.version').text(plugin.version)
   #li.find('.installed').text(if plugin.active then __('activated') else __('deactived'))
   $('#plugin-browse-list').append li
+
+
+
 
 
 # General
@@ -526,8 +544,11 @@ showToast =
   else
     (msg) -> $('#toast').text(msg).toast().toast('show')
 
-__ = (text) -> 
-  if locale[text]? then locale[text]
-  else 
-    console.log 'no translation yet:', text
-    text
+__ = (text, args...) -> 
+  translated = text
+  if locale[text]? then translated = locale[text]
+  else console.log 'no translation yet:', text
+    
+  for a in args
+    translated = translated.replace /%s/, a
+  return translated

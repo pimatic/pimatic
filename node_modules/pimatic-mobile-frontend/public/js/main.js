@@ -1,4 +1,5 @@
-var actuators, addBrowsePlugin, addItem, addLogMessage, addPlugin, addRule, ajaxAlertFail, ajaxShowToast, buildActuator, buildPresents, buildSensor, buildSwitch, buildTemperature, errorCount, loadData, removeRule, rules, sensors, showToast, socket, uncheckAllPlugins, updateErrorCount, updateRule, updateSensorValue, voiceCallback, __;
+var actuators, addBrowsePlugin, addItem, addLogMessage, addPlugin, addRule, ajaxAlertFail, ajaxShowToast, buildActuator, buildPresents, buildSensor, buildSwitch, buildTemperature, errorCount, loadData, removeRule, rules, sensors, showToast, socket, uncheckAllPlugins, updateErrorCount, updateRule, updateSensorValue, voiceCallback, __,
+  __slice = [].slice;
 
 actuators = [];
 
@@ -561,7 +562,7 @@ $(document).on("pagebeforeshow", '#plugins', function(event) {
 });
 
 $(document).on("pageinit", '#plugins-browse', function(event) {
-  return $.ajax({
+  $.ajax({
     url: "/api/plugins/search",
     timeout: 20000
   }).done(function(data) {
@@ -573,12 +574,30 @@ $(document).on("pageinit", '#plugins-browse', function(event) {
     }
     return $('#plugin-browse-list').listview("refresh");
   }).fail(ajaxAlertFail);
+  return $('#plugin-browse-list').on("click", '#add-to-config', function(event, ui) {
+    var plugin;
+    plugin = $(this).parent('li').data('plugin');
+    return $.post("/api/plugins/add", {
+      plugins: [plugin.name]
+    }).done(function(data) {
+      var text;
+      text = null;
+      if (data.added.length > 0) {
+        text = __('Added %s to the config. Plugin will be auto installed on next start.', plugin.name);
+        text += " " + __("Please restart pimatic.");
+      } else {
+        text = __('The plugin %s was allready in the config.', plugin.name);
+      }
+      showToast(text);
+    }).fail(ajaxAlertFail);
+  });
 });
 
 addBrowsePlugin = function(plugin) {
   var id, li;
   id = "plugin-browse-" + plugin.name;
   li = $($('#plugin-browse-template').html());
+  li.data('plugin', plugin);
   li.attr('id', id);
   li.find('.name').text(plugin.name);
   li.find('.description').text(plugin.description);
@@ -632,11 +651,18 @@ showToast = (typeof device !== "undefined" && device !== null) && (device.showTo
   return $('#toast').text(msg).toast().toast('show');
 };
 
-__ = function(text) {
+__ = function() {
+  var a, args, text, translated, _i, _len;
+  text = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+  translated = text;
   if (locale[text] != null) {
-    return locale[text];
+    translated = locale[text];
   } else {
     console.log('no translation yet:', text);
-    return text;
   }
+  for (_i = 0, _len = args.length; _i < _len; _i++) {
+    a = args[_i];
+    translated = translated.replace(/%s/, a);
+  }
+  return translated;
 };
