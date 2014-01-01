@@ -12,8 +12,7 @@ cssIncImages = (cssFile) ->
       css = css.replace(match[1], "data:image/" + ext + ";base64," + img)
     catch err
       console.log "Image not found (%s).", imgPath
-  
-   fs.writeFileSync(cssFile, css, 'utf-8') #you can overwrite the original file with this line
+  fs.writeFileSync(cssFile, css, 'utf-8') #you can overwrite the original file with this line
 
 walk = (dir) ->
   files = fs.readdirSync(dir)
@@ -25,5 +24,6 @@ walk = (dir) ->
     else
       if name.match(/\.css$/)?
         console.log name
+        cssIncImages name
 
-walk '../app/css'
+walk __dirname + '/../app/css'
