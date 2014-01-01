@@ -25,14 +25,6 @@ module.exports = (env) ->
       conf.validate()
       @config = conf.get ""
 
-      # * Setup the coffeescript compiler
-      app.use coffeescript(
-        prefix: '/js'
-        src: __dirname + "/coffee"
-        dest: __dirname + '/public/js'
-        bare: true
-      )
-
       mode = "production" 
       #mode = "development"
 
@@ -76,63 +68,49 @@ module.exports = (env) ->
             ]
       )
 
+      if mode is "production"
+        nap.package()
+
+        assets = ( "/assets/#{f}" for f in fs.readdirSync relPath 'public/assets' )
+
+        lastModified = (dir) ->
+          lastM = new Date(0)
+          files = fs.readdirSync(dir)
+          for own i, file of files
+            name = "#{dir}/#{file}"
+            stats = fs.statSync(name);
+            if stats.isDirectory()
+              l = lastModified name
+              if l > lastM then lastM = l
+            else
+              stats = fs.statSync name
+              if stats.mtime > lastM then lastM = stats.mtime
+          return lastM
+
+        # * Setup html5 manifest
+        renderManifest = require "render-appcache-manifest"
+
+        manifest = renderManifest(
+          cache: assets.concat [
+            '/',
+            '/socket.io/socket.io.js'
+          ]
+          network: ['*']
+          fallback: []
+          lastModified: lastModified __dirname
+        )
+
+        app.get "/application.manifest", (req, res) =>
+          res.statusCode = 200
+          res.setHeader "content-type", "text/cache-manifest"
+          res.setHeader "content-length", Buffer.byteLength(manifest)
+          res.end manifest
 
 
-
-      nap.package()
-
-      app.use nap.middleware
-
-      # * Setup html5 manifest
-      # cacheManifest = require("connect-cache-manifest")
-
-      # filesToCache =
-      #   [
-      #     {
-      #       file: __dirname + "/views/index.jade"
-      #       path: '/'
-      #     }
-      #     {
-      #       dir: __dirname + "/public/css"
-      #       prefix: "/css/"
-      #     }
-      #     {
-      #       dir: __dirname + '/public/js'
-      #       prefix: "/js/"
-      #       ignore: (f) => /main\.js/.test f
-      #     }
-      #     {
-      #       file: __dirname + "/coffee/main.coffee"
-      #       path: '/js/main.js'
-      #     }
-      #     {
-      #       # add socket.io.js: A file must be given, but the file is
-      #       # served by socket.io so just give another file...
-      #       file: __dirname + "/coffee/main.coffee"
-      #       path: '/socket.io/socket.io.js'
-      #     }
-      #     {
-      #       dir: __dirname + '/public/themes/graphite/generated/water'
-      #       prefix: '/themes/graphite/generated/water/'
-      #     }
-      #   ]
-
-      # localeFile = "#{@framework.maindir}/locales/#{@framework.config.settings.locale}.json"
-
-      # if fs.existsSync localeFile
-      #   filesToCache.push
-      #     file: localeFile
-      #     path: '/locale.json'
-      # else
-      #   env.logger.warn "locales file did not exist: #{localeFile}" 
+      else
+        app.use nap.middleware
 
 
-      # app.use cacheManifest(
-      #   manifestPath: "/application.manifest"
-      #   files: filesToCache
-      #   networks: ["*"]
-      #   fallbacks: []
-      # )
 
       # * Setup jade-templates
       app.engine 'jade', require('jade').__express
