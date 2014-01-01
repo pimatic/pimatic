@@ -14,10 +14,10 @@ html(manifest='application.manifest')
         locale = !{JSON.stringify(getCatalog())};
     != nap.js('main')
   body
-    include index-page
-    include add-item-page
-    include rule-edit-page
-    include log-page
-    include plugins-page
+    include pages/index
+    include pages/add-item
+    include pages/edit-rule
+    include pages/log-messages
+    include pages/plugins
     #toast(data-role='toast')
     div.ui-loader-background  

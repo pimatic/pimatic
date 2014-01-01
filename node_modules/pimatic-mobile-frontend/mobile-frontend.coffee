@@ -1,8 +1,7 @@
 # ##Dependencies
 express = require "express" 
-coffeescript = require 'connect-coffee-script'
+coffee = require 'coffee-script'
 socketIo = require 'socket.io'
-async = require 'async'
 assert = require 'cassert'
 Q = require 'q'
 convict = require 'convict'
@@ -42,7 +41,7 @@ module.exports = (env) ->
       nap(
         publicDir: relPath "public"
         mode: @config.mode
-        minify: false
+        minify: true
         assets:
           js:
             jquery: [
@@ -53,7 +52,9 @@ module.exports = (env) ->
               relPath "app/js/jquery.ui.touch-punch.js"
             ]
             main: [
-              relPath "app/main.coffee"
+              relPath "app/scope.coffee"
+              relPath "app/helper.coffee"
+              relPath "app/pages/*"
             ]
           css:
             theme: [
@@ -65,6 +66,13 @@ module.exports = (env) ->
               relPath "app/css/style.css"
             ]
       )
+
+      nap.preprocessors['.coffee'] = (contents, filename) ->
+        try
+          coffee.compile contents, bare: on
+        catch err
+          err.stack = "Nap error compiling #{filename}\n" + err.stack
+          throw err
 
       # When the config mode 
       switch @config.mode 
@@ -136,10 +144,8 @@ module.exports = (env) ->
 
       # * Delivers the index-page
       app.get '/', (req,res) =>
-        res.render 'index',
-          theme: 
-            cssFiles: ['themes/graphite/generated/water/jquery.mobile-1.3.1.css']
-
+        res.render 'layout',
+        
       # * Delivers json-Data in the form of:
 
       # 
