@@ -6,3 +6,7 @@ module.exports =
     doc: "The items to display"
     format: Array
     default: []
+  mode:
+    doc: "production or development mode"
+    format: ["production", "development"]
+    default: "production"

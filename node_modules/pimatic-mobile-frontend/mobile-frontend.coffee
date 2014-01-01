@@ -23,12 +23,12 @@ module.exports = (env) ->
       conf = convict require("./mobile-frontend-config-shema")
       conf.load jsonConfig
       conf.validate()
-      @config = conf.get ""
-
-      mode = "production" 
-      #mode = "development"
+      @config = jsonConfig
+      unless @config.items? then @config.items = conf.get ""
 
       global.nap = require 'nap'
+
+      mode = conf.get "mode"
 
       relPath = (p) -> 
         prefix = 'node_modules/pimatic-mobile-frontend/'
