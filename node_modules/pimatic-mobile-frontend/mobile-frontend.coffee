@@ -23,27 +23,25 @@ module.exports = (env) ->
       conf = convict require("./mobile-frontend-config-shema")
       conf.load jsonConfig
       conf.validate()
-      @config = jsonConfig
-      unless @config.items? then @config.items = conf.get ""
+      @config = conf.get ""
 
       global.nap = require 'nap'
 
-      mode = conf.get "mode"
-
-      relPath = (p) -> 
-        prefix = 'node_modules/pimatic-mobile-frontend/'
+      # Makes a relative path to this moduel, relative to the cwd
+      # and returns x.min.file versions of min.file when they exist
+      relPath = (p) => 
+        prefix = path.relative process.cwd(), __dirname
         # Check if a minimised version exists:
-        if mode is "production"
-          minFile = prefix + p.replace /\.[^\.]+$/, '.min$&'
+        if @config.mode is "production"
+          minFile = prefix + "/" + p.replace(/\.[^\.]+$/, '.min$&')
           if fs.existsSync minFile then return minFile
         # in other modes or when not exist return full file:
-        return prefix + p
+        return prefix + "/" + p
 
-      nap.preprocessors['.gif'] = (contents) -> contents
-
+      # Configure static assets with nap
       nap(
         publicDir: relPath "public"
-        mode: mode
+        mode: @config.mode
         minify: false
         assets:
           js:
@@ -68,48 +66,64 @@ module.exports = (env) ->
             ]
       )
 
-      if mode is "production"
-        nap.package()
+      # When the config mode 
+      switch @config.mode 
+        # is production
+        when "production"
+          # then pack the static assets in "public/assets/"
+          nap.package()
 
-        assets = ( "/assets/#{f}" for f in fs.readdirSync relPath 'public/assets' )
+          # function to create the app manifest
+          createAppManifest = =>
 
-        lastModified = (dir) ->
-          lastM = new Date(0)
-          files = fs.readdirSync(dir)
-          for own i, file of files
-            name = "#{dir}/#{file}"
-            stats = fs.statSync(name);
-            if stats.isDirectory()
-              l = lastModified name
-              if l > lastM then lastM = l
-            else
-              stats = fs.statSync name
-              if stats.mtime > lastM then lastM = stats.mtime
-          return lastM
+            # helper to get last modified date of all files in the plugin directory:
+            lastModified = (dir) ->
+              lastM = new Date(0)
+              files = fs.readdirSync(dir)
+              for own i, file of files
+                name = "#{dir}/#{file}"
+                stats = fs.statSync(name);
+                if stats.isDirectory()
+                  l = lastModified name
+                  if l > lastM then lastM = l
+                else
+                  stats = fs.statSync name
+                  if stats.mtime > lastM then lastM = stats.mtime
+              return lastM
 
-        # * Setup html5 manifest
-        renderManifest = require "render-appcache-manifest"
+            # Collect all files in "public/assets"
+            assets = ( "/assets/#{f}" for f in fs.readdirSync relPath 'public/assets' )
 
-        manifest = renderManifest(
-          cache: assets.concat [
-            '/',
-            '/socket.io/socket.io.js'
-          ]
-          network: ['*']
-          fallback: []
-          lastModified: lastModified __dirname
-        )
+            # Render the app manifest
+            renderManifest = require "render-appcache-manifest"
+            return renderManifest(
+              cache: assets.concat [
+                '/',
+                '/socket.io/socket.io.js'
+              ]
+              network: ['*']
+              fallback: []
+              lastModified: lastModified __dirname
+            )
 
-        app.get "/application.manifest", (req, res) =>
-          res.statusCode = 200
-          res.setHeader "content-type", "text/cache-manifest"
-          res.setHeader "content-length", Buffer.byteLength(manifest)
-          res.end manifest
+          # Save the manifest. We don't need to generate it each request, because
+          # files shouldn't change in production mode
+          manifest = createAppManifest()
 
+          # If the app manifest is requested
+          app.get "/application.manifest", (req, res) =>
+            # then deliver it
+            res.statusCode = 200
+            res.setHeader "content-type", "text/cache-manifest"
+            res.setHeader "content-length", Buffer.byteLength(manifest)
+            res.end manifest
 
-      else
-        app.use nap.middleware
-
+        # if we are in development mode
+        when "development"
+          # then serve the files directly
+          app.use nap.middleware
+        else 
+          env.logger.error "Unknown mode: #{@config.mode}!"
 
 
       # * Setup jade-templates
