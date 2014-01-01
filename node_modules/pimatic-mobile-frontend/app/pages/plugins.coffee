@@ -1,16 +1,29 @@
-# plugins-browse-page
-# ---------
-
 # plugins-page
 # ---------
+
+installedPlugins = null
+allPlugins = null
+
 
 $(document).on "pageinit", '#plugins', (event) ->
   $.get("/api/plugins/installed")
     .done( (data) ->
+      installedPlugins = data.plugins
       addPlugin(p) for p in data.plugins
       $('#plugin-list').listview("refresh")
       $("#plugin-list input[type='checkbox']").checkboxradio()
-    ).fail(ajaxAlertFail)
+    ).fail( ajaxAlertFail
+    ).complete( ->
+      $.ajax(
+        url: "/api/plugins/search"
+        timeout: 20000 #ms
+      ).done( (data) ->
+        allPlugins = data.plugins
+        addBrowsePlugin(p) for p in data.plugins
+        if $('#plugin-browse-list').data('listview')?
+          $('#plugin-browse-list').listview("refresh")
+      ).fail(ajaxAlertFail)
+    )
 
   $('#plugins').on "click", '#plugin-do-action', (event, ui) ->
     val = $('#select-plugin-action').val()
@@ -52,16 +65,10 @@ $(document).on "pagebeforeshow", '#plugins', (event) ->
   $('#select-plugin-action').val('select').selectmenu('refresh')
 
 
-  
+# plugins-browse-page
+# ---------
 
 $(document).on "pageinit", '#plugins-browse', (event) ->
-  $.ajax(
-    url: "/api/plugins/search"
-    timeout: 20000 #ms
-  ).done( (data) ->
-      addBrowsePlugin(p) for p in data.plugins
-      $('#plugin-browse-list').listview("refresh")
-    ).fail(ajaxAlertFail)
 
   $('#plugin-browse-list').on "click", '#add-to-config', (event, ui) ->
     plugin = $(this).parent('li').data('plugin')
