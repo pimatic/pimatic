@@ -586,7 +586,7 @@ $(document).on("pageinit", '#plugins-browse', function(event) {
         text = __('Added %s to the config. Plugin will be auto installed on next start.', plugin.name);
         text += " " + __("Please restart pimatic.");
       } else {
-        text = __('The plugin %s was allready in the config.', plugin.name);
+        text = __('The plugin %s was already in the config.', plugin.name);
       }
       showToast(text);
     }).fail(ajaxAlertFail);

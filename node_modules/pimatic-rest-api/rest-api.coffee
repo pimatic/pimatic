@@ -113,7 +113,7 @@ module.exports = (env) ->
           pluginList =
             for k, p of plugins 
               listEntry =
-                name: p.name
+                name: p.name.replace 'pimatic-', ''
                 description: p.description
                 version: p.version
 
