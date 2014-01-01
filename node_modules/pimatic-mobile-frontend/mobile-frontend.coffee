@@ -9,6 +9,7 @@ convict = require 'convict'
 i18n = require 'i18n'
 util = require 'util'
 fs = require 'fs'
+path = require 'path'
 
 module.exports = (env) ->
 
@@ -32,39 +33,89 @@ module.exports = (env) ->
         bare: true
       )
 
-      # * Setup html5 manifest
-      cacheManifest = require("connect-cache-manifest")
+      mode = "production" 
+      #mode = "development"
 
-      filesToCache =
-        [
-          {
-            file: __dirname + "/views/index.jade"
-            path: '/'
-          }
-          {
-            dir: __dirname + "/public/css"
-            prefix: "/css/"
-          }
-          {
-            dir: __dirname + '/public/js'
-            prefix: "/js/"
-            ignore: (f) => /main\.js/.test f
-          }
-          {
-            file: __dirname + "/coffee/main.coffee"
-            path: '/js/main.js'
-          }
-          {
-            # add socket.io.js: A file must be given, but the file is
-            # served by socket.io so just give another file...
-            file: __dirname + "/coffee/main.coffee"
-            path: '/socket.io/socket.io.js'
-          }
-          {
-            dir: __dirname + '/public/themes/graphite/generated/water'
-            prefix: '/themes/graphite/generated/water/'
-          }
-        ]
+      global.nap = require 'nap'
+
+      relPath = (p) -> 
+        prefix = 'node_modules/pimatic-mobile-frontend/'
+        # Check if a minimised version exists:
+        if mode is "production"
+          minFile = prefix + p.replace /\.[^\.]+$/, '.min$&'
+          if fs.existsSync minFile then return minFile
+        # in other modes or when not exist return full file:
+        return prefix + p
+
+      nap.preprocessors['.gif'] = (contents) -> contents
+
+      nap(
+        publicDir: relPath "public"
+        mode: mode
+        minify: false
+        assets:
+          js:
+            jquery: [
+              relPath "app/js/jquery-1.10.2.js"
+              relPath "app/js/jquery.mobile-1.3.2.js"
+              relPath "app/js/jquery.mobile.toast.js"
+              relPath "app/js/jquery-ui-1.10.3.custom.js"
+              relPath "app/js/jquery.ui.touch-punch.js"
+            ]
+            main: [
+              relPath "app/main.coffee"
+            ]
+          css:
+            theme: [
+              relPath "app/css/theme/default/jquery.mobile-1.3.2.css"
+              relPath "app/css/themes/graphite/water/jquery.mobile-1.3.2.css"
+              relPath "app/css/jquery.mobile.toast.css"
+            ]
+            style: [
+              relPath "app/css/style.css"
+            ]
+      )
+
+
+
+
+      nap.package()
+
+      app.use nap.middleware
+
+      # * Setup html5 manifest
+      # cacheManifest = require("connect-cache-manifest")
+
+      # filesToCache =
+      #   [
+      #     {
+      #       file: __dirname + "/views/index.jade"
+      #       path: '/'
+      #     }
+      #     {
+      #       dir: __dirname + "/public/css"
+      #       prefix: "/css/"
+      #     }
+      #     {
+      #       dir: __dirname + '/public/js'
+      #       prefix: "/js/"
+      #       ignore: (f) => /main\.js/.test f
+      #     }
+      #     {
+      #       file: __dirname + "/coffee/main.coffee"
+      #       path: '/js/main.js'
+      #     }
+      #     {
+      #       # add socket.io.js: A file must be given, but the file is
+      #       # served by socket.io so just give another file...
+      #       file: __dirname + "/coffee/main.coffee"
+      #       path: '/socket.io/socket.io.js'
+      #     }
+      #     {
+      #       dir: __dirname + '/public/themes/graphite/generated/water'
+      #       prefix: '/themes/graphite/generated/water/'
+      #     }
+      #   ]
 
       # localeFile = "#{@framework.maindir}/locales/#{@framework.config.settings.locale}.json"
 
@@ -76,12 +127,12 @@ module.exports = (env) ->
       #   env.logger.warn "locales file did not exist: #{localeFile}" 
 
 
-      app.use cacheManifest(
-        manifestPath: "/application.manifest"
-        files: filesToCache
-        networks: ["*"]
-        fallbacks: []
-      )
+      # app.use cacheManifest(
+      #   manifestPath: "/application.manifest"
+      #   files: filesToCache
+      #   networks: ["*"]
+      #   fallbacks: []
+      # )
 
       # * Setup jade-templates
       app.engine 'jade', require('jade').__express

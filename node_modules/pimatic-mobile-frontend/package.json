@@ -21,7 +21,8 @@
     "connect-coffee-script": "0.1.*",
     "jade": "0.27.*",
     "socket.io": "0.9.*",
-    "connect-cache-manifest": "~0.2.0"
+    "connect-cache-manifest": "~0.2.0",
+    "nap": "~0.7.12"
   },
   "peerDependencies": {
     "pimatic": "~0.3.2"
