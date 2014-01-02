@@ -133,11 +133,7 @@ module.exports = (env) ->
 
       @emit "server listen", "startup"
 
-
-
-
     loadPlugins: -> 
-      deferred = Q.defer()
 
       checkPluginDependencies = (pConf, plugin) =>
         if plugin.pluginDependencies?
@@ -147,23 +143,28 @@ module.exports = (env) ->
               env.logger.error "Plugin \"#{pConf.plugin}\" depends on \"#{dep}\". " +
                 "Please add \"#{dep}\" to your config!"
 
+      # Promise chain, begin with an empty promise
+      chain = Q()
 
-      async.mapSeries(@config.plugins, (pConf, cb) =>
-        assert pConf?
-        assert pConf instanceof Object
-        assert pConf.plugin? and typeof pConf.plugin is "string" 
+      for pConf in @config.plugins
+        do (pConf) =>
+          assert pConf?
+          assert pConf instanceof Object
+          assert pConf.plugin? and typeof pConf.plugin is "string" 
 
-        env.logger.info "loading plugin: \"#{pConf.plugin}\"..."
-        plugin = @pluginManager.loadPlugin env, "pimatic-#{pConf.plugin}", (err, plugin) =>
-          checkPluginDependencies pConf, plugin
-          cb(err, {plugin: plugin, config: pConf})
+          chain = chain.then( () =>
+            env.logger.info "loading plugin: \"#{pConf.plugin}\"..."
+            return @pluginManager.loadPlugin(env, "pimatic-#{pConf.plugin}").then( (plugin) =>
+              checkPluginDependencies pConf, plugin
+              @registerPlugin(plugin, pConf)
+            ).catch( (error) ->
+              # If an error occures log an ignore it.
+              env.logger.error error.message
+              env.logger.debug error.stack
+            )
+          )
 
-      , (err, plugins) =>
-        @registerPlugin(p.plugin, p.config) for p in plugins
-        if err then deferred.reject err
-        else deferred.resolve()
-      )
-      return deferred.promise
+      return chain
 
 
     registerPlugin: (plugin, config) ->
@@ -172,6 +173,14 @@ module.exports = (env) ->
 
       @plugins.push {plugin: plugin, config: config}
       @emit "plugin", plugin
+
+    getPlugin: (name) ->
+      assert name?
+      assert typeof name is "string"
+
+      for p in @plugins
+        if p.config.plugin is name then return p
+      return null
 
     registerActuator: (actuator) ->
       assert actuator?

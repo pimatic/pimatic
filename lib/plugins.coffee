@@ -1,40 +1,98 @@
 npm = require 'npm'
 fs = require 'fs'
+Q = require 'q'
+util = require 'util'
+logger = require './logger'
 
 class PluginManager
 
-  loadPlugin: (env, name, cb) ->
-    self = this
-    cwd = process.cwd()
+  # Loads the given plugin by name
+  loadPlugin: (env, name) ->
+ 
+    return Q.fcall =>     
+      # If the plugin folder already exist
+      promise = 
+        if @existsPlugin name 
+          # just installing the dependencies
+          @installDependencies name
+        else 
+          # otherwise install the plugin from the npm repository
+          @installPlugin name
 
-    onComplete = (err) ->
-      if (err) 
-        env.logger.error err
-      else 
-        plugin = (require name) env
-      process.chdir cwd
-      cb err, plugin
-
-    if self.existsPlugin name
-      self.installDependencies name, onComplete
-    else self.installPlugin name, onComplete
-
+      # After installing
+      return promise.then( ->
+        # require the plugin and return it
+        return plugin = (require name) env
+      )
+  # Checks if the plugin folder exists under node_modules
   existsPlugin: (name) ->
-    self = this
-    return fs.existsSync(self.path name)
+    return fs.existsSync(@path name)
 
-  installDependencies: (name, cb) ->
-    self = this
-    npm.load {}, (er, npm) ->
-      npm.prefix = self.path name
-      npm.install cb
+  # Install the plugin dependencies for an existing plugin folder
+  installDependencies: (name, cwd) ->
+    return @_loadNpm().then( (npm) =>
+      npm.prefix = @path name
+      return Q.ninvoke(npm, 'install')
+    )
 
-  installPlugin: (name, cb) ->
-    npm.load {}, (er, npm) ->
-      npm.install name, cb
+  # Install a plugin from the npm repository
+  installPlugin: (name, cwd) ->
+    return @_loadNpm().then( (npm) =>
+      return Q.ninvoke(npm, 'install', name)
+    )
 
   path: (name) ->
     return "#{process.cwd()}/node_modules/#{name}"
+
+  # Returns plugin list of the form:  
+  # 
+  #     {
+  #      'pimatic-cron': 
+  #       { name: 'pimatic-cron',
+  #         description: 'cron plugin for pimatic',
+  #         maintainers: [ '=sweetpi' ],
+  #         url: null,
+  #         keywords: [],
+  #         version: '0.3.2',
+  #         time: '2013-12-30 09:16',
+  #         words: 'pimatic-cron cron plugin for pimatic =sweetpi' },
+  #      'pimatic-filebrowser': 
+  #       { name: ...
+  #       }
+  #      ...
+  #     }
+  # 
+  searchForPlugins: ->
+    return @_loadNpm().then( (npm) =>
+      return Q.ninvoke(npm, 'search', 'pimatic-')
+    )
+
+  _loadNpm : ->
+    return Q.ninvoke(npm, 'load', options = {}).then( (npm) =>
+
+      # console.log util.inspect(npm,
+      #   showHidden: true
+      #   depth: 2
+      # )
+
+      # Don't log to stdout or stderror:
+      npm.registry.log.pause()
+      # Proxy the log stream to our own log:
+      npm.registry.log.on 'log', (msg) ->
+        if msg.level is 'info' or msg.level is 'verbose' or msg.level is 'silly' then return
+        if msg.level is 'error' 
+          logger.log(msg.level, msg.prefix, msg.message)
+        else
+          logger.info("npm #{msg.level}", msg.prefix, msg.message)
+
+      return npm
+    )
+
+  getInstalledPlugins: ->
+    return Q.nfcall(fs.readdir, "./node_modules").then( (modules) =>
+      return plugins = (module for module in modules when module.match(/^pimatic-.*/)?)
+    ) 
+
 
 class Plugin extends require('events').EventEmitter
   name: null
