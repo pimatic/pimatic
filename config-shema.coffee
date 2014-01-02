@@ -7,19 +7,19 @@ module.exports =
   settings:
     locale:
       doc: "The default language"
-      format: String
+      format: ['en', 'de']
       default: "en"
     authentication:
       username:
-        doc: "The Username for http-basic-authentification"
+        doc: "The Username for http-basic-authentication"
         format: String
         default: ""
       password:
-        doc: "The Password for http-basic-authentification"
+        doc: "The Password for http-basic-authentication"
         format: String
         default: ""
       enabled:
-        doc: "Disable http-basic-authentification"
+        doc: "Disable http-basic-authentication"
         format: Boolean
         default: true
     logLevel:
@@ -44,12 +44,18 @@ module.exports =
         doc: "The port of the https-server"
         format: "port"
         default: 443
+      # To generate a privatekey and a certificate run: 
+      # 
+      #     openssl genrsa -out privatekey.pem 1024
+      #     openssl req -new -key privatekey.pem -out request.pem
+      #     openssl x509 -req -in request.pem -signkey privatekey.pem -out certificate.pem
+      # 
       keyFile:
-        doc: "Certification-file in pem-format"
+        doc: "Privatekey-file"
         format: String
         default: "./.cert/privatekey.pem"
       certFile:
-        doc: "Privatekey-file"
+        doc: "Certification-file in pem-format"
         format: String
         default: "./.cert/certificate.pem"
   plugins:
