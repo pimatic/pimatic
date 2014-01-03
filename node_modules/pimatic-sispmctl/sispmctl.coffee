@@ -49,7 +49,11 @@ module.exports = (env) ->
     getState: () ->
       self = this
       unless self._state?
-        command = "#{backend.config.binary} -qng #{self.config.outletUnit}"
+        # Built the sispmctrl command to get the outlet status
+        command = "#{backend.config.binary} -q -n" # quiet and numerical
+        command += " -d #{self.config.device}" # select the device
+        command += " -g #{self.config.outletUnit}" # get status of the outlet
+        # and execue it.
         return exec(command).then( (streams) ->
           stdout = streams[0]
           stderr = streams[1]
@@ -69,9 +73,12 @@ module.exports = (env) ->
     changeStateTo: (state) ->
       self = this
       if self.state is state then return Q.fcall -> true
-      param = (if state then "-o" else "-f")
-      param += " " + self.config.outletUnit
-      command = "#{backend.config.binary} #{param}"
+      # Built the sispmctrl command
+      command = "#{backend.config.binary}"
+      command += " -d #{self.config.device}" # select the device
+      command += " " + (if state then "-o" else "-f") # do on or off
+      command += " " + self.config.outletUnit # select the outlet
+      # and execue it.
       return exec(command).then( (streams) ->
         stdout = streams[0]
         stderr = streams[1]
