@@ -30,14 +30,14 @@ class PluginManager
 
   # Install the plugin dependencies for an existing plugin folder
   installDependencies: (name, cwd) ->
-    return @_loadNpm().then( (npm) =>
+    return @_getNpm().then( (npm) =>
       npm.prefix = @path name
       return Q.ninvoke(npm, 'install')
     )
 
   # Install a plugin from the npm repository
   installPlugin: (name, cwd) ->
-    return @_loadNpm().then( (npm) =>
+    return @_getNpm().then( (npm) =>
       return Q.ninvoke(npm, 'install', name)
     )
 
@@ -63,11 +63,17 @@ class PluginManager
   #     }
   # 
   searchForPlugins: ->
-    return @_loadNpm().then( (npm) =>
+    return @_getNpm().then( (npm) =>
       return Q.ninvoke(npm, 'search', 'pimatic-')
     )
 
-  _loadNpm : ->
+  _getNpm: ->
+    return if @npm then Q.fcall => @npm
+    else @_loadNpm().then( (npm) =>
+      return @npm = npm
+    )
+
+  _loadNpm: ->
     return Q.ninvoke(npm, 'load', options = {}).then( (npm) =>
 
       # console.log util.inspect(npm,
