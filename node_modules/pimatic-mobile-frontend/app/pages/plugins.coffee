@@ -72,7 +72,8 @@ $(document).on "pageinit", '#plugins-browse', (event) ->
   $('#plugin-browse-list').listview("refresh")
 
   $('#plugin-browse-list').on "click", '#add-to-config', (event, ui) ->
-    plugin = $(this).parent('li').data('plugin')
+    li = $(this).parent('li')
+    plugin = li.data('plugin')
     $.post("/api/plugins/add", plugins: [plugin.name])
       .done( (data) ->
         text = null
@@ -80,6 +81,7 @@ $(document).on "pageinit", '#plugins-browse', (event) ->
           text = __('Added %s to the config. Plugin will be auto installed on next start.', 
                     plugin.name)
           text +=  " " + __("Please restart pimatic.")
+          li.find('.add-to-config').addClass('ui-disabled') 
         else
           text = __('The plugin %s was already in the config.', plugin.name)
         showToast text
@@ -96,5 +98,5 @@ addBrowsePlugin = (plugin) ->
   li.find('.version').text(plugin.version)
   li.find('.active').text(if plugin.active then __('activated') else '')
   li.find('.installed').text(if plugin.installed then __('installed') else '')
-  if plugin.installed then li.find('#add-to-config').attr('disabled', 'disabled') 
+  if plugin.installed then li.find('.add-to-config').addClass('ui-disabled') 
   $('#plugin-browse-list').append li
