@@ -27,7 +27,7 @@ module.exports = (env) ->
       @maindir = path.resolve __dirname, '..'
 
       @ruleManager = new env.rules.RuleManager this, @config.rules
-      @pluginManager = new env.plugins.PluginManager this
+      @pluginManager = new env.plugins.PluginManager env, this
 
       @setupExpressApp()
 
@@ -154,7 +154,7 @@ module.exports = (env) ->
 
           chain = chain.then( () =>
             env.logger.info "loading plugin: \"#{pConf.plugin}\"..."
-            return @pluginManager.loadPlugin(env, "pimatic-#{pConf.plugin}").then( (plugin) =>
+            return @pluginManager.loadPlugin("pimatic-#{pConf.plugin}").then( (plugin) =>
               checkPluginDependencies pConf, plugin
               @registerPlugin(plugin, pConf)
             ).catch( (error) ->

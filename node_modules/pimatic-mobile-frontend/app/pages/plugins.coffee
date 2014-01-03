@@ -5,20 +5,33 @@ installedPlugins = null
 allPlugins = null
 
 $(document).on "pageinit", '#plugins', (event) ->
+  # Show that we are loading:
+  li = $ $('#loading-template').html()
+  $('#plugin-list').append(li).listview("refresh")
+  $('#plugin-browse-list').append(li)
+
+  # Get all installed Plugins
   $.get("/api/plugins/installed")
+    # when done
     .done( (data) ->
+      # save the plugins in installedPlguins
       installedPlugins = data.plugins
+      # and add them to the list.
       addPlugin(p) for p in data.plugins
       $('#plugin-list').listview("refresh")
       $("#plugin-list input[type='checkbox']").checkboxradio()
     ).fail( ajaxAlertFail
     ).complete( ->
+      showToast __('Searching for plugin updates')
       $.ajax(
         url: "/api/plugins/search"
-        timeout: 20000 #ms
+        timeout: 30000 #ms
       ).done( (data) ->
         allPlugins = data.plugins
-        addBrowsePlugin(p) for p in data.plugins
+        for p in data.plugins
+          addBrowsePlugin(p)
+          if p.isNewer
+            $("\#plugin-#{plugin.name} .update-available").text __('update available')
         if $('#plugin-browse-list').data('mobileListview')?
           $('#plugin-browse-list').listview("refresh")
       ).fail(ajaxAlertFail)
@@ -55,7 +68,7 @@ addPlugin = (plugin) ->
   li.find('.description').text(plugin.description)
   li.find('.version').text(plugin.version)
   li.find('.homepage').text(plugin.homepage).attr('href', plugin.homepage)
-  li.find('.active').text(if plugin.active then __('activated') else '')
+  li.find('.active').text(if plugin.active then __('active') else '')
   li.find("input[type='checkbox']").attr('id', checkBoxId).attr('name', checkBoxId)
     .data('plugin-name', plugin.name)
   $('#plugin-list').append li
@@ -96,7 +109,7 @@ addBrowsePlugin = (plugin) ->
   li.find('.name').text(plugin.name)
   li.find('.description').text(plugin.description)
   li.find('.version').text(plugin.version)
-  li.find('.active').text(if plugin.active then __('activated') else '')
+  li.find('.active').text(if plugin.active then __('active') else '')
   li.find('.installed').text(if plugin.installed then __('installed') else '')
   if plugin.installed then li.find('.add-to-config').addClass('ui-disabled') 
   $('#plugin-browse-list').append li

@@ -6,10 +6,11 @@ script#plugin-template(type='text/template')
           span.name
           | 
           span.version
+          | 
+          span.active
         //-p
         //-  a.homepage(data-role="none")
         p.description
-        p.active
         input(type='checkbox')
 script#plugin-browse-template(type='text/template')
   li
@@ -19,11 +20,17 @@ script#plugin-browse-template(type='text/template')
           span.name
           | 
           span.version
+          | 
+          span.installed
+          | 
+          span.update-available
         //-p
         //-  a.homepage(data-role="none")
         p.description
-        p.installed
     a.add-to-config()=__('Add')
+script#lading-template(type='text/template')
+  li.loading=__('Loading') + "..."
+
 div#plugins(data-role='page')
   div(data-theme='a', data-role='header', data-position='fixed')
     a(href='#index', data-role='button', data-icon='arrow-l', data-iconpos='left', data-inline='true')=__('Back')

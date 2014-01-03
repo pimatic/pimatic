@@ -1,10 +1,11 @@
 __ = require('i18n').__
 Q = require 'q'
 fs = require 'fs'
+semver = require 'semver'
 
 module.exports = (env) ->
 
-  class RestFrontend extends env.plugins.Plugin
+  class RestApi extends env.plugins.Plugin
     config: null
 
     init: (app, framework, @config) =>
@@ -90,9 +91,7 @@ module.exports = (env) ->
 
           pluginList = 
             for name in plugins
-              packageJson = JSON.parse(
-                fs.readFileSync("./node_modules/#{name}/package.json", 'utf-8')
-              )
+              packageJson = framework.pluginManager.getInstalledPackageInfo name
               name = name.replace 'pimatic-', ''
               loadedPlugin = framework.getPlugin name
               listEntry = 
@@ -114,13 +113,18 @@ module.exports = (env) ->
             for k, p of plugins 
               name = p.name.replace 'pimatic-', ''
               loadedPlugin = framework.getPlugin name
-              installed = fs.existsSync "#{framework.maindir}/node_modules/#{p.name}" 
+              installed = framework.pluginManager.isInstalled()
+              packageJson = (
+                if installed then framework.pluginManager.getInstalledPackageInfo p.name
+                else null
+              )
               listEntry =
                 name: name
                 description: p.description
                 version: p.version
                 installed: installed
                 active: loadedPlugin?
+                isNewer: (if installed then semver.gt(p.version, packageJson.version) else false)
 
 
           sendSuccessResponse res, { plugins: pluginList}
@@ -152,4 +156,4 @@ module.exports = (env) ->
         framework.saveConfig()
         sendSuccessResponse res, removed: removed
         
-  return new RestFrontend
+  return new RestApi

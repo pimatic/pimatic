@@ -4,15 +4,19 @@ Q = require 'q'
 util = require 'util'
 logger = require './logger'
 
+env = null
+
 class PluginManager
 
+  constructor: (_env, @framework) ->
+    env = _env
+
   # Loads the given plugin by name
-  loadPlugin: (env, name) ->
- 
+  loadPlugin: (name) ->
     return Q.fcall =>     
       # If the plugin folder already exist
       promise = 
-        if @existsPlugin name 
+        if @isInstalled name 
           # just installing the dependencies
           @installDependencies name
         else 
@@ -25,7 +29,7 @@ class PluginManager
         return plugin = (require name) env
       )
   # Checks if the plugin folder exists under node_modules
-  existsPlugin: (name) ->
+  isInstalled: (name) ->
     return fs.existsSync(@path name)
 
   # Install the plugin dependencies for an existing plugin folder
@@ -42,7 +46,7 @@ class PluginManager
     )
 
   path: (name) ->
-    return "#{process.cwd()}/node_modules/#{name}"
+    return "#{@framework.maindir}/node_modules/#{name}"
 
   # Returns plugin list of the form:  
   # 
@@ -95,9 +99,14 @@ class PluginManager
     )
 
   getInstalledPlugins: ->
-    return Q.nfcall(fs.readdir, "./node_modules").then( (modules) =>
+    return Q.nfcall(fs.readdir, "#{@framework.maindir}/node_modules").then( (modules) =>
       return plugins = (module for module in modules when module.match(/^pimatic-.*/)?)
     ) 
+
+  getInstalledPackageInfo: (name) ->
+    return JSON.parse fs.readFileSync(
+      "#{@path name}/package.json", 'utf-8'
+    )
 
 
 class Plugin extends require('events').EventEmitter
