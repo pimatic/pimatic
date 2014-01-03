@@ -112,10 +112,16 @@ module.exports = (env) ->
         framework.pluginManager.searchForPlugins().then( (plugins) =>
           pluginList =
             for k, p of plugins 
+              name = p.name.replace 'pimatic-', ''
+              loadedPlugin = framework.getPlugin name
+              installed = fs.existsSync "#{framework.maindir}/node_modules/#{p.name}" 
               listEntry =
-                name: p.name.replace 'pimatic-', ''
+                name: name
                 description: p.description
                 version: p.version
+                installed: installed
+                active: loadedPlugin?
+
 
           sendSuccessResponse res, { plugins: pluginList}
         ).catch( (error) =>

@@ -4,7 +4,6 @@
 installedPlugins = null
 allPlugins = null
 
-
 $(document).on "pageinit", '#plugins', (event) ->
   $.get("/api/plugins/installed")
     .done( (data) ->
@@ -20,7 +19,7 @@ $(document).on "pageinit", '#plugins', (event) ->
       ).done( (data) ->
         allPlugins = data.plugins
         addBrowsePlugin(p) for p in data.plugins
-        if $('#plugin-browse-list').data('listview')?
+        if $('#plugin-browse-list').data('mobileListview')?
           $('#plugin-browse-list').listview("refresh")
       ).fail(ajaxAlertFail)
     )
@@ -56,7 +55,7 @@ addPlugin = (plugin) ->
   li.find('.description').text(plugin.description)
   li.find('.version').text(plugin.version)
   li.find('.homepage').text(plugin.homepage).attr('href', plugin.homepage)
-  li.find('.active').text(if plugin.active then __('activated') else __('deactived'))
+  li.find('.active').text(if plugin.active then __('activated') else '')
   li.find("input[type='checkbox']").attr('id', checkBoxId).attr('name', checkBoxId)
     .data('plugin-name', plugin.name)
   $('#plugin-list').append li
@@ -69,6 +68,8 @@ $(document).on "pagebeforeshow", '#plugins', (event) ->
 # ---------
 
 $(document).on "pageinit", '#plugins-browse', (event) ->
+
+  $('#plugin-browse-list').listview("refresh")
 
   $('#plugin-browse-list').on "click", '#add-to-config', (event, ui) ->
     plugin = $(this).parent('li').data('plugin')
@@ -93,5 +94,7 @@ addBrowsePlugin = (plugin) ->
   li.find('.name').text(plugin.name)
   li.find('.description').text(plugin.description)
   li.find('.version').text(plugin.version)
-  #li.find('.installed').text(if plugin.active then __('activated') else __('deactived'))
+  li.find('.active').text(if plugin.active then __('activated') else '')
+  li.find('.installed').text(if plugin.installed then __('installed') else '')
+  if plugin.installed then li.find('#add-to-config').attr('disabled', 'disabled') 
   $('#plugin-browse-list').append li

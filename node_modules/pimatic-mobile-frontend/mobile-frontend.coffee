@@ -84,21 +84,6 @@ module.exports = (env) ->
           # function to create the app manifest
           createAppManifest = =>
 
-            # helper to get last modified date of all files in the plugin directory:
-            lastModified = (dir) ->
-              lastM = new Date(0)
-              files = fs.readdirSync(dir)
-              for own i, file of files
-                name = "#{dir}/#{file}"
-                stats = fs.statSync(name);
-                if stats.isDirectory()
-                  l = lastModified name
-                  if l > lastM then lastM = l
-                else
-                  stats = fs.statSync name
-                  if stats.mtime > lastM then lastM = stats.mtime
-              return lastM
-
             # Collect all files in "public/assets"
             assets = ( "/assets/#{f}" for f in fs.readdirSync relPath 'public/assets' )
 
@@ -111,7 +96,7 @@ module.exports = (env) ->
               ]
               network: ['*']
               fallback: []
-              lastModified: lastModified __dirname
+              lastModified: new Date()
             )
 
           # Save the manifest. We don't need to generate it each request, because
