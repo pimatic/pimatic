@@ -36,6 +36,11 @@ module.exports = (env) ->
       @id = "clock"
       @name = "clock"
 
+      @getSensorValue('time').then( (time) =>
+        env.logger.info "the time is: #{time}"
+      )
+      return 
+
     # Only provides a date object as sensor value
     getSensorValuesNames: ->
       "time"
