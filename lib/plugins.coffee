@@ -3,6 +3,7 @@ fs = require 'fs'
 Q = require 'q'
 util = require 'util'
 logger = require './logger'
+assert = require 'cassert'
 
 env = null
 
@@ -30,22 +31,30 @@ class PluginManager
       )
   # Checks if the plugin folder exists under node_modules
   isInstalled: (name) ->
+    assert name?
+    assert name.match(/^pimatic-.*$/)?
     return fs.existsSync(@path name)
 
   # Install the plugin dependencies for an existing plugin folder
-  installDependencies: (name, cwd) ->
+  installDependencies: (name) ->
+    assert name?
+    assert name.match(/^pimatic-.*$/)?
     return @_getNpm().then( (npm) =>
       npm.prefix = @path name
       return Q.ninvoke(npm, 'install')
     )
 
   # Install a plugin from the npm repository
-  installPlugin: (name, cwd) ->
+  installPlugin: (name) ->
+    assert name?
+    assert name.match(/^pimatic-.*$/)?
     return @_getNpm().then( (npm) =>
       return Q.ninvoke(npm, 'install', name)
     )
 
   path: (name) ->
+    assert name?
+    assert name.match(/^pimatic-.*$/)?
     return "#{@framework.maindir}/node_modules/#{name}"
 
   # Returns plugin list of the form:  
@@ -104,6 +113,8 @@ class PluginManager
     ) 
 
   getInstalledPackageInfo: (name) ->
+    assert name?
+    assert name.match(/^pimatic-.*$/)?
     return JSON.parse fs.readFileSync(
       "#{@path name}/package.json", 'utf-8'
     )

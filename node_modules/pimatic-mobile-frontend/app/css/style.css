@@ -148,7 +148,8 @@ li.sortable-placeholder{
   border-top: 0px;
 }
 
-#plugin-list .active, #plugin-browse-list .active, #plugin-browse-list .installed{
+#plugin-list .active, #plugin-browse-list .active, #plugin-browse-list .update-available, 
+#plugin-browse-list .installed{
   -webkit-border-radius: 6px;
   -moz-border-radius: 6px;
   border-radius: 6px;
@@ -156,14 +157,19 @@ li.sortable-placeholder{
   padding: 3px;
 }
 
-#plugin-list .active, #plugin-browse-list .active {
+#plugin-list .active, #plugin-browse-list .active{
   background: #339900;
   color: white;
 }
 
-
 #plugin-browse-list .installed {
   background: gray;
+  color: white;
+}
+
+#plugin-list .update-available{
+  background: #FFCC00;
+  color: white;
 }
 
 

@@ -113,7 +113,7 @@ module.exports = (env) ->
             for k, p of plugins 
               name = p.name.replace 'pimatic-', ''
               loadedPlugin = framework.getPlugin name
-              installed = framework.pluginManager.isInstalled()
+              installed = framework.pluginManager.isInstalled p.name
               packageJson = (
                 if installed then framework.pluginManager.getInstalledPackageInfo p.name
                 else null

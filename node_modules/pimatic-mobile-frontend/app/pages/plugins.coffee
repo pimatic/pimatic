@@ -14,7 +14,8 @@ $(document).on "pageinit", '#plugins', (event) ->
   $.get("/api/plugins/installed")
     # when done
     .done( (data) ->
-      # save the plugins in installedPlguins
+      $('#plugin-list').empty()
+      # save the plugins in installedPlugins
       installedPlugins = data.plugins
       # and add them to the list.
       addPlugin(p) for p in data.plugins
@@ -27,13 +28,15 @@ $(document).on "pageinit", '#plugins', (event) ->
         url: "/api/plugins/search"
         timeout: 30000 #ms
       ).done( (data) ->
+        $('#plugin-browse-list').empty()
         allPlugins = data.plugins
         for p in data.plugins
           addBrowsePlugin(p)
           if p.isNewer
-            $("\#plugin-#{plugin.name} .update-available").text __('update available')
+            $("#plugin-#{plugin.name} .update-available").text __('update available')
         if $('#plugin-browse-list').data('mobileListview')?
           $('#plugin-browse-list').listview("refresh")
+        disableInstallButtons()
       ).fail(ajaxAlertFail)
     )
 
@@ -73,6 +76,14 @@ addPlugin = (plugin) ->
     .data('plugin-name', plugin.name)
   $('#plugin-list').append li
 
+
+disableInstallButtons = () ->
+  if allPlugins?
+    for p in allPlugins
+      if p.installed 
+        $("#plugin-browse-list #plugin-browse-#{p.name} .add-to-config").addClass('ui-disabled') 
+  return
+
 $(document).on "pagebeforeshow", '#plugins', (event) ->
   $('#select-plugin-action').val('select').selectmenu('refresh')
 
@@ -83,6 +94,7 @@ $(document).on "pagebeforeshow", '#plugins', (event) ->
 $(document).on "pageinit", '#plugins-browse', (event) ->
 
   $('#plugin-browse-list').listview("refresh")
+  disableInstallButtons()
 
   $('#plugin-browse-list').on "click", '#add-to-config', (event, ui) ->
     li = $(this).parent('li')
@@ -111,5 +123,4 @@ addBrowsePlugin = (plugin) ->
   li.find('.version').text(plugin.version)
   li.find('.active').text(if plugin.active then __('active') else '')
   li.find('.installed').text(if plugin.installed then __('installed') else '')
-  if plugin.installed then li.find('.add-to-config').addClass('ui-disabled') 
   $('#plugin-browse-list').append li
