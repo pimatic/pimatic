@@ -1,5 +1,6 @@
 npm = require 'npm'
 fs = require 'fs'
+path = require 'path'
 Q = require 'q'
 util = require 'util'
 logger = require './logger'
@@ -80,12 +81,42 @@ class PluginManager
       return Q.ninvoke(npm, 'search', 'pimatic-')
     )
 
-  _getNpm: ->
-    return if @npm then Q.fcall => @npm
-    else @_loadNpm().then( (npm) =>
-      return @npm = npm
+  isPimaticOutdated: ->
+    return @_getNpm().then( (npm) =>
+      # outdated does only work, if pimatic is installed as node module
+      nodeModulesFolder = path.resolve @framework.maindir, '..'
+      if path.basename(nodeModulesFolder) isnt 'node_modules'
+        throw new Error('pimatic is not in an node_modules folder. Update check does not work.')
+      # set prefix to the parent directory of the node_modules folder
+      npm.prefix = path.resolve nodeModulesFolder , '..'
+      return Q.ninvoke(npm, 'outdated', 'pimatic').then( (result)->
+        if result.length is 1
+          result = result[0]
+          return info =
+            current: result[2]
+            latest: result[3]
+        else return false
+      )
     )
 
+  arePluginsOutdated: ->
+    return @_getNpm().then( (npm) =>
+      return @getInstalledPlugins( (plugins) =>
+        return Q.ninvoke(npm, 'outdated', plugins...)
+      )
+    )
+
+  _getNpm: ->
+    return (
+      if @npm then Q.fcall => @npm
+      else @_loadNpm().then (npm) => @npm = npm
+    ).then( (npm) =>
+      # Reset prefix to maindir
+      @npm.prefix = @framework.maindir
+      return npm
+    )
+
+  
   _loadNpm: ->
     return Q.ninvoke(npm, 'load', options = {}).then( (npm) =>
 
