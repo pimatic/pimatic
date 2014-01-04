@@ -14,3 +14,7 @@ module.exports =
     doc: "timeout for requests"
     format: Number
     default: 3000
+  debug:
+    doc: "print out debug info with debug log level"
+    format: Boolean
+    default: false

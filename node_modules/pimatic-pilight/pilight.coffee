@@ -57,7 +57,7 @@ module.exports = (env) ->
     send: (jsonMsg) ->
       success = false
       if @state isnt "unconnected"
-        env.logger.debug "pilight send: ", JSON.stringify(jsonMsg, null, " ")
+        env.logger.debug("pilight send: ", JSON.stringify(jsonMsg, null, " ")) if @config.debug
         @client.write JSON.stringify(jsonMsg) + "\n", 'utf8'
         success = true
       return success
@@ -92,7 +92,7 @@ module.exports = (env) ->
       return deferred.promise
 
     onReceive: (jsonMsg) ->
-      env.logger.debug "pilight received: ", JSON.stringify(jsonMsg, null, " ")
+      env.logger.debug("pilight received: ", JSON.stringify(jsonMsg, null, " ")) if @config.debug
       switch @state
         when "welcome"
           if jsonMsg.message is "accept client"
