@@ -38,13 +38,11 @@ class MemoryTransport extends winston.Transport
     @emit "log", msg
     callback null, true
 
-
-
 logger = new (winston.Logger)(
   transports: [
     new (winston.transports.Console)(
       level: 'debug'
-      colorize: true
+      colorize: not process.env['PIMATIC_DAEMONIZED']?
     ),
     new MemoryTransport()
   ]
