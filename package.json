@@ -41,7 +41,8 @@
     "proxyquire": "~0.5.2",
     "CBuffer": "~0.1.4",
     "semver": "~2.2.1",
-    "fs.extra": "~1.2.1"
+    "fs.extra": "~1.2.1",
+    "start-stop-daemon": "~0.1.0"
   },
   "devDependencies": {
     "grunt": "~0.4.2",
