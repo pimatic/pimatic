@@ -23,7 +23,6 @@
     "type": "git",
     "url": "git://github.com/sweetpi/pimatic.git"
   },
-  "preferGlobal": true,
   "bin": {
     "pimatic": "./main.js"
   },
@@ -41,7 +40,8 @@
     "q": "~0.9.7",
     "proxyquire": "~0.5.2",
     "CBuffer": "~0.1.4",
-    "semver": "~2.2.1"
+    "semver": "~2.2.1",
+    "fs.extra": "~1.2.1"
   },
   "devDependencies": {
     "grunt": "~0.4.2",
