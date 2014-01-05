@@ -54,6 +54,12 @@ class PluginManager
       return Q.ninvoke(npm, 'install', name)
     )
 
+  update: (modules) -> 
+    return @_getNpm().then( (npm) =>
+      npm.prefix = @modulesParentDir
+      return Q.ninvoke(npm, 'update', modules...)
+    )
+
   pathToPlugin: (name) ->
     assert name?
     assert name.match(/^pimatic-.*$/)?
