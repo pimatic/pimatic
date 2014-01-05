@@ -12,6 +12,7 @@ class PluginManager
 
   constructor: (_env, @framework) ->
     env = _env
+    @modulesParentDir = path.resolve @framework.maindir, '../../'
 
   # Loads the given plugin by name
   loadPlugin: (name) ->
@@ -26,22 +27,22 @@ class PluginManager
           @installPlugin name
 
       # After installing
-      return promise.then( ->
+      return promise.then( =>
         # require the plugin and return it
-        return plugin = (require name) env
+        return plugin = (require name) env, module
       )
   # Checks if the plugin folder exists under node_modules
   isInstalled: (name) ->
     assert name?
     assert name.match(/^pimatic-.*$/)?
-    return fs.existsSync(@path name)
+    return fs.existsSync(@pathToPlugin name)
 
   # Install the plugin dependencies for an existing plugin folder
   installDependencies: (name) ->
     assert name?
     assert name.match(/^pimatic-.*$/)?
     return @_getNpm().then( (npm) =>
-      npm.prefix = @path name
+      npm.prefix = @pathToPlugin name
       return Q.ninvoke(npm, 'install')
     )
 
@@ -50,13 +51,14 @@ class PluginManager
     assert name?
     assert name.match(/^pimatic-.*$/)?
     return @_getNpm().then( (npm) =>
+      npm.prefix = @modulesParentDir
       return Q.ninvoke(npm, 'install', name)
     )
 
-  path: (name) ->
+  pathToPlugin: (name) ->
     assert name?
     assert name.match(/^pimatic-.*$/)?
-    return "#{@framework.maindir}/node_modules/#{name}"
+    return path.resolve @framework.maindir, "..", name
 
   # Returns plugin list of the form:  
   # 
@@ -84,11 +86,10 @@ class PluginManager
   isPimaticOutdated: ->
     return @_getNpm().then( (npm) =>
       # outdated does only work, if pimatic is installed as node module
-      nodeModulesFolder = path.resolve @framework.maindir, '..'
-      if path.basename(nodeModulesFolder) isnt 'node_modules'
+      if path.basename(path.resolve @framework.maindir,  ) isnt 'node_modules'
         throw new Error('pimatic is not in an node_modules folder. Update check does not work.')
       # set prefix to the parent directory of the node_modules folder
-      npm.prefix = path.resolve nodeModulesFolder , '..'
+      npm.prefix = @modulesParentDir
       return Q.ninvoke(npm, 'outdated', 'pimatic').then( (result)->
         if result.length is 1
           result = result[0]
@@ -112,7 +113,7 @@ class PluginManager
       else @_loadNpm().then (npm) => @npm = npm
     ).then( (npm) =>
       # Reset prefix to maindir
-      @npm.prefix = @framework.maindir
+      @npm.prefix = @modulesParentDir
       return npm
     )
 
@@ -139,7 +140,7 @@ class PluginManager
     )
 
   getInstalledPlugins: ->
-    return Q.nfcall(fs.readdir, "#{@framework.maindir}/node_modules").then( (modules) =>
+    return Q.nfcall(fs.readdir, "#{@framework.maindir}").then( (modules) =>
       return plugins = (module for module in modules when module.match(/^pimatic-.*/)?)
     ) 
 
