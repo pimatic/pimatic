@@ -146,7 +146,7 @@ To daemonize pimatic you can run:
 
 You can also use `status`, `stop`, `restart`.
 
-To damonize pimatic you can run:
+To daemonize pimatic you can run:
 
     cd pimatic-app
     sudo ./node_modules/pimatic/main.js start
