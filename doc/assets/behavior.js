@@ -13,9 +13,10 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "commentsOnly": true,
           "name": "Markdown"
         },
-        "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/README.md",
+        "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/README.md",
         "projectPath": "README.md",
         "targetPath": "index",
+        "pageTitle": "index",
         "firstHeader": {
           "type": "heading",
           "data": {
@@ -229,12 +230,17 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         "language": {
           "nameMatchers": [".coffee", "Cakefile"],
           "pygmentsLexer": "coffee-script",
+          "multiLineComment": ["###*", " *", " ###", "###", "#", "###"],
+          "strictMultiLineEnd": false,
           "singleLineComment": ["#"],
+          "ignorePrefix": "}",
+          "foldPrefix": "^",
           "name": "CoffeeScript"
         },
-        "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/config-shema.coffee",
+        "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/config-shema.coffee",
         "projectPath": "config-shema.coffee",
         "targetPath": "config-shema",
+        "pageTitle": "config-shema",
         "firstHeader": {
           "type": "heading",
           "data": {
@@ -263,12 +269,17 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "language": {
               "nameMatchers": [".coffee", "Cakefile"],
               "pygmentsLexer": "coffee-script",
+              "multiLineComment": ["###*", " *", " ###", "###", "#", "###"],
+              "strictMultiLineEnd": false,
               "singleLineComment": ["#"],
+              "ignorePrefix": "}",
+              "foldPrefix": "^",
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/lib/actions.coffee",
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/lib/actions.coffee",
             "projectPath": "lib/actions.coffee",
             "targetPath": "lib/actions",
+            "pageTitle": "lib/actions",
             "title": "actions"
           },
           "depth": 2,
@@ -279,12 +290,17 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "language": {
               "nameMatchers": [".coffee", "Cakefile"],
               "pygmentsLexer": "coffee-script",
+              "multiLineComment": ["###*", " *", " ###", "###", "#", "###"],
+              "strictMultiLineEnd": false,
               "singleLineComment": ["#"],
+              "ignorePrefix": "}",
+              "foldPrefix": "^",
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/lib/actuators.coffee",
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/lib/actuators.coffee",
             "projectPath": "lib/actuators.coffee",
             "targetPath": "lib/actuators",
+            "pageTitle": "lib/actuators",
             "title": "actuators"
           },
           "depth": 2,
@@ -295,12 +311,17 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "language": {
               "nameMatchers": [".coffee", "Cakefile"],
               "pygmentsLexer": "coffee-script",
+              "multiLineComment": ["###*", " *", " ###", "###", "#", "###"],
+              "strictMultiLineEnd": false,
               "singleLineComment": ["#"],
+              "ignorePrefix": "}",
+              "foldPrefix": "^",
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/lib/framework.coffee",
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/lib/framework.coffee",
             "projectPath": "lib/framework.coffee",
             "targetPath": "lib/framework",
+            "pageTitle": "lib/framework",
             "title": "framework"
           },
           "depth": 2,
@@ -329,12 +350,17 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "language": {
               "nameMatchers": [".coffee", "Cakefile"],
               "pygmentsLexer": "coffee-script",
+              "multiLineComment": ["###*", " *", " ###", "###", "#", "###"],
+              "strictMultiLineEnd": false,
               "singleLineComment": ["#"],
+              "ignorePrefix": "}",
+              "foldPrefix": "^",
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/lib/helper.coffee",
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/lib/helper.coffee",
             "projectPath": "lib/helper.coffee",
             "targetPath": "lib/helper",
+            "pageTitle": "lib/helper",
             "title": "helper"
           },
           "depth": 2,
@@ -345,12 +371,17 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "language": {
               "nameMatchers": [".coffee", "Cakefile"],
               "pygmentsLexer": "coffee-script",
+              "multiLineComment": ["###*", " *", " ###", "###", "#", "###"],
+              "strictMultiLineEnd": false,
               "singleLineComment": ["#"],
+              "ignorePrefix": "}",
+              "foldPrefix": "^",
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/lib/logger.coffee",
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/lib/logger.coffee",
             "projectPath": "lib/logger.coffee",
             "targetPath": "lib/logger",
+            "pageTitle": "lib/logger",
             "title": "logger"
           },
           "depth": 2,
@@ -361,12 +392,17 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "language": {
               "nameMatchers": [".coffee", "Cakefile"],
               "pygmentsLexer": "coffee-script",
+              "multiLineComment": ["###*", " *", " ###", "###", "#", "###"],
+              "strictMultiLineEnd": false,
               "singleLineComment": ["#"],
+              "ignorePrefix": "}",
+              "foldPrefix": "^",
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/lib/plugins.coffee",
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/lib/plugins.coffee",
             "projectPath": "lib/plugins.coffee",
             "targetPath": "lib/plugins",
+            "pageTitle": "lib/plugins",
             "title": "plugins"
           },
           "depth": 2,
@@ -377,12 +413,17 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "language": {
               "nameMatchers": [".coffee", "Cakefile"],
               "pygmentsLexer": "coffee-script",
+              "multiLineComment": ["###*", " *", " ###", "###", "#", "###"],
+              "strictMultiLineEnd": false,
               "singleLineComment": ["#"],
+              "ignorePrefix": "}",
+              "foldPrefix": "^",
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/lib/rules.coffee",
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/lib/rules.coffee",
             "projectPath": "lib/rules.coffee",
             "targetPath": "lib/rules",
+            "pageTitle": "lib/rules",
             "firstHeader": {
               "type": "heading",
               "data": {
@@ -574,12 +615,17 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "language": {
               "nameMatchers": [".coffee", "Cakefile"],
               "pygmentsLexer": "coffee-script",
+              "multiLineComment": ["###*", " *", " ###", "###", "#", "###"],
+              "strictMultiLineEnd": false,
               "singleLineComment": ["#"],
+              "ignorePrefix": "}",
+              "foldPrefix": "^",
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/lib/sensors.coffee",
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/lib/sensors.coffee",
             "projectPath": "lib/sensors.coffee",
             "targetPath": "lib/sensors",
+            "pageTitle": "lib/sensors",
             "title": "sensors"
           },
           "depth": 2,
@@ -597,1109 +643,22 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         }
       ]
     }, {
-      "type": "folder",
-      "data": {
-        "path": "node_modules",
-        "title": "node_modules"
-      },
-      "depth": 1,
-      "children": [
-        {
-          "type": "folder",
-          "data": {
-            "path": "node_modules/pimatic-cron",
-            "title": "pimatic-cron"
-          },
-          "depth": 2,
-          "children": [
-            {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".md"],
-                  "commentsOnly": true,
-                  "name": "Markdown"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-cron/README.md",
-                "projectPath": "node_modules/pimatic-cron/README.md",
-                "targetPath": "node_modules/pimatic-cron/README",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "pimatic cron plugin",
-                    "slug": "pimatic-cron-plugin",
-                    "isFileHeader": true
-                  },
-                  "depth": 1,
-                  "children": [
-                    {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Provided predicates",
-                        "slug": "provided-predicates"
-                      },
-                      "depth": 2
-                    }
-                  ]
-                },
-                "title": "pimatic cron plugin"
-              },
-              "depth": 3,
-              "outline": [
-                {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Provided predicates",
-                    "slug": "provided-predicates"
-                  },
-                  "depth": 2
-                }
-              ]
-            }, {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".coffee", "Cakefile"],
-                  "pygmentsLexer": "coffee-script",
-                  "singleLineComment": ["#"],
-                  "name": "CoffeeScript"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-cron/cron.coffee",
-                "projectPath": "node_modules/pimatic-cron/cron.coffee",
-                "targetPath": "node_modules/pimatic-cron/cron",
-                "title": "cron"
-              },
-              "depth": 3,
-              "outline": [
-                {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Dependencies",
-                    "slug": "dependencies"
-                  },
-                  "depth": 2
-                }, {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "The ClockBackend",
-                    "slug": "the-clockbackend"
-                  },
-                  "depth": 2
-                }, {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "The Clock-Actuator",
-                    "slug": "the-clock-actuator"
-                  },
-                  "depth": 2
-                }
-              ]
-            }
-          ]
-        }, {
-          "type": "folder",
-          "data": {
-            "path": "node_modules/pimatic-filebrowser",
-            "title": "pimatic-filebrowser"
-          },
-          "depth": 2,
-          "children": [
-            {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".md"],
-                  "commentsOnly": true,
-                  "name": "Markdown"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-filebrowser/README.md",
-                "projectPath": "node_modules/pimatic-filebrowser/README.md",
-                "targetPath": "node_modules/pimatic-filebrowser/README",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "pimatic filebrowser plugin",
-                    "slug": "pimatic-filebrowser-plugin",
-                    "isFileHeader": true
-                  },
-                  "depth": 1,
-                  "children": [
-                    {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Configuration:",
-                        "slug": "configuration"
-                      },
-                      "depth": 2
-                    }
-                  ]
-                },
-                "title": "pimatic filebrowser plugin"
-              },
-              "depth": 3,
-              "outline": [
-                {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Configuration:",
-                    "slug": "configuration"
-                  },
-                  "depth": 2
-                }
-              ]
-            }, {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".coffee", "Cakefile"],
-                  "pygmentsLexer": "coffee-script",
-                  "singleLineComment": ["#"],
-                  "name": "CoffeeScript"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-filebrowser/filebrowser.coffee",
-                "projectPath": "node_modules/pimatic-filebrowser/filebrowser.coffee",
-                "targetPath": "node_modules/pimatic-filebrowser/filebrowser",
-                "title": "filebrowser"
-              },
-              "depth": 3,
-              "outline": [
-                {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Dependencies",
-                    "slug": "dependencies"
-                  },
-                  "depth": 2
-                }, {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Filebrowser",
-                    "slug": "filebrowser"
-                  },
-                  "depth": 2
-                }
-              ]
-            }
-          ]
-        }, {
-          "type": "folder",
-          "data": {
-            "path": "node_modules/pimatic-gpio",
-            "title": "pimatic-gpio"
-          },
-          "depth": 2,
-          "children": [
-            {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".md"],
-                  "commentsOnly": true,
-                  "name": "Markdown"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-gpio/README.md",
-                "projectPath": "node_modules/pimatic-gpio/README.md",
-                "targetPath": "node_modules/pimatic-gpio/README",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "pimatic gpio plugin",
-                    "slug": "pimatic-gpio-plugin",
-                    "isFileHeader": true
-                  },
-                  "depth": 1,
-                  "children": [
-                    {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Configuration",
-                        "slug": "configuration"
-                      },
-                      "depth": 2
-                    }
-                  ]
-                },
-                "title": "pimatic gpio plugin"
-              },
-              "depth": 3,
-              "outline": [
-                {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Configuration",
-                    "slug": "configuration"
-                  },
-                  "depth": 2
-                }
-              ]
-            }, {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".coffee", "Cakefile"],
-                  "pygmentsLexer": "coffee-script",
-                  "singleLineComment": ["#"],
-                  "name": "CoffeeScript"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-gpio/actuator-config-shema.coffee",
-                "projectPath": "node_modules/pimatic-gpio/actuator-config-shema.coffee",
-                "targetPath": "node_modules/pimatic-gpio/actuator-config-shema",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "gpio actuator configuration options",
-                    "slug": "gpio-actuator-configuration-options",
-                    "isFileHeader": true
-                  },
-                  "depth": 1
-                },
-                "title": "gpio actuator configuration options"
-              },
-              "depth": 3,
-              "outline": []
-            }, {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".coffee", "Cakefile"],
-                  "pygmentsLexer": "coffee-script",
-                  "singleLineComment": ["#"],
-                  "name": "CoffeeScript"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-gpio/gpio.coffee",
-                "projectPath": "node_modules/pimatic-gpio/gpio.coffee",
-                "targetPath": "node_modules/pimatic-gpio/gpio",
-                "title": "gpio"
-              },
-              "depth": 3,
-              "outline": [
-                {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "GpioPresents Sensor",
-                    "slug": "gpiopresents-sensor"
-                  },
-                  "depth": 2
-                }
-              ]
-            }, {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".coffee", "Cakefile"],
-                  "pygmentsLexer": "coffee-script",
-                  "singleLineComment": ["#"],
-                  "name": "CoffeeScript"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-gpio/sensor-config-shema.coffee",
-                "projectPath": "node_modules/pimatic-gpio/sensor-config-shema.coffee",
-                "targetPath": "node_modules/pimatic-gpio/sensor-config-shema",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "gpio actuator configuration options",
-                    "slug": "gpio-actuator-configuration-options",
-                    "isFileHeader": true
-                  },
-                  "depth": 1
-                },
-                "title": "gpio actuator configuration options"
-              },
-              "depth": 3,
-              "outline": []
-            }
-          ]
-        }, {
-          "type": "folder",
-          "data": {
-            "path": "node_modules/pimatic-log-reader",
-            "title": "pimatic-log-reader"
-          },
-          "depth": 2,
-          "children": [
-            {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".md"],
-                  "commentsOnly": true,
-                  "name": "Markdown"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-log-reader/README.md",
-                "projectPath": "node_modules/pimatic-log-reader/README.md",
-                "targetPath": "node_modules/pimatic-log-reader/README",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "pimatic log-reader plugin",
-                    "slug": "pimatic-log-reader-plugin",
-                    "isFileHeader": true
-                  },
-                  "depth": 1,
-                  "children": [
-                    {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Configutation:",
-                        "slug": "configutation"
-                      },
-                      "depth": 2
-                    }, {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Examples:",
-                        "slug": "examples"
-                      },
-                      "depth": 2,
-                      "children": [
-                        {
-                          "type": "heading",
-                          "data": {
-                            "level": 3,
-                            "title": "turn a speacker on and off when a music player starts or stops playing:",
-                            "slug": "turn-a-speacker-on-and-off-when-a-music-player-starts-or-stops-playing"
-                          },
-                          "depth": 3
-                        }, {
-                          "type": "heading",
-                          "data": {
-                            "level": 3,
-                            "title": "turn the printer on when you start printing:",
-                            "slug": "turn-the-printer-on-when-you-start-printing"
-                          },
-                          "depth": 3
-                        }
-                      ]
-                    }
-                  ]
-                },
-                "title": "pimatic log-reader plugin"
-              },
-              "depth": 3,
-              "outline": [
-                {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Configutation:",
-                    "slug": "configutation"
-                  },
-                  "depth": 2
-                }, {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Examples:",
-                    "slug": "examples"
-                  },
-                  "depth": 2,
-                  "children": [
-                    {
-                      "type": "heading",
-                      "data": {
-                        "level": 3,
-                        "title": "turn a speacker on and off when a music player starts or stops playing:",
-                        "slug": "turn-a-speacker-on-and-off-when-a-music-player-starts-or-stops-playing"
-                      },
-                      "depth": 3
-                    }, {
-                      "type": "heading",
-                      "data": {
-                        "level": 3,
-                        "title": "turn the printer on when you start printing:",
-                        "slug": "turn-the-printer-on-when-you-start-printing"
-                      },
-                      "depth": 3
-                    }
-                  ]
-                }
-              ]
-            }, {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".coffee", "Cakefile"],
-                  "pygmentsLexer": "coffee-script",
-                  "singleLineComment": ["#"],
-                  "name": "CoffeeScript"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-log-reader/log-reader.coffee",
-                "projectPath": "node_modules/pimatic-log-reader/log-reader.coffee",
-                "targetPath": "node_modules/pimatic-log-reader/log-reader",
-                "title": "log-reader"
-              },
-              "depth": 3,
-              "outline": [
-                {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Dependencies",
-                    "slug": "dependencies"
-                  },
-                  "depth": 2
-                }, {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "The LogReaderPlugin",
-                    "slug": "the-logreaderplugin"
-                  },
-                  "depth": 2
-                }, {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "LogWatcher Sensor",
-                    "slug": "logwatcher-sensor"
-                  },
-                  "depth": 2
-                }
-              ]
-            }
-          ]
-        }, {
-          "type": "folder",
-          "data": {
-            "path": "node_modules/pimatic-mobile-frontend",
-            "title": "pimatic-mobile-frontend"
-          },
-          "depth": 2,
-          "children": [
-            {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".md"],
-                  "commentsOnly": true,
-                  "name": "Markdown"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-mobile-frontend/README.md",
-                "projectPath": "node_modules/pimatic-mobile-frontend/README.md",
-                "targetPath": "node_modules/pimatic-mobile-frontend/README",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "pimatic mobile-frontend plugin",
-                    "slug": "pimatic-mobile-frontend-plugin",
-                    "isFileHeader": true
-                  },
-                  "depth": 1,
-                  "children": [
-                    {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Example config:",
-                        "slug": "example-config"
-                      },
-                      "depth": 2
-                    }
-                  ]
-                },
-                "title": "pimatic mobile-frontend plugin"
-              },
-              "depth": 3,
-              "outline": [
-                {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Example config:",
-                    "slug": "example-config"
-                  },
-                  "depth": 2
-                }
-              ]
-            }, {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".coffee", "Cakefile"],
-                  "pygmentsLexer": "coffee-script",
-                  "singleLineComment": ["#"],
-                  "name": "CoffeeScript"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-mobile-frontend/mobile-frontend.coffee",
-                "projectPath": "node_modules/pimatic-mobile-frontend/mobile-frontend.coffee",
-                "targetPath": "node_modules/pimatic-mobile-frontend/mobile-frontend",
-                "title": "mobile-frontend"
-              },
-              "depth": 3,
-              "outline": [
-                {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Dependencies",
-                    "slug": "dependencies"
-                  },
-                  "depth": 2
-                }, {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "The MobileFrontend",
-                    "slug": "the-mobilefrontend"
-                  },
-                  "depth": 2,
-                  "children": [
-                    {
-                      "type": "heading",
-                      "data": {
-                        "level": 3,
-                        "title": "init the frontend:",
-                        "slug": "init-the-frontend"
-                      },
-                      "depth": 3
-                    }, {
-                      "type": "heading",
-                      "data": {
-                        "level": 3,
-                        "title": "Socket.io stuff:",
-                        "slug": "socketio-stuff"
-                      },
-                      "depth": 3
-                    }
-                  ]
-                }
-              ]
-            }, {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".coffee", "Cakefile"],
-                  "pygmentsLexer": "coffee-script",
-                  "singleLineComment": ["#"],
-                  "name": "CoffeeScript"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-mobile-frontend/mobile-frontend-config-shema.coffee",
-                "projectPath": "node_modules/pimatic-mobile-frontend/mobile-frontend-config-shema.coffee",
-                "targetPath": "node_modules/pimatic-mobile-frontend/mobile-frontend-config-shema",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "mobile-frontend configuration options",
-                    "slug": "mobile-frontend-configuration-options",
-                    "isFileHeader": true
-                  },
-                  "depth": 1
-                },
-                "title": "mobile-frontend configuration options"
-              },
-              "depth": 3,
-              "outline": []
-            }
-          ]
-        }, {
-          "type": "folder",
-          "data": {
-            "path": "node_modules/pimatic-pilight",
-            "title": "pimatic-pilight"
-          },
-          "depth": 2,
-          "children": [
-            {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".md"],
-                  "commentsOnly": true,
-                  "name": "Markdown"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-pilight/README.md",
-                "projectPath": "node_modules/pimatic-pilight/README.md",
-                "targetPath": "node_modules/pimatic-pilight/README",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "pimatic pilight plugin",
-                    "slug": "pimatic-pilight-plugin",
-                    "isFileHeader": true
-                  },
-                  "depth": 1,
-                  "children": [
-                    {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Configuration",
-                        "slug": "configuration"
-                      },
-                      "depth": 2
-                    }
-                  ]
-                },
-                "title": "pimatic pilight plugin"
-              },
-              "depth": 3,
-              "outline": [
-                {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Configuration",
-                    "slug": "configuration"
-                  },
-                  "depth": 2
-                }
-              ]
-            }, {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".coffee", "Cakefile"],
-                  "pygmentsLexer": "coffee-script",
-                  "singleLineComment": ["#"],
-                  "name": "CoffeeScript"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-pilight/pilight.coffee",
-                "projectPath": "node_modules/pimatic-pilight/pilight.coffee",
-                "targetPath": "node_modules/pimatic-pilight/pilight",
-                "title": "pilight"
-              },
-              "depth": 3,
-              "outline": []
-            }, {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".coffee", "Cakefile"],
-                  "pygmentsLexer": "coffee-script",
-                  "singleLineComment": ["#"],
-                  "name": "CoffeeScript"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-pilight/pilight-config-shema.coffee",
-                "projectPath": "node_modules/pimatic-pilight/pilight-config-shema.coffee",
-                "targetPath": "node_modules/pimatic-pilight/pilight-config-shema",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "pilight configuration options",
-                    "slug": "pilight-configuration-options",
-                    "isFileHeader": true
-                  },
-                  "depth": 1
-                },
-                "title": "pilight configuration options"
-              },
-              "depth": 3,
-              "outline": []
-            }
-          ]
-        }, {
-          "type": "folder",
-          "data": {
-            "path": "node_modules/pimatic-ping",
-            "title": "pimatic-ping"
-          },
-          "depth": 2,
-          "children": [
-            {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".md"],
-                  "commentsOnly": true,
-                  "name": "Markdown"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-ping/README.md",
-                "projectPath": "node_modules/pimatic-ping/README.md",
-                "targetPath": "node_modules/pimatic-ping/README",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "pimatic ping plugin",
-                    "slug": "pimatic-ping-plugin",
-                    "isFileHeader": true
-                  },
-                  "depth": 1,
-                  "children": [
-                    {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Providided predicates",
-                        "slug": "providided-predicates"
-                      },
-                      "depth": 2
-                    }
-                  ]
-                },
-                "title": "pimatic ping plugin"
-              },
-              "depth": 3,
-              "outline": [
-                {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Providided predicates",
-                    "slug": "providided-predicates"
-                  },
-                  "depth": 2
-                }
-              ]
-            }, {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".coffee", "Cakefile"],
-                  "pygmentsLexer": "coffee-script",
-                  "singleLineComment": ["#"],
-                  "name": "CoffeeScript"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-ping/ping.coffee",
-                "projectPath": "node_modules/pimatic-ping/ping.coffee",
-                "targetPath": "node_modules/pimatic-ping/ping",
-                "title": "ping"
-              },
-              "depth": 3,
-              "outline": [
-                {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Dependencies",
-                    "slug": "dependencies"
-                  },
-                  "depth": 2
-                }, {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "The DevicePresentsBackend",
-                    "slug": "the-devicepresentsbackend"
-                  },
-                  "depth": 2
-                }, {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "PingPresents Sensor",
-                    "slug": "pingpresents-sensor"
-                  },
-                  "depth": 2
-                }
-              ]
-            }
-          ]
-        }, {
-          "type": "folder",
-          "data": {
-            "path": "node_modules/pimatic-redirect",
-            "title": "pimatic-redirect"
-          },
-          "depth": 2,
-          "children": [
-            {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".md"],
-                  "commentsOnly": true,
-                  "name": "Markdown"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-redirect/README.md",
-                "projectPath": "node_modules/pimatic-redirect/README.md",
-                "targetPath": "node_modules/pimatic-redirect/README",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "pimatic redirect plugin",
-                    "slug": "pimatic-redirect-plugin",
-                    "isFileHeader": true
-                  },
-                  "depth": 1
-                },
-                "title": "pimatic redirect plugin"
-              },
-              "depth": 3,
-              "outline": []
-            }, {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".coffee", "Cakefile"],
-                  "pygmentsLexer": "coffee-script",
-                  "singleLineComment": ["#"],
-                  "name": "CoffeeScript"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-redirect/redirect.coffee",
-                "projectPath": "node_modules/pimatic-redirect/redirect.coffee",
-                "targetPath": "node_modules/pimatic-redirect/redirect",
-                "title": "redirect"
-              },
-              "depth": 3,
-              "outline": []
-            }
-          ]
-        }, {
-          "type": "folder",
-          "data": {
-            "path": "node_modules/pimatic-rest-api",
-            "title": "pimatic-rest-api"
-          },
-          "depth": 2,
-          "children": [
-            {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".md"],
-                  "commentsOnly": true,
-                  "name": "Markdown"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-rest-api/README.md",
-                "projectPath": "node_modules/pimatic-rest-api/README.md",
-                "targetPath": "node_modules/pimatic-rest-api/README",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "pimatic rest-api plugin",
-                    "slug": "pimatic-rest-api-plugin",
-                    "isFileHeader": true
-                  },
-                  "depth": 1
-                },
-                "title": "pimatic rest-api plugin"
-              },
-              "depth": 3,
-              "outline": []
-            }, {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".coffee", "Cakefile"],
-                  "pygmentsLexer": "coffee-script",
-                  "singleLineComment": ["#"],
-                  "name": "CoffeeScript"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-rest-api/rest-api.coffee",
-                "projectPath": "node_modules/pimatic-rest-api/rest-api.coffee",
-                "targetPath": "node_modules/pimatic-rest-api/rest-api",
-                "title": "rest-api"
-              },
-              "depth": 3,
-              "outline": []
-            }
-          ]
-        }, {
-          "type": "folder",
-          "data": {
-            "path": "node_modules/pimatic-sispmctl",
-            "title": "pimatic-sispmctl"
-          },
-          "depth": 2,
-          "children": [
-            {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".md"],
-                  "commentsOnly": true,
-                  "name": "Markdown"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-sispmctl/README.md",
-                "projectPath": "node_modules/pimatic-sispmctl/README.md",
-                "targetPath": "node_modules/pimatic-sispmctl/README",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "pimatic sispmctl plugin",
-                    "slug": "pimatic-sispmctl-plugin",
-                    "isFileHeader": true
-                  },
-                  "depth": 1,
-                  "children": [
-                    {
-                      "type": "heading",
-                      "data": {
-                        "level": 2,
-                        "title": "Configuration",
-                        "slug": "configuration"
-                      },
-                      "depth": 2
-                    }
-                  ]
-                },
-                "title": "pimatic sispmctl plugin"
-              },
-              "depth": 3,
-              "outline": [
-                {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "Configuration",
-                    "slug": "configuration"
-                  },
-                  "depth": 2
-                }
-              ]
-            }, {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".coffee", "Cakefile"],
-                  "pygmentsLexer": "coffee-script",
-                  "singleLineComment": ["#"],
-                  "name": "CoffeeScript"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-sispmctl/actuator-config-shema.coffee",
-                "projectPath": "node_modules/pimatic-sispmctl/actuator-config-shema.coffee",
-                "targetPath": "node_modules/pimatic-sispmctl/actuator-config-shema",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "SispmctlSwitch actuator configuration options",
-                    "slug": "sispmctlswitch-actuator-configuration-options",
-                    "isFileHeader": true
-                  },
-                  "depth": 1
-                },
-                "title": "SispmctlSwitch actuator configuration options"
-              },
-              "depth": 3,
-              "outline": []
-            }, {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".coffee", "Cakefile"],
-                  "pygmentsLexer": "coffee-script",
-                  "singleLineComment": ["#"],
-                  "name": "CoffeeScript"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-sispmctl/sispmctl.coffee",
-                "projectPath": "node_modules/pimatic-sispmctl/sispmctl.coffee",
-                "targetPath": "node_modules/pimatic-sispmctl/sispmctl",
-                "title": "sispmctl"
-              },
-              "depth": 3,
-              "outline": []
-            }, {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".coffee", "Cakefile"],
-                  "pygmentsLexer": "coffee-script",
-                  "singleLineComment": ["#"],
-                  "name": "CoffeeScript"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-sispmctl/sispmctl-config-shema.coffee",
-                "projectPath": "node_modules/pimatic-sispmctl/sispmctl-config-shema.coffee",
-                "targetPath": "node_modules/pimatic-sispmctl/sispmctl-config-shema",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "sispmctl configuration options",
-                    "slug": "sispmctl-configuration-options",
-                    "isFileHeader": true
-                  },
-                  "depth": 1
-                },
-                "title": "sispmctl configuration options"
-              },
-              "depth": 3,
-              "outline": []
-            }
-          ]
-        }, {
-          "type": "folder",
-          "data": {
-            "path": "node_modules/pimatic-speak-api",
-            "title": "pimatic-speak-api"
-          },
-          "depth": 2,
-          "children": [
-            {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".md"],
-                  "commentsOnly": true,
-                  "name": "Markdown"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-speak-api/README.md",
-                "projectPath": "node_modules/pimatic-speak-api/README.md",
-                "targetPath": "node_modules/pimatic-speak-api/README",
-                "firstHeader": {
-                  "type": "heading",
-                  "data": {
-                    "level": 1,
-                    "title": "pimatic speak-api plugin",
-                    "slug": "pimatic-speak-api-plugin",
-                    "isFileHeader": true
-                  },
-                  "depth": 1
-                },
-                "title": "pimatic speak-api plugin"
-              },
-              "depth": 3,
-              "outline": []
-            }, {
-              "type": "file",
-              "data": {
-                "language": {
-                  "nameMatchers": [".coffee", "Cakefile"],
-                  "pygmentsLexer": "coffee-script",
-                  "singleLineComment": ["#"],
-                  "name": "CoffeeScript"
-                },
-                "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/node_modules/pimatic-speak-api/speak-api.coffee",
-                "projectPath": "node_modules/pimatic-speak-api/speak-api.coffee",
-                "targetPath": "node_modules/pimatic-speak-api/speak-api",
-                "title": "speak-api"
-              },
-              "depth": 3,
-              "outline": []
-            }
-          ]
-        }
-      ]
-    }, {
       "type": "file",
       "data": {
         "language": {
           "nameMatchers": [".coffee", "Cakefile"],
           "pygmentsLexer": "coffee-script",
+          "multiLineComment": ["###*", " *", " ###", "###", "#", "###"],
+          "strictMultiLineEnd": false,
           "singleLineComment": ["#"],
+          "ignorePrefix": "}",
+          "foldPrefix": "^",
           "name": "CoffeeScript"
         },
-        "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/pimatic/startup.coffee",
+        "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/startup.coffee",
         "projectPath": "startup.coffee",
         "targetPath": "startup",
+        "pageTitle": "startup",
         "firstHeader": {
           "type": "heading",
           "data": {
@@ -1950,14 +909,29 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
   };
 
   buildTOCNode = function(node, metaInfo) {
-    var c, children$, discloser$, label$, node$, _i, _len, _ref, _ref1, _ref2;
+    var c, children$, clickLabel, discloser, discloser$, label$, node$, _i, _len, _ref, _ref1, _ref2;
     node$ = $("<li class=\"" + node.type + "\"/>");
+    discloser = null;
     switch (node.type) {
       case 'file':
         node$.append("<a class=\"label\" href=\"" + metaInfo.relativeRoot + node.data.targetPath + ".html\" title=\"" + node.data.projectPath + "\"><span class=\"text\">" + node.data.title + "</span></a>");
+        clickLabel = function(evt) {
+          if (evt.target === discloser) {
+            node$.toggleClass('expanded');
+            evt.preventDefault();
+            return false;
+          }
+          return selectNode(node$);
+        };
         break;
       case 'folder':
-        node$.append("<span class=\"label\"><span class=\"text\">" + node.data.title + "</span></span>");
+        node$.append("<a class=\"label\" href=\"#\"><span class=\"text\">" + node.data.title + "</span></a>");
+        clickLabel = function(evt) {
+          selectNode(node$);
+          node$.toggleClass('expanded');
+          evt.preventDefault();
+          return false;
+        };
     }
     if (((_ref = node.children) != null ? _ref.length : void 0) > 0) {
       children$ = $('<ol class="children"/>');
@@ -1969,17 +943,12 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
       node$.append(children$);
     }
     label$ = node$.find('> .label');
-    label$.click(function() {
-      return selectNode(node$);
-    });
+    label$.click(clickLabel);
     discloser$ = $('<span class="discloser"/>').prependTo(label$);
     if (!(((_ref2 = node.children) != null ? _ref2.length : void 0) > 0)) {
       discloser$.addClass('placeholder');
     }
-    discloser$.click(function(evt) {
-      node$.toggleClass('expanded');
-      return evt.preventDefault();
-    });
+    discloser = discloser$.get(0);
     if (node.type === 'file') {
       fileMap[node.data.targetPath] = node$;
     }
@@ -2054,7 +1023,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
     search$.bind('keyup search', function(evt) {
       return searchNodes(search$.val());
     });
-    return search$.keydown(function(evt) {
+    search$.keydown(function(evt) {
       if (evt.keyCode === 27) {
         if (search$.val().trim() === '') {
           return search$.blur();
@@ -2062,6 +1031,15 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           return search$.val('');
         }
       }
+    });
+    return $('.code.folded').each(function(index, code) {
+      var code$;
+      code$ = $(code);
+      return code$.click(function(evt) {
+        code$.toggleClass('folded');
+        evt.preventDefault();
+        return false;
+      });
     });
   });
 

@@ -3,7 +3,7 @@
 <span class="nv">assert = </span><span class="nx">require</span> <span class="s">&#39;cassert&#39;</span>
 
 <span class="k">class</span> <span class="nx">ActionHandler</span>
-  <span class="nv">executeAction: </span><span class="nf">(actionString, simulate) =&gt;</span>
+  <span class="nv">executeAction: </span><span class="nf">(actionString, simulate) -&gt;</span>
     <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;unimplemented&quot;</span><span class="p">)</span>  
 
 <span class="nv">env = </span><span class="kc">null</span>
@@ -26,7 +26,7 @@
     <span class="nv">self = </span><span class="k">this</span>
     <span class="nv">result = </span><span class="kc">null</span>
     <span class="nv">regExpString = </span><span class="s">&#39;^(?:turn)?(?:\\s+the)?(.+?)(on|off)$&#39;</span>
-    <span class="nv">matches = </span><span class="nx">actionString</span><span class="p">.</span><span class="nx">match</span> <span class="p">(</span><span class="k">new</span> <span class="nb">RegExp</span> <span class="nx">regExpString</span><span class="p">)</span></div></div></div><div class="segment"><div class="comments"><div class="wrapper"><p>Try the translated form:</p></div></div><div class="code"><div class="wrapper">    <span class="k">unless</span> <span class="nx">matches</span><span class="o">?</span> <span class="k">then</span> <span class="nv">matches = </span><span class="nx">actionString</span><span class="p">.</span><span class="nx">match</span> <span class="p">(</span><span class="k">new</span> <span class="nb">RegExp</span> <span class="nx">__</span><span class="p">(</span><span class="nx">regExpString</span><span class="p">))</span>
+    <span class="nv">matches = </span><span class="nx">actionString</span><span class="p">.</span><span class="nx">match</span> <span class="p">(</span><span class="k">new</span> <span class="nb">RegExp</span> <span class="nx">regExpString</span><span class="p">)</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Try the translated form:</p></div></div><div class="code"><div class="wrapper">    <span class="k">unless</span> <span class="nx">matches</span><span class="o">?</span> <span class="k">then</span> <span class="nv">matches = </span><span class="nx">actionString</span><span class="p">.</span><span class="nx">match</span> <span class="p">(</span><span class="k">new</span> <span class="nb">RegExp</span> <span class="nx">__</span><span class="p">(</span><span class="nx">regExpString</span><span class="p">))</span>
     <span class="k">if</span> <span class="nx">matches</span><span class="o">?</span>
       <span class="nv">actuatorName = </span><span class="nx">matches</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">trim</span><span class="p">()</span>
       <span class="nv">state = </span><span class="nx">matches</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
@@ -56,7 +56,7 @@
   <span class="nv">constructor: </span><span class="nf">(_env, @framework) -&gt;</span>
     <span class="nv">env = </span><span class="nx">_env</span>
 
-  <span class="nv">executeAction: </span><span class="nf">(actionString, simulate) =&gt;</span>
+  <span class="nv">executeAction: </span><span class="nf">(actionString, simulate) -&gt;</span>
     <span class="nv">regExpString = </span><span class="s">&#39;^log\\s+&quot;(.*)?&quot;$&#39;</span>
     <span class="nv">matches = </span><span class="nx">actionString</span><span class="p">.</span><span class="nx">match</span> <span class="p">(</span><span class="k">new</span> <span class="nb">RegExp</span> <span class="nx">regExpString</span><span class="p">)</span>
     <span class="k">if</span> <span class="nx">matches</span><span class="o">?</span>
