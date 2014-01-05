@@ -33,7 +33,8 @@ Installation
 First you need to install [node.js](http://nodejs.org) that comes with the package manager 
 [npm](https://npmjs.org/). Then you can run
 
-    npm install pimatic
+    mkdir pimatic-app
+    npm install pimatic --prefix pimatic-app
 
 to install the pimatic framework.
 
@@ -41,8 +42,8 @@ Configuration
 -------------
 I recommend to start with the default config:
 
-    cd node_modules/pimatic
-    cp config_default.json config.json
+    cd pimatic-app
+    cp ./node_modules/pimatic/config_default.json ./config.json
 
 The config is in the [json](https://en.wikipedia.org/wiki/JSON) format and currently includes five 
 sections:
@@ -135,14 +136,8 @@ Running
 -------
 The server can be started with 
 
-    cd node_modules/pimatic
-    sudo ./main.js
-
-or if you have [CoffeeScript](http://coffeescript.org/) globally installed, you can run
-
-    cd node_modules/pimatic
-    sudo coffee startup.coffee
-
+    cd pimatic-app
+    sudo ./node_modules/pimatic/main.js
 
 
 Extensions and Hacking

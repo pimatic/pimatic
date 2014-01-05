@@ -2,6 +2,7 @@
 
 assert = require 'cassert'
 fs = require 'fs'
+path = require 'path'
 
 # Setup the environment
 env =
@@ -14,7 +15,13 @@ env =
   actions: require './lib/actions'
   require: (args...) -> module.require args...
 
-configFile = if process.env.PIMATIC_CONFIG? then process.env.PIMATIC_CONFIG else "./config.json"
+# set the config file to
+configFile = (
+  # PIMATIC_CONFIG envirement variable if it is set
+  if process.env.PIMATIC_CONFIG? then process.env.PIMATIC_CONFIG 
+  # or get the config the parent folder of node_modules
+  else path.resolve __dirname, '../../config.json'
+)
 
 # Setup the framework
 Framework = (require './lib/framework') env 
