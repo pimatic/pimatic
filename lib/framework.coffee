@@ -166,6 +166,20 @@ module.exports = (env) ->
 
       return chain
 
+    restart: () ->
+      unless process.env['PIMATIC_DAEMONIZED']?
+        throw new Error 'Can not restart self, when not daemonzed. ' +
+          'Please run pimatic with: "node main.js start" to use this feature.'
+
+      options =
+        cwd: process.cwd()
+        env: process.env
+        detached: true
+        stdio: 'inherit'
+
+      spawn = require('child_process').spawn
+      spawn process.argv[0], process.argv[1..]
+      process.exit 0
 
     registerPlugin: (plugin, config) ->
       assert plugin? and plugin instanceof env.plugins.Plugin
