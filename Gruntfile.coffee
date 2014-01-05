@@ -1,7 +1,7 @@
 module.exports = (grunt) ->
 
   # all node_modules:
-  modules = require("fs").readdirSync "./node_modules"
+  modules = require("fs").readdirSync ".."
   # just the pimatic-* modules:
   plugins = (module for module in modules when module.match(/^pimatic-.*/)?)
 
@@ -12,9 +12,33 @@ module.exports = (grunt) ->
     "./config-shema.coffee"
     "./lib/*.coffee"
   ]
+
+  grocTasks =
+    pimatic:
+      src: [
+        "./README.md"
+        "./startup.coffee"
+        "./config-shema.coffee"
+        "./lib/*.coffee"
+      ]
+      options: 
+        root: "."
+        out: "doc"
+        "repository-url": "https://github.com/pimatic/pimatic"
+        strip: false
+
   for plugin in plugins
-    grocFiles.push "./node_modules/#{plugin}/README.md"
-    grocFiles.push "./node_modules/#{plugin}/*.coffee"
+    grocTasks[plugin] =
+      src: [
+        "../#{plugin}/README.md"
+        "../#{plugin}/*.coffee"
+      ]
+      options: 
+        root: "../#{plugin}"
+        out: "../#{plugin}/doc"
+        "repository-url": "https://github.com/pimatic/pimatic"
+        strip: false
+
 
   # package.json files of plugins
   pluginPackageJson = ("node_modules/#{plugin}/package.json" for plugin in plugins)
@@ -27,7 +51,7 @@ module.exports = (grunt) ->
     coffeelint:
       app: [
         "*.coffee"
-        "node_modules/pimatic-*/*.coffee"
+        "../pimatic-*/*.coffee"
         "lib/**/*.coffee"
         "test/**/*.coffee"
       ]
@@ -39,14 +63,9 @@ module.exports = (grunt) ->
         indentation:
           value: 2
           level: "error"
-
-    groc:
-      files: grocFiles
-      options: 
-        root: "."
-        out: "docs"
-        "repository-url": "https://github.com/pimatic/pimatic"
-        strip: false
+        no_unnecessary_fat_arrows:
+          level: 'ignore'
+    groc: grocTasks
 
     "ftp-deploy":
       build:
@@ -62,20 +81,19 @@ module.exports = (grunt) ->
         options:
           reporter: "spec"
           require: ['coffee-errors'] #needed for right line numbers in errors
-        src: ["test/**/*"]
+        src: ["test/*"]
       # blanket is used to record coverage
       testBlanket:
         options:
           reporter: "dot"
           require: ["coverage/blanket"]
-        src: ["test/**/*"]
+        src: ["test/*"]
       coverage:
         options:
           reporter: "html-cov"
           quiet: true
           captureFile: "coverage/coverage.html"
-
-        src: ["test/**/*."]
+        src: ["test/*"]
     bump:
       options:
         files: bumpFiles
