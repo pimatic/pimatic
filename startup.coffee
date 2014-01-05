@@ -12,6 +12,7 @@ env =
   rules: require './lib/rules'
   plugins: require './lib/plugins'
   actions: require './lib/actions'
+  require: (args...) -> module.require args...
 
 configFile = if process.env.PIMATIC_CONFIG? then process.env.PIMATIC_CONFIG else "./config.json"
 
