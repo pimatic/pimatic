@@ -53,5 +53,11 @@
 	"Select an action": "Select an action",
 	"Install a Plugins": "Install a Plugins",
 	"Add": "Add",
-	"Loading": "Loading"
+	"Loading": "Loading",
+	"Updates": "Updates",
+	"Install Updates": "Install Updates",
+	"active": "active",
+	"update available": "update available",
+	"installed": "installed",
+	"Restart pimatic": "Restart pimatic"
 }
