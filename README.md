@@ -139,6 +139,13 @@ The server can be started with
     cd pimatic-app
     sudo ./node_modules/pimatic/main.js
 
+To damonize pimatic you can run:
+
+    cd pimatic-app
+    sudo ./node_modules/pimatic/main.js start
+
+You can also use `status`, `stop`, `restart`.
+
 
 Extensions and Hacking
 ----------------------
