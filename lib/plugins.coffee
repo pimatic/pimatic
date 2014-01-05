@@ -3,7 +3,6 @@ fs = require 'fs'
 path = require 'path'
 Q = require 'q'
 util = require 'util'
-logger = require './logger'
 assert = require 'cassert'
 
 env = null
@@ -132,23 +131,22 @@ class PluginManager
       npm.registry.log.on 'log', (msg) ->
         if msg.level is 'info' or msg.level is 'verbose' or msg.level is 'silly' then return
         if msg.level is 'error' 
-          logger.log(msg.level, msg.prefix, msg.message)
+          env.logger.log(msg.level, msg.prefix, msg.message)
         else
-          logger.info("npm #{msg.level}", msg.prefix, msg.message)
-
+          env.logger.info("npm #{msg.level}", msg.prefix, msg.message)
       return npm
     )
 
   getInstalledPlugins: ->
-    return Q.nfcall(fs.readdir, "#{@framework.maindir}").then( (modules) =>
-      return plugins = (module for module in modules when module.match(/^pimatic-.*/)?)
+    return Q.nfcall(fs.readdir, "#{@framework.maindir}/..").then( (files) =>
+      return plugins = (f for f in files when f.match(/^pimatic-.*/)?)
     ) 
 
   getInstalledPackageInfo: (name) ->
     assert name?
     assert name.match(/^pimatic-.*$/)?
     return JSON.parse fs.readFileSync(
-      "#{@path name}/package.json", 'utf-8'
+      "#{@pathToPlugin name}/package.json", 'utf-8'
     )
 
 
