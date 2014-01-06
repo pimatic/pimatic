@@ -7,6 +7,7 @@ env =
   rules: require '../lib/rules'
   plugins: require '../lib/plugins'
   actions: require '../lib/actions'
+  predicates: require '../lib/predicates'
   require: (args...) -> module.require args...
 
 modules = fs.readdirSync ".."
