@@ -19,8 +19,10 @@ class PluginManager
       # If the plugin folder already exist
       promise = 
         if @isInstalled name 
-          # just installing the dependencies
-          @installDependencies name
+          # We could instal the depencies...
+          # @installDependencies name
+          # but it takes so long
+          Q()
         else 
           # otherwise install the plugin from the npm repository
           @installPlugin name
