@@ -1,11 +1,10 @@
 #!/bin/sh
 BRANCH=$1
 mkdir pimatic-app
-mkdir pimatic-app/node_modules
-cd pimatic-app/node_modules
+cd pimatic-app
 for name in pimatic pimatic-cron pimatic-filebrowser pimatic-gpio pimatic-log-reader pimatic-mobile-frontend pimatic-pilight pimatic-ping pimatic-redirect pimatic-rest-api pimatic-sispmctl pimatic-speak-api
   do
     echo $name
-    git clone https://github.com/sweetpi/$name.git -b $BRANCH
+    npm install git+https://github.com/sweetpi/$name.git#$BRANCH
 done
-cd ../..
+cp ./node_modules/pimatic/config_default.json ./config.json
