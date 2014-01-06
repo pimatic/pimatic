@@ -1,7 +1,7 @@
 assert = require "cassert"
 Q = require 'q'
 actions = require '../lib/actions'
-actuators = require '../lib/actuators'
+devices = require '../lib/devices'
 i18n = require 'i18n'
 
 i18n.configure(
@@ -16,16 +16,16 @@ describe "SwitchActionHandler", ->
     logger: {}
 
   frameworkDummy =
-    actuators: {}
+    devices: {}
 
   switchActionHandler = new actions.SwitchActionHandler envDummy, frameworkDummy
 
-  class DummySwitch extends actuators.SwitchActuator
+  class DummySwitch extends devices.SwitchActuator
     id: 'dummy-switch-id'
     name: 'dummy switch'
 
   dummySwitch = new DummySwitch()
-  frameworkDummy.actuators['dummy-switch-id'] = dummySwitch
+  frameworkDummy.devices['dummy-switch-id'] = dummySwitch
 
   describe "#executeAction()", ->
     turnOnCalled = false

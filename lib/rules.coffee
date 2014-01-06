@@ -81,11 +81,12 @@ class RuleManager extends require('events').EventEmitter
       # Utility function, that finds a sensor, that can decide the given predicate like `its 10pm`
       findSensorForPredicate = (predicate) =>
         assert predicate? and typeof predicate is "string" and predicate.length isnt 0
-        for sensorId, sensor of @framework.sensors
-          type = sensor.canDecide predicate
-          assert type is 'event' or type is 'state' or type is no
-          if type is 'event' or type is 'state'
-            return [type, sensor]
+        for deviceId, device of @framework.devices
+          if device.canDecide?
+            type = device.canDecide predicate
+            assert type is 'event' or type is 'state' or type is no
+            if type is 'event' or type is 'state'
+              return [type, device]
         return [null, null]
 
       # Now split the condition in a token stream.

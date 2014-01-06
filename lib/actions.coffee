@@ -13,12 +13,12 @@ class SwitchActionHandler extends ActionHandler
   constructor: (_env, @framework) ->
     env = _env
 
-  runOnActuatorByNameOrId: (actuatorName, doCallback) ->
+  runOnDeviceByNameOrId: (deviceName, doCallback) ->
     self = this
-    assert typeof self.framework.actuators is 'object'
-    for id, actuator of self.framework.actuators
-      if id.toLowerCase() is actuatorName or actuator.name.toLowerCase() is actuatorName
-        result = doCallback actuator
+    assert typeof self.framework.devices is 'object'
+    for id, device of self.framework.devices
+      if id.toLowerCase() is deviceName or device.name.toLowerCase() is deviceName
+        result = doCallback device
         #"break" when result was given by callback 
         if result? then return result
 
@@ -30,25 +30,25 @@ class SwitchActionHandler extends ActionHandler
     # Try the translated form:
     unless matches? then matches = actionString.match (new RegExp __(regExpString))
     if matches?
-      actuatorName = matches[1].trim()
+      deviceName = matches[1].trim()
       state = matches[2]
       state =  (if state is __("on") or state is "on" then on else off)
       actionName = (if state then "turnOn" else "turnOff")
-      result = self.runOnActuatorByNameOrId actuatorName, (actuator)->
-        if actuator.hasAction actionName
+      result = self.runOnDeviceByNameOrId deviceName, (device)->
+        if device.hasAction actionName
           if simulate
             if state
-              return Q.fcall -> __("would turn %s on", actuator.name)
+              return Q.fcall -> __("would turn %s on", device.name)
             else 
-              return Q.fcall -> __("would turn %s off", actuator.name)
+              return Q.fcall -> __("would turn %s off", device.name)
           else
             if state
-              return actuator.turnOn().then( ->
-                __("turned %s on", actuator.name)
+              return device.turnOn().then( ->
+                __("turned %s on", device.name)
               )
             else 
-              return actuator.turnOff().then( ->
-                __("turned %s off", actuator.name)
+              return device.turnOff().then( ->
+                __("turned %s off", device.name)
               )
         else return null
     return result

@@ -13,8 +13,7 @@ module.exports = (env) ->
   class Framework extends require('events').EventEmitter
     configFile: null
     plugins: []
-    actuators: []
-    sensors: []
+    devices: []
     app: null
     ruleManager: null
     pluginManager: null
@@ -41,10 +40,16 @@ module.exports = (env) ->
       conf.validate()
       @config = conf.get("")
 
+      # handle legacy config:
+      if @config.sensors? and @config.actuators?
+        @config.devices = @config.sensors.concat @config.actuators
+        delete @config.sensors
+        delete @config.actuators
+        @saveConfig()
+
       env.helper.checkConfig env, null, =>
         assert Array.isArray @config.plugins
-        assert Array.isArray @config.actuators
-        assert Array.isArray @config.rules
+        assert Array.isArray @config.devices
 
       # * Set the log level
       env.logger.transports.console.level = @config.settings.logLevel
@@ -196,123 +201,65 @@ module.exports = (env) ->
         if p.config.plugin is name then return p
       return null
 
-    registerActuator: (actuator) ->
-      assert actuator?
-      assert actuator instanceof env.actuators.Actuator
-      assert actuator.name? and actuator.name.lenght isnt 0
-      assert actuator.id? and actuator.id.lenght isnt 0
+    registerDevice: (device) ->
+      assert device?
+      assert device instanceof env.devices.Device
+      assert device.name? and device.name.lenght isnt 0
+      assert device.id? and device.id.lenght isnt 0
 
-      if @actuators[actuator.id]?
-        throw new assert.AssertionError("dublicate actuator id \"#{actuator.id}\"")
+      if @devices[device.id]?
+        throw new assert.AssertionError("dublicate device id \"#{device.id}\"")
 
-      env.logger.info "new actuator \"#{actuator.name}\"..."
-      @actuators[actuator.id]=actuator
-      @emit "actuator", actuator
+      env.logger.info "new device \"#{device.name}\"..."
+      @devices[device.id]=device
+      @emit "device", device
 
-    registerSensor: (sensor) ->
-      assert sensor?
-      assert sensor instanceof env.sensors.Sensor
-      assert sensor.name? and sensor.name.lenght isnt 0
-      assert sensor.id? and sensor.id.lenght isnt 0
 
-      if @sensors[sensor.id]?
-        throw new assert.AssertionError("dublicate sensor id \"#{sensor.id}\"")
-
-      env.logger.info "new sensor \"#{sensor.name}\"..."
-      @sensors[sensor.id]=sensor
-      @emit "sensor", sensor
-
-    loadActuators: ->
-      for acConfig in @config.actuators
+    loadDevices: ->
+      for deviceConfig in @config.devices
         found = false
         for plugin in @plugins
-          if plugin.plugin.createActuator?
-            found = plugin.plugin.createActuator acConfig
+          if plugin.plugin.createDevice?
+            found = plugin.plugin.createDevice deviceConfig
             if found then break
         unless found
-          env.logger.warn "no plugin found for actuator \"#{acConfig.id}\"!"
+          env.logger.warn "no plugin found for device \"#{deviceConfig.id}\"!"
       return
 
-    getActuatorById: (id) ->
-      @actuators[id]
+    getDeviceById: (id) ->
+      @devices[id]
 
-    addActuatorToConfig: (config) ->
-      assert config.id?
-      assert config.class?
+    addDeviceToConfig: (deviceConfig) ->
+      assert deviceConfig.id?
+      assert deviceConfig.class?
 
-      # Check if actuator is already in the config:
-      present = @isActuatorInConfig config.id
+      # Check if device is already in the deviceConfig:
+      present = @isDeviceInConfig deviceConfig.id
       if present
-        message = "an actuator with the id #{config.id} is already in the config" 
+        message = "an device with the id #{deviceConfig.id} is already in the config" 
         throw new Error message
-      @config.actuators.push config
+      @config.devices.push deviceConfig
       @saveConfig()
 
-    isActuatorInConfig: (id) ->
+    isDeviceInConfig: (id) ->
       assert id?
-      for a in @config.actuators
-        if a.id is id then return true
+      for d in @config.devices
+        if d.id is id then return true
       return false
 
-    updateActuatorConfig: (config) ->
-      assert config.id?
-      assert config.class?
+    updateDeviceConfig: (deviceConfig) ->
+      assert deviceConfig.id?
+      assert deviceConfig.class?
 
       found = false
-      for a, i in @config.actuators
-        if a.id is config.id
-          @config.actuators[i] = config
+      for d, i in @config.devices
+        if d.id is deviceConfig.id
+          @config.devices[i] = deviceConfig
           found = true
           break
-      if not found then throw new Error "no actuator with #{config.id} in config"
+      if not found then throw new Error "no device with #{deviceConfig.id} in config"
       @saveConfig()
       return
-
-    loadSensors: ->
-      for sensorConfig in @config.sensors
-        found = false
-        for plugin in @plugins
-          if plugin.plugin.createSensor?
-            found = plugin.plugin.createSensor sensorConfig
-            if found then break
-        unless found
-          env.logger.warn "no plugin found for sensor \"#{sensorConfig.id}\"!"
-      return
-
-    addSensorToConfig: (config) ->
-      assert config.id?
-      assert config.class?
-
-      # Check if actuator is already in the config:
-      present = @isSensorInConfig config.id
-      if present
-        message = "an sensor with the id #{config.id} is already in the config" 
-        throw new Error message
-      @config.sensors.push config
-      @saveConfig()
-
-    isSensorInConfig: (id) ->
-      assert id?
-      for s in @config.sensors
-        if s.id is id then return true
-      return false
-
-    updateSensorConfig: (config) ->
-      assert config.id?
-      assert config.class?
-
-      found = false
-      for a, i in @config.sensors
-        if a.id is config.id
-          @config.sensors[i] = config
-          found = true
-          break
-      if not found then throw new Error "no sensor with #{config.id} in config"
-      @saveConfig()
-      return
-
-    getSensorById: (id) ->
-      @sensors[id]
 
     init: ->
 
@@ -367,8 +314,7 @@ module.exports = (env) ->
 
       return @loadPlugins()
         .then(initPlugins)
-        .then( => @loadActuators())
-        .then( => @loadSensors())
+        .then( => @loadDevices())
         .then(initActionHandler)
         .then(initRules)
         .then( =>         

@@ -7,8 +7,7 @@ describe "RuleManager", ->
   env =
     logger: require '../lib/logger'
     helper: require '../lib/helper'
-    actuators: require '../lib/actuators'
-    sensors: require '../lib/sensors'
+    devices: require '../lib/devices'
     rules: require '../lib/rules'
     plugins: require '../lib/plugins'
 
@@ -17,7 +16,7 @@ describe "RuleManager", ->
 
   ruleManager = null
 
-  class DummySensor extends env.sensors.Sensor
+  class DummySensor extends env.devices.Sensor
     type: 'unknwon'
     name: 'test'
     getSensorValuesNames: -> []
@@ -37,7 +36,7 @@ describe "RuleManager", ->
 
   sensor = new DummySensor
   serverDummy = 
-    sensors: [sensor]
+    devices: [sensor]
   ruleManager = new env.rules.RuleManager serverDummy, []
   actionHandler = new DummyActionHandler
   ruleManager.actionHandlers = [actionHandler]

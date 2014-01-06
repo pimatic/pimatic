@@ -59,5 +59,7 @@
 	"active": "active",
 	"update available": "update available",
 	"installed": "installed",
-	"Restart pimatic": "Restart pimatic"
+	"Restart pimatic": "Restart pimatic",
+	"Add a group header": "Add a group header",
+	"Other": "Other"
 }

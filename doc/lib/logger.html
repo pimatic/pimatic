@@ -38,13 +38,11 @@
     <span class="nx">@emit</span> <span class="s">&quot;log&quot;</span><span class="p">,</span> <span class="nx">msg</span>
     <span class="nx">callback</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">true</span>
 
-
-
 <span class="nv">logger = </span><span class="k">new</span> <span class="p">(</span><span class="nx">winston</span><span class="p">.</span><span class="nx">Logger</span><span class="p">)(</span>
   <span class="nv">transports: </span><span class="p">[</span>
     <span class="k">new</span> <span class="p">(</span><span class="nx">winston</span><span class="p">.</span><span class="nx">transports</span><span class="p">.</span><span class="nx">Console</span><span class="p">)(</span>
       <span class="nv">level: </span><span class="s">&#39;debug&#39;</span>
-      <span class="nv">colorize: </span><span class="kc">true</span>
+      <span class="nv">colorize: </span><span class="o">not</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">[</span><span class="s">&#39;PIMATIC_DAEMONIZED&#39;</span><span class="p">]</span><span class="o">?</span>
     <span class="p">),</span>
     <span class="k">new</span> <span class="nx">MemoryTransport</span><span class="p">()</span>
   <span class="p">]</span>

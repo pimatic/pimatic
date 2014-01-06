@@ -62,12 +62,8 @@ module.exports =
     doc: "Array of plugins to load"
     format: Array
     default: []
-  actuators:
-    doc: "Array of actuator definations"
-    format: Array
-    default: []
-  sensors:
-    doc: 'Array of sensor definations'
+  devices:
+    doc: "Array of device definations"
     format: Array
     default: []
   rules:

@@ -169,9 +169,7 @@ class Plugin extends require('events').EventEmitter
   init: ->
     throw new Error("your plugin must implement init")
 
-  #createActuator: (config) ->
-
-  #createSensor: (config) ->
+  #createDevice: (config) ->
 
 module.exports.PluginManager = PluginManager
 module.exports.Plugin = Plugin

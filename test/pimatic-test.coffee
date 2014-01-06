@@ -17,7 +17,7 @@ describe "pimatic", ->
       httpsServer:
         enabled: false
       plugins: []
-      actuators: []
+      devices: []
       rules: []
 
   fs = require 'fs'
@@ -33,7 +33,7 @@ describe "pimatic", ->
     fs.unlinkSync configFile
 
   framework = null
-  actuatorConfig = null
+  deviceConfig = null
 
   describe 'startup', ->
 
@@ -55,43 +55,43 @@ describe "pimatic", ->
       ).on "error", (e) ->
         throw e
 
-  describe '#addActuatorToConfig()', ->
+  describe '#addDeviceToConfig()', ->
 
-    actuatorConfig = 
+    deviceConfig = 
       id: 'test-actuator'
       class: 'TestActuatorClass'
 
     it 'should add the actuator to the config', ->
 
-      framework.addActuatorToConfig actuatorConfig
-      assert framework.config.actuators.length is 1
-      assert framework.config.actuators[0].id is actuatorConfig.id
+      framework.addDeviceToConfig deviceConfig
+      assert framework.config.devices.length is 1
+      assert framework.config.devices[0].id is deviceConfig.id
 
     it 'should throw an error if the actuator exists', ->
       try
-        framework.addActuatorToConfig actuatorConfig
+        framework.addDeviceToConfig deviceConfig
         assert false
       catch e
-        assert e.message is "an actuator with the id #{actuatorConfig.id} is already in the config"
+        assert e.message is "an device with the id #{deviceConfig.id} is already in the config"
 
-  describe '#isActuatorInConfig()', ->
+  describe '#isDeviceInConfig()', ->
 
     it 'should find actuator in config', ->
-      assert framework.isActuatorInConfig actuatorConfig.id
+      assert framework.isDeviceInConfig deviceConfig.id
 
     it 'should not find antother actuator in config', ->
-      assert not framework.isActuatorInConfig 'a-not-present-id'
+      assert not framework.isDeviceInConfig 'a-not-present-id'
 
 
-  describe '#updateActuatorConfig()', ->
+  describe '#updateDeviceConfig()', ->
 
-    actuatorConfigNew = 
+    deviceConfigNew = 
       id: 'test-actuator'
       class: 'TestActuatorClass'
       test: 'bla'
 
 
     it 'should update actuator in config', ->
-      framework.updateActuatorConfig actuatorConfigNew
-      assert framework.config.actuators[0].test is 'bla'
+      framework.updateDeviceConfig deviceConfigNew
+      assert framework.config.devices[0].test is 'bla'
 

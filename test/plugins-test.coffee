@@ -3,8 +3,7 @@ fs = require("fs")
 env =
   logger: require '../lib/logger'
   helper: require '../lib/helper'
-  actuators: require '../lib/actuators'
-  sensors: require '../lib/sensors'
+  devices: require '../lib/devices'
   rules: require '../lib/rules'
   plugins: require '../lib/plugins'
   actions: require '../lib/actions'

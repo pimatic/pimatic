@@ -26,7 +26,8 @@ rule definition. The web interface is built using <a href="http://expressjs.com"
 <p>First you need to install <a href="http://nodejs.org">node.js</a> that comes with the package manager 
 <a href="https://npmjs.org/">npm</a>. Then you can run</p>
 
-<pre><code>npm install pimatic
+<pre><code>mkdir pimatic-app
+npm install pimatic --prefix pimatic-app
 </code></pre>
 
 <p>to install the pimatic framework.</p>
@@ -35,8 +36,8 @@ rule definition. The web interface is built using <a href="http://expressjs.com"
 
 <p>I recommend to start with the default config:</p>
 
-<pre><code>cd node_modules/pimatic
-cp config_default.json config.json
+<pre><code>cd pimatic-app
+cp ./node_modules/pimatic/config_default.json ./config.json
 </code></pre>
 
 <p>The config is in the <a href="https://en.wikipedia.org/wiki/JSON">json</a> format and currently includes five 
@@ -141,15 +142,25 @@ determines the plugin and type of the sensor. </p>
 
 <p>The server can be started with </p>
 
-<pre><code>cd node_modules/pimatic
-sudo ./main.js
+<pre><code>cd pimatic-app
+sudo ./node_modules/pimatic/main.jsgc
 </code></pre>
 
-<p>or if you have <a href="http://coffeescript.org/">CoffeeScript</a> globally installed, you can run</p>
+<p>To daemonize pimatic you can run:</p>
 
-<pre><code>cd node_modules/pimatic
-sudo coffee startup.coffee
+<pre><code>cd pimatic-app
+sudo ./node_modules/pimatic/main.js start
 </code></pre>
+
+<p>You can also use <code>status</code>, <code>stop</code>, <code>restart</code>.</p>
+
+<p>To daemonize pimatic you can run:</p>
+
+<pre><code>cd pimatic-app
+sudo ./node_modules/pimatic/main.js start
+</code></pre>
+
+<p>You can also use <code>status</code>, <code>stop</code>, <code>restart</code>.</p>
 
 <h2 id="extensions-and-hacking">Extensions and Hacking</h2>
 

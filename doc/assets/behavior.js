@@ -297,14 +297,24 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "foldPrefix": "^",
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/lib/actuators.coffee",
-            "projectPath": "lib/actuators.coffee",
-            "targetPath": "lib/actuators",
-            "pageTitle": "lib/actuators",
-            "title": "actuators"
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/lib/devices.coffee",
+            "projectPath": "lib/devices.coffee",
+            "targetPath": "lib/devices",
+            "pageTitle": "lib/devices",
+            "title": "devices"
           },
           "depth": 2,
-          "outline": []
+          "outline": [
+            {
+              "type": "heading",
+              "data": {
+                "level": 1,
+                "title": "Sensor",
+                "slug": "sensor"
+              },
+              "depth": 1
+            }
+          ]
         }, {
           "type": "file",
           "data": {
@@ -607,37 +617,6 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "depth": 3
                 }
               ]
-            }
-          ]
-        }, {
-          "type": "file",
-          "data": {
-            "language": {
-              "nameMatchers": [".coffee", "Cakefile"],
-              "pygmentsLexer": "coffee-script",
-              "multiLineComment": ["###*", " *", " ###", "###", "#", "###"],
-              "strictMultiLineEnd": false,
-              "singleLineComment": ["#"],
-              "ignorePrefix": "}",
-              "foldPrefix": "^",
-              "name": "CoffeeScript"
-            },
-            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/lib/sensors.coffee",
-            "projectPath": "lib/sensors.coffee",
-            "targetPath": "lib/sensors",
-            "pageTitle": "lib/sensors",
-            "title": "sensors"
-          },
-          "depth": 2,
-          "outline": [
-            {
-              "type": "heading",
-              "data": {
-                "level": 1,
-                "title": "Sensor",
-                "slug": "sensor"
-              },
-              "depth": 1
             }
           ]
         }
