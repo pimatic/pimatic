@@ -1,0 +1,5 @@
+#!/bin/sh
+mkdir pimatic-app
+cd pimatic-app
+npm install pimatic --production
+cp ./node_modules/pimatic/config_default.json ./config.json
