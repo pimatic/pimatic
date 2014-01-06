@@ -17,7 +17,7 @@
       "plugin": "speak-api" 
     }, 
     { 
-      "plugin": "clock" 
+      "plugin": "cron" 
     }, 
     { 
       "plugin": "mobile-frontend",
