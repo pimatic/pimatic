@@ -76,19 +76,19 @@ the `node_modules` directory and there prefixed with `pimatic-`.
 #### Available Plugins:
 
   * devices and sensors:
-    * [pilight plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-pilight/README.html)
-    * [sispmctl plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-sispmctl/README.html)
-    * [gpio plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-gpio/README.html)
+    * [pilight plugin](http://sweetpi.de/pimatic/docs/pimatic-pilight/README.html)
+    * [sispmctl plugin](http://sweetpi.de/pimatic/docs/pimatic-sispmctl/README.html)
+    * [gpio plugin](http://sweetpi.de/pimatic/docs/pimatic-gpio/README.html)
   * frontend or api:
-    * [mobile-frontend plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-mobile-frontend/README.html)
-    * [filebrowser plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-filebrowser/README.html)
-    * [redirect plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-redirect/README.html)
-    * [rest-api plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-rest-api/README.html)
-    * [speak-api plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-speak-api/README.html)  
+    * [mobile-frontend plugin](http://sweetpi.de/pimatic/docs/pimatic-mobile-frontend/README.html)
+    * [filebrowser plugin](http://sweetpi.de/pimatic/docs/pimatic-filebrowser/README.html)
+    * [redirect plugin](http://sweetpi.de/pimatic/docs/pimatic-redirect/README.html)
+    * [rest-api plugin](http://sweetpi.de/pimatic/docs/pimatic-rest-api/README.html)
+    * [speak-api plugin](http://sweetpi.de/pimatic/docs/pimatic-speak-api/README.html)  
   * rule predicates:
-    * [cron plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-cron/README.html)
-    * [ping plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-ping/README.html)
-    * [log-reader plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-log-reader/README.html)
+    * [cron plugin](http://sweetpi.de/pimatic/docs/pimatic-cron/README.html)
+    * [ping plugin](http://sweetpi.de/pimatic/docs/pimatic-ping/README.html)
+    * [log-reader plugin](http://sweetpi.de/pimatic/docs/pimatic-log-reader/README.html)
 
 ### The "devices"-section
 The `"devices"`-section should contain all devices, you want to have registered in the 
@@ -121,19 +121,19 @@ Running
 The server can be started with 
 
     cd pimatic-app
-    sudo ./node_modules/pimatic/main.jsgc
+    sudo ./node_modules/pimatic/pimatic.js
 
 To daemonize pimatic you can run:
 
     cd pimatic-app
-    sudo ./node_modules/pimatic/main.js start
+    sudo ./node_modules/pimatic/pimatic.js start
 
 You can also use `status`, `stop`, `restart`.
 
 To daemonize pimatic you can run:
 
     cd pimatic-app
-    sudo ./node_modules/pimatic/main.js start
+    sudo ./node_modules/pimatic/pimatic.js start
 
 You can also use `status`, `stop`, `restart`.
 

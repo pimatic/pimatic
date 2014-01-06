@@ -2,19 +2,20 @@
   "name": "pimatic",
   "description": "A home automation server and framework for the raspberry pi running on node.js",
   "author": "Oliver Schneider <oliverschneider89+sweetpi@gmail.com> (http://sweetpi.de)",
-  "main": "main.js",
+  "main": "pimatic.js",
   "files": [
     "docs",
     "lib",
     "locales",
     "test",
     "coverage/blanket.js",
-    "main.js",
+    "pimatic.js",
     "startup.coffee",
     "Cuntfile.coffee",
     "config-shema.coffee",
     "config_default.json",
     "README.md",
+    "plugins.md",
     "LICENSE"
   ],
   "version": "0.3.2",
@@ -24,7 +25,7 @@
     "url": "git://github.com/sweetpi/pimatic.git"
   },
   "bin": {
-    "pimatic": "./main.js"
+    "pimatic": "./pimatic.js"
   },
   "dependencies": {
     "coffee-script": "1.6.*",
