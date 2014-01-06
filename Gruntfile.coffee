@@ -17,6 +17,7 @@ module.exports = (grunt) ->
     pimatic:
       src: [
         "./README.md"
+        "./plugins.md"
         "./startup.coffee"
         "./config-shema.coffee"
         "./lib/*.coffee"
