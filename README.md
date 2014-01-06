@@ -51,8 +51,7 @@ sections:
     { 
       "settings": { ... },
       "plugins": [ ... ],
-      "actuators": [ ... ],
-      "sensors": [ ... ],
+      "devices": [ ... ],
       "rules": [ ... ]
     }
 
@@ -91,10 +90,10 @@ the `node_modules` directory and there prefixed with `pimatic-`.
     * [ping plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-ping/README.html)
     * [log-reader plugin](http://sweetpi.de/pimatic/docs/node_modules/pimatic-log-reader/README.html)
 
-### The "actuators"-section
-The `"actuators"`-section should contain all actuators, you want to have registered in the 
+### The "devices"-section
+The `"devices"`-section should contain all devices, you want to have registered in the 
 framework. An actuator is typically provided by a plugin, so take a look at the desired plugin 
-for more details about the configuration of your actuators. A actuator configuration has the form
+for more details about the configuration of your devices. A device configuration has the form
 
     { 
       "id": "light",
@@ -104,22 +103,7 @@ for more details about the configuration of your actuators. A actuator configura
     }
 
 where the `"id"` should be unique, the `"name"` should be human readable description and `"class"`
-determines the plugin and type of the actuator. 
-
-### The "sensor"-section
-The `"sensor"`-section should contain all sensors, you want to have registered in the framework. 
-A sensor is typically provided by a plugin, so take a look at the desired plugin for more details 
-about the configuration of your sensor. A sensor configuration has the form
-
-    { 
-      "id": "temperature",
-      "class": "SomeSensor",
-      "name": "Temperature in the kitchen",
-      ...
-    }
-
-where the `"id"` should be unique, the `"name"` should be human readable description and `"class"` 
-determines the plugin and type of the sensor. 
+determines the plugin and type of the device. 
 
 
 ### The "rules"-section
@@ -156,5 +140,7 @@ You can also use `status`, `stop`, `restart`.
 
 Extensions and Hacking
 ----------------------
-The framework is built to be extendable by plugins. If you have devices that are currently not supported please add a plugin for your devices. 
-As well, if you have a nice Ideas for plugins or need support for specials actuators you are welcome to create a issue or submit a patch.
+The framework is built to be extendable by plugins. If you have devices that are currently not 
+supported please add a plugin for your devices. 
+As well, if you have a nice Ideas for plugins or need support for specials actuators you are
+welcome to create a issue or submit a patch.
