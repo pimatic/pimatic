@@ -273,8 +273,11 @@ module.exports = (env) ->
             env.logger.debug err.stack
 
       initActionHandler = =>
-        @ruleManager.actionHandlers.push new env.actions.SwitchActionHandler env, this
-        @ruleManager.actionHandlers.push new env.actions.LogActionHandler env, this
+        @ruleManager.addActionHandler new env.actions.SwitchActionHandler env, this
+        @ruleManager.addActionHandler new env.actions.LogActionHandler env, this
+
+      initPredicateProvider = =>
+        @ruleManager.addPredicateProvider new env.predicates.PresentPredicateProvider env, this
 
       initRules = =>
 
@@ -316,6 +319,7 @@ module.exports = (env) ->
         .then(initPlugins)
         .then( => @loadDevices())
         .then(initActionHandler)
+        .then(initPredicateProvider)
         .then(initRules)
         .then( =>         
           # Save the config on "config" event

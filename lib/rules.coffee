@@ -15,9 +15,9 @@ class RuleManager extends require('events').EventEmitter
   #     orgCondition: 'its 10pm and light is on'
   #     predicates: [
   #       { id: 'some-id0'
-  #         sensor: the corresponding sensor },
+  #         provider: the corresponding provider },
   #       { id: 'some-id1'
-  #         sensor: the corresponding sensor }
+  #         provider: the corresponding provider }
   #     ]
   #     tokens: ['predicate', '(', 0, ')', 'and', 
   #              'predicate', '(', 1, ')' ] 
@@ -28,15 +28,19 @@ class RuleManager extends require('events').EventEmitter
   # 
   #     id: id
   #     string: 'if bla then blub'
-  #     error: 'Could not find a sensor that decides bla'
+  #     error: 'Could not find a provider that decides bla'
   #     active: false 
   # 
   rules: []
   # Array of ActionHandlers: see [actions.coffee](actions.html)
   actionHandlers: []
+  # Array of predicateProviders: see [actions.coffee](actions.html)
+  predicateProviders: []
 
   constructor: (@framework) ->
 
+  addActionHandler: (ah) -> @actionHandlers.push ah
+  addPredicateProvider: (pv) -> @predicateProviders.push pv
 
   # ###parseRuleString
   # This function parses a rule given by a string and returns a rule object.
@@ -48,9 +52,9 @@ class RuleManager extends require('events').EventEmitter
   #     orgCondition: 'its 10pm and light is on'
   #     predicates: [
   #       { id: 'some-id0'
-  #         sensor: the corresponding sensor },
+  #         provider: the corresponding provider },
   #       { id: 'some-id1'
-  #         sensor: the corresponding sensor }
+  #         provider: the corresponding provider }
   #     ]
   #     tokens: ['predicate', '(', 0, ')', 'and', 
   #              'predicate', '(', 1, ')' ] 
@@ -78,15 +82,14 @@ class RuleManager extends require('events').EventEmitter
       # and `actions` gets `" turn the light off"`.
       actions = parts[2].trim()
 
-      # Utility function, that finds a sensor, that can decide the given predicate like `its 10pm`
-      findSensorForPredicate = (predicate) =>
+      # Utility function, that finds a provider, that can decide the given predicate like `its 10pm`
+      findPredicateProvider = (predicate) =>
         assert predicate? and typeof predicate is "string" and predicate.length isnt 0
-        for deviceId, device of @framework.devices
-          if device.canDecide?
-            type = device.canDecide predicate
-            assert type is 'event' or type is 'state' or type is no
-            if type is 'event' or type is 'state'
-              return [type, device]
+        for provider in @predicateProviders
+          type = provider.canDecide predicate
+          assert type is 'event' or type is 'state' or type is no
+          if type is 'event' or type is 'state'
+            return [type, provider]
         return [null, null]
 
       # Now split the condition in a token stream.
@@ -108,20 +111,20 @@ class RuleManager extends require('events').EventEmitter
           else
             i = predicates.length
             predId = id+
-            [type, predSensor] = findSensorForPredicate token
+            [type, provider] = findPredicateProvider token
 
             forSuffix = null
             forTime = null
-            unless predSensor?
+            unless provider?
               # no predicate found yet. Try to split the predicate at `for` to handle 
               # predicates in the form `"the light is on for 10 seconds"`
               parts = token.split /\sfor\s/
               if parts.length is 2
                 realPredicate = parts[0].trim()
                 maybeForSuffix = parts[1].trim().toLowerCase()
-                [type, predSensor] = findSensorForPredicate realPredicate
+                [type, provider] = findPredicateProvider realPredicate
                 matches = maybeForSuffix.match(/^(\d+)\s+seconds?$/)
-                if predSensor? and matches?
+                if provider? and matches?
                   token = realPredicate
                   forSuffix = maybeForSuffix
                   forTime = (parseInt matches[1], 10) * 1000
@@ -133,12 +136,12 @@ class RuleManager extends require('events').EventEmitter
               id: predId
               token: token
               type: type
-              sensor: predSensor
+              provider: provider
               forToken: forSuffix
               for: forTime
 
-            if not predicate.sensor?
-              throw new Error "Could not find an sensor that decides \"#{predicate.token}\""
+            if not predicate.provider?
+              throw new Error "Could not find an provider that decides \"#{predicate.token}\""
 
             predicates.push(predicate)
             tokens = tokens.concat ["predicate", "(", i, ")"]
@@ -164,12 +167,12 @@ class RuleManager extends require('events').EventEmitter
   # ###_whenPredicateIsTrue
   # Register for every predicate the callback function that should be called
   # when the predicate becomes true.
-  _registerPredicateSensorNotify: (rule) ->
+  _registerPredicateProviderNotify: (rule) ->
     assert rule?
     assert rule.predicates?
 
     # ###whenPredicateIsTrue
-    # This function should be called by a sensor if a predicate becomes true
+    # This function should be called by a provider if a predicate becomes true
     whenPredicateIsTrue = (ruleId, predicateId, state) =>
       assert ruleId? and typeof ruleId is "string" and ruleId.length isnt 0
       assert predicateId? and typeof predicateId is "string" and predicateId.length isnt 0
@@ -194,23 +197,23 @@ class RuleManager extends require('events').EventEmitter
       ).done()
       return
     
-    # Register the whenPredicateIsTrue for all sensors:
+    # Register the whenPredicateIsTrue for all providers:
     for p in rule.predicates
       do (p) =>
-        p.sensor.notifyWhen p.id, p.token, (state) =>
+        p.provider.notifyWhen p.id, p.token, (state) =>
           assert state is 'event' or state is true or state is false
           if state is true or state is 'event'
             whenPredicateIsTrue rule.id, p.id, state
           
-  # ###_cancelPredicateSensorNotify
+  # ###_cancelPredicateproviderNotify
   # Cancels for every predicate the callback that should be called
   # when the predicate becomes true.
-  _cancelPredicateSensorNotify: (rule) ->
+  _cancelPredicateProviderNotify: (rule) ->
     assert rule?
     assert rule.predicates?
 
     # Then cancel the notifier for all predicates
-    p.sensor.cancelNotify p.id for p in rule.predicates
+    p.provider.cancelNotify p.id for p in rule.predicates
 
   # ###AddRuleByString
   addRuleByString: (id, ruleString, active=yes, force=false) ->
@@ -219,7 +222,7 @@ class RuleManager extends require('events').EventEmitter
 
     # First parse the rule.
     return @parseRuleString(id, ruleString).then( (rule)=>
-      @_registerPredicateSensorNotify rule
+      @_registerPredicateProviderNotify rule
       # If the rules was successful parsed add it to the rule array.
       rule.active = active
       @rules[id] = rule
@@ -256,7 +259,7 @@ class RuleManager extends require('events').EventEmitter
     # First get the rule from the rule array.
     rule = @rules[id]
     # Then get cancel all notifies
-    @_cancelPredicateSensorNotify rule
+    @_cancelPredicateProviderNotify rule
     # and delete the rule from the array
     delete @rules[id]
     # and emit the event.
@@ -274,9 +277,9 @@ class RuleManager extends require('events').EventEmitter
       # If the rule was successfully parsed then get the old rule
       oldRule = @rules[id]
       # and cancel the notifier for the old predicates.
-      @_cancelPredicateSensorNotify rule
+      @_cancelPredicateProviderNotify rule
       # and register the new ones:
-      @_registerPredicateSensorNotify rule
+      @_registerPredicateProviderNotify rule
 
       # Then add the rule to the rules array
       @rules[id] = rule
@@ -305,7 +308,7 @@ class RuleManager extends require('events').EventEmitter
             predicateValues.push (Q.fcall => kpred.state)
             known = yes
       unless known
-        predicateValues.push (pred.sensor.isTrue pred.id, pred.token)
+        predicateValues.push (pred.provider.isTrue pred.id, pred.token)
 
     return Q.all(predicateValues).then( (predicateValues) =>
       bet = require 'bet'
@@ -369,17 +372,17 @@ class RuleManager extends require('events').EventEmitter
 
               timeout = setTimeout =>
                 deferred.resolve true
-                pred.sensor.cancelNotify idNew
+                pred.provider.cancelNotify idNew
               , pred.for
 
               # else let us be notified when it becomes false
-              pred.sensor.notifyWhen idNew, pred.token, (state) =>
+              pred.provider.notifyWhen idNew, pred.token, (state) =>
                 assert state is true or state is false
                 # if it changes to false
                 if state is false
                   # then the condition doesn't hold
                   deferred.resolve false
-                  pred.sensor.cancelNotify idNew
+                  pred.provider.cancelNotify idNew
                   clearTimeout timeout
             )
             awaiting.push deferred.promise

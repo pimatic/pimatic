@@ -12,6 +12,7 @@ env =
   rules: require './lib/rules'
   plugins: require './lib/plugins'
   actions: require './lib/actions'
+  predicates: require './lib/predicates'
   require: (args...) -> module.require args...
 
 # set the config file to
