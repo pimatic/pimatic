@@ -78,7 +78,7 @@ class PresentPredicateProvider extends PredicateProvider
     if matches?
       deviceName = matches[1].trim()
       for id, d of @framework.devices
-        if 'present' in d.getSensorValuesNames()
+        if d.getSensorValuesNames? and 'present' in d.getSensorValuesNames()
           if deviceName is d.name or deviceName is d.id
             return info =
               device: d
