@@ -10,17 +10,17 @@ describe "RuleManager", ->
     devices: require '../lib/devices'
     rules: require '../lib/rules'
     plugins: require '../lib/plugins'
+    predicates: require '../lib/predicates'
 
   before ->
     env.logger.transports.console.level = 'error'
 
   ruleManager = null
 
-  class DummySensor extends env.devices.Sensor
+  class DummyPredicateProvider extends env.predicates.PredicateProvider
     type: 'unknwon'
     name: 'test'
-    getSensorValuesNames: -> []
-    getSensorValue: (name) -> throw new Error("no name available")
+
     canDecide: (predicate) -> 
       assert predicate is "predicate 1"
       return 'event'
@@ -34,10 +34,10 @@ describe "RuleManager", ->
       return Q.fcall -> "action 1 executed"
 
 
-  sensor = new DummySensor
-  serverDummy = 
-    devices: [sensor]
+  provider = new DummyPredicateProvider
+  serverDummy = {}
   ruleManager = new env.rules.RuleManager serverDummy, []
+  ruleManager.addPredicateProvider provider
   actionHandler = new DummyActionHandler
   ruleManager.actionHandlers = [actionHandler]
 
@@ -58,7 +58,7 @@ describe "RuleManager", ->
 
     it 'should parse rule with for suffix', (finish) ->
 
-      sensor.canDecide = (predicate) -> 
+      provider.canDecide = (predicate) -> 
         assert predicate is "predicate 1" or predicate is 'predicate 1 for 10 seconds'
         return if predicate is "predicate 1" then 'state' else no
 
@@ -89,7 +89,7 @@ describe "RuleManager", ->
 
     it 'should reject unknown predicate', (finish) ->
 
-      sensor.canDecide = (predicate) ->
+      provider.canDecide = (predicate) ->
         assert predicate is 'predicate 2'
         return false
 
@@ -97,13 +97,13 @@ describe "RuleManager", ->
         finish new Error 'Accepted invalid rule'
       ).catch( (error) -> 
         assert error?
-        assert error.message is 'Could not find an sensor that decides "predicate 2"'
+        assert error.message is 'Could not find an provider that decides "predicate 2"'
         finish()
       ).done()
 
     it 'should reject unknown action', (finish) ->
       canDecideCalled = false
-      sensor.canDecide = (predicate) ->
+      provider.canDecide = (predicate) ->
         assert predicate is "predicate 1"
         canDecideCalled = true
         return 'event'
@@ -133,7 +133,7 @@ describe "RuleManager", ->
     notifyCallback = null
 
     it 'should add the rule', (finish) ->
-      sensor.notifyWhen = (id, predicate, callback) -> 
+      provider.notifyWhen = (id, predicate, callback) -> 
         assert id?
         assert predicate is 'predicate 1'
         assert typeof callback is 'function'
@@ -170,12 +170,12 @@ describe "RuleManager", ->
 
     it 'should decide predicate 1', (finish)->
 
-      sensor.canDecide = (predicate) -> 
+      provider.canDecide = (predicate) -> 
         assert predicate is "predicate 1"
         return 'state'
 
-      sensor.isTrue = (id, predicate) -> Q.fcall -> true
-      sensor.notifyWhen = (id, predicate, callback) -> true
+      provider.isTrue = (id, predicate) -> Q.fcall -> true
+      provider.notifyWhen = (id, predicate, callback) -> true
 
       rule =
         id: "test1"
@@ -184,7 +184,7 @@ describe "RuleManager", ->
           id: "test1,"
           token: "predicate 1"
           type: "state"
-          sensor: sensor
+          provider: provider
           for: null
         ]
         tokens: [
@@ -200,7 +200,7 @@ describe "RuleManager", ->
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
         assert isTrue is true
       ).then( -> 
-        sensor.isTrue = (id, predicate) -> Q.fcall -> false 
+        provider.isTrue = (id, predicate) -> Q.fcall -> false 
       ).then( -> ruleManager.doesRuleCondtionHold rule).then( (isTrue) ->
         assert isTrue is false
         finish()
@@ -208,12 +208,12 @@ describe "RuleManager", ->
 
     it 'should decide predicate 1 and predicate 2', (finish)->
 
-      sensor.canDecide = (predicate) -> 
+      provider.canDecide = (predicate) -> 
         assert predicate is "predicate 1" or predicate is "predicate 2"
         return 'state'
 
-      sensor.isTrue = (id, predicate) -> Q.fcall -> true
-      sensor.notifyWhen = (id, predicate, callback) -> true
+      provider.isTrue = (id, predicate) -> Q.fcall -> true
+      provider.notifyWhen = (id, predicate, callback) -> true
 
       rule =
         id: "test1"
@@ -223,14 +223,14 @@ describe "RuleManager", ->
             id: "test1,"
             token: "predicate 1"
             type: "state"
-            sensor: sensor
+            provider: provider
             for: null
           }
           {
             id: "test2,"
             token: "predicate 2"
             type: "state"
-            sensor: sensor
+            provider: provider
             for: null
           }
         ]
@@ -252,7 +252,7 @@ describe "RuleManager", ->
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
         assert isTrue is true
       ).then( -> 
-        sensor.isTrue = (id, predicate) -> Q.fcall -> (predicate is 'predicate 1') 
+        provider.isTrue = (id, predicate) -> Q.fcall -> (predicate is 'predicate 1') 
       ).then( -> ruleManager.doesRuleCondtionHold rule ).then( (isTrue) ->
         assert isTrue is false
         finish()
@@ -260,12 +260,12 @@ describe "RuleManager", ->
 
     it 'should decide predicate 1 or predicate 2', (finish)->
 
-      sensor.canDecide = (predicate) -> 
+      provider.canDecide = (predicate) -> 
         assert predicate is "predicate 1" or predicate is "predicate 2"
         return 'state'
 
-      sensor.isTrue = (id, predicate) -> Q.fcall -> true
-      sensor.notifyWhen = (id, predicate, callback) -> true
+      provider.isTrue = (id, predicate) -> Q.fcall -> true
+      provider.notifyWhen = (id, predicate, callback) -> true
 
       rule =
         id: "test1"
@@ -275,14 +275,14 @@ describe "RuleManager", ->
             id: "test1,"
             token: "predicate 1"
             type: "state"
-            sensor: sensor
+            provider: provider
             for: null
           }
           {
             id: "test2,"
             token: "predicate 2"
             type: "state"
-            sensor: sensor
+            provider: provider
             for: null
           }
         ]
@@ -304,7 +304,7 @@ describe "RuleManager", ->
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
         assert isTrue is true
       ).then( -> 
-        sensor.isTrue = (id, predicate) -> Q.fcall -> (predicate is 'predicate 1') 
+        provider.isTrue = (id, predicate) -> Q.fcall -> (predicate is 'predicate 1') 
       ).then( -> ruleManager.doesRuleCondtionHold rule ).then( (isTrue) ->
         assert isTrue is true
         finish()
@@ -314,12 +314,12 @@ describe "RuleManager", ->
     it 'should decide predicate 1 for 1 second (holds)', (finish)->
       this.timeout 2000
 
-      sensor.canDecide = (predicate) -> 
+      provider.canDecide = (predicate) -> 
         assert predicate is "predicate 1"
         return 'state'
 
-      sensor.isTrue = (id, predicate) -> Q.fcall -> true
-      sensor.notifyWhen = (id, predicate, callback) -> 
+      provider.isTrue = (id, predicate) -> Q.fcall -> true
+      provider.notifyWhen = (id, predicate, callback) -> 
         assert predicate is "predicate 1"
         return true
 
@@ -330,7 +330,7 @@ describe "RuleManager", ->
           id: "test1,"
           token: "predicate 1"
           type: "state"
-          sensor: sensor
+          provider: provider
           forToken: "1 second"
           for: 1000
         ]
@@ -352,14 +352,14 @@ describe "RuleManager", ->
     it 'should decide predicate 1 for 1 second (does not hold)', (finish)->
       this.timeout 2000
 
-      sensor.canDecide = (predicate) -> 
+      provider.canDecide = (predicate) -> 
         assert predicate is "predicate 1"
         return 'state'
 
-      sensor.isTrue = (id, predicate) -> Q.fcall -> true
+      provider.isTrue = (id, predicate) -> Q.fcall -> true
 
       notifyCallback = null
-      sensor.notifyWhen = (id, predicate, callback) -> 
+      provider.notifyWhen = (id, predicate, callback) -> 
         assert predicate is "predicate 1"
         notifyCallback = callback
         return true
@@ -371,7 +371,7 @@ describe "RuleManager", ->
           id: "test1,"
           token: "predicate 1"
           type: "state"
-          sensor: sensor
+          provider: provider
           forToken: "1 second"
           for: 1000
         ]
@@ -404,14 +404,14 @@ describe "RuleManager", ->
     it 'should update the rule', (finish) ->
 
       canDecideCalled = false
-      sensor.canDecide = (predicate) ->
+      provider.canDecide = (predicate) ->
         assert predicate is 'predicate 2'
         canDecideCalled = i
         i++
         return 'event'
 
       cancleNotifyCalled = false
-      sensor.cancelNotify = (id) ->
+      provider.cancelNotify = (id) ->
         assert id?
         assert id is notifyId
         cancleNotifyCalled = i
@@ -419,7 +419,7 @@ describe "RuleManager", ->
         return true
 
       notifyWhenCalled = false
-      sensor.notifyWhen = (id, predicate, callback) -> 
+      provider.notifyWhen = (id, predicate, callback) -> 
         assert id?
         assert predicate is 'predicate 2'
         assert typeof callback is 'function'
@@ -428,7 +428,7 @@ describe "RuleManager", ->
         i++
         return true
 
-      sensor.isTrue = -> Q.fcall -> true
+      provider.isTrue = -> Q.fcall -> true
 
       actionHandler.executeAction = (actionString, simulate) => Q.fcall -> "execute action"
 
@@ -458,7 +458,7 @@ describe "RuleManager", ->
 
     it 'should remove the rule', ->
       cancleNotifyCalled = false
-      sensor.cancelNotify = (id) ->
+      provider.cancelNotify = (id) ->
         assert id?
         cancleNotifyCalled = true
         return true
