@@ -175,7 +175,7 @@ module.exports = (env) ->
       unless process.env['PIMATIC_DAEMONIZED']?
         throw new Error 'Can not restart self, when not daemonzed. ' +
           'Please run pimatic with: "node main.js start" to use this feature.'
-
+      # monitor will auto restart script
       process.nextTick -> process.exit 0
 
     registerPlugin: (plugin, config) ->
