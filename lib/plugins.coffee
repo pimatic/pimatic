@@ -44,7 +44,7 @@ class PluginManager
     assert name.match(/^pimatic-.*$/)?
     return @_getNpm().then( (npm) =>
       npm.prefix = @pathToPlugin name
-      return Q.ninvoke(npm, 'install')
+      return Q.ninvoke(npm.commands, 'install', [])
     )
 
   # Install a plugin from the npm repository
@@ -53,13 +53,13 @@ class PluginManager
     assert name.match(/^pimatic-.*$/)?
     return @_getNpm().then( (npm) =>
       npm.prefix = @modulesParentDir
-      return Q.ninvoke(npm, 'install', name)
+      return Q.ninvoke(npm.commands, 'install', [name])
     )
 
   update: (modules) -> 
     return @_getNpm().then( (npm) =>
       npm.prefix = @modulesParentDir
-      return Q.ninvoke(npm, 'update', modules...)
+      return Q.ninvoke(npm.commands, 'update', modules)
     )
 
   pathToPlugin: (name) ->
@@ -87,7 +87,7 @@ class PluginManager
   # 
   searchForPlugins: ->
     return @_getNpm().then( (npm) =>
-      return Q.ninvoke(npm, 'search', 'pimatic-')
+      return Q.ninvoke(npm.commands, 'search', ['pimatic-'], true)
     )
 
   isPimaticOutdated: ->
@@ -97,7 +97,7 @@ class PluginManager
         throw new Error('pimatic is not in an node_modules folder. Update check does not work.')
       # set prefix to the parent directory of the node_modules folder
       npm.prefix = @modulesParentDir
-      return Q.ninvoke(npm, 'outdated', 'pimatic').then( (result) =>
+      return Q.ninvoke(npm.commands, 'outdated', ['pimatic'], true).then( (result) =>
         if result.length is 1
           result = result[0]
           return info =
@@ -111,7 +111,7 @@ class PluginManager
     return @_getNpm().then( (npm) =>
       return @getInstalledPlugins().then( (plugins) =>
         npm.prefix = @modulesParentDir
-        return Q.ninvoke(npm, 'outdated', plugins...).then( (result) =>
+        return Q.ninvoke(npm.commands, 'outdated', plugins, true).then( (result) =>
           return (for r in result
             entry =
               plugin: r[1]
@@ -140,7 +140,6 @@ class PluginManager
       #   showHidden: true
       #   depth: 2
       # )
-
       # Don't log to stdout or stderror:
       npm.registry.log.pause()
       # Proxy the log stream to our own log:
