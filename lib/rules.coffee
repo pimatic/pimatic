@@ -66,8 +66,12 @@ class RuleManager extends require('events').EventEmitter
     assert id? and typeof id is "string" and id.length isnt 0
     assert ruleString? and typeof ruleString is "string"
 
+    rule = 
+      id: id
+      string: ruleString
+
     # Allways return a promise
-    return Q.fcall =>
+    return Q.fcall( =>
       # First take the string apart, so that 
       # `parts` gets `["", "its 10pm and light is on", "turn the light off"]`.
       parts = ruleString.split /^if\s|\sthen\s/
@@ -78,9 +82,9 @@ class RuleManager extends require('events').EventEmitter
         when parts.length > 3 
           throw new Error('The rule must exactly contain one "if" and one "then"!')
       # Now `condition` gets `"its 10pm and light is on"`
-      condition = parts[1].trim()
+      rule.orgCondition = parts[1].trim()
       # and `actions` gets `" turn the light off"`.
-      actions = parts[2].trim()
+      rule.action = parts[2].trim()
 
       # Utility function, that finds a provider, that can decide the given predicate like `its 10pm`
       findPredicateProvider = (predicate) =>
@@ -103,7 +107,7 @@ class RuleManager extends require('events').EventEmitter
       # `predicates = [ {token: '12:30'}, {token: 'temperature > 10'}]`
       predicates = []
       tokens = []
-      for token in condition.split /(\sand\s|\sor\s|\)|\()/ 
+      for token in rule.orgCondition.split /(\sand\s|\sor\s|\)|\()/ 
         do (token) =>
           token = token.trim()
           if token in ["and", "or", ")", "("]
@@ -146,23 +150,24 @@ class RuleManager extends require('events').EventEmitter
             predicates.push(predicate)
             tokens = tokens.concat ["predicate", "(", i, ")"]
               
+      rule.tokens = tokens
+      rule.predicates = predicates
 
       # Simulate the action execution to try if it can be executed-
-      return @executeAction(actions, true).then( =>
-
+      return @executeAction(rule.action, true).then( =>
         # If the execution was sussessful then return the rule object.
-        return rule = 
-          id: id
-          orgCondition: condition
-          predicates: predicates
-          tokens: tokens
-          action: actions
-          string: ruleString
+        return rule 
       ).catch( (error) =>
         # If there was a Errror simulation the action exeution, return an error.
         logger.debug error
         throw new Error "Could not find a actuator to execute \"#{actions}\""
       )
+    ).catch( (error) =>
+      logger.info "rethrowing error: #{error.message}"
+      logger.debug error.stack
+      error.rule = rule
+      throw error
+    )
 
   # ###_whenPredicateIsTrue
   # Register for every predicate the callback function that should be called
@@ -180,6 +185,7 @@ class RuleManager extends require('events').EventEmitter
 
       # First get get the corresponding rule
       rule = @rules[ruleId]
+      unless rule.active then return
 
       # Then mark the given predicate as true, if it is an event
       knownPredicates = (if state is 'event' 
@@ -242,14 +248,16 @@ class RuleManager extends require('events').EventEmitter
       # If there was an error pasring the rule, but the rule is forced to be added, then add
       # the rule with an error
       if force
-        rule = 
-          id: id
-          string: ruleString
-          error: error.message
-          active: false
-          valid: no
-        @rules[id] = rule
-        @emit 'add', rule
+        if error.rule?
+          rule = error.rule
+          rule.error = error.message
+          rule.active = false
+          rule.valid = no
+          @rules[id] = rule
+          @emit 'add', rule
+        else
+          logger.error 'Could not force add rule, because error had no rule attribute.'
+          logger.debug error
       throw error
     )
 
