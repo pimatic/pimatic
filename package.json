@@ -25,7 +25,7 @@
     "url": "git://github.com/sweetpi/pimatic.git"
   },
   "bin": {
-    "pimatic": "./pimatic.js"
+    "pimatic.js": "./pimatic.js"
   },
   "dependencies": {
     "coffee-script": "1.6.*",

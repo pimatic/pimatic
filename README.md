@@ -130,12 +130,16 @@ To daemonize pimatic you can run:
 
 You can also use `status`, `stop`, `restart`.
 
-To daemonize pimatic you can run:
+###Install global
 
-    cd pimatic-app
-    sudo ./node_modules/pimatic/pimatic.js start
+To make pimatic available global you can run:
 
-You can also use `status`, `stop`, `restart`.
+    cd ./node_modules/pimatic
+    sudo npm link
+
+Then pimatic can be used with:
+
+    pimatic.js [start|stop|status|restart]
 
 
 Extensions and Hacking
