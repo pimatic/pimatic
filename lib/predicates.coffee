@@ -100,7 +100,7 @@ class SensorValuePredicateProvider extends PredicateProvider
   isTrue: (id, predicate) ->
     info = @_parsePredicate predicate
     if info? then return info.device.getSensorValue(info.sensorValueName).then (value) =>
-      return @_compareValues info.comparator, value, referenceValue
+      return @_compareValues info.comparator, value, info.referenceValue
     else throw new Error "Sensor can not decide \"#{predicate}\"!"
 
   # Removes the notification for an with `notifyWhen` registered predicate. 
@@ -154,14 +154,14 @@ class SensorValuePredicateProvider extends PredicateProvider
       '(.+)' # reference value
     matches = predicate.match (new RegExp regExpString)
     if matches?
-      sensorValueName = matches[1].trim()
-      sensorName = matches[2].trim()
+      sensorValueName = matches[1].trim().toLowerCase()
+      sensorName = matches[2].trim().toLowerCase()
       comparator = matches[3].trim() 
       referenceValue = matches[4].trim()
       #console.log "#{sensorValueName}, #{sensorName}, #{comparator}, #{referenceValue}"
       for id, d of @framework.devices
         if d.getSensorValuesNames?
-          if sensorName is d.name or sensorName is d.id
+          if sensorName is d.name.toLowerCase() or sensorName is d.id.toLowerCase()
             if sensorValueName in d.getSensorValuesNames()
               comparator = switch  
                 when comparator in ['is', 'equal', 'equals', 'equal to', 'equals to'] then '=='

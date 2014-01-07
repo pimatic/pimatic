@@ -249,7 +249,7 @@ class RuleManager extends require('events').EventEmitter
           active: false
           valid: no
         @rules[id] = rule
-        rule.emit 'add', rule
+        @emit 'add', rule
       throw error
     )
 
