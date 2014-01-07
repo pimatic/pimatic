@@ -270,6 +270,7 @@ module.exports = (env) ->
 
       initPredicateProvider = =>
         @ruleManager.addPredicateProvider new env.predicates.PresentPredicateProvider env, this
+        @ruleManager.addPredicateProvider new env.predicates.SensorValuePredicateProvider env, this
 
       initRules = =>
 

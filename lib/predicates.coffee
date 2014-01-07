@@ -86,5 +86,105 @@ class PresentPredicateProvider extends PredicateProvider
     return null
 
 
+
+class SensorValuePredicateProvider extends PredicateProvider
+  _listener: {}
+
+  constructor: (_env, @framework) ->
+    env = _env
+
+  canDecide: (predicate) ->
+    info = @_parsePredicate predicate
+    return if info? then 'state' else no 
+
+  isTrue: (id, predicate) ->
+    info = @_parsePredicate predicate
+    if info? then return info.device.getSensorValue(info.sensorValueName).then (value) =>
+      return @_compareValues info.comparator, value, referenceValue
+    else throw new Error "Sensor can not decide \"#{predicate}\"!"
+
+  # Removes the notification for an with `notifyWhen` registered predicate. 
+  cancelNotify: (id) ->
+    listener = @_listener[id]
+    if listener?
+      listener.destroy()
+      delete @_listener[id]
+
+  # Registers notification. 
+  notifyWhen: (id, predicate, callback) ->
+    info = @_parsePredicate predicate
+    if info?
+      device = info.device
+
+      lastState = null
+      deviceListener = (val) =>
+        state = @_compareValues info.comparator, val, info.referenceValue
+        if state isnt lastState
+          lastState = state
+          callback state
+
+      device.on info.sensorValueName, deviceListener
+
+      @_listener[id] =
+        id: id
+        destroy: => device.removeListener info.sensorValueName, deviceListener
+
+    else throw new Error "PresentPredicateProvider can not decide \"#{predicate}\"!"
+
+  _compareValues: (comparator, value, referenceValue) ->
+    unless isNaN value
+      value = parseFloat value
+    return switch comparator
+      when '==' then value is referenceValue
+      when '!=' then value isnt referenceValue
+      when '<' then value < referenceValue
+      when '>' then value > referenceValue
+      else throw new Error "Unknown comparator: #{comparator}"
+
+
+  _parsePredicate: (predicate) ->
+    regExpString = 
+      '^(.+)\\s+' + # the sensor value
+      'of\\s+' + # of
+      '(.+?)\\s+' + # the sensor
+      '(?:is\\s+)?' + # is
+      '(equal\\s+to|equals*|lower|less|greater|is not|is)' + 
+        # is, is not, equal, equals, lower, less, greater
+      '(?:|\\s+equal|\\s+than|\\s+as)?\\s+' + # equal to, equal, than, as
+      '(.+)' # reference value
+    matches = predicate.match (new RegExp regExpString)
+    if matches?
+      sensorValueName = matches[1].trim()
+      sensorName = matches[2].trim()
+      comparator = matches[3].trim() 
+      referenceValue = matches[4].trim()
+      #console.log "#{sensorValueName}, #{sensorName}, #{comparator}, #{referenceValue}"
+      for id, d of @framework.devices
+        if d.getSensorValuesNames?
+          if sensorName is d.name or sensorName is d.id
+            if sensorValueName in d.getSensorValuesNames()
+              comparator = switch  
+                when comparator in ['is', 'equal', 'equals', 'equal to', 'equals to'] then '=='
+                when comparator is 'is not' then '!='
+                when comparator is 'greater' then '>'
+                when comparator in ['lower', 'less'] then '<'
+                else 
+                  env.logger.error "Illegal comparator \"#{comparator}\""
+                  false
+
+              unless comparator is false
+                unless isNaN(referenceValue)
+                  referenceValue = parseFloat referenceValue
+                return info =
+                  device: d
+                  sensorValueName: sensorValueName
+                  comparator: comparator
+                  referenceValue: referenceValue
+
+
+    return null
+
+
 module.exports.PredicateProvider = PredicateProvider
 module.exports.PresentPredicateProvider = PresentPredicateProvider
+module.exports.SensorValuePredicateProvider = SensorValuePredicateProvider
