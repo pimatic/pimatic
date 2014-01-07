@@ -213,7 +213,8 @@ class RuleManager extends require('events').EventEmitter
     assert rule.predicates?
 
     # Then cancel the notifier for all predicates
-    p.provider.cancelNotify p.id for p in rule.predicates
+    if rule.valid
+      p.provider.cancelNotify p.id for p in rule.predicates
 
   # ###AddRuleByString
   addRuleByString: (id, ruleString, active=yes, force=false) ->
@@ -225,6 +226,7 @@ class RuleManager extends require('events').EventEmitter
       @_registerPredicateProviderNotify rule
       # If the rules was successful parsed add it to the rule array.
       rule.active = active
+      rule.valid = yes
       @rules[id] = rule
       @emit "add", rule
       # Check if the condition of the rule is allready true.
@@ -238,13 +240,14 @@ class RuleManager extends require('events').EventEmitter
       return
     ).catch( (error) =>
       # If there was an error pasring the rule, but the rule is forced to be added, then add
-      # the rule with an error.1
+      # the rule with an error
       if force
         rule = 
           id: id
           string: ruleString
           error: error.message
           active: false
+          valid: no
         @rules[id] = rule
         rule.emit 'add', rule
       throw error
@@ -267,13 +270,15 @@ class RuleManager extends require('events').EventEmitter
     return
 
   # ###updateRuleByString
-  updateRuleByString: (id, ruleString) ->
+  updateRuleByString: (id, ruleString, active=yes) ->
     assert id? and typeof id is "string" and id.length isnt 0
     assert ruleString? and typeof ruleString is "string"
     throw new Error("Invalid ruleId: \"#{id}\"") unless @rules[id]?
 
     # First try to parse the updated ruleString.
     return @parseRuleString(id, ruleString).then( (rule)=>
+      rule.active = active
+      rule.valid = yes
       # If the rule was successfully parsed then get the old rule
       oldRule = @rules[id]
       # and cancel the notifier for the old predicates.
@@ -286,10 +291,11 @@ class RuleManager extends require('events').EventEmitter
       # and emit the event.
       @emit "update", rule
       # Then check if the condition of the rule is now true.
-      @doesRuleCondtionHold(rule).then( (isTrue) =>
-        # If the condition is true then exectue the action.
-        return if isTrue then @executeActionAndLogResult(rule).done()
-      ).done()
+      if active
+        @doesRuleCondtionHold(rule).then( (isTrue) =>
+          # If the condition is true then exectue the action.
+          return if isTrue then @executeActionAndLogResult(rule).done()
+        ).done()
       return
     )
 

@@ -274,8 +274,9 @@ module.exports = (env) ->
       initRules = =>
 
         addRulePromises = (for rule in @config.rules
-          do(rule) =>
-            @ruleManager.addRuleByString(rule.id, rule.rule).catch( (err) =>
+          do (rule) =>
+            unless rule.active? then rule.active = yes
+            @ruleManager.addRuleByString(rule.id, rule.rule, rule.active, true).catch( (err) =>
               env.logger.error "Could not parse rule \"#{rule.rule}\": " + err.message 
               env.logger.debug err.stack
             )        
@@ -292,12 +293,13 @@ module.exports = (env) ->
             @config.rules.push 
               id: rule.id
               rule: rule.string
+              active: rule.active
             @emit "config"
           # * If a rule was changed then...
           @ruleManager.on "update", (rule) =>
             # ...change the rule with the right id in the config.json file
             @config.rules = for r in @config.rules 
-              if r.id is rule.id then {id: rule.id, rule: rule.string}
+              if r.id is rule.id then {id: rule.id, rule: rule.string, active: rule.active}
               else r
             @emit "config"
           # * If a rule was removed then

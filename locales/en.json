@@ -61,5 +61,6 @@
 	"installed": "installed",
 	"Restart pimatic": "Restart pimatic",
 	"Add a group header": "Add a group header",
-	"Other": "Other"
+	"Other": "Other",
+	"Enabled": "Enabled"
 }
