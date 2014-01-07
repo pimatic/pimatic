@@ -160,7 +160,7 @@ class RuleManager extends require('events').EventEmitter
       ).catch( (error) =>
         # If there was a Errror simulation the action exeution, return an error.
         logger.debug error
-        throw new Error "Could not find a actuator to execute \"#{actions}\""
+        throw new Error "Could not find a actuator to execute \"#{rule.action}\""
       )
     ).catch( (error) =>
       logger.info "rethrowing error: #{error.message}"
