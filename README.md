@@ -120,13 +120,13 @@ Running
 -------
 The server can be started with 
 
-    cd pimatic-app
-    sudo ./node_modules/pimatic/pimatic.js
+    cd pimatic-app/node_modules
+    sudo .bin/pimatic.js
 
 To daemonize pimatic you can run:
 
-    cd pimatic-app
-    sudo ./node_modules/pimatic/pimatic.js start
+    cd pimatic-app/node_modules
+    sudo .bin/pimatic.js start
 
 You can also use `status`, `stop`, `restart`.
 
