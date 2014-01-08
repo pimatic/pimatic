@@ -1,5 +1,6 @@
 module.exports = (grunt) ->
 
+  path = require "path"
   # all node_modules:
   modules = require("fs").readdirSync ".."
   # just the pimatic-* modules:
@@ -40,6 +41,17 @@ module.exports = (grunt) ->
         "repository-url": "https://github.com/pimatic/pimatic"
         strip: false
 
+  ftpTasks = {}
+  for plugin in ["pimatic"].concat plugins 
+    ftpTasks[plugin] =
+      auth:
+        host: "sweetpi.de"
+        port: 21
+      authKey: 'sweetpi.de'
+      src: path.resolve __dirname, '..', plugin, "doc"
+      dest: (if plugin is "pimatic" then "/sweetpi/pimatic/docs"
+      else "/sweetpi/pimatic/docs/#{plugin}")
+
 
   # package.json files of plugins
   pluginPackageJson = ("../#{plugin}/package.json" for plugin in plugins)
@@ -68,14 +80,7 @@ module.exports = (grunt) ->
           level: 'ignore'
     groc: grocTasks
 
-    "ftp-deploy":
-      build:
-        auth:
-          host: "sweetpi.de"
-          port: 21
-        authKey: 'sweetpi.de'
-        src: "docs"
-        dest: "/sweetpi/pimatic/docs"
+    "ftp-deploy": ftpTasks
 
     mochaTest:
       test:
@@ -120,7 +125,7 @@ module.exports = (grunt) ->
     cwd = process.cwd()
     require("async").eachSeries plugins, ((file, cb) ->
       grunt.log.writeln "publishing: " + file
-      process.chdir cwd + "/node_modules/" + file
+      path.resolve __dirname, '..', file
       child = grunt.util.spawn(
         opts:
           stdio: "inherit"
