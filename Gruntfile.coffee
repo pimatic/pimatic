@@ -13,6 +13,12 @@ module.exports = (grunt) ->
     "./lib/*.coffee"
   ]
 
+  # some realy dirty tricks:
+  usedGroc = require('./node_modules/grunt-groc/node_modules/groc')
+  ownGroc = require('./node_modules/groc')
+  for name, prop of ownGroc
+    usedGroc[name] = prop
+
   grocTasks =
     pimatic:
       src: [
@@ -25,8 +31,9 @@ module.exports = (grunt) ->
       options: 
         root: "."
         out: "doc"
-        "repository-url": "https://github.com/pimatic/pimatic"
+        "repository-url": "https://github.com/sweetpi/pimatic"
         strip: false
+        style: 'pimatic'
 
   for plugin in plugins
     grocTasks[plugin] =
@@ -37,7 +44,7 @@ module.exports = (grunt) ->
       options: 
         root: "../#{plugin}"
         out: "../#{plugin}/doc"
-        "repository-url": "https://github.com/pimatic/pimatic"
+        "repository-url": "https://github.com/sweetpi/pimatic"
         strip: false
 
 
@@ -115,24 +122,6 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks "grunt-groc"
   grunt.loadNpmTasks "grunt-ftp-deploy"
   grunt.loadNpmTasks "grunt-mocha-test"
-  grunt.registerTask "publish-plugins", "publish all pimatic-plugins", ->
-    done = @async()
-    cwd = process.cwd()
-    require("async").eachSeries plugins, ((file, cb) ->
-      grunt.log.writeln "publishing: " + file
-      process.chdir cwd + "/node_modules/" + file
-      child = grunt.util.spawn(
-        opts:
-          stdio: "inherit"
-        cmd: "npm"
-        args: ["publish"]
-      , (err) ->
-        console.log err.message  if err
-        cb()
-      )
-    ), (err) ->
-      process.chdir cwd
-      done()
 
 
   # Default task(s).
