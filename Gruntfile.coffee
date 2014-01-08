@@ -20,6 +20,14 @@ module.exports = (grunt) ->
   for name, prop of ownGroc
     usedGroc[name] = prop
 
+
+  links =
+    'pimatic framework': '/'
+
+  for l in plugins
+    short = l.replace 'pimatic-', ''
+    links[short] = l
+
   grocTasks =
     pimatic:
       src: [
@@ -33,9 +41,17 @@ module.exports = (grunt) ->
         root: "."
         out: "doc"
         "repository-url": "https://github.com/sweetpi/pimatic"
-        strip: false
         style: 'pimatic'
+        links: JSON.stringify links
 
+  pluginLinks =
+    'pimatic framework': '..'
+
+  for l in plugins
+    short = l.replace 'pimatic-', ''
+    pluginLinks[short] = "../#{l}"
+ 
+          
   for plugin in plugins
     grocTasks[plugin] =
       src: [
@@ -46,7 +62,9 @@ module.exports = (grunt) ->
         root: "../#{plugin}"
         out: "../#{plugin}/doc"
         "repository-url": "https://github.com/sweetpi/pimatic"
-        strip: false
+        links: JSON.stringify pluginLinks
+
+
 
   ftpTasks = {}
   for plugin in ["pimatic"].concat plugins 
