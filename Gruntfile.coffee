@@ -42,7 +42,7 @@ module.exports = (grunt) ->
 
 
   # package.json files of plugins
-  pluginPackageJson = ("node_modules/#{plugin}/package.json" for plugin in plugins)
+  pluginPackageJson = ("../#{plugin}/package.json" for plugin in plugins)
   # and main package.json files
   bumpFiles = ["package.json"].concat pluginPackageJson
 
