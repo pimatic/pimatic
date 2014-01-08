@@ -151,17 +151,7 @@
     <span class="nv">restart: </span><span class="p">()</span> <span class="nf">-&gt;</span>
       <span class="k">unless</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">[</span><span class="s">&#39;PIMATIC_DAEMONIZED&#39;</span><span class="p">]</span><span class="o">?</span>
         <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&#39;Can not restart self, when not daemonzed. &#39;</span> <span class="o">+</span>
-          <span class="s">&#39;Please run pimatic with: &quot;node main.js start&quot; to use this feature.&#39;</span>
-
-      <span class="nv">options =</span>
-        <span class="nv">cwd: </span><span class="nx">process</span><span class="p">.</span><span class="nx">cwd</span><span class="p">()</span>
-        <span class="nv">env: </span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span>
-        <span class="nv">detached: </span><span class="kc">true</span>
-        <span class="nv">stdio: </span><span class="s">&#39;inherit&#39;</span>
-
-      <span class="nv">spawn = </span><span class="nx">require</span><span class="p">(</span><span class="s">&#39;child_process&#39;</span><span class="p">).</span><span class="nx">spawn</span>
-      <span class="nx">spawn</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">..]</span>
-      <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span> <span class="mi">0</span>
+          <span class="s">&#39;Please run pimatic with: &quot;node &#39;</span> <span class="o">+</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39; start&quot; to use this feature.&#39;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>monitor will auto restart script</p></div></div><div class="code"><div class="wrapper">      <span class="nx">process</span><span class="p">.</span><span class="nx">nextTick</span> <span class="nf">-&gt;</span> <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span> <span class="mi">0</span>
 
     <span class="nv">registerPlugin: </span><span class="nf">(plugin, config) -&gt;</span>
       <span class="nx">assert</span> <span class="nx">plugin</span><span class="o">?</span> <span class="o">and</span> <span class="nx">plugin</span> <span class="k">instanceof</span> <span class="nx">env</span><span class="p">.</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">Plugin</span>
@@ -247,14 +237,19 @@
             <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">debug</span> <span class="nx">err</span><span class="p">.</span><span class="nx">stack</span>
 
       <span class="nv">initActionHandler = </span><span class="o">=&gt;</span>
-        <span class="nx">@ruleManager</span><span class="p">.</span><span class="nx">actionHandlers</span><span class="p">.</span><span class="nx">push</span> <span class="k">new</span> <span class="nx">env</span><span class="p">.</span><span class="nx">actions</span><span class="p">.</span><span class="nx">SwitchActionHandler</span> <span class="nx">env</span><span class="p">,</span> <span class="k">this</span>
-        <span class="nx">@ruleManager</span><span class="p">.</span><span class="nx">actionHandlers</span><span class="p">.</span><span class="nx">push</span> <span class="k">new</span> <span class="nx">env</span><span class="p">.</span><span class="nx">actions</span><span class="p">.</span><span class="nx">LogActionHandler</span> <span class="nx">env</span><span class="p">,</span> <span class="k">this</span>
+        <span class="nx">@ruleManager</span><span class="p">.</span><span class="nx">addActionHandler</span> <span class="k">new</span> <span class="nx">env</span><span class="p">.</span><span class="nx">actions</span><span class="p">.</span><span class="nx">SwitchActionHandler</span> <span class="nx">env</span><span class="p">,</span> <span class="k">this</span>
+        <span class="nx">@ruleManager</span><span class="p">.</span><span class="nx">addActionHandler</span> <span class="k">new</span> <span class="nx">env</span><span class="p">.</span><span class="nx">actions</span><span class="p">.</span><span class="nx">LogActionHandler</span> <span class="nx">env</span><span class="p">,</span> <span class="k">this</span>
+
+      <span class="nv">initPredicateProvider = </span><span class="o">=&gt;</span>
+        <span class="nx">@ruleManager</span><span class="p">.</span><span class="nx">addPredicateProvider</span> <span class="k">new</span> <span class="nx">env</span><span class="p">.</span><span class="nx">predicates</span><span class="p">.</span><span class="nx">PresentPredicateProvider</span> <span class="nx">env</span><span class="p">,</span> <span class="k">this</span>
+        <span class="nx">@ruleManager</span><span class="p">.</span><span class="nx">addPredicateProvider</span> <span class="k">new</span> <span class="nx">env</span><span class="p">.</span><span class="nx">predicates</span><span class="p">.</span><span class="nx">SensorValuePredicateProvider</span> <span class="nx">env</span><span class="p">,</span> <span class="k">this</span>
 
       <span class="nv">initRules = </span><span class="o">=&gt;</span>
 
         <span class="nv">addRulePromises = </span><span class="p">(</span><span class="k">for</span> <span class="nx">rule</span> <span class="k">in</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">rules</span>
-          <span class="nx">do</span><span class="nf">(rule) =&gt;</span>
-            <span class="nx">@ruleManager</span><span class="p">.</span><span class="nx">addRuleByString</span><span class="p">(</span><span class="nx">rule</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">rule</span><span class="p">).</span><span class="nx">catch</span><span class="p">(</span> <span class="nf">(err) =&gt;</span>
+          <span class="nx">do</span> <span class="nf">(rule) =&gt;</span>
+            <span class="k">unless</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">active</span><span class="o">?</span> <span class="k">then</span> <span class="nv">rule.active = </span><span class="kc">yes</span>
+            <span class="nx">@ruleManager</span><span class="p">.</span><span class="nx">addRuleByString</span><span class="p">(</span><span class="nx">rule</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">rule</span><span class="p">,</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">active</span><span class="p">,</span> <span class="kc">true</span><span class="p">).</span><span class="nx">catch</span><span class="p">(</span> <span class="nf">(err) =&gt;</span>
               <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="s">&quot;Could not parse rule \&quot;</span><span class="si">#{</span><span class="nx">rule</span><span class="p">.</span><span class="nx">rule</span><span class="si">}</span><span class="s">\&quot;: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span> 
               <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">debug</span> <span class="nx">err</span><span class="p">.</span><span class="nx">stack</span>
             <span class="p">)</span>        
@@ -266,10 +261,11 @@
             <span class="nx">@config</span><span class="p">.</span><span class="nx">rules</span><span class="p">.</span><span class="nx">push</span> 
               <span class="nv">id: </span><span class="nx">rule</span><span class="p">.</span><span class="nx">id</span>
               <span class="nv">rule: </span><span class="nx">rule</span><span class="p">.</span><span class="nx">string</span>
+              <span class="nv">active: </span><span class="nx">rule</span><span class="p">.</span><span class="nx">active</span>
             <span class="nx">@emit</span> <span class="s">&quot;config&quot;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><ul>
 <li>If a rule was changed then...</li>
 </ul></div></div><div class="code"><div class="wrapper">          <span class="nx">@ruleManager</span><span class="p">.</span><span class="nx">on</span> <span class="s">&quot;update&quot;</span><span class="p">,</span> <span class="nf">(rule) =&gt;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>...change the rule with the right id in the config.json file</p></div></div><div class="code"><div class="wrapper">            <span class="vi">@config.rules = </span><span class="k">for</span> <span class="nx">r</span> <span class="k">in</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">rules</span> 
-              <span class="k">if</span> <span class="nx">r</span><span class="p">.</span><span class="nx">id</span> <span class="o">is</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">id</span> <span class="k">then</span> <span class="p">{</span><span class="nv">id: </span><span class="nx">rule</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nv">rule: </span><span class="nx">rule</span><span class="p">.</span><span class="nx">string</span><span class="p">}</span>
+              <span class="k">if</span> <span class="nx">r</span><span class="p">.</span><span class="nx">id</span> <span class="o">is</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">id</span> <span class="k">then</span> <span class="p">{</span><span class="nv">id: </span><span class="nx">rule</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nv">rule: </span><span class="nx">rule</span><span class="p">.</span><span class="nx">string</span><span class="p">,</span> <span class="nv">active: </span><span class="nx">rule</span><span class="p">.</span><span class="nx">active</span><span class="p">}</span>
               <span class="k">else</span> <span class="nx">r</span>
             <span class="nx">@emit</span> <span class="s">&quot;config&quot;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><ul>
 <li>If a rule was removed then</li>
@@ -281,6 +277,7 @@
         <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">initPlugins</span><span class="p">)</span>
         <span class="p">.</span><span class="nx">then</span><span class="p">(</span> <span class="o">=&gt;</span> <span class="nx">@loadDevices</span><span class="p">())</span>
         <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">initActionHandler</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">initPredicateProvider</span><span class="p">)</span>
         <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">initRules</span><span class="p">)</span>
         <span class="p">.</span><span class="nx">then</span><span class="p">(</span> <span class="o">=&gt;</span>         </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Save the config on "config" event</p></div></div><div class="code"><div class="wrapper">          <span class="nx">@</span><span class="kc">on</span> <span class="s">&quot;config&quot;</span><span class="p">,</span> <span class="o">=&gt;</span>
             <span class="nx">@saveConfig</span><span class="p">()</span>

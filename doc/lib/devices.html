@@ -23,9 +23,7 @@ For example a power outlet, a light or door opener.</p></div></div><div class="c
     <span class="nv">self._state = </span><span class="nx">state</span>
     <span class="nx">self</span><span class="p">.</span><span class="nx">emit</span> <span class="s">&quot;state&quot;</span><span class="p">,</span> <span class="nx">state</span>
 
-<span class="k">class</span> <span class="nx">PowerSwitch</span> <span class="k">extends</span> <span class="nx">SwitchActuator</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h1 id="sensor">Sensor</h1>
-
-<p>A sensor can decide predicates. </p></div></div><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">Sensor</span> <span class="k">extends</span> <span class="nx">Device</span>
+<span class="k">class</span> <span class="nx">PowerSwitch</span> <span class="k">extends</span> <span class="nx">SwitchActuator</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h1 id="sensor">Sensor</h1></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">Sensor</span> <span class="k">extends</span> <span class="nx">Device</span>
   <span class="nv">type: </span><span class="s">&#39;unknwon&#39;</span>
   <span class="nv">name: </span><span class="kc">null</span>
 
@@ -33,20 +31,8 @@ For example a power outlet, a light or door opener.</p></div></div><div class="c
     <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement getSensorValuesNames&quot;</span><span class="p">)</span>
 
   <span class="nv">getSensorValue: </span><span class="nf">(name) -&gt;</span>
-    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement getSensorValue&quot;</span><span class="p">)</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>This function should return 'event' or 'state' if the sensor can decide the given predicate.
-If the sensor can decide the predicate and it is a one shot event like 'its 10pm' then the
-canDecide should return <code>'event'</code>
-If the sensor can decide the predicate and it can be true or false like 'x is present' then 
-canDecide should return <code>'state'</code>
-If the sensor can not decide the given predicate then canDecide should return <code>false</code></p></div></div><div class="code"><div class="wrapper">  <span class="nv">canDecide: </span><span class="nf">(predicate) -&gt;</span>
-    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement canDecide&quot;</span><span class="p">)</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>The sensor should return <code>true</code> if the predicate is true and <code>false</code> if it is false.
-If the sensor can not decide the predicate or the predicate is an eventthis function 
-should throw an Error.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">isTrue: </span><span class="nf">(id, predicate) -&gt;</span>
-    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement itTrue&quot;</span><span class="p">)</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>The sensor should call the callback if the state of the predicate changes (it becomes true or 
-false).
-If the sensor can not decide the predicate this function should throw an Error.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">notifyWhen: </span><span class="nf">(id, predicate, callback) -&gt;</span>
-    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement notifyWhen&quot;</span><span class="p">)</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Cancels the notification for the predicate with the id given id.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">cancelNotify: </span><span class="nf">(id) -&gt;</span>
-    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement cancelNotify&quot;</span><span class="p">)</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement getSensorValue&quot;</span><span class="p">)</span>
+
 
 <span class="k">class</span> <span class="nx">TemperatureSensor</span> <span class="k">extends</span> <span class="nx">Sensor</span>
   <span class="nv">type: </span><span class="s">&#39;TemperatureSensor&#39;</span>
@@ -54,7 +40,6 @@ If the sensor can not decide the predicate this function should throw an Error.<
 <span class="k">class</span> <span class="nx">PresentsSensor</span> <span class="k">extends</span> <span class="nx">Sensor</span>
   <span class="nv">type: </span><span class="s">&#39;PresentsSensor&#39;</span>
   <span class="nv">_present: </span><span class="kc">undefined</span>
-  <span class="nv">_listener: </span><span class="p">{}</span>
 
   <span class="nv">getSensorValuesNames: </span><span class="nf">-&gt;</span> <span class="p">[</span><span class="s">&quot;present&quot;</span><span class="p">]</span>
 
@@ -63,45 +48,12 @@ If the sensor can not decide the predicate this function should throw an Error.<
       <span class="k">when</span> <span class="s">&quot;present&quot;</span> <span class="k">then</span> <span class="k">return</span> <span class="nx">Q</span><span class="p">.</span><span class="nx">fcall</span> <span class="o">=&gt;</span> <span class="nx">@_present</span>
       <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;Illegal sensor value name&quot;</span>
 
-  <span class="nv">canDecide: </span><span class="nf">(predicate) -&gt;</span>
-    <span class="nv">info = </span><span class="nx">@_parsePredicate</span> <span class="nx">predicate</span>
-    <span class="k">return</span> <span class="k">if</span> <span class="nx">info</span><span class="o">?</span> <span class="k">then</span> <span class="s">&#39;state&#39;</span> <span class="k">else</span> <span class="kc">no</span> 
-
-  <span class="nv">isTrue: </span><span class="nf">(id, predicate) -&gt;</span>
-    <span class="nv">info = </span><span class="nx">@_parsePredicate</span> <span class="nx">predicate</span>
-    <span class="k">if</span> <span class="nx">info</span><span class="o">?</span> <span class="k">then</span> <span class="k">return</span> <span class="nx">Q</span><span class="p">.</span><span class="nx">fcall</span> <span class="o">=&gt;</span> <span class="nx">info</span><span class="p">.</span><span class="nx">present</span> <span class="o">is</span> <span class="nx">@_present</span>
-    <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;Sensor can not decide \&quot;</span><span class="si">#{</span><span class="nx">predicate</span><span class="si">}</span><span class="s">\&quot;!&quot;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Removes the notification for an with <code>notifyWhen</code> registered predicate. </p></div></div><div class="code"><div class="wrapper">  <span class="nv">cancelNotify: </span><span class="nf">(id) -&gt;</span>
-    <span class="k">if</span> <span class="nx">@_listener</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span><span class="o">?</span>
-      <span class="k">delete</span> <span class="nx">@_listener</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Registers notification. </p></div></div><div class="code"><div class="wrapper">  <span class="nv">notifyWhen: </span><span class="nf">(id, predicate, callback) -&gt;</span>
-    <span class="nv">info = </span><span class="nx">@_parsePredicate</span> <span class="nx">predicate</span>
-    <span class="k">if</span> <span class="nx">info</span><span class="o">?</span>
-      <span class="nx">@_listener</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span>
-        <span class="nv">id: </span><span class="nx">id</span>
-        <span class="nv">callback: </span><span class="nx">callback</span>
-        <span class="nv">present: </span><span class="nx">info</span><span class="p">.</span><span class="nx">present</span>
-    <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;PingPresents sensor can not decide \&quot;</span><span class="si">#{</span><span class="nx">predicate</span><span class="si">}</span><span class="s">\&quot;!&quot;</span>
-
   <span class="nv">_setPresent: </span><span class="nf">(value) -&gt;</span>
     <span class="k">if</span> <span class="nx">@_present</span> <span class="o">is</span> <span class="nx">value</span> <span class="k">then</span> <span class="k">return</span>
     <span class="vi">@_present = </span><span class="nx">value</span>
-    <span class="nx">@_notifyListener</span><span class="p">()</span>
+    <span class="c1">#@_notifyListener()</span>
     <span class="nx">@emit</span> <span class="s">&#39;present&#39;</span><span class="p">,</span> <span class="nx">value</span>
 
-  <span class="nv">_notifyListener: </span><span class="nf">-&gt;</span>
-    <span class="k">for</span> <span class="nx">id</span><span class="p">,</span> <span class="nx">l</span> <span class="k">of</span> <span class="nx">@_listener</span>
-      <span class="nx">l</span><span class="p">.</span><span class="nx">callback</span><span class="p">(</span><span class="nx">l</span><span class="p">.</span><span class="nx">present</span> <span class="o">is</span> <span class="nx">@_present</span><span class="p">)</span>
-
-
-  <span class="nv">_parsePredicate: </span><span class="nf">(predicate) -&gt;</span>
-    <span class="nv">regExpString = </span><span class="s">&#39;^(.+)\\s+is\\s+(not\\s+)?present$&#39;</span>
-    <span class="nv">matches = </span><span class="nx">predicate</span><span class="p">.</span><span class="nx">match</span> <span class="p">(</span><span class="k">new</span> <span class="nb">RegExp</span> <span class="nx">regExpString</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nx">matches</span><span class="o">?</span>
-      <span class="nv">deviceName = </span><span class="nx">matches</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">trim</span><span class="p">()</span>
-      <span class="k">if</span> <span class="nx">deviceName</span> <span class="o">is</span> <span class="nx">@name</span> <span class="o">or</span> <span class="nx">deviceName</span> <span class="o">is</span> <span class="nx">@id</span>
-        <span class="k">return</span> <span class="nv">info =</span>
-          <span class="nv">deviceId: </span><span class="nx">@id</span>
-          <span class="nv">present: </span><span class="p">(</span><span class="k">if</span> <span class="nx">matches</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">?</span> <span class="k">then</span> <span class="kc">no</span> <span class="k">else</span> <span class="kc">yes</span><span class="p">)</span> 
-    <span class="k">return</span> <span class="kc">null</span>
 
 <span class="nv">module.exports.Device = </span><span class="nx">Device</span>
 <span class="nv">module.exports.Actuator = </span><span class="nx">Actuator</span>

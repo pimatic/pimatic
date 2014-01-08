@@ -83,16 +83,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "type": "heading",
                   "data": {
                     "level": 3,
-                    "title": "The \"actuators\"-section",
-                    "slug": "the-actuators-section"
-                  },
-                  "depth": 3
-                }, {
-                  "type": "heading",
-                  "data": {
-                    "level": 3,
-                    "title": "The \"sensor\"-section",
-                    "slug": "the-sensor-section"
+                    "title": "The \"devices\"-section",
+                    "slug": "the-devices-section"
                   },
                   "depth": 3
                 }, {
@@ -112,7 +104,18 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                 "title": "Running",
                 "slug": "running"
               },
-              "depth": 2
+              "depth": 2,
+              "children": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "Install global",
+                    "slug": "install-global"
+                  },
+                  "depth": 3
+                }
+              ]
             }, {
               "type": "heading",
               "data": {
@@ -184,16 +187,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "type": "heading",
               "data": {
                 "level": 3,
-                "title": "The \"actuators\"-section",
-                "slug": "the-actuators-section"
-              },
-              "depth": 3
-            }, {
-              "type": "heading",
-              "data": {
-                "level": 3,
-                "title": "The \"sensor\"-section",
-                "slug": "the-sensor-section"
+                "title": "The \"devices\"-section",
+                "slug": "the-devices-section"
               },
               "depth": 3
             }, {
@@ -213,7 +208,18 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "title": "Running",
             "slug": "running"
           },
-          "depth": 2
+          "depth": 2,
+          "children": [
+            {
+              "type": "heading",
+              "data": {
+                "level": 3,
+                "title": "Install global",
+                "slug": "install-global"
+              },
+              "depth": 3
+            }
+          ]
         }, {
           "type": "heading",
           "data": {
@@ -430,6 +436,27 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "foldPrefix": "^",
               "name": "CoffeeScript"
             },
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/lib/predicates.coffee",
+            "projectPath": "lib/predicates.coffee",
+            "targetPath": "lib/predicates",
+            "pageTitle": "lib/predicates",
+            "title": "predicates"
+          },
+          "depth": 2,
+          "outline": []
+        }, {
+          "type": "file",
+          "data": {
+            "language": {
+              "nameMatchers": [".coffee", "Cakefile"],
+              "pygmentsLexer": "coffee-script",
+              "multiLineComment": ["###*", " *", " ###", "###", "#", "###"],
+              "strictMultiLineEnd": false,
+              "singleLineComment": ["#"],
+              "ignorePrefix": "}",
+              "foldPrefix": "^",
+              "name": "CoffeeScript"
+            },
             "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/lib/rules.coffee",
             "projectPath": "lib/rules.coffee",
             "targetPath": "lib/rules",
@@ -481,8 +508,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                       "type": "heading",
                       "data": {
                         "level": 3,
-                        "title": "_cancelPredicateSensorNotify",
-                        "slug": "-cancelpredicatesensornotify"
+                        "title": "_cancelPredicateproviderNotify",
+                        "slug": "-cancelpredicateprovidernotify"
                       },
                       "depth": 3
                     }, {
@@ -571,8 +598,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "type": "heading",
                   "data": {
                     "level": 3,
-                    "title": "_cancelPredicateSensorNotify",
-                    "slug": "-cancelpredicatesensornotify"
+                    "title": "_cancelPredicateproviderNotify",
+                    "slug": "-cancelpredicateprovidernotify"
                   },
                   "depth": 3
                 }, {
@@ -619,6 +646,53 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               ]
             }
           ]
+        }
+      ]
+    }, {
+      "type": "file",
+      "data": {
+        "language": {
+          "nameMatchers": [".md"],
+          "commentsOnly": true,
+          "name": "Markdown"
+        },
+        "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/plugins.md",
+        "projectPath": "plugins.md",
+        "targetPath": "plugins",
+        "pageTitle": "plugins",
+        "firstHeader": {
+          "type": "heading",
+          "data": {
+            "level": 1,
+            "title": "pimatic plugins",
+            "slug": "pimatic-plugins",
+            "isFileHeader": true
+          },
+          "depth": 1,
+          "children": [
+            {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "Available Plugins:",
+                "slug": "available-plugins"
+              },
+              "depth": 2
+            }
+          ]
+        },
+        "title": "pimatic plugins"
+      },
+      "depth": 1,
+      "outline": [
+        {
+          "type": "heading",
+          "data": {
+            "level": 2,
+            "title": "Available Plugins:",
+            "slug": "available-plugins"
+          },
+          "depth": 2
         }
       ]
     }, {
