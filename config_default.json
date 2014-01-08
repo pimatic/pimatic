@@ -25,11 +25,8 @@
       ] 
     }
   ],
-  "actuators": [
+  "devices": [
  
-  ],
-  "sensors": [
-
   ],
   "rules": [
 

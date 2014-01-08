@@ -1,5 +1,6 @@
 module.exports = (grunt) ->
 
+  path = require "path"
   # all node_modules:
   modules = require("fs").readdirSync ".."
   # just the pimatic-* modules:
@@ -47,6 +48,17 @@ module.exports = (grunt) ->
         "repository-url": "https://github.com/sweetpi/pimatic"
         strip: false
 
+  ftpTasks = {}
+  for plugin in ["pimatic"].concat plugins 
+    ftpTasks[plugin] =
+      auth:
+        host: "sweetpi.de"
+        port: 21
+      authKey: 'sweetpi.de'
+      src: path.resolve __dirname, '..', plugin, "doc"
+      dest: (if plugin is "pimatic" then "/sweetpi/pimatic/docs"
+      else "/sweetpi/pimatic/docs/#{plugin}")
+
 
   # package.json files of plugins
   pluginPackageJson = ("../#{plugin}/package.json" for plugin in plugins)
@@ -75,14 +87,7 @@ module.exports = (grunt) ->
           level: 'ignore'
     groc: grocTasks
 
-    "ftp-deploy":
-      build:
-        auth:
-          host: "sweetpi.de"
-          port: 21
-        authKey: 'sweetpi.de'
-        src: "docs"
-        dest: "/sweetpi/pimatic/docs"
+    "ftp-deploy": ftpTasks
 
     mochaTest:
       test:
@@ -122,7 +127,6 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks "grunt-groc"
   grunt.loadNpmTasks "grunt-ftp-deploy"
   grunt.loadNpmTasks "grunt-mocha-test"
-
 
   # Default task(s).
   grunt.registerTask "default", ["coffeelint", "mochaTest:test", "groc"]
