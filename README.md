@@ -70,8 +70,8 @@ In the `"plugins"`-section you have to list all plugins to load in the form of
       "plugin": "plugin-name" 
     }
 
-where `"plugin-name"` ist the name and directory of the plugin you want to load. All plugins are in 
-the `node_modules` directory and there prefixed with `pimatic-`. 
+where `"plugin-name"` ist the name and directory of the plugin you want to load. All plugins are 
+installed in the `node_modules` directory and prefixed with `pimatic-`. 
 
 #### Available Plugins:
 
