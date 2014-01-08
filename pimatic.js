@@ -9,7 +9,7 @@ var options = {
   errFile: logFile,
   cwd: __dirname,
   env: { 'PIMATIC_DAEMONIZED': true },
-  max: Infinity //the script will run 3 times at most
+  max: 30 //the script will run 30 times at most
 };
 
 startStopDaemon(options, function() {
