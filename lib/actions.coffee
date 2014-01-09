@@ -23,6 +23,7 @@ class SwitchActionHandler extends ActionHandler
         if result? then return result
 
   executeAction: (actionString, simulate) =>
+    actionString = actionString.toLowerCase()
     self = this
     result = null
     regExpString = '^(?:turn)?(?:\\s+the)?(.+?)(on|off)$'
