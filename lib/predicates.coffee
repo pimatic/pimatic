@@ -73,13 +73,14 @@ class PresentPredicateProvider extends PredicateProvider
 
 
   _parsePredicate: (predicate) ->
+    predicate = predicate.toLowerCase()
     regExpString = '^(.+)\\s+is\\s+(not\\s+)?present$'
     matches = predicate.match (new RegExp regExpString)
     if matches?
       deviceName = matches[1].trim()
       for id, d of @framework.devices
         if d.getSensorValuesNames? and 'present' in d.getSensorValuesNames()
-          if deviceName is d.name or deviceName is d.id
+          if deviceName is d.name.toLowerCase() or deviceName is d.id.toLowerCase()
             return info =
               device: d
               present: (if matches[2]? then no else yes) 
@@ -143,6 +144,7 @@ class SensorValuePredicateProvider extends PredicateProvider
 
 
   _parsePredicate: (predicate) ->
+    predicate = predicate.toLowerCase()
     regExpString = 
       '^(.+)\\s+' + # the sensor value
       'of\\s+' + # of
