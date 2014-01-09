@@ -9,7 +9,7 @@ Q = require 'q'
 class RuleManager extends require('events').EventEmitter
   # Array of the added rules
   # If a rule was successfully added, the rule has the form:
-  # 
+  #  
   #     id: 'some-id'
   #     string: 'if its 10pm and light is on then turn the light off'
   #     orgCondition: 'its 10pm and light is on'
@@ -23,14 +23,14 @@ class RuleManager extends require('events').EventEmitter
   #              'predicate', '(', 1, ')' ] 
   #     action: 'turn the light off'
   #     active: false or true
-  # 
+  #  
   # If the rule had an error:
-  # 
+  #  
   #     id: id
   #     string: 'if bla then blub'
   #     error: 'Could not find a provider that decides bla'
   #     active: false 
-  # 
+  #  
   rules: []
   # Array of ActionHandlers: see [actions.coffee](actions.html)
   actionHandlers: []
@@ -46,7 +46,7 @@ class RuleManager extends require('events').EventEmitter
   # This function parses a rule given by a string and returns a rule object.
   # A rule string is for example 'if its 10pm and light is on then turn the light off'
   # it get parsed to the follwoing rule object:
-  # 
+  #  
   #     id: 'some-id'
   #     string: 'if its 10pm and light is on then turn the light off'
   #     orgCondition: 'its 10pm and light is on'
@@ -60,7 +60,7 @@ class RuleManager extends require('events').EventEmitter
   #              'predicate', '(', 1, ')' ] 
   #     action: 'turn the light off'
   #     active: false or true
-  # 
+  #  
   # The function returns a promise!
   parseRuleString: (id, ruleString) ->
     assert id? and typeof id is "string" and id.length isnt 0

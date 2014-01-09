@@ -2,25 +2,30 @@
 <span class="nv">logger = </span><span class="nx">require</span> <span class="s">&quot;./logger&quot;</span>
 <span class="nv">util = </span><span class="nx">require</span> <span class="s">&#39;util&#39;</span>
 <span class="nv">Q = </span><span class="nx">require</span> <span class="s">&#39;q&#39;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="rulemanager">RuleManager</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">RuleManager</span> <span class="k">extends</span> <span class="nx">require</span><span class="p">(</span><span class="s">&#39;events&#39;</span><span class="p">).</span><span class="nx">EventEmitter</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Array of the added rules
-If a rule was successfully added, the rule has the form:
-    id: 'some-id'
-    string: 'if its 10pm and light is on then turn the light off'
-    orgCondition: 'its 10pm and light is on'
-    predicates: [
-      { id: 'some-id0'
-        provider: the corresponding provider },
-      { id: 'some-id1'
-        provider: the corresponding provider }
-    ]
-    tokens: ['predicate', '(', 0, ')', 'and', 
-             'predicate', '(', 1, ')' ] 
-    action: 'turn the light off'
-    active: false or true
-If the rule had an error:
-    id: id
-    string: 'if bla then blub'
-    error: 'Could not find a provider that decides bla'
-    active: false </p></div></div><div class="code"><div class="wrapper">  <span class="nv">rules: </span><span class="p">[]</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Array of ActionHandlers: see <a href="actions.html">actions.coffee</a></p></div></div><div class="code"><div class="wrapper">  <span class="nv">actionHandlers: </span><span class="p">[]</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Array of predicateProviders: see <a href="actions.html">actions.coffee</a></p></div></div><div class="code"><div class="wrapper">  <span class="nv">predicateProviders: </span><span class="p">[]</span>
+If a rule was successfully added, the rule has the form:</p>
+
+<pre><code>id: 'some-id'
+string: 'if its 10pm and light is on then turn the light off'
+orgCondition: 'its 10pm and light is on'
+predicates: [
+  { id: 'some-id0'
+    provider: the corresponding provider },
+  { id: 'some-id1'
+    provider: the corresponding provider }
+]
+tokens: ['predicate', '(', 0, ')', 'and', 
+         'predicate', '(', 1, ')' ] 
+action: 'turn the light off'
+active: false or true
+</code></pre>
+
+<p>If the rule had an error:</p>
+
+<pre><code>id: id
+string: 'if bla then blub'
+error: 'Could not find a provider that decides bla'
+active: false 
+</code></pre></div></div><div class="code"><div class="wrapper">  <span class="nv">rules: </span><span class="p">[]</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Array of ActionHandlers: see <a href="actions.html">actions.coffee</a></p></div></div><div class="code"><div class="wrapper">  <span class="nv">actionHandlers: </span><span class="p">[]</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Array of predicateProviders: see <a href="actions.html">actions.coffee</a></p></div></div><div class="code"><div class="wrapper">  <span class="nv">predicateProviders: </span><span class="p">[]</span>
 
   <span class="nv">constructor: </span><span class="nf">(@framework) -&gt;</span>
 
@@ -29,21 +34,24 @@ If the rule had an error:
 
 <p>This function parses a rule given by a string and returns a rule object.
 A rule string is for example 'if its 10pm and light is on then turn the light off'
-it get parsed to the follwoing rule object:
-    id: 'some-id'
-    string: 'if its 10pm and light is on then turn the light off'
-    orgCondition: 'its 10pm and light is on'
-    predicates: [
-      { id: 'some-id0'
-        provider: the corresponding provider },
-      { id: 'some-id1'
-        provider: the corresponding provider }
-    ]
-    tokens: ['predicate', '(', 0, ')', 'and', 
-             'predicate', '(', 1, ')' ] 
-    action: 'turn the light off'
-    active: false or true
-The function returns a promise!</p></div></div><div class="code"><div class="wrapper">  <span class="nv">parseRuleString: </span><span class="nf">(id, ruleString) -&gt;</span>
+it get parsed to the follwoing rule object:</p>
+
+<pre><code>id: 'some-id'
+string: 'if its 10pm and light is on then turn the light off'
+orgCondition: 'its 10pm and light is on'
+predicates: [
+  { id: 'some-id0'
+    provider: the corresponding provider },
+  { id: 'some-id1'
+    provider: the corresponding provider }
+]
+tokens: ['predicate', '(', 0, ')', 'and', 
+         'predicate', '(', 1, ')' ] 
+action: 'turn the light off'
+active: false or true
+</code></pre>
+
+<p>The function returns a promise!</p></div></div><div class="code"><div class="wrapper">  <span class="nv">parseRuleString: </span><span class="nf">(id, ruleString) -&gt;</span>
     <span class="nx">assert</span> <span class="nx">id</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">id</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span> <span class="o">and</span> <span class="nx">id</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span>
     <span class="nx">assert</span> <span class="nx">ruleString</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">ruleString</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span>
 

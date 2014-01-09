@@ -738,6 +738,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
     "mobile-frontend": "pimatic-mobile-frontend",
     "pilight": "pimatic-pilight",
     "ping": "pimatic-ping",
+    "plugin-template": "pimatic-plugin-template",
     "redirect": "pimatic-redirect",
     "rest-api": "pimatic-rest-api",
     "sispmctl": "pimatic-sispmctl",
