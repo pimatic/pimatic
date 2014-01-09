@@ -139,7 +139,7 @@ To make pimatic available global you can run:
 
 Then pimatic can be used with:
 
-    pimatic.js [start|stop|status|restart]
+    sudo pimatic.js [start|stop|status|restart]
 
 
 Extensions and Hacking
