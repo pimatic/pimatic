@@ -22,7 +22,7 @@ module.exports = (grunt) ->
 
 
   links =
-    'pimatic framework': '/'
+    'pimatic framework': '.'
 
   for l in plugins
     short = l.replace 'pimatic-', ''
