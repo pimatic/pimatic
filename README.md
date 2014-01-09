@@ -1,5 +1,5 @@
 pimatic
-==============
+=======
 
 pimatic is a home automation framework that runs on [node.js](http://nodejs.org). It provides a 
 common extensible platform for home control and automation tasks.  
@@ -139,8 +139,15 @@ To make pimatic available global you can run:
 
 Then pimatic can be used with:
 
-    pimatic.js [start|stop|status|restart]
+    sudo pimatic.js [start|stop|status|restart]
 
+Documentation
+-------------
+
+pimatics source files are annotated with 
+(literate programming)[http://en.wikipedia.org/wiki/Literate_programming] style comments and docs. 
+You can [browse the self generated documentation](https://www.sweetpi.de/pimatic/docs/) with the 
+source code side by side.
 
 Extensions and Hacking
 ----------------------
@@ -148,3 +155,6 @@ The framework is built to be extendable by plugins. If you have devices that are
 supported please add a plugin for your devices. 
 As well, if you have a nice Ideas for plugins or need support for specials actuators you are
 welcome to create a issue or submit a patch.
+
+For plugin development take a look at the
+[plugin template](https://github.com/sweetpi/pimatic-plugin-template).
