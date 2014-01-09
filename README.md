@@ -145,7 +145,7 @@ Documentation
 -------------
 
 pimatics source files are annotated with 
-(literate programming)[http://en.wikipedia.org/wiki/Literate_programming] style comments and docs. 
+[literate programming](http://en.wikipedia.org/wiki/Literate_programming) style comments and docs. 
 You can [browse the self generated documentation](https://www.sweetpi.de/pimatic/docs/) with the 
 source code side by side.
 
