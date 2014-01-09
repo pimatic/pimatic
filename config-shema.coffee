@@ -45,11 +45,11 @@ module.exports =
         format: "port"
         default: 443
       # To generate a privatekey and a certificate run: 
-      # 
+      #  
       #     openssl genrsa -out privatekey.pem 1024
       #     openssl req -new -key privatekey.pem -out request.pem
       #     openssl x509 -req -in request.pem -signkey privatekey.pem -out certificate.pem
-      # 
+      #  
       keyFile:
         doc: "Privatekey-file"
         format: String
