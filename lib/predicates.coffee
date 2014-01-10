@@ -30,11 +30,8 @@ class PredicateProvider
 
 env = null
 
-class PresentPredicateProvider extends PredicateProvider
+class DeviceEventPredicateProvider extends PredicateProvider
   _listener: {}
-
-  constructor: (_env, @framework) ->
-    env = _env
 
   canDecide: (predicate) ->
     info = @_parsePredicate predicate
@@ -42,9 +39,8 @@ class PresentPredicateProvider extends PredicateProvider
 
   isTrue: (id, predicate) ->
     info = @_parsePredicate predicate
-    if info? then return info.device.getSensorValue('present').then (present) =>
-      return info.present is present
-    else throw new Error "Sensor can not decide \"#{predicate}\"!"
+    if info? then return info.getPredicateValue()
+    else throw new Error "Can not decide \"#{predicate}\"!"
 
   # Removes the notification for an with `notifyWhen` registered predicate. 
   cancelNotify: (id) ->
@@ -58,19 +54,26 @@ class PresentPredicateProvider extends PredicateProvider
     info = @_parsePredicate predicate
     if info?
       device = info.device
+      event = info.event
+      eventListener = info.getEventListener(callback)
 
-      presentListener = (present) =>
-        callback(info.present is present)
-
-      device.on 'present', presentListener
+      device.on event, eventListener
 
       @_listener[id] =
         id: id
         present: info.present
-        destroy: => device.removeListener 'present', presentListener
+        destroy: => device.removeListener event, eventListener
 
-    else throw new Error "PresentPredicateProvider can not decide \"#{predicate}\"!"
+    else throw new Error "DeviceEventPredicateProvider can not decide \"#{predicate}\"!"
 
+  _parsePredicate: (predicate) ->
+    throw new Error 'Should be implemented by supper class.'
+
+
+class PresentPredicateProvider extends DeviceEventPredicateProvider
+
+  constructor: (_env, @framework) ->
+    env = _env
 
   _parsePredicate: (predicate) ->
     predicate = predicate.toLowerCase()
@@ -78,59 +81,28 @@ class PresentPredicateProvider extends PredicateProvider
     matches = predicate.match (new RegExp regExpString)
     if matches?
       deviceName = matches[1].trim()
+      negated = (if matches[2]? then yes else no) 
       for id, d of @framework.devices
         if d.getSensorValuesNames? and 'present' in d.getSensorValuesNames()
-          if deviceName is d.name.toLowerCase() or deviceName is d.id.toLowerCase()
+          if d.matchesIdOrName deviceName
             return info =
               device: d
-              present: (if matches[2]? then no else yes) 
+              event: 'present'
+              getPredicateValue: => 
+                d.getSensorValue('present').then (present) =>
+                  if negated then not present else present
+              getEventListener: (callback) => 
+                return eventListener = (present) => 
+                  callback(if negated then not present else present)
+              negated: negated # for testing only
     return null
 
 
 
-class SensorValuePredicateProvider extends PredicateProvider
-  _listener: {}
+class SensorValuePredicateProvider extends DeviceEventPredicateProvider
 
   constructor: (_env, @framework) ->
     env = _env
-
-  canDecide: (predicate) ->
-    info = @_parsePredicate predicate
-    return if info? then 'state' else no 
-
-  isTrue: (id, predicate) ->
-    info = @_parsePredicate predicate
-    if info? then return info.device.getSensorValue(info.sensorValueName).then (value) =>
-      return @_compareValues info.comparator, value, info.referenceValue
-    else throw new Error "Sensor can not decide \"#{predicate}\"!"
-
-  # Removes the notification for an with `notifyWhen` registered predicate. 
-  cancelNotify: (id) ->
-    listener = @_listener[id]
-    if listener?
-      listener.destroy()
-      delete @_listener[id]
-
-  # Registers notification. 
-  notifyWhen: (id, predicate, callback) ->
-    info = @_parsePredicate predicate
-    if info?
-      device = info.device
-
-      lastState = null
-      deviceListener = (val) =>
-        state = @_compareValues info.comparator, val, info.referenceValue
-        if state isnt lastState
-          lastState = state
-          callback state
-
-      device.on info.sensorValueName, deviceListener
-
-      @_listener[id] =
-        id: id
-        destroy: => device.removeListener info.sensorValueName, deviceListener
-
-    else throw new Error "PresentPredicateProvider can not decide \"#{predicate}\"!"
 
   _compareValues: (comparator, value, referenceValue) ->
     unless isNaN value
@@ -162,11 +134,10 @@ class SensorValuePredicateProvider extends PredicateProvider
       referenceValue = matches[4].trim()
 
       if (referenceValue.match /.*for .*/)? then return null
-      
       #console.log "#{sensorValueName}, #{sensorName}, #{comparator}, #{referenceValue}"
       for id, d of @framework.devices
         if d.getSensorValuesNames?
-          if sensorName is d.name.toLowerCase() or sensorName is d.id.toLowerCase()
+          if d.matchesIdOrName sensorName
             if sensorValueName in d.getSensorValuesNames()
               comparator = switch  
                 when comparator in ['is', 'equal', 'equals', 'equal to', 'equals to'] then '=='
@@ -180,10 +151,22 @@ class SensorValuePredicateProvider extends PredicateProvider
               unless comparator is false
                 unless isNaN(referenceValue)
                   referenceValue = parseFloat referenceValue
+
+                lastState = null
                 return info =
                   device: d
-                  sensorValueName: sensorValueName
-                  comparator: comparator
+                  event: sensorValueName
+                  getPredicateValue: => 
+                    d.getSensorValue(sensorValueName).then (value) =>
+                      @_compareValues comparator, value, referenceValue
+                  getEventListener: (callback) => 
+                    return sensorValueListener = (value) =>
+                      state = @_compareValues comparator, value, referenceValue
+                      if state isnt lastState
+                        lastState = state
+                        callback state
+                  comparator: comparator # for testing only
+                  sensorValueName: sensorValueName # for testing only
                   referenceValue: referenceValue
 
 

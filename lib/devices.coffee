@@ -5,16 +5,21 @@ Q = require 'q'
 
 
 class Device extends require('events').EventEmitter
+  # A unic id defined by the config or by the plugin that provies the device.
+  id: null
+  # The name of the actuator to display at the frontend.
+  name: null
+
+  matchesIdOrName: (find) ->
+    find = find.toLowerCase()
+    return find is @id.toLowerCase() or find is @name.toLowerCase()
+
 
 # An Actuator is an physical or logical element you can control by triggering an action on it.
 # For example a power outlet, a light or door opener.
 class Actuator extends Device
   # Defines the actions an Actuator has.
   actions: []
-  # A unic id defined by the config or by the backend module that provies the actuator.
-  id: null
-  # The name of the actuator to display at the frontend.
-  name: null
   # Events of the actuator.
   events: []
 

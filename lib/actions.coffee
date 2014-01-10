@@ -17,7 +17,7 @@ class SwitchActionHandler extends ActionHandler
     self = this
     assert typeof self.framework.devices is 'object'
     for id, device of self.framework.devices
-      if id.toLowerCase() is deviceName or device.name.toLowerCase() is deviceName
+      if device.matchesIdOrName deviceName
         result = doCallback device
         #"break" when result was given by callback 
         if result? then return result

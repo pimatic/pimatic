@@ -34,19 +34,19 @@ describe "PresentPredicateProvider", ->
       info = provider._parsePredicate "test is present"
       assert info?
       assert info.device.id is "test"
-      assert info.present is yes
+      assert info.negated is no
 
     it 'should parse "test device is present"', ->
       info = provider._parsePredicate "test device is present"
       assert info?
       assert info.device.id is "test"
-      assert info.present is yes
+      assert info.negated is no
 
     it 'should parse "test is not present"', ->
       info = provider._parsePredicate "test is not present"
       assert info?
       assert info.device.id is "test"
-      assert info.present is no
+      assert info.negated is yes
 
     it 'should return null if id is wrong', ->
       info = provider._parsePredicate "foo is present"
