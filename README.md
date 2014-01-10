@@ -158,3 +158,5 @@ welcome to create a issue or submit a patch.
 
 For plugin development take a look at the
 [plugin template](https://github.com/sweetpi/pimatic-plugin-template).
+
+[![Build Status](https://travis-ci.org/sweetpi/pimatic.png?branch=development)](https://travis-ci.org/sweetpi/pimatic)
