@@ -212,7 +212,6 @@ class RuleManager extends require('events').EventEmitter
   # when the predicate becomes true.
   _cancelPredicateProviderNotify: (rule) ->
     assert rule?
-    assert rule.predicates?
 
     # Then cancel the notifier for all predicates
     if rule.valid
