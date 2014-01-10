@@ -49,6 +49,7 @@
     "start-stop-daemon": "~0.1.0"
   },
   "devDependencies": {
+    "grunt-cli": "~0.1.11",
     "grunt": "~0.4.2",
     "grunt-coffeelint": "~0.0.8",
     "grunt-groc": "~0.4.0",
