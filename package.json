@@ -27,6 +27,9 @@
   "bin": {
     "pimatic.js": "./pimatic.js"
   },
+  "scripts": {
+    "test": "grunt test"
+  },
   "dependencies": {
     "coffee-script": "1.6.*",
     "express": "3.0.*",
