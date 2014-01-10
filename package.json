@@ -59,7 +59,7 @@
     "coffee-errors": "~0.8.4",
     "supertest": "~0.8.2",
     "grunt-bump": "0.0.13",
-    "groc": "git+https://github.com/sweetpi/nap.git#pimatic-style"
+    "groc": "git+https://github.com/sweetpi/groc.git#pimatic-style"
   },
   "engines": {
     "node": ">0.8.x",
