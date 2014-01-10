@@ -17,6 +17,8 @@ describe "RuleManager", ->
 
   ruleManager = null
 
+  getTime = -> new Date().getTime()
+
   class DummyPredicateProvider extends env.predicates.PredicateProvider
     type: 'unknwon'
     name: 'test'
@@ -313,6 +315,7 @@ describe "RuleManager", ->
 
     it 'should decide predicate 1 for 1 second (holds)', (finish)->
       this.timeout 2000
+      start = getTime()
 
       provider.canDecide = (predicate) -> 
         assert predicate is "predicate 1"
@@ -345,12 +348,15 @@ describe "RuleManager", ->
 
 
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
+        elapsed = getTime() - start
         assert isTrue is true
+        assert elapsed >= 1000
         finish()
       ).done()
 
-    it 'should decide predicate 1 for 1 second (does not hold)', (finish)->
+    it 'should decide predicate 1 for 1 second (does not hold)', (finish) ->
       this.timeout 2000
+      start = getTime()
 
       provider.canDecide = (predicate) -> 
         assert predicate is "predicate 1"
@@ -390,9 +396,244 @@ describe "RuleManager", ->
 
 
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
+        elapsed = getTime() - start
         assert isTrue is false
+        assert elapsed < 1000
         finish()
       ).done()
+
+    it 'should decide predicate 1 for 1 second and predicate 2 for 2 seconds (holds)', (finish)->
+      this.timeout 3000
+      start = getTime()
+
+      provider.canDecide = (predicate) -> 
+        assert predicate is "predicate 1" or predicate is "predicate 2"
+        return 'state'
+
+      provider.isTrue = (id, predicate) -> Q.fcall -> true
+      provider.notifyWhen = (id, predicate, callback) -> 
+        assert predicate is "predicate 1" or predicate is "predicate 2"
+        return true
+
+      rule =
+        id: "test1"
+        orgCondition: "predicate 1 for 1 second and predicate 2 for 2 seconds"
+        predicates: [
+          {
+            id: "test1"
+            token: "predicate 1"
+            type: "state"
+            provider: provider
+            forToken: "1 second"
+            for: 1000
+          }
+          {
+            id: "test2"
+            token: "predicate 2"
+            type: "state"
+            provider: provider
+            forToken: "2 seconds"
+            for: 2000
+          }
+        ]
+        tokens: [
+          "predicate"
+          "("
+          0
+          ")"
+          "and"
+          "predicate"
+          "("
+          1
+          ")"
+        ]
+        action: "action 1"
+        string: "if predicate 1 for 1 second and predicate 2 for 2 seconds then action 1"
+
+      ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
+        elapsed = getTime() - start
+        assert isTrue is true
+        assert elapsed >= 2000
+        finish()
+      ).done()
+
+    it 'should decide predicate 1 for 1 second and predicate 2 for 2 seconds (does not holds)', 
+    (finish)->
+      this.timeout 3000
+      start = getTime()
+
+      provider.canDecide = (predicate) -> 
+        assert predicate is "predicate 1" or predicate is "predicate 2"
+        return 'state'
+
+      provider.isTrue = (id, predicate) -> Q.fcall -> true
+      provider.notifyWhen = (id, predicate, callback) -> 
+        assert predicate is "predicate 1" or predicate is "predicate 2"
+        if predicate is "predicate 1"
+          setTimeout ->
+            callback false
+          , 500
+
+      rule =
+        id: "test1"
+        orgCondition: "predicate 1 for 1 second and predicate 2 for 2 seconds"
+        predicates: [
+          {
+            id: "test1"
+            token: "predicate 1"
+            type: "state"
+            provider: provider
+            forToken: "1 second"
+            for: 1000
+          }
+          {
+            id: "test2"
+            token: "predicate 2"
+            type: "state"
+            provider: provider
+            forToken: "2 seconds"
+            for: 2000
+          }
+        ]
+        tokens: [
+          "predicate"
+          "("
+          0
+          ")"
+          "and"
+          "predicate"
+          "("
+          1
+          ")"
+        ]
+        action: "action 1"
+        string: "if predicate 1 for 1 second and predicate 2 for 2 seconds then action 1"
+
+      ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
+        elapsed = getTime() - start
+        assert isTrue is false
+        assert elapsed < 3000
+        finish()
+      ).done()
+
+    it 'should decide predicate 1 for 1 second or predicate 2 for 2 seconds (holds)', (finish)->
+      this.timeout 3000
+      start = getTime()
+
+      provider.canDecide = (predicate) -> 
+        assert predicate is "predicate 1" or predicate is "predicate 2"
+        return 'state'
+
+      provider.isTrue = (id, predicate) -> Q.fcall -> true
+
+      provider.notifyWhen = (id, predicate, callback) -> 
+        assert predicate is "predicate 1" or predicate is "predicate 2"
+        if predicate is "predicate 1"
+          setTimeout ->
+            callback false
+          , 500
+
+      rule =
+        id: "test1"
+        orgCondition: "predicate 1 for 1 second or predicate 2 for 2 seconds"
+        predicates: [
+          {
+            id: "test1"
+            token: "predicate 1"
+            type: "state"
+            provider: provider
+            forToken: "1 second"
+            for: 1000
+          }
+          {
+            id: "test2"
+            token: "predicate 2"
+            type: "state"
+            provider: provider
+            forToken: "2 seconds"
+            for: 2000
+          }
+        ]
+        tokens: [
+          "predicate"
+          "("
+          0
+          ")"
+          "or"
+          "predicate"
+          "("
+          1
+          ")"
+        ]
+        action: "action 1"
+        string: "if predicate 1 for 1 second or predicate 2 for 2 seconds then action 1"
+
+      ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
+        elapsed = getTime() - start
+        assert isTrue is true
+        assert elapsed >= 2000
+        finish()
+      ).done()
+
+    it 'should decide predicate 1 for 1 second or predicate 2 for 2 seconds (does not holds)', 
+    (finish)->
+      this.timeout 3000
+      start = getTime()
+
+      provider.canDecide = (predicate) -> 
+        assert predicate is "predicate 1" or predicate is "predicate 2"
+        return 'state'
+
+      provider.isTrue = (id, predicate) -> Q.fcall -> true
+
+      provider.notifyWhen = (id, predicate, callback) -> 
+        assert predicate is "predicate 1" or predicate is "predicate 2"
+        setTimeout ->
+          callback false
+        , 500
+
+      rule =
+        id: "test1"
+        orgCondition: "predicate 1 for 1 second or predicate 2 for 2 seconds"
+        predicates: [
+          {
+            id: "test1"
+            token: "predicate 1"
+            type: "state"
+            provider: provider
+            forToken: "1 second"
+            for: 1000
+          }
+          {
+            id: "test2"
+            token: "predicate 2"
+            type: "state"
+            provider: provider
+            forToken: "2 seconds"
+            for: 2000
+          }
+        ]
+        tokens: [
+          "predicate"
+          "("
+          0
+          ")"
+          "or"
+          "predicate"
+          "("
+          1
+          ")"
+        ]
+        action: "action 1"
+        string: "if predicate 1 for 1 second or predicate 2 for 2 seconds then action 1"
+
+      ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
+        elapsed = getTime() - start
+        assert isTrue is false
+        assert elapsed < 1000
+        finish()
+      ).done()
+
 
 
   # ###Tests for `updateRuleByString()`

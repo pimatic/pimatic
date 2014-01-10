@@ -187,13 +187,9 @@ class RuleManager extends require('events').EventEmitter
       rule = @rules[ruleId]
       unless rule.active then return
 
-      # Then mark the given predicate as true, if it is an event
-      knownPredicates = (if state is 'event' 
-        [
-          id: predicateId
-          state: true
-        ]
-      else [] )
+      # Then mark the given predicate as true
+      knownPredicates = {}
+      knownPredicates[predicateId] = true
 
       # and check if the rule is now true.
       @doesRuleCondtionHold(rule, knownPredicates).then( (isTrue) =>
@@ -309,22 +305,20 @@ class RuleManager extends require('events').EventEmitter
 
   # ###evaluateConditionOfRule
   # Uses 'bet' to evaluate rule.tokens
-  evaluateConditionOfRule: (rule, knownPredicates = []) ->
+  evaluateConditionOfRule: (rule, knownPredicates = {}) ->
     assert rule? and rule instanceof Object
-    assert Array.isArray knownPredicates
+    assert knownPredicates? and knownPredicates instanceof Object
 
-    predicateValues = []
-    for pred in rule.predicates
-      known = no
-      for kpred in knownPredicates
-        if pred.id is kpred.id
-          do (kpred) =>
-            predicateValues.push (Q.fcall => kpred.state)
-            known = yes
-      unless known
-        predicateValues.push (pred.provider.isTrue pred.id, pred.token)
+    awaiting = []
+    predNumToId = []
+    for pred, i in rule.predicates
+      do (pred) =>
+        predNumToId[i] = pred.id
+        unless knownPredicates[pred.id]?
+          awaiting.push pred.provider.isTrue(pred.id, pred.token).then (state) =>
+            knownPredicates[pred.id] = state
 
-    return Q.all(predicateValues).then( (predicateValues) =>
+    return Q.all(awaiting).then( (predicateValues) =>
       bet = require 'bet'
       bet.operators['and'] =
         assoc: 'left'
@@ -340,76 +334,102 @@ class RuleManager extends require('events').EventEmitter
         exec: (args) => if args[0] isnt 0 or args[1] isnt 0 then 1 else 0
       bet.functions['predicate'] =
       argc: 1
-      exec: (args) => if predicateValues[args[0]] then 1 else 0
+      exec: (args) => 
+        predId = predNumToId[args[0]]
+        assert knownPredicates[predId]?
+        if knownPredicates[predId] then 1 else 0
 
       isTrue = (bet.evaluateSync(rule.tokens) is 1)
       return isTrue
     )
 
 
-  doesRuleCondtionHold: (rule, knownPredicates = []) ->
+  doesRuleCondtionHold: (rule, knownPredicates = {}) ->
     assert rule? and rule instanceof Object   
-    assert Array.isArray knownPredicates
+    assert knownPredicates? and knownPredicates instanceof Object
 
+    # First evaluate the condition and
     return @evaluateConditionOfRule(rule, knownPredicates).then( (isTrue) =>
+      # if the condition is false then the condition con not hold, because it is already false
+      # so return false.
       unless isTrue then return false
-
       # Some predicates could have a 'for'-Suffix like 'for 10 seconds' then the predicates 
-      # must at least hold for 10 seconds to be true, so we have to wait 10 seconds
+      # must at least hold for 10 seconds to be true, so we have to wait 10 seconds to decide
+      # if the rule is realy true
 
-      awaiting = []
-      # Check for eacht predicate
-      for pred in rule.predicates
-        do (pred) => 
-          # if it has a for suffix:
-          if pred.for?
-            deferred = Q.defer()
-            # if its an event something gone wrong, because an event can't hold 
-            # because it is one time event
-            assert pred.type is 'state'
-            # Check what would be if the condition would change
-            knownPredicatesNew = knownPredicates.slice() # make a copy
-            # and mark the predicate as false
-            knownPredicatesNew.push 
-              id: pred.id
-              state: false
+      # Create a deferred that will be resolve with the return value when the decision can be made. 
+      deferred = Q.defer()
 
-            # and reevaluate the confiton of the rule
-            @evaluateConditionOfRule(rule, knownPredicatesNew).then( (isTrueNew) =>
-              # if the rule is true without this predicate we don't have to check it.
-              if isTrueNew 
-                # so the predicates holds:
-                deferred.resolve true
-                return
+      # We will collect all predicates that have a for suffix and are not yet decideable in an 
+      # awaiting list.
+      awaiting = {}
 
-              idNew = pred.id + "-for-" + (new Date().getTime())
-
-              timeout = setTimeout =>
-                deferred.resolve true
-                pred.provider.cancelNotify idNew
-              , pred.for
-
-              # else let us be notified when it becomes false
-              pred.provider.notifyWhen idNew, pred.token, (state) =>
-                assert state is true or state is false
-                # if it changes to false
-                if state is false
-                  # then the condition doesn't hold
-                  deferred.resolve false
-                  pred.provider.cancelNotify idNew
-                  clearTimeout timeout
-            )
-            awaiting.push deferred.promise
+      # Whenever an awaiting predicate gets resolved then we will revalidate the rule condition.
+      revalidateCondition = () =>
+        @evaluateConditionOfRule(rule, knownPredicates).then (isTrueNew) =>
+          # If it is true
+          if isTrueNew 
+            # then resolve the return value as true
+            deferred.resolve true
+            # and cancel all awaitings.
+            for id, a of awaiting
+              a.cancel()
             return
 
-      return Q.all(awaiting).then( (resolved) =>
-        # If one needed predicate becomes false
-        for r in resolved
-          # then the condition becomes false
-          unless r then return false
-        # year all were holding, so return true
-        return true
-      )
+          # Else check if we have awaiting predicates.
+          # If we have no awaiting predicates
+          if (id for id of awaiting).length is 0
+            # then we can resolve the return value as false
+            deferred.resolve false 
+        .done()
+
+      # Fill the awaiting list:
+      # Check for each predicate,
+      for pred in rule.predicates
+        do (pred) => 
+          # if it has a for suffix.
+          if pred.for?
+            # If it has a for suffix and its an event something gone wrong, because an event can't 
+            # hold (its just one time)
+            assert pred.type is 'state'
+            # Create a new predicate id so we can register another listener.
+            idNew = pred.id + "-for-" + (new Date().getTime())
+            # Mark that we are awaiting the result
+            awaiting[pred.id] = {}
+            # and as long as we are awaiting the result, the predicate is false.
+            knownPredicates[pred.id] = false
+
+            # When the time passes
+            timeout = setTimeout =>
+              knownPredicates[pred.id] = true
+              # the predicate remains true and no value is awaited anymore.
+              awaiting[pred.id].cancel()
+              revalidateCondition()
+            , pred.for
+
+            # Let us be notified when it becomes false.
+            pred.provider.notifyWhen idNew, pred.token, (state) =>
+              assert state is true or state is false
+              # If it changes to false
+              if state is false
+                # then the predicate is false
+                knownPredicates[pred.id] = false
+                # and clear the timeout.
+                awaiting[pred.id].cancel()
+                revalidateCondition()
+
+            awaiting[pred.id].cancel = =>
+              delete awaiting[pred.id]
+              clearTimeout timeout
+              # and we can cancel the notify
+              pred.provider.cancelNotify idNew
+
+      # If we have not found awaiting predicates
+      if (id for id of awaiting).length is 0
+        # then resolve the return value to true.
+        deferred.resolve true 
+      # At then end return the deferred promise. 
+      return deferred.promise
     )
     
   executeActionAndLogResult: (rule) ->
