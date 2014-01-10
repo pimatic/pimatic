@@ -158,3 +158,6 @@ welcome to create a issue or submit a patch.
 
 For plugin development take a look at the
 [plugin template](https://github.com/sweetpi/pimatic-plugin-template).
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/sweetpi/pimatic/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
