@@ -15,10 +15,14 @@ module.exports = (grunt) ->
   ]
 
   # some realy dirty tricks:
-  usedGroc = require('./node_modules/grunt-groc/node_modules/groc')
-  ownGroc = require('./node_modules/groc')
-  for name, prop of ownGroc
-    usedGroc[name] = prop
+  try
+    usedGroc = require('./node_modules/grunt-groc/node_modules/groc')
+    ownGroc = require('./node_modules/groc')
+    for name, prop of ownGroc
+      usedGroc[name] = prop
+  catch e
+    grunt.log.writeln "Could not use own groc version: #{e.message}." 
+  
 
 
   links =
