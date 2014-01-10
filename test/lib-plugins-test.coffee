@@ -16,6 +16,7 @@ describe "PluginManager", ->
     maindir: "#{os.tmpdir()}/pimatic-test/node_modules/pimatic"
 
   pluginManager = null
+  skip = not process.env['NPM_TESTS']
 
   before ->
     # make the temp dir:
@@ -38,7 +39,7 @@ describe "PluginManager", ->
 
   describe '#installPlugin()', ->
 
-    it 'should install the plugin from npm', (finish) ->
+    it 'should install the plugin from npm',  unless skip then (finish) ->
       this.timeout 20000
       pluginManager.installPlugin('pimatic-cron').then( ->
         assert fs.existsSync "#{os.tmpdir()}/pimatic-test/node_modules/pimatic-cron"
@@ -48,7 +49,7 @@ describe "PluginManager", ->
 
   describe '#installDependencies()', ->
 
-    it 'should install the plugin dependencies', (finish) ->
+    it 'should install the plugin dependencies',  unless skip then (finish) ->
       this.timeout 20000
       fs.rmrfSync "#{os.tmpdir()}/pimatic-test/node_modules/pimatic-cron/node_modules"
       pluginManager.installPlugin('pimatic-cron').then( ->
@@ -58,7 +59,7 @@ describe "PluginManager", ->
 
   describe '#getInstalledPlugins()', ->
 
-    it 'should return the pimatic-cron plugin', (finish) ->
+    it 'should return the pimatic-cron plugin',  unless skip then (finish) ->
       pluginManager.getInstalledPlugins().then( (names) ->
         assert names.length is 1
         assert names[0] is 'pimatic-cron'
@@ -67,8 +68,8 @@ describe "PluginManager", ->
 
   describe '#getInstalledPackageInfo()', ->
 
-    it 'should return pimatic-crons package.json', ->
+    it 'should return pimatic-crons package.json',  unless skip then  ->
       pkgInfo = pluginManager.getInstalledPackageInfo('pimatic-cron')
       assert pkgInfo.name is 'pimatic-cron' 
 
- #configFile = "#{os.tmpdir()}/pimatic-test-config.json"
+ configFile = "#{os.tmpdir()}/pimatic-test-config.json"
