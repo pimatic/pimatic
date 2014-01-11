@@ -25,8 +25,7 @@ describe "pimatic", ->
   configFile = "#{os.tmpdir()}/pimatic-test-config.json"
 
   before ->
-    fs.writeFileSync configFile, JSON.stringify(config), (err) ->
-      throw err  if err
+    fs.writeFileSync configFile, JSON.stringify(config)
     process.env.PIMATIC_CONFIG = configFile
 
   after ->
