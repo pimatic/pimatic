@@ -160,3 +160,4 @@ For plugin development take a look at the
 [plugin template](https://github.com/sweetpi/pimatic-plugin-template).
 
 [![Build Status](https://travis-ci.org/sweetpi/pimatic.png?branch=development)](https://travis-ci.org/sweetpi/pimatic)
+[![NPM version](https://badge.fury.io/js/pimatic.png)](http://badge.fury.io/js/pimatic)
