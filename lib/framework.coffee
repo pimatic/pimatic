@@ -190,7 +190,7 @@ module.exports = (env) ->
       assert typeof name is "string"
 
       for p in @plugins
-        if p.config.plugin is name then return p
+        if p.config.plugin is name then return p.plugin
       return null
 
     registerDevice: (device) ->
