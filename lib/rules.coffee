@@ -114,7 +114,7 @@ class RuleManager extends require('events').EventEmitter
             tokens.push token
           else
             i = predicates.length
-            predId = id+
+            predId = id+i
             [type, provider] = findPredicateProvider token
 
             forSuffix = null
