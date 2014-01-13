@@ -321,8 +321,13 @@ module.exports = (env) ->
           @on "config", =>
             @saveConfig()
 
-          @emit "after init", "framework"
-          @listen()
+          context = 
+            waitFor: []
+            waitForIt: (promise) -> @waitFor.push promise
+
+          @emit "after init", context
+
+          Q.all(context.waitFor).then => @listen()
         )
 
     saveConfig: ->
