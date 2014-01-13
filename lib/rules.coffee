@@ -315,6 +315,9 @@ class RuleManager extends require('events').EventEmitter
         predNumToId[i] = pred.id
         unless knownPredicates[pred.id]?
           awaiting.push pred.provider.isTrue(pred.id, pred.token).then (state) =>
+            unless state?
+              state = false
+              env.logger.info "Could not decide #{pred.token} yet."
             knownPredicates[pred.id] = state
 
     return Q.all(awaiting).then( (predicateValues) =>
