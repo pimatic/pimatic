@@ -1,6 +1,9 @@
 pimatic
 =======
 
+[![Build Status](https://travis-ci.org/sweetpi/pimatic.png?branch=development)](https://travis-ci.org/sweetpi/pimatic)
+[![NPM version](https://badge.fury.io/js/pimatic.png)](http://badge.fury.io/js/pimatic)
+
 pimatic is a home automation framework that runs on [node.js](http://nodejs.org). It provides a 
 common extensible platform for home control and automation tasks.  
 
@@ -156,8 +159,4 @@ supported please add a plugin for your devices.
 As well, if you have a nice Ideas for plugins or need support for specials actuators you are
 welcome to create a issue or submit a patch.
 
-For plugin development take a look at the
-[plugin template](https://github.com/sweetpi/pimatic-plugin-template).
-
-[![Build Status](https://travis-ci.org/sweetpi/pimatic.png?branch=development)](https://travis-ci.org/sweetpi/pimatic)
-[![NPM version](https://badge.fury.io/js/pimatic.png)](http://badge.fury.io/js/pimatic)
+For plugin development take a look at the [plugin template](https://github.com/sweetpi/pimatic-plugin-template).
