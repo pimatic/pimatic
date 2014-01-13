@@ -1,6 +1,5 @@
 assert = require 'cassert'
 fs = require "fs"
-async = require 'async'
 convict = require 'convict'
 i18n = require 'i18n'
 express = require "express"
