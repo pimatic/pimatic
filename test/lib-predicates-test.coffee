@@ -1,6 +1,6 @@
 assert = require "cassert"
 
-describe "PresentPredicateProvider", ->
+describe "PresencePredicateProvider", ->
 
   # Setup the environment
   env =
@@ -19,9 +19,9 @@ describe "PresentPredicateProvider", ->
   sensorDummy = null
 
   beforeEach ->
-    provider = new env.predicates.PresentPredicateProvider(env, frameworkDummy)
+    provider = new env.predicates.PresencePredicateProvider(env, frameworkDummy)
 
-    sensorDummy = new env.devices.PresentsSensor
+    sensorDummy = new env.devices.PresenceSensor
     sensorDummy.id = 'test'
     sensorDummy.name = 'test device'
 
@@ -55,23 +55,23 @@ describe "PresentPredicateProvider", ->
   describe '#notifyWhen()', ->
 
     it "should notify when device is present", (finish) ->
-      sensorDummy._present = false
+      sensorDummy._presence = false
       success = provider.notifyWhen "test-id-1", "test is present", (state)->
         assert state is true
         provider.cancelNotify "test-id-1"
         finish()
 
-      sensorDummy._setPresent true
+      sensorDummy._setPresence true
       assert success
 
     it "should notify when device is not present", (finish) ->
-      sensorDummy._present = true
+      sensorDummy._presence = true
       success = provider.notifyWhen "test-id-2", "test is not present", (state)->
         assert state is true
         provider.cancelNotify "test-id-2"
         finish()
 
-      sensorDummy._setPresent false
+      sensorDummy._setPresence false
       assert success
 
   describe '#cancelNotify()', ->
@@ -91,7 +91,7 @@ describe "PresentPredicateProvider", ->
       assert not provider._listener['test-id-3']?
       assert not provider._listener['test-id-4']?
 
-describe "PresentPredicateProvider", ->
+describe "PresencePredicateProvider", ->
 
   # Setup the environment
   env =
@@ -110,7 +110,7 @@ describe "PresentPredicateProvider", ->
   sensorDummy = null
 
   beforeEach ->
-    provider = new env.predicates.SensorValuePredicateProvider(env, frameworkDummy)
+    provider = new env.predicates.DevicePropertyPredicateProvider(env, frameworkDummy)
 
     sensorDummy = new env.devices.Sensor
     sensorDummy.id = 'test'

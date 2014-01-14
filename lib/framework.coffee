@@ -268,8 +268,11 @@ module.exports = (env) ->
         @ruleManager.addActionHandler new env.actions.LogActionHandler env, this
 
       initPredicateProvider = =>
-        @ruleManager.addPredicateProvider new env.predicates.PresentPredicateProvider env, this
-        @ruleManager.addPredicateProvider new env.predicates.SensorValuePredicateProvider env, this
+        presencePredProvider = new env.predicates.PresencePredicateProvider env, this
+        devicePropertyPredProvider = new env.predicates.DevicePropertyPredicateProvider env, this
+        @ruleManager.addPredicateProvider presencePredProvider
+        @ruleManager.addPredicateProvider devicePropertyPredProvider
+          
 
       initRules = =>
 
