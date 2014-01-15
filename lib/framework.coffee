@@ -195,8 +195,7 @@ module.exports = (env) ->
     registerDevice: (device) ->
       assert device?
       assert device instanceof env.devices.Device
-      assert device.name? and device.name.lenght isnt 0
-      assert device.id? and device.id.lenght isnt 0
+      assert device._constructorCalled
 
       if @devices[device.id]?
         throw new assert.AssertionError("dublicate device id \"#{device.id}\"")
