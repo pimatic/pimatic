@@ -26,9 +26,10 @@ class Device extends require('events').EventEmitter
   _checkAttribute: (attrName) ->
     attr = @attributes[attrName]
     assert attr.description?, "no description for #{attrName} of #{@name} given"
+    assert attr.type?, "no type for #{attrName} of #{@name} given"
     validTypes = [Boolean, String, Number, Date]
-    isValidType = (t) => _.any(validTypes, (t) -> attr.type is t) or Array.isArray attr
-    assert isValidType attr.type, "#{attrName} has no valid type."
+    isValidType = (t) => _.any(validTypes, (t) -> attr.type is t) or Array.isArray attr.type
+    assert isValidType(attr.type), "#{attrName} of #{@name} has no valid type."
     
     # If it is a Number it must have a unit
     if attr.type is Number and not attr.unit? then attr.unit = ''

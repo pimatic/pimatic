@@ -8,7 +8,6 @@
     "lib",
     "locales",
     "test",
-    "coverage/blanket.js",
     "pimatic.js",
     "startup.coffee",
     "Cuntfile.coffee",

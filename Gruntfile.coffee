@@ -22,8 +22,6 @@ module.exports = (grunt) ->
       usedGroc[name] = prop
   catch e
     grunt.log.writeln "Could not use own groc version: #{e.message}." 
-  
-
 
   links =
     'pimatic framework': '.'
@@ -121,13 +119,12 @@ module.exports = (grunt) ->
       testBlanket:
         options:
           reporter: "dot"
-          require: ["coverage/blanket"]
         src: ["test/*"]
       coverage:
         options:
           reporter: "html-cov"
           quiet: true
-          captureFile: "coverage/coverage.html"
+          captureFile: "coverage.html"
         src: ["test/*"]
     bump:
       options:
@@ -150,7 +147,34 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks "grunt-ftp-deploy"
   grunt.loadNpmTasks "grunt-mocha-test"
 
+
+  grunt.registerTask "blanket", =>
+    blanket = require "blanket"
+
+    blanket(
+      pattern: (file) ->
+        if file.match "pimatic/lib" then return true
+        #if file.match "pimatic/node_modules" then return false
+        withoutPrefix = file.replace(/.*\/node_modules\/pimatic/, "")
+        return (not withoutPrefix.match 'node_modules') and (not withoutPrefix.match "/test/")
+      loader: "./node-loaders/coffee-script"
+    )
+
+  grunt.registerTask "clean-coverage", =>
+    fs = require "fs"
+    path = require "path"
+
+    replaceAll = (find, replace, str) => 
+      escapeRegExp = (str) => str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")
+      str.replace(new RegExp(escapeRegExp(find), 'g'), replace)
+
+    file = "#{__dirname}/coverage.html"
+    html = fs.readFileSync(file).toString()
+    html = replaceAll path.dirname(__dirname), "", html
+    fs.writeFileSync file, html
+
   # Default task(s).
   grunt.registerTask "default", ["coffeelint", "mochaTest:test", "groc"]
   grunt.registerTask "test", ["coffeelint", "mochaTest:test"]
-  grunt.registerTask "coverage", ["mochaTest:testBlanket", "mochaTest:coverage"]
+  grunt.registerTask "coverage", 
+    ["blanket", "mochaTest:testBlanket", "mochaTest:coverage", "clean-coverage"]
