@@ -1,4 +1,4 @@
-assert = require "cassert"
+  assert = require "cassert"
 
 describe "PresencePredicateProvider", ->
 
@@ -110,12 +110,11 @@ describe "PresencePredicateProvider", ->
   sensorDummy = null
 
   beforeEach ->
-    provider = new env.predicates.DevicePropertyPredicateProvider(env, frameworkDummy)
+    provider = new env.predicates.DeviceAttributePredicateProvider(env, frameworkDummy)
 
-    sensorDummy = new env.devices.Sensor
+    sensorDummy = new env.devices.PresenceSensor
     sensorDummy.id = 'test'
     sensorDummy.name = 'test sensor'
-    sensorDummy.getSensorValuesNames = -> ['test value']
 
     frameworkDummy.devices =
       test: sensorDummy

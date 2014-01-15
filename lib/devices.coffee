@@ -15,16 +15,16 @@ class Device extends require('events').EventEmitter
   # Defines the actions an device has.
   actions: {}
   # Events the device emits.
-  properties: {}
+  attributes: {}
 
   # Checks if the actuator has a given action.
   hasAction: (name) -> @actions[name]?
 
-  # Checks if the actuator has the property event.
-  hasProperty: (name) -> @properties[name]?
+  # Checks if the actuator has the attribute event.
+  hasAttribute: (name) -> @attributes[name]?
 
-  getProperty: (property) ->
-    getter = 'get' + property[0].toUpperCase() + property.slice(1)
+  getAttributeValue: (attribute) ->
+    getter = 'get' + attribute[0].toUpperCase() + attribute.slice(1)
     return @[getter]()
 
   # Checks if find matches the id or name in lower case.
@@ -60,33 +60,28 @@ class SwitchActuator extends Actuator
         state:
           type: Boolean
       
-  properties:
+  attributes:
     state:
       desciption: "the current state of the switch"
       type: Boolean
-    labels: ['on', 'off']
+      labels: ['on', 'off']
 
   # Returns a promise
-  turnOn: ->
-    @changeStateTo on
+  turnOn: -> @changeStateTo on
 
   # Retuns a promise
-  turnOff: ->
-    @changeStateTo off
+  turnOff: -> @changeStateTo off
 
   # Retuns a promise that is fulfilled when done.
   changeStateTo: (state) ->
     throw new Error "Function \"changeStateTo\" is not implemented!"
 
   # Returns a promise that will be fulfilled with the state
-  getState: ->
-    self = this
-    return Q.fcall -> self._state
+  getState: -> Q(@_state)
 
   _setState: (state) ->
-    self = this
-    self._state = state
-    self.emit "state", state
+    @_state = state
+    @emit "state", state
 
   getTemplateName: -> "switch"
 
@@ -100,7 +95,7 @@ class Sensor extends Device
 
 class TemperatureSensor extends Sensor
 
-  properties:
+  attributes:
     temperature:
       desciption: "the messured temperature"
       type: Number
@@ -111,7 +106,7 @@ class TemperatureSensor extends Sensor
 class PresenceSensor extends Sensor
   _presence: undefined
 
-  properties:
+  attributes:
     presence:
       desciption: "is the human/device present"
       type: Boolean
@@ -123,6 +118,9 @@ class PresenceSensor extends Sensor
     @_presence = value
     #@_notifyListener()
     @emit 'presence', value
+
+
+  getPresence: -> Q(@_presence)
 
   getTemplateName: -> "presence"
 

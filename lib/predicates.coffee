@@ -82,13 +82,13 @@ class PresencePredicateProvider extends DeviceEventPredicateProvider
       deviceName = matches[1].trim()
       negated = (if matches[2]? then yes else no) 
       for id, d of @framework.devices
-        if d.hasProperty 'presence'
+        if d.hasAttribute 'presence'
           if d.matchesIdOrName deviceName
             return info =
               device: d
               event: 'precence'
               getPredicateValue: => 
-                d.getProperty('presence').then (presence) =>
+                d.getAttributeValue('presence').then (presence) =>
                   if negated then not presence else presence
               getEventListener: (callback) => 
                 return eventListener = (presence) => 
@@ -98,7 +98,7 @@ class PresencePredicateProvider extends DeviceEventPredicateProvider
 
 
 
-class DevicePropertyPredicateProvider extends DeviceEventPredicateProvider
+class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
 
   constructor: (_env, @framework) ->
     env = _env
@@ -117,7 +117,7 @@ class DevicePropertyPredicateProvider extends DeviceEventPredicateProvider
   _parsePredicate: (predicate) ->
     predicate = predicate.toLowerCase()
     regExpString = 
-      '^(.+)\\s+' + # the property
+      '^(.+)\\s+' + # the attribute
       'of\\s+' + # of
       '(.+?)\\s+' + # the device
       '(?:is\\s+)?' + # is
@@ -127,16 +127,16 @@ class DevicePropertyPredicateProvider extends DeviceEventPredicateProvider
       '(.+)' # reference value
     matches = predicate.match (new RegExp regExpString)
     if matches?
-      propertyName = matches[1].trim().toLowerCase()
+      attributeName = matches[1].trim().toLowerCase()
       deviceName = matches[2].trim().toLowerCase()
       comparator = matches[3].trim() 
       referenceValue = matches[4].trim()
 
       if (referenceValue.match /.*for .*/)? then return null
-      #console.log "#{propertyName}, #{deviceName}, #{comparator}, #{referenceValue}"
+      #console.log "#{attributeName}, #{deviceName}, #{comparator}, #{referenceValue}"
       for id, d of @framework.devices
         if d.matchesIdOrName deviceName
-          if d.hasProperty propertyName
+          if d.hasAttribute attributeName
             comparator = switch  
               when comparator in ['is', 'equal', 'equals', 'equal to', 'equals to'] then '=='
               when comparator is 'is not' then '!='
@@ -153,18 +153,18 @@ class DevicePropertyPredicateProvider extends DeviceEventPredicateProvider
               lastValue = null
               return info =
                 device: d
-                event: propertyName
+                event: attributeName
                 getPredicateValue: => 
-                  d.getProperty(propertyName).then (value) =>
+                  d.getAttributeValue(attributeName).then (value) =>
                     @_compareValues comparator, value, referenceValue
                 getEventListener: (callback) => 
-                  return propertyListener = (value) =>
+                  return attributeListener = (value) =>
                     state = @_compareValues comparator, value, referenceValue
                     if state isnt lastValue
                       lastValue = state
                       callback state
                 comparator: comparator # for testing only
-                propertyName: propertyName # for testing only
+                attributeName: attributeName # for testing only
                 referenceValue: referenceValue
 
 
@@ -173,4 +173,4 @@ class DevicePropertyPredicateProvider extends DeviceEventPredicateProvider
 
 module.exports.PredicateProvider = PredicateProvider
 module.exports.PresencePredicateProvider = PresencePredicateProvider
-module.exports.DevicePropertyPredicateProvider = DevicePropertyPredicateProvider
+module.exports.DeviceAttributePredicateProvider = DeviceAttributePredicateProvider
