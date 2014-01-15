@@ -57,7 +57,9 @@
     "supertest": "~0.8.2",
     "grunt-bump": "0.0.13",
     "groc": "git+https://github.com/sweetpi/groc.git#pimatic-style",
-    "proxyquire": "~0.5.2"
+    "proxyquire": "~0.5.2",
+    "mocha": "~1.17.0",
+    "sinon": "~1.7.3"
   },
   "engines": {
     "node": ">0.8.x",

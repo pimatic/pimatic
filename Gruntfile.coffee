@@ -79,7 +79,6 @@ module.exports = (grunt) ->
       dest: (if plugin is "pimatic" then "/sweetpi/pimatic/docs"
       else "/sweetpi/pimatic/docs/#{plugin}")
 
-
   # package.json files of plugins
   pluginPackageJson = ("../#{plugin}/package.json" for plugin in plugins)
   # and main package.json files
@@ -115,6 +114,11 @@ module.exports = (grunt) ->
           reporter: "spec"
           require: ['coffee-errors'] #needed for right line numbers in errors
         src: ["test/*"]
+      testPlugin:
+        options:
+          reporter: "spec"
+          require: ['coffee-errors'] #needed for right line numbers in errors
+        src: ["test/plugins-test.coffee"]
       # blanket is used to record coverage
       testBlanket:
         options:
@@ -178,3 +182,10 @@ module.exports = (grunt) ->
   grunt.registerTask "test", ["coffeelint", "mochaTest:test"]
   grunt.registerTask "coverage", 
     ["blanket", "mochaTest:testBlanket", "mochaTest:coverage", "clean-coverage"]
+
+  for plugin in plugins
+    do (plugin) =>
+      grunt.registerTask "setEnv:#{plugin}", =>
+        process.env['PIMATIC_PLUGIN_TEST'] = plugin
+
+      grunt.registerTask "test:#{plugin}", ["setEnv:#{plugin}", "mochaTest:testPlugin"]
