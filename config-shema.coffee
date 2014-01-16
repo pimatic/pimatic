@@ -12,7 +12,7 @@ module.exports =
     debug:
       doc: "Turn on debug checks. Set the logLevel to debug to additional outputs"
       format: Boolean
-      defualt: false
+      default: false
     authentication:
       username:
         doc: "The Username for http-basic-authentication"
