@@ -1,5 +1,5 @@
 #!/bin/sh
 BRANCH=$1
-mkdir pimatic-app
-cd pimatic-app
-mkdir node_modules
+cd ../..
+mv sweetpi node_modules
+cd node_modules/pimatic
