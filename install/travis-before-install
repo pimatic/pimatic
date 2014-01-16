@@ -1,5 +1,8 @@
 #!/bin/sh
 BRANCH=$1
+pwd -P
 cd ../..
+pwd -P
 mv sweetpi node_modules
 cd node_modules/pimatic
+pwd -P
