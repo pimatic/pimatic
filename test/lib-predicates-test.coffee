@@ -5,7 +5,6 @@ describe "PresencePredicateProvider", ->
   # Setup the environment
   env =
     logger: require '../lib/logger'
-    helper: require '../lib/helper'
     devices: require '../lib/devices'
     rules: require '../lib/rules'
     plugins: require '../lib/plugins'
@@ -96,7 +95,6 @@ describe "PresencePredicateProvider", ->
   # Setup the environment
   env =
     logger: require '../lib/logger'
-    helper: require '../lib/helper'
     devices: require '../lib/devices'
     rules: require '../lib/rules'
     plugins: require '../lib/plugins'

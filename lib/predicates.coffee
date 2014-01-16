@@ -86,7 +86,7 @@ class PresencePredicateProvider extends DeviceEventPredicateProvider
           if d.matchesIdOrName deviceName
             return info =
               device: d
-              event: 'precence'
+              event: 'presence'
               getPredicateValue: => 
                 d.getAttributeValue('presence').then (presence) =>
                   if negated then not presence else presence

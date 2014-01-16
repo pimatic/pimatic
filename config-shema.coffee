@@ -9,6 +9,10 @@ module.exports =
       doc: "The default language"
       format: ['en', 'de']
       default: "en"
+    debug:
+      doc: "Turn on debug checks. Set the logLevel to debug to additional outputs"
+      format: Boolean
+      defualt: false
     authentication:
       username:
         doc: "The Username for http-basic-authentication"

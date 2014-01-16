@@ -5,7 +5,6 @@ i18n = require 'i18n'
 express = require "express"
 Q = require 'q'
 path = require 'path'
-#Q.longStackSupport = on
 
 module.exports = (env) ->
 
@@ -46,9 +45,11 @@ module.exports = (env) ->
         delete @config.actuators
         @saveConfig()
 
-      env.helper.checkConfig env, null, =>
-        assert Array.isArray @config.plugins
-        assert Array.isArray @config.devices
+      assert Array.isArray @config.plugins
+      assert Array.isArray @config.devices
+
+      # Turn on long Stack traces if debug mode is on.
+      Q.longStackSupport = @config.debug
 
       # * Set the log level
       env.logger.transports.console.level = @config.settings.logLevel
@@ -64,12 +65,6 @@ module.exports = (env) ->
       # Setup express
       # -------------
       @app = express()
-      @app.use i18n.init
-      @app.use( (req, res, next) =>
-        # force to use language settings
-        i18n.setLocale req, @config.settings.locale
-        next()
-      )
       #@app.use express.logger()
       @app.use express.bodyParser()
 
