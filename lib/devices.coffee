@@ -117,13 +117,13 @@ class SwitchActuator extends Actuator
 
 
 class DimmerActuator extends SwitchActuator
-  _dimLevel: null
+  _dimlevel: null
 
   actions: 
     changeDimLevelTo:
-      description: "sets the dim level"
+      description: "sets the level of the dimmer"
       params:
-        dimLevel:
+        dimlevel:
           type: Number
     changeStateTo:
       description: "changes the switch to on or off"
@@ -136,7 +136,7 @@ class DimmerActuator extends SwitchActuator
       description: "turns the dim level to 0%"
       
   attributes:
-    dimLevel:
+    dimlevel:
       description: "the current dim level"
       type: Number
       unit: "%"
@@ -146,26 +146,27 @@ class DimmerActuator extends SwitchActuator
       labels: ['on', 'off']
 
   # Returns a promise
-  turnOn: -> @changeDimLevelTo 0
+  turnOn: -> @changeDimlevelTo 100
 
   # Retuns a promise
-  turnOff: -> @changeDimLevelTo 100
+  turnOff: -> @changeDimlevelTo 0
 
   # Retuns a promise that is fulfilled when done.
-  changeDimLevelTo: (state) ->
+  changeDimlevelTo: (state) ->
     throw new Error "Function \"changeDimLevelTo\" is not implemented!"
 
-  _setDimLevel: (level) =>
-    cassert not isNaN(level)
+  _setDimlevel: (level) =>
+    assert not isNaN(level) 
+    level = parseFloat(level)
     cassert level >= 0
     cassert level <= 100
-    if @_dimLevel is level then return
-    @_dimLevel = level
-    @emit "dimLevel", level
+    if @_dimlevel is level then return
+    @_dimlevel = level
+    @emit "dimlevel", level
     @_setState(level > 0)
 
   # Returns a promise that will be fulfilled with the dim level
-  getDimLevel: -> Q(@_dimLevel)
+  getDimlevel: -> Q(@_dimlevel)
 
   getTemplateName: -> "dimmer"
 
