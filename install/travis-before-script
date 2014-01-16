@@ -1,6 +1,6 @@
 #!/bin/sh
 BRANCH=$1
-cd ../../..
+cd ../..
 for name in pimatic-cron pimatic-filebrowser pimatic-gpio pimatic-log-reader pimatic-mobile-frontend pimatic-pilight pimatic-ping pimatic-redirect pimatic-rest-api pimatic-sispmctl pimatic-speak-api pimatic-datalogger
 do
   echo "Installing $name from git..." 

@@ -1,0 +1,5 @@
+#!/bin/sh
+BRANCH=$1
+mkdir pimatic-app
+cd pimatic-app
+mkdir node_modules
