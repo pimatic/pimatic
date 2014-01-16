@@ -109,10 +109,65 @@ class SwitchActuator extends Actuator
   getState: -> Q(@_state)
 
   _setState: (state) ->
+    if @_state is state then return
     @_state = state
     @emit "state", state
 
   getTemplateName: -> "switch"
+
+
+class DimmerActuator extends SwitchActuator
+  _dimLevel: null
+
+  actions: 
+    changeDimLevelTo:
+      description: "sets the dim level"
+      params:
+        dimLevel:
+          type: Number
+    changeStateTo:
+      description: "changes the switch to on or off"
+      params:
+        state:
+          type: Boolean
+    turnOn:
+      description: "turns the dim level to 100%"
+    turnOff:
+      description: "turns the dim level to 0%"
+      
+  attributes:
+    dimLevel:
+      description: "the current dim level"
+      type: Number
+      unit: "%"
+    state:
+      description: "the current state of the switch"
+      type: Boolean
+      labels: ['on', 'off']
+
+  # Returns a promise
+  turnOn: -> @changeDimLevelTo 0
+
+  # Retuns a promise
+  turnOff: -> @changeDimLevelTo 100
+
+  # Retuns a promise that is fulfilled when done.
+  changeDimLevelTo: (state) ->
+    throw new Error "Function \"changeDimLevelTo\" is not implemented!"
+
+  _setDimLevel: (level) =>
+    cassert not isNaN(level)
+    cassert level >= 0
+    cassert level <= 100
+    if @_dimLevel is level then return
+    @_dimLevel = level
+    @emit "dimLevel", level
+    @_setState(level > 0)
+
+  # Returns a promise that will be fulfilled with the dim level
+  getDimLevel: -> Q(@_dimLevel)
+
+  getTemplateName: -> "dimmer"
 
 class PowerSwitch extends SwitchActuator
 
@@ -157,6 +212,7 @@ module.exports.Device = Device
 module.exports.Actuator = Actuator
 module.exports.SwitchActuator = SwitchActuator
 module.exports.PowerSwitch = PowerSwitch
+module.exports.DimmerActuator = DimmerActuator
 module.exports.Sensor = Sensor
 module.exports.TemperatureSensor = TemperatureSensor
 module.exports.PresenceSensor = PresenceSensor
