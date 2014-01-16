@@ -120,7 +120,7 @@ class DimmerActuator extends SwitchActuator
   _dimlevel: null
 
   actions: 
-    changeDimLevelTo:
+    changeDimlevelTo:
       description: "sets the level of the dimmer"
       params:
         dimlevel:
@@ -153,7 +153,7 @@ class DimmerActuator extends SwitchActuator
 
   # Retuns a promise that is fulfilled when done.
   changeDimlevelTo: (state) ->
-    throw new Error "Function \"changeDimLevelTo\" is not implemented!"
+    throw new Error "Function \"changeDimlevelTo\" is not implemented!"
 
   _setDimlevel: (level) =>
     assert not isNaN(level) 
