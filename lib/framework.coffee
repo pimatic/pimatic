@@ -74,9 +74,8 @@ module.exports = (env) ->
       auth = @config.settings.authentication
       if auth.enabled
         #Check authentication.
-        env.helper.checkConfig env, 'settings.authentication', =>
-          assert auth.username and typeof auth.username is "string" and auth.username.length isnt 0 
-          assert auth.password and typeof auth.password is "string" and auth.password.length isnt 0 
+        assert auth.username and typeof auth.username is "string" and auth.username.length isnt 0 
+        assert auth.password and typeof auth.password is "string" and auth.password.length isnt 0 
         @app.use express.basicAuth(auth.username, auth.password)
 
       if not @config.settings.httpsServer?.enabled and 
@@ -86,10 +85,9 @@ module.exports = (env) ->
       # Start the https-server if it is enabled.
       if @config.settings.httpsServer?.enabled
         httpsConfig = @config.settings.httpsServer
-        env.helper.checkConfig env, 'server', =>
-          assert httpsConfig instanceof Object
-          assert typeof httpsConfig.keyFile is 'string' and httpsConfig.keyFile.length isnt 0
-          assert typeof httpsConfig.certFile is 'string' and httpsConfig.certFile.length isnt 0 
+        assert httpsConfig instanceof Object
+        assert typeof httpsConfig.keyFile is 'string' and httpsConfig.keyFile.length isnt 0
+        assert typeof httpsConfig.certFile is 'string' and httpsConfig.certFile.length isnt 0 
 
         httpsOptions = {}
         httpsOptions[name]=value for name, value of httpsConfig
