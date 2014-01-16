@@ -1,7 +1,6 @@
 #!/bin/sh
 BRANCH=$1
-pwd -P
-cd ..
+cd ../..
 pwd -P
 for name in pimatic-cron pimatic-filebrowser pimatic-gpio pimatic-log-reader pimatic-mobile-frontend pimatic-pilight pimatic-ping pimatic-redirect pimatic-rest-api pimatic-sispmctl pimatic-speak-api pimatic-datalogger
 do
