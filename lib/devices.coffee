@@ -79,7 +79,7 @@ class SwitchActuator extends Actuator
     turnOff:
       description: "turns the switch off"
     changeStateTo:
-      description: "changes the siwitch to on or off"
+      description: "changes the switch to on or off"
       params:
         state:
           type: Boolean
@@ -145,7 +145,6 @@ class PresenceSensor extends Sensor
   _setPresence: (value) ->
     if @_presence is value then return
     @_presence = value
-    #@_notifyListener()
     @emit 'presence', value
 
 
