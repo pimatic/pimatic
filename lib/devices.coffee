@@ -35,6 +35,7 @@ class Device extends require('events').EventEmitter
     if attr.type is Number and not attr.unit? then attr.unit = ''
     # If it is a Boolean it must have labels
     if attr.type is Boolean and not attr.labels then attr.labels = ["true", "false"]
+    unless attr.label then attr.label = upperCaseFirst(attrName)
 
   constructor: ->
     assert @id?, "the device has no id"
@@ -51,7 +52,7 @@ class Device extends require('events').EventEmitter
   hasAttribute: (name) -> @attributes[name]?
 
   getAttributeValue: (attribute) ->
-    getter = 'get' + attribute[0].toUpperCase() + attribute.slice(1)
+    getter = 'get' + upperCaseFirst(attribute)
     return @[getter]()
 
   # Checks if find matches the id or name in lower case.
@@ -207,6 +208,11 @@ class PresenceSensor extends Sensor
   getPresence: -> Q(@_presence)
 
   getTemplateName: -> "presence"
+
+upperCaseFirst = (string) -> 
+  unless string.length is 0
+    string[0].toUpperCase() + string.slice(1)
+  else ""
 
 
 module.exports.Device = Device
