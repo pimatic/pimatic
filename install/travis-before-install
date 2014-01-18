@@ -5,3 +5,4 @@ cd ../..
 mv sweetpi node_modules
 cd node_modules/pimatic
 pwd -P
+apt-get install build-essential
