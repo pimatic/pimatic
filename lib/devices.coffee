@@ -180,7 +180,7 @@ class PowerSwitch extends SwitchActuator
 # #Sensor
 class Sensor extends Device
 
-  getTemplateName: -> "sensor"
+  getTemplateName: -> "device"
 
 
 class TemperatureSensor extends Sensor
