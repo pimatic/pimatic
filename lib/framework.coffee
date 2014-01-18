@@ -237,20 +237,6 @@ module.exports = (env) ->
         if d.id is id then return true
       return false
 
-    updateDeviceConfig: (deviceConfig) ->
-      assert deviceConfig.id?
-      assert deviceConfig.class?
-
-      found = false
-      for d, i in @config.devices
-        if d.id is deviceConfig.id
-          @config.devices[i] = deviceConfig
-          found = true
-          break
-      if not found then throw new Error "no device with #{deviceConfig.id} in config"
-      @saveConfig()
-      return
-
     init: ->
 
       initPlugins = =>
