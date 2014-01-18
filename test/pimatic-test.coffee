@@ -80,17 +80,3 @@ describe "pimatic", ->
 
     it 'should not find antother actuator in config', ->
       assert not framework.isDeviceInConfig 'a-not-present-id'
-
-
-  describe '#updateDeviceConfig()', ->
-
-    deviceConfigNew = 
-      id: 'test-actuator'
-      class: 'TestActuatorClass'
-      test: 'bla'
-
-
-    it 'should update actuator in config', ->
-      framework.updateDeviceConfig deviceConfigNew
-      assert framework.config.devices[0].test is 'bla'
-
