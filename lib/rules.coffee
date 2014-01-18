@@ -4,6 +4,7 @@ assert = require 'cassert'
 logger = require "./logger"
 util = require 'util'
 Q = require 'q'
+milliseconds = require './milliseconds'
 
 # ##RuleManager
 class RuleManager extends require('events').EventEmitter
@@ -127,11 +128,12 @@ class RuleManager extends require('events').EventEmitter
                 realPredicate = parts[0].trim()
                 maybeForSuffix = parts[1].trim().toLowerCase()
                 [type, provider] = findPredicateProvider realPredicate
-                matches = maybeForSuffix.match(/^(\d+)\s+seconds?$/)
-                if provider? and matches?
+                ms = milliseconds.parse maybeForSuffix
+                console.log ms
+                if provider? and ms?
                   token = realPredicate
                   forSuffix = maybeForSuffix
-                  forTime = (parseInt matches[1], 10) * 1000
+                  forTime = ms
 
             if type is 'event' and forSuffix?
               throw new Error "\"#{token}\" is an event it can not be true for \"#{forSuffix}\""
