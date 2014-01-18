@@ -7,6 +7,10 @@ For an example <code>config.json</code> file see the <code>config_default.json</
       <span class="nv">doc: </span><span class="s">&quot;The default language&quot;</span>
       <span class="nv">format: </span><span class="p">[</span><span class="s">&#39;en&#39;</span><span class="p">,</span> <span class="s">&#39;de&#39;</span><span class="p">]</span>
       <span class="nv">default: </span><span class="s">&quot;en&quot;</span>
+    <span class="nv">debug:</span>
+      <span class="nv">doc: </span><span class="s">&quot;Turn on debug checks. Set the logLevel to debug to additional outputs&quot;</span>
+      <span class="nv">format: </span><span class="nb">Boolean</span>
+      <span class="nv">default: </span><span class="kc">false</span>
     <span class="nv">authentication:</span>
       <span class="nv">username:</span>
         <span class="nv">doc: </span><span class="s">&quot;The Username for http-basic-authentication&quot;</span>
@@ -41,10 +45,12 @@ For an example <code>config.json</code> file see the <code>config_default.json</
       <span class="nv">port:</span>
         <span class="nv">doc: </span><span class="s">&quot;The port of the https-server&quot;</span>
         <span class="nv">format: </span><span class="s">&quot;port&quot;</span>
-        <span class="nv">default: </span><span class="mi">443</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>To generate a privatekey and a certificate run: 
-    openssl genrsa -out privatekey.pem 1024
-    openssl req -new -key privatekey.pem -out request.pem
-    openssl x509 -req -in request.pem -signkey privatekey.pem -out certificate.pem</p></div></div><div class="code"><div class="wrapper">      <span class="nv">keyFile:</span>
+        <span class="nv">default: </span><span class="mi">443</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>To generate a privatekey and a certificate run: </p>
+
+<pre><code>openssl genrsa -out privatekey.pem 1024
+openssl req -new -key privatekey.pem -out request.pem
+openssl x509 -req -in request.pem -signkey privatekey.pem -out certificate.pem
+</code></pre></div></div><div class="code"><div class="wrapper">      <span class="nv">keyFile:</span>
         <span class="nv">doc: </span><span class="s">&quot;Privatekey-file&quot;</span>
         <span class="nv">format: </span><span class="nb">String</span>
         <span class="nv">default: </span><span class="s">&quot;./.cert/privatekey.pem&quot;</span>

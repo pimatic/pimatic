@@ -17,12 +17,13 @@
     <span class="nv">self = </span><span class="k">this</span>
     <span class="nx">assert</span> <span class="k">typeof</span> <span class="nx">self</span><span class="p">.</span><span class="nx">framework</span><span class="p">.</span><span class="nx">devices</span> <span class="o">is</span> <span class="s">&#39;object&#39;</span>
     <span class="k">for</span> <span class="nx">id</span><span class="p">,</span> <span class="nx">device</span> <span class="k">of</span> <span class="nx">self</span><span class="p">.</span><span class="nx">framework</span><span class="p">.</span><span class="nx">devices</span>
-      <span class="k">if</span> <span class="nx">id</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">()</span> <span class="o">is</span> <span class="nx">deviceName</span> <span class="o">or</span> <span class="nx">device</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">()</span> <span class="o">is</span> <span class="nx">deviceName</span>
+      <span class="k">if</span> <span class="nx">device</span><span class="p">.</span><span class="nx">matchesIdOrName</span> <span class="nx">deviceName</span>
         <span class="nv">result = </span><span class="nx">doCallback</span> <span class="nx">device</span>
         <span class="c1">#&quot;break&quot; when result was given by callback </span>
         <span class="k">if</span> <span class="nx">result</span><span class="o">?</span> <span class="k">then</span> <span class="k">return</span> <span class="nx">result</span>
 
   <span class="nv">executeAction: </span><span class="nf">(actionString, simulate) =&gt;</span>
+    <span class="nv">actionString = </span><span class="nx">actionString</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">()</span>
     <span class="nv">self = </span><span class="k">this</span>
     <span class="nv">result = </span><span class="kc">null</span>
     <span class="nv">regExpString = </span><span class="s">&#39;^(?:turn)?(?:\\s+the)?(.+?)(on|off)$&#39;</span>

@@ -1,12 +1,10 @@
 <!DOCTYPE html><html lang="en"><head><title>lib/framework</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="lib/framework"><meta name="groc-project-path" content="lib/framework.coffee"><meta name="groc-github-url" content="https://github.com/sweetpi/pimatic"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><link rel="stylesheet" type="text/css" media="all" href="../assets/customStyle.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/sweetpi/pimatic/blob/master/lib/framework.coffee">lib/framework.coffee</a></div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="nv">assert = </span><span class="nx">require</span> <span class="s">&#39;cassert&#39;</span>
 <span class="nv">fs = </span><span class="nx">require</span> <span class="s">&quot;fs&quot;</span>
-<span class="nv">async = </span><span class="nx">require</span> <span class="s">&#39;async&#39;</span>
 <span class="nv">convict = </span><span class="nx">require</span> <span class="s">&#39;convict&#39;</span>
 <span class="nv">i18n = </span><span class="nx">require</span> <span class="s">&#39;i18n&#39;</span>
 <span class="nv">express = </span><span class="nx">require</span> <span class="s">&quot;express&quot;</span>
 <span class="nv">Q = </span><span class="nx">require</span> <span class="s">&#39;q&#39;</span>
 <span class="nv">path = </span><span class="nx">require</span> <span class="s">&#39;path&#39;</span>
-<span class="c1">#Q.longStackSupport = on</span>
 
 <span class="nv">module.exports = </span><span class="nf">(env) -&gt;</span>
 
@@ -44,9 +42,8 @@
         <span class="k">delete</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">actuators</span>
         <span class="nx">@saveConfig</span><span class="p">()</span>
 
-      <span class="nx">env</span><span class="p">.</span><span class="nx">helper</span><span class="p">.</span><span class="nx">checkConfig</span> <span class="nx">env</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="o">=&gt;</span>
-        <span class="nx">assert</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">plugins</span>
-        <span class="nx">assert</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">devices</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><ul>
+      <span class="nx">assert</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">plugins</span>
+      <span class="nx">assert</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">devices</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Turn on long Stack traces if debug mode is on.</p></div></div><div class="code"><div class="wrapper">      <span class="nv">Q.longStackSupport = </span><span class="nx">@config</span><span class="p">.</span><span class="nx">debug</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><ul>
 <li>Set the log level</li>
 </ul></div></div><div class="code"><div class="wrapper">      <span class="nv">env.logger.transports.console.level = </span><span class="nx">@config</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">logLevel</span>
 
@@ -58,29 +55,23 @@
 
 
     <span class="nv">setupExpressApp: </span><span class="p">()</span> <span class="nf">-&gt;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="setup-express">Setup express</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper">      <span class="vi">@app = </span><span class="nx">express</span><span class="p">()</span>
-      <span class="nx">@app</span><span class="p">.</span><span class="nx">use</span> <span class="nx">i18n</span><span class="p">.</span><span class="nx">init</span>
-      <span class="nx">@app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span> <span class="nf">(req, res, next) =&gt;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>force to use language settings</p></div></div><div class="code"><div class="wrapper">        <span class="nx">i18n</span><span class="p">.</span><span class="nx">setLocale</span> <span class="nx">req</span><span class="p">,</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">locale</span>
-        <span class="nx">next</span><span class="p">()</span>
-      <span class="p">)</span>
       <span class="c1">#@app.use express.logger()</span>
       <span class="nx">@app</span><span class="p">.</span><span class="nx">use</span> <span class="nx">express</span><span class="p">.</span><span class="nx">bodyParser</span><span class="p">()</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="setup-authentication">Setup authentication</h2>
 
 <p>Use http-basicAuth if authentication is not disabled.</p></div></div><div class="code"><div class="wrapper">      <span class="nv">auth = </span><span class="nx">@config</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">authentication</span>
       <span class="k">if</span> <span class="nx">auth</span><span class="p">.</span><span class="nx">enabled</span>
         <span class="c1">#Check authentication.</span>
-        <span class="nx">env</span><span class="p">.</span><span class="nx">helper</span><span class="p">.</span><span class="nx">checkConfig</span> <span class="nx">env</span><span class="p">,</span> <span class="s">&#39;settings.authentication&#39;</span><span class="p">,</span> <span class="o">=&gt;</span>
-          <span class="nx">assert</span> <span class="nx">auth</span><span class="p">.</span><span class="nx">username</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">auth</span><span class="p">.</span><span class="nx">username</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span> <span class="o">and</span> <span class="nx">auth</span><span class="p">.</span><span class="nx">username</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span> 
-          <span class="nx">assert</span> <span class="nx">auth</span><span class="p">.</span><span class="nx">password</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">auth</span><span class="p">.</span><span class="nx">password</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span> <span class="o">and</span> <span class="nx">auth</span><span class="p">.</span><span class="nx">password</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span> 
+        <span class="nx">assert</span> <span class="nx">auth</span><span class="p">.</span><span class="nx">username</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">auth</span><span class="p">.</span><span class="nx">username</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span> <span class="o">and</span> <span class="nx">auth</span><span class="p">.</span><span class="nx">username</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span> 
+        <span class="nx">assert</span> <span class="nx">auth</span><span class="p">.</span><span class="nx">password</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">auth</span><span class="p">.</span><span class="nx">password</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span> <span class="o">and</span> <span class="nx">auth</span><span class="p">.</span><span class="nx">password</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span> 
         <span class="nx">@app</span><span class="p">.</span><span class="nx">use</span> <span class="nx">express</span><span class="p">.</span><span class="nx">basicAuth</span><span class="p">(</span><span class="nx">auth</span><span class="p">.</span><span class="nx">username</span><span class="p">,</span> <span class="nx">auth</span><span class="p">.</span><span class="nx">password</span><span class="p">)</span>
 
       <span class="k">if</span> <span class="o">not</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">httpsServer</span><span class="o">?</span><span class="p">.</span><span class="nx">enabled</span> <span class="o">and</span> 
          <span class="o">not</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">httpServer</span><span class="o">?</span><span class="p">.</span><span class="nx">enabled</span>
         <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">warn</span> <span class="s">&quot;You have no https and no http server enabled!&quot;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Start the https-server if it is enabled.</p></div></div><div class="code"><div class="wrapper">      <span class="k">if</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">httpsServer</span><span class="o">?</span><span class="p">.</span><span class="nx">enabled</span>
         <span class="nv">httpsConfig = </span><span class="nx">@config</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">httpsServer</span>
-        <span class="nx">env</span><span class="p">.</span><span class="nx">helper</span><span class="p">.</span><span class="nx">checkConfig</span> <span class="nx">env</span><span class="p">,</span> <span class="s">&#39;server&#39;</span><span class="p">,</span> <span class="o">=&gt;</span>
-          <span class="nx">assert</span> <span class="nx">httpsConfig</span> <span class="k">instanceof</span> <span class="nb">Object</span>
-          <span class="nx">assert</span> <span class="k">typeof</span> <span class="nx">httpsConfig</span><span class="p">.</span><span class="nx">keyFile</span> <span class="o">is</span> <span class="s">&#39;string&#39;</span> <span class="o">and</span> <span class="nx">httpsConfig</span><span class="p">.</span><span class="nx">keyFile</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span>
-          <span class="nx">assert</span> <span class="k">typeof</span> <span class="nx">httpsConfig</span><span class="p">.</span><span class="nx">certFile</span> <span class="o">is</span> <span class="s">&#39;string&#39;</span> <span class="o">and</span> <span class="nx">httpsConfig</span><span class="p">.</span><span class="nx">certFile</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span> 
+        <span class="nx">assert</span> <span class="nx">httpsConfig</span> <span class="k">instanceof</span> <span class="nb">Object</span>
+        <span class="nx">assert</span> <span class="k">typeof</span> <span class="nx">httpsConfig</span><span class="p">.</span><span class="nx">keyFile</span> <span class="o">is</span> <span class="s">&#39;string&#39;</span> <span class="o">and</span> <span class="nx">httpsConfig</span><span class="p">.</span><span class="nx">keyFile</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span>
+        <span class="nx">assert</span> <span class="k">typeof</span> <span class="nx">httpsConfig</span><span class="p">.</span><span class="nx">certFile</span> <span class="o">is</span> <span class="s">&#39;string&#39;</span> <span class="o">and</span> <span class="nx">httpsConfig</span><span class="p">.</span><span class="nx">certFile</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span> 
 
         <span class="nv">httpsOptions = </span><span class="p">{}</span>
         <span class="nx">httpsOptions</span><span class="p">[</span><span class="nx">name</span><span class="p">]</span><span class="o">=</span><span class="nx">value</span> <span class="k">for</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">value</span> <span class="k">of</span> <span class="nx">httpsConfig</span>
@@ -130,12 +121,19 @@
               <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="s">&quot;Plugin \&quot;</span><span class="si">#{</span><span class="nx">pConf</span><span class="p">.</span><span class="nx">plugin</span><span class="si">}</span><span class="s">\&quot; depends on \&quot;</span><span class="si">#{</span><span class="nx">dep</span><span class="si">}</span><span class="s">\&quot;. &quot;</span> <span class="o">+</span>
                 <span class="s">&quot;Please add \&quot;</span><span class="si">#{</span><span class="nx">dep</span><span class="si">}</span><span class="s">\&quot; to your config!&quot;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Promise chain, begin with an empty promise</p></div></div><div class="code"><div class="wrapper">      <span class="nv">chain = </span><span class="nx">Q</span><span class="p">()</span>
 
-      <span class="k">for</span> <span class="nx">pConf</span> <span class="k">in</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">plugins</span>
-        <span class="nx">do</span> <span class="nf">(pConf) =&gt;</span>
+      <span class="k">for</span> <span class="nx">pConf</span><span class="p">,</span> <span class="nx">i</span> <span class="k">in</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">plugins</span>
+        <span class="nx">do</span> <span class="nf">(pConf, i) =&gt;</span>
           <span class="nx">assert</span> <span class="nx">pConf</span><span class="o">?</span>
           <span class="nx">assert</span> <span class="nx">pConf</span> <span class="k">instanceof</span> <span class="nb">Object</span>
           <span class="nx">assert</span> <span class="nx">pConf</span><span class="p">.</span><span class="nx">plugin</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">pConf</span><span class="p">.</span><span class="nx">plugin</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span> 
 
+          <span class="c1">#legacy support</span>
+          <span class="k">if</span> <span class="nx">pConf</span><span class="p">.</span><span class="nx">plugin</span> <span class="o">is</span> <span class="s">&quot;speak-api&quot;</span>
+            <span class="nv">chain = </span><span class="nx">chain</span><span class="p">.</span><span class="nx">then</span> <span class="o">=&gt;</span>
+              <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="s">&quot;removing deprecated plugin speak-api!&quot;</span>
+              <span class="nx">@config</span><span class="p">.</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">splice</span> <span class="nx">i</span><span class="p">,</span> <span class="mi">1</span>
+            <span class="k">return</span>
+          
           <span class="nv">chain = </span><span class="nx">chain</span><span class="p">.</span><span class="nx">then</span><span class="p">(</span> <span class="p">()</span> <span class="o">=&gt;</span>
             <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="s">&quot;loading plugin: \&quot;</span><span class="si">#{</span><span class="nx">pConf</span><span class="p">.</span><span class="nx">plugin</span><span class="si">}</span><span class="s">\&quot;...&quot;</span>
             <span class="k">return</span> <span class="nx">@pluginManager</span><span class="p">.</span><span class="nx">loadPlugin</span><span class="p">(</span><span class="s">&quot;pimatic-</span><span class="si">#{</span><span class="nx">pConf</span><span class="p">.</span><span class="nx">plugin</span><span class="si">}</span><span class="s">&quot;</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span> <span class="nf">(plugin) =&gt;</span>
@@ -151,7 +149,11 @@
     <span class="nv">restart: </span><span class="p">()</span> <span class="nf">-&gt;</span>
       <span class="k">unless</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">[</span><span class="s">&#39;PIMATIC_DAEMONIZED&#39;</span><span class="p">]</span><span class="o">?</span>
         <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&#39;Can not restart self, when not daemonzed. &#39;</span> <span class="o">+</span>
-          <span class="s">&#39;Please run pimatic with: &quot;node &#39;</span> <span class="o">+</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39; start&quot; to use this feature.&#39;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>monitor will auto restart script</p></div></div><div class="code"><div class="wrapper">      <span class="nx">process</span><span class="p">.</span><span class="nx">nextTick</span> <span class="nf">-&gt;</span> <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span> <span class="mi">0</span>
+          <span class="s">&#39;Please run pimatic with: &quot;node &#39;</span> <span class="o">+</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39; start&quot; to use this feature.&#39;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>monitor will auto restart script</p></div></div><div class="code"><div class="wrapper">      <span class="nx">process</span><span class="p">.</span><span class="nx">nextTick</span> <span class="nf">-&gt;</span> 
+        <span class="nv">daemon = </span><span class="nx">require</span> <span class="s">&#39;daemon&#39;</span>
+        <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s">&quot;restarting...&quot;</span><span class="p">)</span>
+        <span class="nx">daemon</span><span class="p">.</span><span class="nx">daemon</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">..]</span>
+        <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span> <span class="mi">0</span>
 
     <span class="nv">registerPlugin: </span><span class="nf">(plugin, config) -&gt;</span>
       <span class="nx">assert</span> <span class="nx">plugin</span><span class="o">?</span> <span class="o">and</span> <span class="nx">plugin</span> <span class="k">instanceof</span> <span class="nx">env</span><span class="p">.</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">Plugin</span>
@@ -165,14 +167,13 @@
       <span class="nx">assert</span> <span class="k">typeof</span> <span class="nx">name</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span>
 
       <span class="k">for</span> <span class="nx">p</span> <span class="k">in</span> <span class="nx">@plugins</span>
-        <span class="k">if</span> <span class="nx">p</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">plugin</span> <span class="o">is</span> <span class="nx">name</span> <span class="k">then</span> <span class="k">return</span> <span class="nx">p</span>
+        <span class="k">if</span> <span class="nx">p</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">plugin</span> <span class="o">is</span> <span class="nx">name</span> <span class="k">then</span> <span class="k">return</span> <span class="nx">p</span><span class="p">.</span><span class="nx">plugin</span>
       <span class="k">return</span> <span class="kc">null</span>
 
     <span class="nv">registerDevice: </span><span class="nf">(device) -&gt;</span>
       <span class="nx">assert</span> <span class="nx">device</span><span class="o">?</span>
       <span class="nx">assert</span> <span class="nx">device</span> <span class="k">instanceof</span> <span class="nx">env</span><span class="p">.</span><span class="nx">devices</span><span class="p">.</span><span class="nx">Device</span>
-      <span class="nx">assert</span> <span class="nx">device</span><span class="p">.</span><span class="nx">name</span><span class="o">?</span> <span class="o">and</span> <span class="nx">device</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">lenght</span> <span class="o">isnt</span> <span class="mi">0</span>
-      <span class="nx">assert</span> <span class="nx">device</span><span class="p">.</span><span class="nx">id</span><span class="o">?</span> <span class="o">and</span> <span class="nx">device</span><span class="p">.</span><span class="nx">id</span><span class="p">.</span><span class="nx">lenght</span> <span class="o">isnt</span> <span class="mi">0</span>
+      <span class="nx">assert</span> <span class="nx">device</span><span class="p">.</span><span class="nx">_constructorCalled</span>
 
       <span class="k">if</span> <span class="nx">@devices</span><span class="p">[</span><span class="nx">device</span><span class="p">.</span><span class="nx">id</span><span class="p">]</span><span class="o">?</span>
         <span class="k">throw</span> <span class="k">new</span> <span class="nx">assert</span><span class="p">.</span><span class="nx">AssertionError</span><span class="p">(</span><span class="s">&quot;dublicate device id \&quot;</span><span class="si">#{</span><span class="nx">device</span><span class="p">.</span><span class="nx">id</span><span class="si">}</span><span class="s">\&quot;&quot;</span><span class="p">)</span>
@@ -211,20 +212,6 @@
         <span class="k">if</span> <span class="nx">d</span><span class="p">.</span><span class="nx">id</span> <span class="o">is</span> <span class="nx">id</span> <span class="k">then</span> <span class="k">return</span> <span class="kc">true</span>
       <span class="k">return</span> <span class="kc">false</span>
 
-    <span class="nv">updateDeviceConfig: </span><span class="nf">(deviceConfig) -&gt;</span>
-      <span class="nx">assert</span> <span class="nx">deviceConfig</span><span class="p">.</span><span class="nx">id</span><span class="o">?</span>
-      <span class="nx">assert</span> <span class="nx">deviceConfig</span><span class="p">.</span><span class="nx">class</span><span class="o">?</span>
-
-      <span class="nv">found = </span><span class="kc">false</span>
-      <span class="k">for</span> <span class="nx">d</span><span class="p">,</span> <span class="nx">i</span> <span class="k">in</span> <span class="nx">@config</span><span class="p">.</span><span class="nx">devices</span>
-        <span class="k">if</span> <span class="nx">d</span><span class="p">.</span><span class="nx">id</span> <span class="o">is</span> <span class="nx">deviceConfig</span><span class="p">.</span><span class="nx">id</span>
-          <span class="nx">@config</span><span class="p">.</span><span class="nx">devices</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">deviceConfig</span>
-          <span class="nv">found = </span><span class="kc">true</span>
-          <span class="k">break</span>
-      <span class="k">if</span> <span class="o">not</span> <span class="nx">found</span> <span class="k">then</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;no device with </span><span class="si">#{</span><span class="nx">deviceConfig</span><span class="p">.</span><span class="nx">id</span><span class="si">}</span><span class="s"> in config&quot;</span>
-      <span class="nx">@saveConfig</span><span class="p">()</span>
-      <span class="k">return</span>
-
     <span class="nv">init: </span><span class="nf">-&gt;</span>
 
       <span class="nv">initPlugins = </span><span class="o">=&gt;</span>
@@ -241,8 +228,11 @@
         <span class="nx">@ruleManager</span><span class="p">.</span><span class="nx">addActionHandler</span> <span class="k">new</span> <span class="nx">env</span><span class="p">.</span><span class="nx">actions</span><span class="p">.</span><span class="nx">LogActionHandler</span> <span class="nx">env</span><span class="p">,</span> <span class="k">this</span>
 
       <span class="nv">initPredicateProvider = </span><span class="o">=&gt;</span>
-        <span class="nx">@ruleManager</span><span class="p">.</span><span class="nx">addPredicateProvider</span> <span class="k">new</span> <span class="nx">env</span><span class="p">.</span><span class="nx">predicates</span><span class="p">.</span><span class="nx">PresentPredicateProvider</span> <span class="nx">env</span><span class="p">,</span> <span class="k">this</span>
-        <span class="nx">@ruleManager</span><span class="p">.</span><span class="nx">addPredicateProvider</span> <span class="k">new</span> <span class="nx">env</span><span class="p">.</span><span class="nx">predicates</span><span class="p">.</span><span class="nx">SensorValuePredicateProvider</span> <span class="nx">env</span><span class="p">,</span> <span class="k">this</span>
+        <span class="nv">presencePredProvider = </span><span class="k">new</span> <span class="nx">env</span><span class="p">.</span><span class="nx">predicates</span><span class="p">.</span><span class="nx">PresencePredicateProvider</span> <span class="nx">env</span><span class="p">,</span> <span class="k">this</span>
+        <span class="nv">deviceAttributePredProvider = </span><span class="k">new</span> <span class="nx">env</span><span class="p">.</span><span class="nx">predicates</span><span class="p">.</span><span class="nx">DeviceAttributePredicateProvider</span> <span class="nx">env</span><span class="p">,</span> <span class="k">this</span>
+        <span class="nx">@ruleManager</span><span class="p">.</span><span class="nx">addPredicateProvider</span> <span class="nx">presencePredProvider</span>
+        <span class="nx">@ruleManager</span><span class="p">.</span><span class="nx">addPredicateProvider</span> <span class="nx">deviceAttributePredProvider</span>
+          
 
       <span class="nv">initRules = </span><span class="o">=&gt;</span>
 
@@ -282,8 +272,13 @@
         <span class="p">.</span><span class="nx">then</span><span class="p">(</span> <span class="o">=&gt;</span>         </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Save the config on "config" event</p></div></div><div class="code"><div class="wrapper">          <span class="nx">@</span><span class="kc">on</span> <span class="s">&quot;config&quot;</span><span class="p">,</span> <span class="o">=&gt;</span>
             <span class="nx">@saveConfig</span><span class="p">()</span>
 
-          <span class="nx">@emit</span> <span class="s">&quot;after init&quot;</span><span class="p">,</span> <span class="s">&quot;framework&quot;</span>
-          <span class="nx">@listen</span><span class="p">()</span>
+          <span class="nv">context = </span>
+            <span class="nv">waitFor: </span><span class="p">[]</span>
+            <span class="nv">waitForIt: </span><span class="nf">(promise) -&gt;</span> <span class="nx">@waitFor</span><span class="p">.</span><span class="nx">push</span> <span class="nx">promise</span>
+
+          <span class="nx">@emit</span> <span class="s">&quot;after init&quot;</span><span class="p">,</span> <span class="nx">context</span>
+
+          <span class="nx">Q</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">waitFor</span><span class="p">).</span><span class="nx">then</span> <span class="o">=&gt;</span> <span class="nx">@listen</span><span class="p">()</span>
         <span class="p">)</span>
 
     <span class="nv">saveConfig: </span><span class="nf">-&gt;</span>

@@ -120,6 +120,14 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "type": "heading",
               "data": {
                 "level": 2,
+                "title": "Documentation",
+                "slug": "documentation"
+              },
+              "depth": 2
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
                 "title": "Extensions and Hacking",
                 "slug": "extensions-and-hacking"
               },
@@ -224,6 +232,14 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "type": "heading",
           "data": {
             "level": 2,
+            "title": "Documentation",
+            "slug": "documentation"
+          },
+          "depth": 2
+        }, {
+          "type": "heading",
+          "data": {
+            "level": 2,
             "title": "Extensions and Hacking",
             "slug": "extensions-and-hacking"
           },
@@ -303,6 +319,27 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "foldPrefix": "^",
               "name": "CoffeeScript"
             },
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/lib/daemon.coffee",
+            "projectPath": "lib/daemon.coffee",
+            "targetPath": "lib/daemon",
+            "pageTitle": "lib/daemon",
+            "title": "daemon"
+          },
+          "depth": 2,
+          "outline": []
+        }, {
+          "type": "file",
+          "data": {
+            "language": {
+              "nameMatchers": [".coffee", "Cakefile"],
+              "pygmentsLexer": "coffee-script",
+              "multiLineComment": ["###*", " *", " ###", "###", "#", "###", "###*", "#", "###"],
+              "strictMultiLineEnd": false,
+              "singleLineComment": ["#"],
+              "ignorePrefix": "}",
+              "foldPrefix": "^",
+              "name": "CoffeeScript"
+            },
             "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/lib/devices.coffee",
             "projectPath": "lib/devices.coffee",
             "targetPath": "lib/devices",
@@ -312,6 +349,14 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "depth": 2,
           "outline": [
             {
+              "type": "heading",
+              "data": {
+                "level": 1,
+                "title": "Device class",
+                "slug": "device-class"
+              },
+              "depth": 1
+            }, {
               "type": "heading",
               "data": {
                 "level": 1,
@@ -373,11 +418,11 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "foldPrefix": "^",
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/lib/helper.coffee",
-            "projectPath": "lib/helper.coffee",
-            "targetPath": "lib/helper",
-            "pageTitle": "lib/helper",
-            "title": "helper"
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/lib/logger.coffee",
+            "projectPath": "lib/logger.coffee",
+            "targetPath": "lib/logger",
+            "pageTitle": "lib/logger",
+            "title": "logger"
           },
           "depth": 2,
           "outline": []
@@ -394,11 +439,11 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "foldPrefix": "^",
               "name": "CoffeeScript"
             },
-            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/lib/logger.coffee",
-            "projectPath": "lib/logger.coffee",
-            "targetPath": "lib/logger",
-            "pageTitle": "lib/logger",
-            "title": "logger"
+            "sourcePath": "/home/h3llfire/Projektesammlung/2013_pimatic/node_modules/pimatic/lib/milliseconds.coffee",
+            "projectPath": "lib/milliseconds.coffee",
+            "targetPath": "lib/milliseconds",
+            "pageTitle": "lib/milliseconds",
+            "title": "milliseconds"
           },
           "depth": 2,
           "outline": []
@@ -730,8 +775,9 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
   ];
 
   links = {
-    "pimatic framework": "/",
+    "pimatic framework": ".",
     "cron": "pimatic-cron",
+    "datalogger": "pimatic-datalogger",
     "filebrowser": "pimatic-filebrowser",
     "gpio": "pimatic-gpio",
     "log-reader": "pimatic-log-reader",
@@ -742,7 +788,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
     "redirect": "pimatic-redirect",
     "rest-api": "pimatic-rest-api",
     "sispmctl": "pimatic-sispmctl",
-    "speak-api": "pimatic-speak-api"
+    "speak-api": "pimatic-speak-api",
+    "voice-recognition": "pimatic-voice-recognition"
   };
 
   nav$ = null;

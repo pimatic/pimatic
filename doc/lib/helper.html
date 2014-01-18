@@ -11,4 +11,23 @@
       <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="s">&quot;details: </span><span class="si">#{</span><span class="nx">msg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s">&quot;</span> <span class="k">if</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">2</span>
       <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span> <span class="mi">1</span>
     <span class="k">else</span> 
-    <span class="k">throw</span> <span class="nx">err</span></div></div></div></div></body></html>
+    <span class="k">throw</span> <span class="nx">err</span>
+
+
+<span class="nv">module.exports.find = </span><span class="nf">(array, key, value) =&gt;</span>
+  <span class="nx">assert</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span> <span class="nx">array</span>
+  <span class="nx">assert</span> <span class="nx">key</span><span class="o">?</span>
+  <span class="nx">assert</span> <span class="nx">value</span><span class="o">?</span>
+  <span class="k">for</span> <span class="nx">e</span><span class="p">,</span> <span class="nx">i</span> <span class="k">in</span> <span class="nx">array</span> 
+    <span class="k">if</span> <span class="nx">e</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">is</span> <span class="nx">value</span> <span class="k">then</span> <span class="k">return</span> <span class="nx">array</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span>
+  <span class="k">return</span> <span class="kc">null</span>
+
+<span class="nv">module.exports.delete = </span><span class="nf">(array, key, value) =&gt;</span>
+  <span class="nx">assert</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span> <span class="nx">array</span>
+  <span class="nx">assert</span> <span class="nx">key</span><span class="o">?</span>
+  <span class="nx">assert</span> <span class="nx">value</span><span class="o">?</span>
+  <span class="k">for</span> <span class="nx">e</span><span class="p">,</span> <span class="nx">i</span> <span class="k">in</span> <span class="nx">array</span> 
+    <span class="k">if</span> <span class="nx">e</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">is</span> <span class="nx">value</span>
+      <span class="nx">array</span><span class="p">.</span><span class="nx">splice</span> <span class="nx">i</span>
+      <span class="k">return</span> <span class="kc">true</span>
+  <span class="k">return</span> <span class="kc">false</span></div></div></div></div></body></html>

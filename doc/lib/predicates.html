@@ -19,11 +19,8 @@ If the sensor can not decide the predicate this function should throw an Error.<
 
 <span class="nv">env = </span><span class="kc">null</span>
 
-<span class="k">class</span> <span class="nx">PresentPredicateProvider</span> <span class="k">extends</span> <span class="nx">PredicateProvider</span>
+<span class="k">class</span> <span class="nx">DeviceEventPredicateProvider</span> <span class="k">extends</span> <span class="nx">PredicateProvider</span>
   <span class="nv">_listener: </span><span class="p">{}</span>
-
-  <span class="nv">constructor: </span><span class="nf">(_env, @framework) -&gt;</span>
-    <span class="nv">env = </span><span class="nx">_env</span>
 
   <span class="nv">canDecide: </span><span class="nf">(predicate) -&gt;</span>
     <span class="nv">info = </span><span class="nx">@_parsePredicate</span> <span class="nx">predicate</span>
@@ -31,9 +28,8 @@ If the sensor can not decide the predicate this function should throw an Error.<
 
   <span class="nv">isTrue: </span><span class="nf">(id, predicate) -&gt;</span>
     <span class="nv">info = </span><span class="nx">@_parsePredicate</span> <span class="nx">predicate</span>
-    <span class="k">if</span> <span class="nx">info</span><span class="o">?</span> <span class="k">then</span> <span class="k">return</span> <span class="nx">info</span><span class="p">.</span><span class="nx">device</span><span class="p">.</span><span class="nx">getSensorValue</span><span class="p">(</span><span class="s">&#39;present&#39;</span><span class="p">).</span><span class="nx">then</span> <span class="nf">(present) =&gt;</span>
-      <span class="k">return</span> <span class="nx">info</span><span class="p">.</span><span class="nx">present</span> <span class="o">is</span> <span class="nx">present</span>
-    <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;Sensor can not decide \&quot;</span><span class="si">#{</span><span class="nx">predicate</span><span class="si">}</span><span class="s">\&quot;!&quot;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Removes the notification for an with <code>notifyWhen</code> registered predicate. </p></div></div><div class="code"><div class="wrapper">  <span class="nv">cancelNotify: </span><span class="nf">(id) -&gt;</span>
+    <span class="k">if</span> <span class="nx">info</span><span class="o">?</span> <span class="k">then</span> <span class="k">return</span> <span class="nx">info</span><span class="p">.</span><span class="nx">getPredicateValue</span><span class="p">()</span>
+    <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;Can not decide \&quot;</span><span class="si">#{</span><span class="nx">predicate</span><span class="si">}</span><span class="s">\&quot;!&quot;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Removes the notification for an with <code>notifyWhen</code> registered predicate. </p></div></div><div class="code"><div class="wrapper">  <span class="nv">cancelNotify: </span><span class="nf">(id) -&gt;</span>
     <span class="nv">listener = </span><span class="nx">@_listener</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span>
     <span class="k">if</span> <span class="nx">listener</span><span class="o">?</span>
       <span class="nx">listener</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>
@@ -41,72 +37,54 @@ If the sensor can not decide the predicate this function should throw an Error.<
     <span class="nv">info = </span><span class="nx">@_parsePredicate</span> <span class="nx">predicate</span>
     <span class="k">if</span> <span class="nx">info</span><span class="o">?</span>
       <span class="nv">device = </span><span class="nx">info</span><span class="p">.</span><span class="nx">device</span>
+      <span class="nv">event = </span><span class="nx">info</span><span class="p">.</span><span class="nx">event</span>
+      <span class="nv">eventListener = </span><span class="nx">info</span><span class="p">.</span><span class="nx">getEventListener</span><span class="p">(</span><span class="nx">callback</span><span class="p">)</span>
 
-      <span class="nv">presentListener = </span><span class="nf">(present) =&gt;</span>
-        <span class="nx">callback</span><span class="p">(</span><span class="nx">info</span><span class="p">.</span><span class="nx">present</span> <span class="o">is</span> <span class="nx">present</span><span class="p">)</span>
-
-      <span class="nx">device</span><span class="p">.</span><span class="nx">on</span> <span class="s">&#39;present&#39;</span><span class="p">,</span> <span class="nx">presentListener</span>
+      <span class="nx">device</span><span class="p">.</span><span class="nx">on</span> <span class="nx">event</span><span class="p">,</span> <span class="nx">eventListener</span>
 
       <span class="nx">@_listener</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span>
         <span class="nv">id: </span><span class="nx">id</span>
-        <span class="nv">present: </span><span class="nx">info</span><span class="p">.</span><span class="nx">present</span>
-        <span class="nv">destroy: </span><span class="o">=&gt;</span> <span class="nx">device</span><span class="p">.</span><span class="nx">removeListener</span> <span class="s">&#39;present&#39;</span><span class="p">,</span> <span class="nx">presentListener</span>
+        <span class="nv">destroy: </span><span class="o">=&gt;</span> <span class="nx">device</span><span class="p">.</span><span class="nx">removeListener</span> <span class="nx">event</span><span class="p">,</span> <span class="nx">eventListener</span>
 
-    <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;PresentPredicateProvider can not decide \&quot;</span><span class="si">#{</span><span class="nx">predicate</span><span class="si">}</span><span class="s">\&quot;!&quot;</span>
-
+    <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;DeviceEventPredicateProvider can not decide \&quot;</span><span class="si">#{</span><span class="nx">predicate</span><span class="si">}</span><span class="s">\&quot;!&quot;</span>
 
   <span class="nv">_parsePredicate: </span><span class="nf">(predicate) -&gt;</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&#39;Should be implemented by supper class.&#39;</span>
+
+
+<span class="k">class</span> <span class="nx">PresencePredicateProvider</span> <span class="k">extends</span> <span class="nx">DeviceEventPredicateProvider</span>
+
+  <span class="nv">constructor: </span><span class="nf">(_env, @framework) -&gt;</span>
+    <span class="nv">env = </span><span class="nx">_env</span>
+
+  <span class="nv">_parsePredicate: </span><span class="nf">(predicate) -&gt;</span>
+    <span class="nv">predicate = </span><span class="nx">predicate</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">()</span>
     <span class="nv">regExpString = </span><span class="s">&#39;^(.+)\\s+is\\s+(not\\s+)?present$&#39;</span>
     <span class="nv">matches = </span><span class="nx">predicate</span><span class="p">.</span><span class="nx">match</span> <span class="p">(</span><span class="k">new</span> <span class="nb">RegExp</span> <span class="nx">regExpString</span><span class="p">)</span>
     <span class="k">if</span> <span class="nx">matches</span><span class="o">?</span>
       <span class="nv">deviceName = </span><span class="nx">matches</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">trim</span><span class="p">()</span>
+      <span class="nv">negated = </span><span class="p">(</span><span class="k">if</span> <span class="nx">matches</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">?</span> <span class="k">then</span> <span class="kc">yes</span> <span class="k">else</span> <span class="kc">no</span><span class="p">)</span> 
       <span class="k">for</span> <span class="nx">id</span><span class="p">,</span> <span class="nx">d</span> <span class="k">of</span> <span class="nx">@framework</span><span class="p">.</span><span class="nx">devices</span>
-        <span class="k">if</span> <span class="nx">d</span><span class="p">.</span><span class="nx">getSensorValuesNames</span><span class="o">?</span> <span class="o">and</span> <span class="s">&#39;present&#39;</span> <span class="k">in</span> <span class="nx">d</span><span class="p">.</span><span class="nx">getSensorValuesNames</span><span class="p">()</span>
-          <span class="k">if</span> <span class="nx">deviceName</span> <span class="o">is</span> <span class="nx">d</span><span class="p">.</span><span class="nx">name</span> <span class="o">or</span> <span class="nx">deviceName</span> <span class="o">is</span> <span class="nx">d</span><span class="p">.</span><span class="nx">id</span>
+        <span class="k">if</span> <span class="nx">d</span><span class="p">.</span><span class="nx">hasAttribute</span> <span class="s">&#39;presence&#39;</span>
+          <span class="k">if</span> <span class="nx">d</span><span class="p">.</span><span class="nx">matchesIdOrName</span> <span class="nx">deviceName</span>
             <span class="k">return</span> <span class="nv">info =</span>
               <span class="nv">device: </span><span class="nx">d</span>
-              <span class="nv">present: </span><span class="p">(</span><span class="k">if</span> <span class="nx">matches</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">?</span> <span class="k">then</span> <span class="kc">no</span> <span class="k">else</span> <span class="kc">yes</span><span class="p">)</span> 
+              <span class="nv">event: </span><span class="s">&#39;presence&#39;</span>
+              <span class="nv">getPredicateValue: </span><span class="o">=&gt;</span> 
+                <span class="nx">d</span><span class="p">.</span><span class="nx">getAttributeValue</span><span class="p">(</span><span class="s">&#39;presence&#39;</span><span class="p">).</span><span class="nx">then</span> <span class="nf">(presence) =&gt;</span>
+                  <span class="k">if</span> <span class="nx">negated</span> <span class="k">then</span> <span class="o">not</span> <span class="nx">presence</span> <span class="k">else</span> <span class="nx">presence</span>
+              <span class="nv">getEventListener: </span><span class="nf">(callback) =&gt;</span> 
+                <span class="k">return</span> <span class="nv">eventListener = </span><span class="nf">(presence) =&gt;</span> 
+                  <span class="nx">callback</span><span class="p">(</span><span class="k">if</span> <span class="nx">negated</span> <span class="k">then</span> <span class="o">not</span> <span class="nx">presence</span> <span class="k">else</span> <span class="nx">presence</span><span class="p">)</span>
+              <span class="nv">negated: </span><span class="nx">negated</span> <span class="c1"># for testing only</span>
     <span class="k">return</span> <span class="kc">null</span>
 
 
 
-<span class="k">class</span> <span class="nx">SensorValuePredicateProvider</span> <span class="k">extends</span> <span class="nx">PredicateProvider</span>
-  <span class="nv">_listener: </span><span class="p">{}</span>
+<span class="k">class</span> <span class="nx">DeviceAttributePredicateProvider</span> <span class="k">extends</span> <span class="nx">DeviceEventPredicateProvider</span>
 
   <span class="nv">constructor: </span><span class="nf">(_env, @framework) -&gt;</span>
     <span class="nv">env = </span><span class="nx">_env</span>
-
-  <span class="nv">canDecide: </span><span class="nf">(predicate) -&gt;</span>
-    <span class="nv">info = </span><span class="nx">@_parsePredicate</span> <span class="nx">predicate</span>
-    <span class="k">return</span> <span class="k">if</span> <span class="nx">info</span><span class="o">?</span> <span class="k">then</span> <span class="s">&#39;state&#39;</span> <span class="k">else</span> <span class="kc">no</span> 
-
-  <span class="nv">isTrue: </span><span class="nf">(id, predicate) -&gt;</span>
-    <span class="nv">info = </span><span class="nx">@_parsePredicate</span> <span class="nx">predicate</span>
-    <span class="k">if</span> <span class="nx">info</span><span class="o">?</span> <span class="k">then</span> <span class="k">return</span> <span class="nx">info</span><span class="p">.</span><span class="nx">device</span><span class="p">.</span><span class="nx">getSensorValue</span><span class="p">(</span><span class="nx">info</span><span class="p">.</span><span class="nx">sensorValueName</span><span class="p">).</span><span class="nx">then</span> <span class="nf">(value) =&gt;</span>
-      <span class="k">return</span> <span class="nx">@_compareValues</span> <span class="nx">info</span><span class="p">.</span><span class="nx">comparator</span><span class="p">,</span> <span class="nx">value</span><span class="p">,</span> <span class="nx">info</span><span class="p">.</span><span class="nx">referenceValue</span>
-    <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;Sensor can not decide \&quot;</span><span class="si">#{</span><span class="nx">predicate</span><span class="si">}</span><span class="s">\&quot;!&quot;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Removes the notification for an with <code>notifyWhen</code> registered predicate. </p></div></div><div class="code"><div class="wrapper">  <span class="nv">cancelNotify: </span><span class="nf">(id) -&gt;</span>
-    <span class="nv">listener = </span><span class="nx">@_listener</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span>
-    <span class="k">if</span> <span class="nx">listener</span><span class="o">?</span>
-      <span class="nx">listener</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>
-      <span class="k">delete</span> <span class="nx">@_listener</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Registers notification. </p></div></div><div class="code"><div class="wrapper">  <span class="nv">notifyWhen: </span><span class="nf">(id, predicate, callback) -&gt;</span>
-    <span class="nv">info = </span><span class="nx">@_parsePredicate</span> <span class="nx">predicate</span>
-    <span class="k">if</span> <span class="nx">info</span><span class="o">?</span>
-      <span class="nv">device = </span><span class="nx">info</span><span class="p">.</span><span class="nx">device</span>
-
-      <span class="nv">lastState = </span><span class="kc">null</span>
-      <span class="nv">deviceListener = </span><span class="nf">(val) =&gt;</span>
-        <span class="nv">state = </span><span class="nx">@_compareValues</span> <span class="nx">info</span><span class="p">.</span><span class="nx">comparator</span><span class="p">,</span> <span class="nx">val</span><span class="p">,</span> <span class="nx">info</span><span class="p">.</span><span class="nx">referenceValue</span>
-        <span class="k">if</span> <span class="nx">state</span> <span class="o">isnt</span> <span class="nx">lastState</span>
-          <span class="nv">lastState = </span><span class="nx">state</span>
-          <span class="nx">callback</span> <span class="nx">state</span>
-
-      <span class="nx">device</span><span class="p">.</span><span class="nx">on</span> <span class="nx">info</span><span class="p">.</span><span class="nx">sensorValueName</span><span class="p">,</span> <span class="nx">deviceListener</span>
-
-      <span class="nx">@_listener</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span>
-        <span class="nv">id: </span><span class="nx">id</span>
-        <span class="nv">destroy: </span><span class="o">=&gt;</span> <span class="nx">device</span><span class="p">.</span><span class="nx">removeListener</span> <span class="nx">info</span><span class="p">.</span><span class="nx">sensorValueName</span><span class="p">,</span> <span class="nx">deviceListener</span>
-
-    <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;PresentPredicateProvider can not decide \&quot;</span><span class="si">#{</span><span class="nx">predicate</span><span class="si">}</span><span class="s">\&quot;!&quot;</span>
 
   <span class="nv">_compareValues: </span><span class="nf">(comparator, value, referenceValue) -&gt;</span>
     <span class="k">unless</span> <span class="nb">isNaN</span> <span class="nx">value</span>
@@ -120,49 +98,58 @@ If the sensor can not decide the predicate this function should throw an Error.<
 
 
   <span class="nv">_parsePredicate: </span><span class="nf">(predicate) -&gt;</span>
+    <span class="nv">predicate = </span><span class="nx">predicate</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">()</span>
     <span class="nv">regExpString = </span>
-      <span class="s">&#39;^(.+)\\s+&#39;</span> <span class="o">+</span> <span class="c1"># the sensor value</span>
+      <span class="s">&#39;^(.+)\\s+&#39;</span> <span class="o">+</span> <span class="c1"># the attribute</span>
       <span class="s">&#39;of\\s+&#39;</span> <span class="o">+</span> <span class="c1"># of</span>
-      <span class="s">&#39;(.+?)\\s+&#39;</span> <span class="o">+</span> <span class="c1"># the sensor</span>
+      <span class="s">&#39;(.+?)\\s+&#39;</span> <span class="o">+</span> <span class="c1"># the device</span>
       <span class="s">&#39;(?:is\\s+)?&#39;</span> <span class="o">+</span> <span class="c1"># is</span>
       <span class="s">&#39;(equal\\s+to|equals*|lower|less|greater|is not|is)&#39;</span> <span class="o">+</span> </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>is, is not, equal, equals, lower, less, greater</p></div></div><div class="code"><div class="wrapper">      <span class="s">&#39;(?:|\\s+equal|\\s+than|\\s+as)?\\s+&#39;</span> <span class="o">+</span> <span class="c1"># equal to, equal, than, as</span>
       <span class="s">&#39;(.+)&#39;</span> <span class="c1"># reference value</span>
     <span class="nv">matches = </span><span class="nx">predicate</span><span class="p">.</span><span class="nx">match</span> <span class="p">(</span><span class="k">new</span> <span class="nb">RegExp</span> <span class="nx">regExpString</span><span class="p">)</span>
     <span class="k">if</span> <span class="nx">matches</span><span class="o">?</span>
-      <span class="nv">sensorValueName = </span><span class="nx">matches</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">trim</span><span class="p">().</span><span class="nx">toLowerCase</span><span class="p">()</span>
-      <span class="nv">sensorName = </span><span class="nx">matches</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="nx">trim</span><span class="p">().</span><span class="nx">toLowerCase</span><span class="p">()</span>
+      <span class="nv">attributeName = </span><span class="nx">matches</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">trim</span><span class="p">().</span><span class="nx">toLowerCase</span><span class="p">()</span>
+      <span class="nv">deviceName = </span><span class="nx">matches</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="nx">trim</span><span class="p">().</span><span class="nx">toLowerCase</span><span class="p">()</span>
       <span class="nv">comparator = </span><span class="nx">matches</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="nx">trim</span><span class="p">()</span> 
       <span class="nv">referenceValue = </span><span class="nx">matches</span><span class="p">[</span><span class="mi">4</span><span class="p">].</span><span class="nx">trim</span><span class="p">()</span>
-
-      <span class="k">if</span> <span class="p">(</span><span class="nx">referenceValue</span><span class="p">.</span><span class="nx">match</span> <span class="sr">/.*for .*/</span><span class="p">)</span><span class="o">?</span> <span class="k">then</span> <span class="k">return</span> <span class="kc">null</span>
-      
-      <span class="c1">#console.log &quot;#{sensorValueName}, #{sensorName}, #{comparator}, #{referenceValue}&quot;</span>
+      <span class="c1">#console.log &quot;#{attributeName}, #{deviceName}, #{comparator}, #{referenceValue}&quot;</span>
       <span class="k">for</span> <span class="nx">id</span><span class="p">,</span> <span class="nx">d</span> <span class="k">of</span> <span class="nx">@framework</span><span class="p">.</span><span class="nx">devices</span>
-        <span class="k">if</span> <span class="nx">d</span><span class="p">.</span><span class="nx">getSensorValuesNames</span><span class="o">?</span>
-          <span class="k">if</span> <span class="nx">sensorName</span> <span class="o">is</span> <span class="nx">d</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">()</span> <span class="o">or</span> <span class="nx">sensorName</span> <span class="o">is</span> <span class="nx">d</span><span class="p">.</span><span class="nx">id</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">()</span>
-            <span class="k">if</span> <span class="nx">sensorValueName</span> <span class="k">in</span> <span class="nx">d</span><span class="p">.</span><span class="nx">getSensorValuesNames</span><span class="p">()</span>
-              <span class="nv">comparator = </span><span class="k">switch</span>  
-                <span class="k">when</span> <span class="nx">comparator</span> <span class="k">in</span> <span class="p">[</span><span class="s">&#39;is&#39;</span><span class="p">,</span> <span class="s">&#39;equal&#39;</span><span class="p">,</span> <span class="s">&#39;equals&#39;</span><span class="p">,</span> <span class="s">&#39;equal to&#39;</span><span class="p">,</span> <span class="s">&#39;equals to&#39;</span><span class="p">]</span> <span class="k">then</span> <span class="s">&#39;==&#39;</span>
-                <span class="k">when</span> <span class="nx">comparator</span> <span class="o">is</span> <span class="s">&#39;is not&#39;</span> <span class="k">then</span> <span class="s">&#39;!=&#39;</span>
-                <span class="k">when</span> <span class="nx">comparator</span> <span class="o">is</span> <span class="s">&#39;greater&#39;</span> <span class="k">then</span> <span class="s">&#39;&gt;&#39;</span>
-                <span class="k">when</span> <span class="nx">comparator</span> <span class="k">in</span> <span class="p">[</span><span class="s">&#39;lower&#39;</span><span class="p">,</span> <span class="s">&#39;less&#39;</span><span class="p">]</span> <span class="k">then</span> <span class="s">&#39;&lt;&#39;</span>
-                <span class="k">else</span> 
-                  <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="s">&quot;Illegal comparator \&quot;</span><span class="si">#{</span><span class="nx">comparator</span><span class="si">}</span><span class="s">\&quot;&quot;</span>
-                  <span class="kc">false</span>
+        <span class="k">if</span> <span class="nx">d</span><span class="p">.</span><span class="nx">matchesIdOrName</span> <span class="nx">deviceName</span>
+          <span class="k">if</span> <span class="nx">d</span><span class="p">.</span><span class="nx">hasAttribute</span> <span class="nx">attributeName</span>
+            <span class="nv">comparator = </span><span class="k">switch</span>  
+              <span class="k">when</span> <span class="nx">comparator</span> <span class="k">in</span> <span class="p">[</span><span class="s">&#39;is&#39;</span><span class="p">,</span> <span class="s">&#39;equal&#39;</span><span class="p">,</span> <span class="s">&#39;equals&#39;</span><span class="p">,</span> <span class="s">&#39;equal to&#39;</span><span class="p">,</span> <span class="s">&#39;equals to&#39;</span><span class="p">]</span> <span class="k">then</span> <span class="s">&#39;==&#39;</span>
+              <span class="k">when</span> <span class="nx">comparator</span> <span class="o">is</span> <span class="s">&#39;is not&#39;</span> <span class="k">then</span> <span class="s">&#39;!=&#39;</span>
+              <span class="k">when</span> <span class="nx">comparator</span> <span class="o">is</span> <span class="s">&#39;greater&#39;</span> <span class="k">then</span> <span class="s">&#39;&gt;&#39;</span>
+              <span class="k">when</span> <span class="nx">comparator</span> <span class="k">in</span> <span class="p">[</span><span class="s">&#39;lower&#39;</span><span class="p">,</span> <span class="s">&#39;less&#39;</span><span class="p">]</span> <span class="k">then</span> <span class="s">&#39;&lt;&#39;</span>
+              <span class="k">else</span> 
+                <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="s">&quot;Illegal comparator \&quot;</span><span class="si">#{</span><span class="nx">comparator</span><span class="si">}</span><span class="s">\&quot;&quot;</span>
+                <span class="kc">false</span>
 
-              <span class="k">unless</span> <span class="nx">comparator</span> <span class="o">is</span> <span class="kc">false</span>
-                <span class="k">unless</span> <span class="nb">isNaN</span><span class="p">(</span><span class="nx">referenceValue</span><span class="p">)</span>
-                  <span class="nv">referenceValue = </span><span class="nb">parseFloat</span> <span class="nx">referenceValue</span>
-                <span class="k">return</span> <span class="nv">info =</span>
-                  <span class="nv">device: </span><span class="nx">d</span>
-                  <span class="nv">sensorValueName: </span><span class="nx">sensorValueName</span>
-                  <span class="nv">comparator: </span><span class="nx">comparator</span>
-                  <span class="nv">referenceValue: </span><span class="nx">referenceValue</span>
+            <span class="k">unless</span> <span class="nx">comparator</span> <span class="o">is</span> <span class="kc">false</span>
+              <span class="k">unless</span> <span class="nb">isNaN</span><span class="p">(</span><span class="nx">referenceValue</span><span class="p">)</span>
+                <span class="nv">referenceValue = </span><span class="nb">parseFloat</span> <span class="nx">referenceValue</span>
+
+              <span class="nv">lastValue = </span><span class="kc">null</span>
+              <span class="k">return</span> <span class="nv">info =</span>
+                <span class="nv">device: </span><span class="nx">d</span>
+                <span class="nv">event: </span><span class="nx">attributeName</span>
+                <span class="nv">getPredicateValue: </span><span class="o">=&gt;</span> 
+                  <span class="nx">d</span><span class="p">.</span><span class="nx">getAttributeValue</span><span class="p">(</span><span class="nx">attributeName</span><span class="p">).</span><span class="nx">then</span> <span class="nf">(value) =&gt;</span>
+                    <span class="nx">@_compareValues</span> <span class="nx">comparator</span><span class="p">,</span> <span class="nx">value</span><span class="p">,</span> <span class="nx">referenceValue</span>
+                <span class="nv">getEventListener: </span><span class="nf">(callback) =&gt;</span> 
+                  <span class="k">return</span> <span class="nv">attributeListener = </span><span class="nf">(value) =&gt;</span>
+                    <span class="nv">state = </span><span class="nx">@_compareValues</span> <span class="nx">comparator</span><span class="p">,</span> <span class="nx">value</span><span class="p">,</span> <span class="nx">referenceValue</span>
+                    <span class="k">if</span> <span class="nx">state</span> <span class="o">isnt</span> <span class="nx">lastValue</span>
+                      <span class="nv">lastValue = </span><span class="nx">state</span>
+                      <span class="nx">callback</span> <span class="nx">state</span>
+                <span class="nv">comparator: </span><span class="nx">comparator</span> <span class="c1"># for testing only</span>
+                <span class="nv">attributeName: </span><span class="nx">attributeName</span> <span class="c1"># for testing only</span>
+                <span class="nv">referenceValue: </span><span class="nx">referenceValue</span>
 
 
     <span class="k">return</span> <span class="kc">null</span>
 
 
 <span class="nv">module.exports.PredicateProvider = </span><span class="nx">PredicateProvider</span>
-<span class="nv">module.exports.PresentPredicateProvider = </span><span class="nx">PresentPredicateProvider</span>
-<span class="nv">module.exports.SensorValuePredicateProvider = </span><span class="nx">SensorValuePredicateProvider</span></div></div></div></div></body></html>
+<span class="nv">module.exports.PresencePredicateProvider = </span><span class="nx">PresencePredicateProvider</span>
+<span class="nv">module.exports.DeviceAttributePredicateProvider = </span><span class="nx">DeviceAttributePredicateProvider</span></div></div></div></div></body></html>
