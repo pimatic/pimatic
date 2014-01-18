@@ -175,7 +175,11 @@ module.exports = (env) ->
         throw new Error 'Can not restart self, when not daemonzed. ' +
           'Please run pimatic with: "node ' + process.argv[1] + ' start" to use this feature.'
       # monitor will auto restart script
-      process.nextTick -> process.exit 0
+      process.nextTick -> 
+        daemon = require 'daemon'
+        env.logger.info("restarting...")
+        daemon.daemon process.argv[1], process.argv[2..]
+        process.exit 0
 
     registerPlugin: (plugin, config) ->
       assert plugin? and plugin instanceof env.plugins.Plugin
