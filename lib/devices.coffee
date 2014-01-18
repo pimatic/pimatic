@@ -53,7 +53,11 @@ class Device extends require('events').EventEmitter
 
   getAttributeValue: (attribute) ->
     getter = 'get' + upperCaseFirst(attribute)
-    return @[getter]()
+    # call the getter
+    result = @[getter]()
+    # Be sure that it is a promise!
+    assert Q.isPromise result, "#{getter} of #{@name} should always return a promise!"
+    return result
 
   # Checks if find matches the id or name in lower case.
   matchesIdOrName: (find) ->
