@@ -116,25 +116,25 @@ class RuleManager extends require('events').EventEmitter
           else
             i = predicates.length
             predId = id+i
-            [type, provider] = findPredicateProvider token
 
             forSuffix = null
             forTime = null
-            unless provider?
-              # no predicate found yet. Try to split the predicate at `for` to handle 
-              # predicates in the form `"the light is on for 10 seconds"`
-              parts = token.split /\sfor\s/
-              if parts.length is 2
-                realPredicate = parts[0].trim()
-                maybeForSuffix = parts[1].trim().toLowerCase()
-                [type, provider] = findPredicateProvider realPredicate
-                ms = milliseconds.parse maybeForSuffix
-                console.log ms
-                if provider? and ms?
-                  token = realPredicate
-                  forSuffix = maybeForSuffix
-                  forTime = ms
 
+            # Try to split the predicate at the last `for` to handle 
+            # predicates in the form `"the light is on for 10 seconds"`
+            forMatches = token.match /(.+)\sfor\s(.+)/
+            if forMatches? and forMatches?.length is 3
+              beforeFor = forMatches[1].trim()
+              afterFor = forMatches[2].trim()
+
+              # Test if we can parse the afterFor part.
+              ms = milliseconds.parse afterFor
+              if ms?
+                token = beforeFor
+                forSuffix = afterFor
+                forTime = ms
+
+            [type, provider] = findPredicateProvider token
             if type is 'event' and forSuffix?
               throw new Error "\"#{token}\" is an event it can not be true for \"#{forSuffix}\""
 

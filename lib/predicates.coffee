@@ -131,8 +131,6 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
       deviceName = matches[2].trim().toLowerCase()
       comparator = matches[3].trim() 
       referenceValue = matches[4].trim()
-
-      if (referenceValue.match /.*for .*/)? then return null
       #console.log "#{attributeName}, #{deviceName}, #{comparator}, #{referenceValue}"
       for id, d of @framework.devices
         if d.matchesIdOrName deviceName

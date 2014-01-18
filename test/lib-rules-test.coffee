@@ -57,11 +57,11 @@ describe "RuleManager", ->
         finish() 
       ).catch(finish).done()
 
-    it 'should parse rule with for suffix', (finish) ->
+    it 'should parse rule with for "10 seconds" suffix', (finish) ->
 
       provider.canDecide = (predicate) -> 
-        assert predicate is "predicate 1" or predicate is 'predicate 1 for 10 seconds'
-        return if predicate is "predicate 1" then 'state' else no
+        assert predicate is "predicate 1"
+        return 'state'
 
       ruleManager.parseRuleString("test1", "if predicate 1 for 10 seconds then action 1")
       .then( (rule) -> 
@@ -70,9 +70,47 @@ describe "RuleManager", ->
         assert rule.tokens.length > 0
         assert rule.predicates.length is 1
         assert rule.predicates[0].forToken is '10 seconds'
-        assert rule.predicates[0].for is 10000
+        assert rule.predicates[0].for is 10*1000
         assert rule.action is 'action 1'
         assert rule.string is 'if predicate 1 for 10 seconds then action 1'
+        finish() 
+      ).catch(finish).done()
+
+    it 'should parse rule with for "2 hours" suffix', (finish) ->
+
+      provider.canDecide = (predicate) -> 
+        assert predicate is "predicate 1"
+        return 'state'
+
+      ruleManager.parseRuleString("test1", "if predicate 1 for 2 hours then action 1")
+      .then( (rule) -> 
+        assert rule.id is 'test1'
+        assert rule.orgCondition is 'predicate 1 for 2 hours'
+        assert rule.tokens.length > 0
+        assert rule.predicates.length is 1
+        assert rule.predicates[0].forToken is '2 hours'
+        assert rule.predicates[0].for is 2*60*60*1000
+        assert rule.action is 'action 1'
+        assert rule.string is 'if predicate 1 for 2 hours then action 1'
+        finish() 
+      ).catch(finish).done()
+
+    it 'should not detect for "42 foo" as for suffix', (finish) ->
+
+      provider.canDecide = (predicate) -> 
+        assert predicate is "predicate 1 for 42 foo"
+        return 'state'
+
+      ruleManager.parseRuleString("test1", "if predicate 1 for 42 foo then action 1")
+      .then( (rule) -> 
+        assert rule.id is 'test1'
+        assert rule.orgCondition is 'predicate 1 for 42 foo'
+        assert rule.tokens.length > 0
+        assert rule.predicates.length is 1
+        assert rule.predicates[0].forToken is null
+        assert rule.predicates[0].for is null
+        assert rule.action is 'action 1'
+        assert rule.string is 'if predicate 1 for 42 foo then action 1'
         finish() 
       ).catch(finish).done()
 
