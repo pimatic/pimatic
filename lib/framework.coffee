@@ -143,12 +143,19 @@ module.exports = (env) ->
       # Promise chain, begin with an empty promise
       chain = Q()
 
-      for pConf in @config.plugins
-        do (pConf) =>
+      for pConf, i in @config.plugins
+        do (pConf, i) =>
           assert pConf?
           assert pConf instanceof Object
           assert pConf.plugin? and typeof pConf.plugin is "string" 
 
+          #legacy support
+          if pConf.plugin is "speak-api"
+            chain = chain.then =>
+              env.logger.info "removing deprecated plugin speak-api!"
+              @config.plugins.splice i, 1
+            return
+          
           chain = chain.then( () =>
             env.logger.info "loading plugin: \"#{pConf.plugin}\"..."
             return @pluginManager.loadPlugin("pimatic-#{pConf.plugin}").then( (plugin) =>
