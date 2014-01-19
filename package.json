@@ -17,7 +17,7 @@
     "plugins.md",
     "LICENSE"
   ],
-  "version": "0.5.0",
+  "version": "0.5.1",
   "homepage": "http://github.com/sweetpi/pimatic",
   "repository": {
     "type": "git",
