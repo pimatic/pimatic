@@ -258,8 +258,10 @@ module.exports = (env) ->
 
       initPredicateProvider = =>
         presencePredProvider = new env.predicates.PresencePredicateProvider env, this
+        switchPredProvider = new env.predicates.SwitchPredicateProvider env, this
         deviceAttributePredProvider = new env.predicates.DeviceAttributePredicateProvider env, this
         @ruleManager.addPredicateProvider presencePredProvider
+        @ruleManager.addPredicateProvider switchPredProvider
         @ruleManager.addPredicateProvider deviceAttributePredProvider
           
 

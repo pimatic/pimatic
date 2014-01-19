@@ -96,7 +96,30 @@ class PresencePredicateProvider extends DeviceEventPredicateProvider
               negated: negated # for testing only
     return null
 
+class SwitchPredicateProvider extends DeviceEventPredicateProvider
 
+  constructor: (_env, @framework) ->
+    env = _env
+
+  _parsePredicate: (predicate) ->
+    predicate = predicate.toLowerCase()
+    regExpString = '^(.+)\\s+is\\s+(?:turned\\s+)?(on|off)$'
+    matches = predicate.match (new RegExp regExpString)
+    if matches?
+      deviceName = matches[1].trim()
+      state = matches[2] is "on"
+      for id, d of @framework.devices
+        if d.hasAttribute 'state'
+          if d.matchesIdOrName deviceName
+            return info =
+              device: d
+              event: 'state'
+              getPredicateValue: => 
+                d.getAttributeValue('state').then (s) => s is state
+              getEventListener: (callback) => 
+                return eventListener = (s) => callback(s is state)
+              state: state # for testing only
+    return null
 
 class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
 
@@ -188,4 +211,5 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
 
 module.exports.PredicateProvider = PredicateProvider
 module.exports.PresencePredicateProvider = PresencePredicateProvider
+module.exports.SwitchPredicateProvider = SwitchPredicateProvider
 module.exports.DeviceAttributePredicateProvider = DeviceAttributePredicateProvider

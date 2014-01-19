@@ -18,7 +18,6 @@ describe "PresencePredicateProvider", ->
   sensorDummy = null
 
   beforeEach ->
-    # console.log env.predicates.PresencePredicateProvider
     provider = new env.predicates.PresencePredicateProvider(env, frameworkDummy)
 
     class PresenceDummySensor extends env.devices.PresenceSensor
@@ -101,7 +100,97 @@ describe "PresencePredicateProvider", ->
       assert not provider._listener['test-id-3']?
       assert not provider._listener['test-id-4']?
 
-describe "PresencePredicateProvider", ->
+
+describe "SwitchPredicateProvider", ->
+
+  # Setup the environment
+  env =
+    logger: require '../lib/logger'
+    devices: require '../lib/devices'
+    rules: require '../lib/rules'
+    plugins: require '../lib/plugins'
+    predicates: require '../lib/predicates'
+
+
+  frameworkDummy = 
+    devices: {}
+
+  provider = null
+  switchDummy = null
+
+  beforeEach ->
+    provider = new env.predicates.SwitchPredicateProvider(env, frameworkDummy)
+
+    class SwitchDummyDevice extends env.devices.SwitchActuator
+      constructor: () ->
+        @id = 'test'
+        @name = 'test device'
+        @_state = on
+        super()
+
+    switchDummy = new SwitchDummyDevice
+
+    frameworkDummy.devices =
+      test: switchDummy
+
+  describe '#_parsePredicate()', ->
+
+    it 'should parse "test is on"', ->
+      info = provider._parsePredicate "test is on"
+      assert info?
+      assert info.device.id is "test"
+      assert info.state is on
+
+    it 'should parse "test device is on"', ->
+      info = provider._parsePredicate "test device is on"
+      assert info?
+      assert info.device.id is "test"
+      assert info.state is on
+
+    it 'should parse "test is off"', ->
+      info = provider._parsePredicate "test is off"
+      assert info?
+      assert info.device.id is "test"
+      assert info.state is off
+
+    it 'should parse "test is turned on"', ->
+      info = provider._parsePredicate "test is turned on"
+      assert info?
+      assert info.device.id is "test"
+      assert info.state is on
+
+    it 'should parse "test is turned off"', ->
+      info = provider._parsePredicate "test is turned off"
+      assert info?
+      assert info.device.id is "test"
+      assert info.state is off
+
+
+
+  describe '#notifyWhen()', ->
+
+    it "should notify when device is turned on", (finish) ->
+      switchDummy._state = off
+      success = provider.notifyWhen "test-id-1", "test is turned on", (predState)->
+        assert predState is true
+        provider.cancelNotify "test-id-1"
+        finish()
+
+      switchDummy._setState on
+      assert success
+
+    it "should notify when device is turned off", (finish) ->
+      switchDummy._state = on
+      success = provider.notifyWhen "test-id-2", "test is turned off", (predState)->
+        assert predState is true
+        provider.cancelNotify "test-id-2"
+        finish()
+
+      switchDummy._setState off
+      assert success
+
+
+describe "DeviceAttributePredicateProvider", ->
 
   # Setup the environment
   env =
