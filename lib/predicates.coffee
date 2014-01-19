@@ -169,8 +169,9 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
 
             unless comparator is false
               # if the attribute has a unit
-              unit = d.attributes[attributeName].unit.toLowerCase()
+              unit = d.attributes[attributeName].unit
               if unit?
+                unit = unit.toLowerCase()
                 # then remove it from the reference value and
                 # allow just "c" for "°C"
                 lastIndex = referenceValue.replace('°c', 'c').lastIndexOf unit.replace('°c', 'c')
