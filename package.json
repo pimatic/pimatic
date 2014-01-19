@@ -43,7 +43,8 @@
     "CBuffer": "~0.1.4",
     "semver": "~2.2.1",
     "fs.extra": "~1.2.1",
-    "daemon": "~1.1.0"
+    "daemon": "~1.1.0",
+    "date-format-lite": "~0.5.0"
   },
   "devDependencies": {
     "grunt-cli": "~0.1.11",

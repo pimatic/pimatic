@@ -4,6 +4,7 @@ assert = require 'cassert'
 logger = require "./logger"
 util = require 'util'
 Q = require 'q'
+require "date-format-lite"
 milliseconds = require './milliseconds'
 
 # ##RuleManager
@@ -438,7 +439,7 @@ class RuleManager extends require('events').EventEmitter
     
   executeActionAndLogResult: (rule) ->
     # Returns the current time as string: `2012-11-04 14:55:45`
-    now = => new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')
+    now = => new Date().format 'YYYY-MM-DD hh:mm:ss'
     return @executeAction(rule.action, false).then( (message) =>
       if message? 
         logger.info "#{now()}: rule #{rule.id}: #{message}"
