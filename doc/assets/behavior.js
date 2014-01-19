@@ -788,8 +788,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
     "redirect": "pimatic-redirect",
     "rest-api": "pimatic-rest-api",
     "sispmctl": "pimatic-sispmctl",
-    "speak-api": "pimatic-speak-api",
-    "voice-recognition": "pimatic-voice-recognition"
+    "speak-api": "pimatic-speak-api"
   };
 
   nav$ = null;

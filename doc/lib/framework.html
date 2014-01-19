@@ -148,7 +148,7 @@
 
     <span class="nv">restart: </span><span class="p">()</span> <span class="nf">-&gt;</span>
       <span class="k">unless</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">[</span><span class="s">&#39;PIMATIC_DAEMONIZED&#39;</span><span class="p">]</span><span class="o">?</span>
-        <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&#39;Can not restart self, when not daemonzed. &#39;</span> <span class="o">+</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&#39;Can not restart self, when not daemonized. &#39;</span> <span class="o">+</span>
           <span class="s">&#39;Please run pimatic with: &quot;node &#39;</span> <span class="o">+</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39; start&quot; to use this feature.&#39;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>monitor will auto restart script</p></div></div><div class="code"><div class="wrapper">      <span class="nx">process</span><span class="p">.</span><span class="nx">nextTick</span> <span class="nf">-&gt;</span> 
         <span class="nv">daemon = </span><span class="nx">require</span> <span class="s">&#39;daemon&#39;</span>
         <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s">&quot;restarting...&quot;</span><span class="p">)</span>
@@ -229,8 +229,10 @@
 
       <span class="nv">initPredicateProvider = </span><span class="o">=&gt;</span>
         <span class="nv">presencePredProvider = </span><span class="k">new</span> <span class="nx">env</span><span class="p">.</span><span class="nx">predicates</span><span class="p">.</span><span class="nx">PresencePredicateProvider</span> <span class="nx">env</span><span class="p">,</span> <span class="k">this</span>
+        <span class="nv">switchPredProvider = </span><span class="k">new</span> <span class="nx">env</span><span class="p">.</span><span class="nx">predicates</span><span class="p">.</span><span class="nx">SwitchPredicateProvider</span> <span class="nx">env</span><span class="p">,</span> <span class="k">this</span>
         <span class="nv">deviceAttributePredProvider = </span><span class="k">new</span> <span class="nx">env</span><span class="p">.</span><span class="nx">predicates</span><span class="p">.</span><span class="nx">DeviceAttributePredicateProvider</span> <span class="nx">env</span><span class="p">,</span> <span class="k">this</span>
         <span class="nx">@ruleManager</span><span class="p">.</span><span class="nx">addPredicateProvider</span> <span class="nx">presencePredProvider</span>
+        <span class="nx">@ruleManager</span><span class="p">.</span><span class="nx">addPredicateProvider</span> <span class="nx">switchPredProvider</span>
         <span class="nx">@ruleManager</span><span class="p">.</span><span class="nx">addPredicateProvider</span> <span class="nx">deviceAttributePredProvider</span>
           
 
