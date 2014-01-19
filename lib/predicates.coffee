@@ -135,18 +135,37 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
       for id, d of @framework.devices
         if d.matchesIdOrName deviceName
           if d.hasAttribute attributeName
-            comparator = switch  
-              when comparator in ['is', 'equal', 'equals', 'equal to', 'equals to'] then '=='
-              when comparator is 'is not' then '!='
-              when comparator is 'greater' then '>'
-              when comparator in ['lower', 'less'] then '<'
+            comparator = switch comparator
+              when 'is', 'equal', 'equals', 'equal to', 'equals to' then '=='
+              when 'is not' then '!='
+              when 'greater' then '>'
+              when 'lower', 'less' then '<'
               else 
                 env.logger.error "Illegal comparator \"#{comparator}\""
                 false
 
             unless comparator is false
-              unless isNaN(referenceValue)
+              # if the attribute has a unit
+              unit = d.attributes[attributeName].unit.toLowerCase()
+              if unit?
+                # then remove it from the reference value and
+                # allow just "c" for "°C"
+                lastIndex = referenceValue.replace('°c', 'c').lastIndexOf unit.replace('°c', 'c')
+                if lastIndex isnt -1
+                  referenceValue = referenceValue.substring 0, lastIndex
+
+              # If the attribute is numerical
+              if d.attributes[attributeName].type is Number
+                # then check the referenceValue
+                if isNaN(referenceValue)
+                  throw new Error "Expected #{referenceValue} in \"#{predicate}\" to be a number."
+                # and convert it to a float.
                 referenceValue = parseFloat referenceValue
+              else
+                # if its not numerical but comparator is less or greater
+                if comparator in ["<", ">"]
+                  # then something gone wrong.
+                  throw new Error "Can not compare a non numerical attribute with less or creater."
 
               lastValue = null
               return info =
@@ -164,8 +183,6 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
                 comparator: comparator # for testing only
                 attributeName: attributeName # for testing only
                 referenceValue: referenceValue
-
-
     return null
 
 
