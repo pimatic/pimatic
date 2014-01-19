@@ -26,14 +26,24 @@ class SwitchActionHandler extends ActionHandler
     actionString = actionString.toLowerCase()
     self = this
     result = null
-    regExpString = '^(?:turn|switch)?(?:\\s+the)?(.+?)(on|off)$'
+
+    deviceName = null
+    state = null
+    regExpString = '^(?:turn|switch)?(?:\\s+the|\\s+)?(.+?)(on|off)$'
     matches = actionString.match (new RegExp regExpString)
-    # Try the translated form:
-    unless matches? then matches = actionString.match (new RegExp __(regExpString))
     if matches?
       deviceName = matches[1].trim()
       state = matches[2]
-      state =  (if state is __("on") or state is "on" then on else off)
+    else 
+      # Try the other way around:
+      regExpString = '^(?:turn|switch)\\s+(on|off)(?:\\s+the\\s+)?(.+?)$'
+      matches = actionString.match (new RegExp regExpString)
+      if matches?
+        deviceName = matches[2].trim()
+        state = matches[1]
+    # If we had a match
+    if deviceName? and state?
+      state = (state is "on")
       actionName = (if state then "turnOn" else "turnOff")
       result = self.runOnDeviceByNameOrId deviceName, (device)->
         if device.hasAction actionName

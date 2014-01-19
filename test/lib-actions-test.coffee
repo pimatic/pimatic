@@ -70,6 +70,13 @@ describe "SwitchActionHandler", ->
             finish()
           ).done()
 
+    it "should execute: turn on the dummy switch", (finish) ->
+      switchActionHandler.executeAction("turn on the dummy switch", false).then( (message) ->
+        assert turnOnCalled
+        assert message is "turned dummy switch on"
+        finish()
+      ).done()
+
     it 'should not execute: invalid-id on', ->
       result = switchActionHandler.executeAction("invalid-id on", false)
       assert not result?
