@@ -26,7 +26,7 @@ class SwitchActionHandler extends ActionHandler
     actionString = actionString.toLowerCase()
     self = this
     result = null
-    regExpString = '^(?:turn)?(?:\\s+the)?(.+?)(on|off)$'
+    regExpString = '^(?:turn|switch)?(?:\\s+the)?(.+?)(on|off)$'
     matches = actionString.match (new RegExp regExpString)
     # Try the translated form:
     unless matches? then matches = actionString.match (new RegExp __(regExpString))

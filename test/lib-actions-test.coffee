@@ -45,6 +45,8 @@ describe "SwitchActionHandler", ->
     validRulePrefixes = [
       'turn the dummy switch'
       'turn dummy switch'
+      'switch the dummy switch'
+      'switch dummy switch'
       'dummy switch'
       'dummy-switch-id'
     ]
