@@ -1,0 +1,8 @@
+#!/bin/sh
+BRANCH=$1
+pwd -P
+cd ../..
+mv sweetpi node_modules
+cd node_modules/pimatic
+pwd -P
+sudo apt-get install build-essential

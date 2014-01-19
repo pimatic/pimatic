@@ -1,12 +1,10 @@
 assert = require 'cassert'
 fs = require "fs"
-async = require 'async'
 convict = require 'convict'
 i18n = require 'i18n'
 express = require "express"
 Q = require 'q'
 path = require 'path'
-#Q.longStackSupport = on
 
 module.exports = (env) ->
 
@@ -47,9 +45,11 @@ module.exports = (env) ->
         delete @config.actuators
         @saveConfig()
 
-      env.helper.checkConfig env, null, =>
-        assert Array.isArray @config.plugins
-        assert Array.isArray @config.devices
+      assert Array.isArray @config.plugins
+      assert Array.isArray @config.devices
+
+      # Turn on long Stack traces if debug mode is on.
+      Q.longStackSupport = @config.debug
 
       # * Set the log level
       env.logger.transports.console.level = @config.settings.logLevel
@@ -65,12 +65,6 @@ module.exports = (env) ->
       # Setup express
       # -------------
       @app = express()
-      @app.use i18n.init
-      @app.use( (req, res, next) =>
-        # force to use language settings
-        i18n.setLocale req, @config.settings.locale
-        next()
-      )
       #@app.use express.logger()
       @app.use express.bodyParser()
 
@@ -80,9 +74,8 @@ module.exports = (env) ->
       auth = @config.settings.authentication
       if auth.enabled
         #Check authentication.
-        env.helper.checkConfig env, 'settings.authentication', =>
-          assert auth.username and typeof auth.username is "string" and auth.username.length isnt 0 
-          assert auth.password and typeof auth.password is "string" and auth.password.length isnt 0 
+        assert auth.username and typeof auth.username is "string" and auth.username.length isnt 0 
+        assert auth.password and typeof auth.password is "string" and auth.password.length isnt 0 
         @app.use express.basicAuth(auth.username, auth.password)
 
       if not @config.settings.httpsServer?.enabled and 
@@ -92,10 +85,9 @@ module.exports = (env) ->
       # Start the https-server if it is enabled.
       if @config.settings.httpsServer?.enabled
         httpsConfig = @config.settings.httpsServer
-        env.helper.checkConfig env, 'server', =>
-          assert httpsConfig instanceof Object
-          assert typeof httpsConfig.keyFile is 'string' and httpsConfig.keyFile.length isnt 0
-          assert typeof httpsConfig.certFile is 'string' and httpsConfig.certFile.length isnt 0 
+        assert httpsConfig instanceof Object
+        assert typeof httpsConfig.keyFile is 'string' and httpsConfig.keyFile.length isnt 0
+        assert typeof httpsConfig.certFile is 'string' and httpsConfig.certFile.length isnt 0 
 
         httpsOptions = {}
         httpsOptions[name]=value for name, value of httpsConfig
@@ -151,12 +143,19 @@ module.exports = (env) ->
       # Promise chain, begin with an empty promise
       chain = Q()
 
-      for pConf in @config.plugins
-        do (pConf) =>
+      for pConf, i in @config.plugins
+        do (pConf, i) =>
           assert pConf?
           assert pConf instanceof Object
           assert pConf.plugin? and typeof pConf.plugin is "string" 
 
+          #legacy support
+          if pConf.plugin is "speak-api"
+            chain = chain.then =>
+              env.logger.info "removing deprecated plugin speak-api!"
+              @config.plugins.splice i, 1
+            return
+          
           chain = chain.then( () =>
             env.logger.info "loading plugin: \"#{pConf.plugin}\"..."
             return @pluginManager.loadPlugin("pimatic-#{pConf.plugin}").then( (plugin) =>
@@ -173,10 +172,14 @@ module.exports = (env) ->
 
     restart: () ->
       unless process.env['PIMATIC_DAEMONIZED']?
-        throw new Error 'Can not restart self, when not daemonzed. ' +
+        throw new Error 'Can not restart self, when not daemonized. ' +
           'Please run pimatic with: "node ' + process.argv[1] + ' start" to use this feature.'
       # monitor will auto restart script
-      process.nextTick -> process.exit 0
+      process.nextTick -> 
+        daemon = require 'daemon'
+        env.logger.info("restarting...")
+        daemon.daemon process.argv[1], process.argv[2..]
+        process.exit 0
 
     registerPlugin: (plugin, config) ->
       assert plugin? and plugin instanceof env.plugins.Plugin
@@ -190,14 +193,13 @@ module.exports = (env) ->
       assert typeof name is "string"
 
       for p in @plugins
-        if p.config.plugin is name then return p
+        if p.config.plugin is name then return p.plugin
       return null
 
     registerDevice: (device) ->
       assert device?
       assert device instanceof env.devices.Device
-      assert device.name? and device.name.lenght isnt 0
-      assert device.id? and device.id.lenght isnt 0
+      assert device._constructorCalled
 
       if @devices[device.id]?
         throw new assert.AssertionError("dublicate device id \"#{device.id}\"")
@@ -239,20 +241,6 @@ module.exports = (env) ->
         if d.id is id then return true
       return false
 
-    updateDeviceConfig: (deviceConfig) ->
-      assert deviceConfig.id?
-      assert deviceConfig.class?
-
-      found = false
-      for d, i in @config.devices
-        if d.id is deviceConfig.id
-          @config.devices[i] = deviceConfig
-          found = true
-          break
-      if not found then throw new Error "no device with #{deviceConfig.id} in config"
-      @saveConfig()
-      return
-
     init: ->
 
       initPlugins = =>
@@ -269,8 +257,13 @@ module.exports = (env) ->
         @ruleManager.addActionHandler new env.actions.LogActionHandler env, this
 
       initPredicateProvider = =>
-        @ruleManager.addPredicateProvider new env.predicates.PresentPredicateProvider env, this
-        @ruleManager.addPredicateProvider new env.predicates.SensorValuePredicateProvider env, this
+        presencePredProvider = new env.predicates.PresencePredicateProvider env, this
+        switchPredProvider = new env.predicates.SwitchPredicateProvider env, this
+        deviceAttributePredProvider = new env.predicates.DeviceAttributePredicateProvider env, this
+        @ruleManager.addPredicateProvider presencePredProvider
+        @ruleManager.addPredicateProvider switchPredProvider
+        @ruleManager.addPredicateProvider deviceAttributePredProvider
+          
 
       initRules = =>
 
@@ -321,8 +314,13 @@ module.exports = (env) ->
           @on "config", =>
             @saveConfig()
 
-          @emit "after init", "framework"
-          @listen()
+          context = 
+            waitFor: []
+            waitForIt: (promise) -> @waitFor.push promise
+
+          @emit "after init", context
+
+          Q.all(context.waitFor).then => @listen()
         )
 
     saveConfig: ->

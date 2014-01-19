@@ -30,11 +30,8 @@ class PredicateProvider
 
 env = null
 
-class PresentPredicateProvider extends PredicateProvider
+class DeviceEventPredicateProvider extends PredicateProvider
   _listener: {}
-
-  constructor: (_env, @framework) ->
-    env = _env
 
   canDecide: (predicate) ->
     info = @_parsePredicate predicate
@@ -42,9 +39,8 @@ class PresentPredicateProvider extends PredicateProvider
 
   isTrue: (id, predicate) ->
     info = @_parsePredicate predicate
-    if info? then return info.device.getSensorValue('present').then (present) =>
-      return info.present is present
-    else throw new Error "Sensor can not decide \"#{predicate}\"!"
+    if info? then return info.getPredicateValue()
+    else throw new Error "Can not decide \"#{predicate}\"!"
 
   # Removes the notification for an with `notifyWhen` registered predicate. 
   cancelNotify: (id) ->
@@ -58,79 +54,77 @@ class PresentPredicateProvider extends PredicateProvider
     info = @_parsePredicate predicate
     if info?
       device = info.device
+      event = info.event
+      eventListener = info.getEventListener(callback)
 
-      presentListener = (present) =>
-        callback(info.present is present)
-
-      device.on 'present', presentListener
+      device.on event, eventListener
 
       @_listener[id] =
         id: id
-        present: info.present
-        destroy: => device.removeListener 'present', presentListener
+        destroy: => device.removeListener event, eventListener
 
-    else throw new Error "PresentPredicateProvider can not decide \"#{predicate}\"!"
+    else throw new Error "DeviceEventPredicateProvider can not decide \"#{predicate}\"!"
 
+  _parsePredicate: (predicate) ->
+    throw new Error 'Should be implemented by supper class.'
+
+
+class PresencePredicateProvider extends DeviceEventPredicateProvider
+
+  constructor: (_env, @framework) ->
+    env = _env
 
   _parsePredicate: (predicate) ->
     predicate = predicate.toLowerCase()
-    regExpString = '^(.+)\\s+is\\s+(not\\s+)?present$'
+    regExpString = '^(.+)\\s+is\\s+(not\\s+present|present|absent)$'
     matches = predicate.match (new RegExp regExpString)
     if matches?
       deviceName = matches[1].trim()
+      negated = (if matches[2] isnt "present" then yes else no) 
       for id, d of @framework.devices
-        if d.getSensorValuesNames? and 'present' in d.getSensorValuesNames()
-          if deviceName is d.name.toLowerCase() or deviceName is d.id.toLowerCase()
+        if d.hasAttribute 'presence'
+          if d.matchesIdOrName deviceName
             return info =
               device: d
-              present: (if matches[2]? then no else yes) 
+              event: 'presence'
+              getPredicateValue: => 
+                d.getAttributeValue('presence').then (presence) =>
+                  if negated then not presence else presence
+              getEventListener: (callback) => 
+                return eventListener = (presence) => 
+                  callback(if negated then not presence else presence)
+              negated: negated # for testing only
     return null
 
-
-
-class SensorValuePredicateProvider extends PredicateProvider
-  _listener: {}
+class SwitchPredicateProvider extends DeviceEventPredicateProvider
 
   constructor: (_env, @framework) ->
     env = _env
 
-  canDecide: (predicate) ->
-    info = @_parsePredicate predicate
-    return if info? then 'state' else no 
+  _parsePredicate: (predicate) ->
+    predicate = predicate.toLowerCase()
+    regExpString = '^(.+)\\s+is\\s+(?:turned\\s+)?(on|off)$'
+    matches = predicate.match (new RegExp regExpString)
+    if matches?
+      deviceName = matches[1].trim()
+      state = matches[2] is "on"
+      for id, d of @framework.devices
+        if d.hasAttribute 'state'
+          if d.matchesIdOrName deviceName
+            return info =
+              device: d
+              event: 'state'
+              getPredicateValue: => 
+                d.getAttributeValue('state').then (s) => s is state
+              getEventListener: (callback) => 
+                return eventListener = (s) => callback(s is state)
+              state: state # for testing only
+    return null
 
-  isTrue: (id, predicate) ->
-    info = @_parsePredicate predicate
-    if info? then return info.device.getSensorValue(info.sensorValueName).then (value) =>
-      return @_compareValues info.comparator, value, info.referenceValue
-    else throw new Error "Sensor can not decide \"#{predicate}\"!"
+class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
 
-  # Removes the notification for an with `notifyWhen` registered predicate. 
-  cancelNotify: (id) ->
-    listener = @_listener[id]
-    if listener?
-      listener.destroy()
-      delete @_listener[id]
-
-  # Registers notification. 
-  notifyWhen: (id, predicate, callback) ->
-    info = @_parsePredicate predicate
-    if info?
-      device = info.device
-
-      lastState = null
-      deviceListener = (val) =>
-        state = @_compareValues info.comparator, val, info.referenceValue
-        if state isnt lastState
-          lastState = state
-          callback state
-
-      device.on info.sensorValueName, deviceListener
-
-      @_listener[id] =
-        id: id
-        destroy: => device.removeListener info.sensorValueName, deviceListener
-
-    else throw new Error "PresentPredicateProvider can not decide \"#{predicate}\"!"
+  constructor: (_env, @framework) ->
+    env = _env
 
   _compareValues: (comparator, value, referenceValue) ->
     unless isNaN value
@@ -146,9 +140,9 @@ class SensorValuePredicateProvider extends PredicateProvider
   _parsePredicate: (predicate) ->
     predicate = predicate.toLowerCase()
     regExpString = 
-      '^(.+)\\s+' + # the sensor value
+      '^(.+)\\s+' + # the attribute
       'of\\s+' + # of
-      '(.+?)\\s+' + # the sensor
+      '(.+?)\\s+' + # the device
       '(?:is\\s+)?' + # is
       '(equal\\s+to|equals*|lower|less|greater|is not|is)' + 
         # is, is not, equal, equals, lower, less, greater
@@ -156,40 +150,66 @@ class SensorValuePredicateProvider extends PredicateProvider
       '(.+)' # reference value
     matches = predicate.match (new RegExp regExpString)
     if matches?
-      sensorValueName = matches[1].trim().toLowerCase()
-      sensorName = matches[2].trim().toLowerCase()
+      attributeName = matches[1].trim().toLowerCase()
+      deviceName = matches[2].trim().toLowerCase()
       comparator = matches[3].trim() 
       referenceValue = matches[4].trim()
-
-      if (referenceValue.match /.*for .*/)? then return null
-      
-      #console.log "#{sensorValueName}, #{sensorName}, #{comparator}, #{referenceValue}"
+      #console.log "#{attributeName}, #{deviceName}, #{comparator}, #{referenceValue}"
       for id, d of @framework.devices
-        if d.getSensorValuesNames?
-          if sensorName is d.name.toLowerCase() or sensorName is d.id.toLowerCase()
-            if sensorValueName in d.getSensorValuesNames()
-              comparator = switch  
-                when comparator in ['is', 'equal', 'equals', 'equal to', 'equals to'] then '=='
-                when comparator is 'is not' then '!='
-                when comparator is 'greater' then '>'
-                when comparator in ['lower', 'less'] then '<'
-                else 
-                  env.logger.error "Illegal comparator \"#{comparator}\""
-                  false
+        if d.matchesIdOrName deviceName
+          if d.hasAttribute attributeName
+            comparator = switch comparator
+              when 'is', 'equal', 'equals', 'equal to', 'equals to' then '=='
+              when 'is not' then '!='
+              when 'greater' then '>'
+              when 'lower', 'less' then '<'
+              else 
+                env.logger.error "Illegal comparator \"#{comparator}\""
+                false
 
-              unless comparator is false
-                unless isNaN(referenceValue)
-                  referenceValue = parseFloat referenceValue
-                return info =
-                  device: d
-                  sensorValueName: sensorValueName
-                  comparator: comparator
-                  referenceValue: referenceValue
+            unless comparator is false
+              # if the attribute has a unit
+              unit = d.attributes[attributeName].unit.toLowerCase()
+              if unit?
+                # then remove it from the reference value and
+                # allow just "c" for "°C"
+                lastIndex = referenceValue.replace('°c', 'c').lastIndexOf unit.replace('°c', 'c')
+                if lastIndex isnt -1
+                  referenceValue = referenceValue.substring 0, lastIndex
 
+              # If the attribute is numerical
+              if d.attributes[attributeName].type is Number
+                # then check the referenceValue
+                if isNaN(referenceValue)
+                  throw new Error "Expected #{referenceValue} in \"#{predicate}\" to be a number."
+                # and convert it to a float.
+                referenceValue = parseFloat referenceValue
+              else
+                # if its not numerical but comparator is less or greater
+                if comparator in ["<", ">"]
+                  # then something gone wrong.
+                  throw new Error "Can not compare a non numerical attribute with less or creater."
 
+              lastValue = null
+              return info =
+                device: d
+                event: attributeName
+                getPredicateValue: => 
+                  d.getAttributeValue(attributeName).then (value) =>
+                    @_compareValues comparator, value, referenceValue
+                getEventListener: (callback) => 
+                  return attributeListener = (value) =>
+                    state = @_compareValues comparator, value, referenceValue
+                    if state isnt lastValue
+                      lastValue = state
+                      callback state
+                comparator: comparator # for testing only
+                attributeName: attributeName # for testing only
+                referenceValue: referenceValue
     return null
 
 
 module.exports.PredicateProvider = PredicateProvider
-module.exports.PresentPredicateProvider = PresentPredicateProvider
-module.exports.SensorValuePredicateProvider = SensorValuePredicateProvider
+module.exports.PresencePredicateProvider = PresencePredicateProvider
+module.exports.SwitchPredicateProvider = SwitchPredicateProvider
+module.exports.DeviceAttributePredicateProvider = DeviceAttributePredicateProvider

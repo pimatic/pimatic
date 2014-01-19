@@ -1,18 +1,25 @@
 #!/usr/bin/env node
-var startStopDaemon = require('start-stop-daemon');
+require('coffee-script');
 var path = require('path');
+var fs = require('fs');
+var init = require('./lib/daemon');
 
-logFile = path.resolve(__dirname, '../../pimatic-daemon.log');
-var options = {
-  logFile: logFile,
-  outFile: logFile,
-  errFile: logFile,
-  cwd: __dirname,
-  env: { 'PIMATIC_DAEMONIZED': true },
-  max: 30 //the script will run 30 times at most
+run = function () {
+  require('./startup');
 };
 
-startStopDaemon(options, function() {
-  require('coffee-script');
-  require('./startup');
-});
+var command = process.argv[2];
+if(!command || command === "run") {
+  run();
+} else {
+  logFile = path.resolve(__dirname, '../../pimatic-daemon.log');
+  pidFile = path.resolve(__dirname, '../../pimatic.pid');
+
+  init.simple({
+    pidfile: pidFile,
+    logfile: logFile,
+    command: process.argv[3],
+    run: run
+  });
+}
+

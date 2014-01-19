@@ -4,5 +4,5 @@ node_modules
 npm-debug.log
 node.log
 .ftppass
-coverage/coverage.html
+coverage.html
 

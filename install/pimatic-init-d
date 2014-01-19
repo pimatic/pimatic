@@ -1,0 +1,28 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          pimatic
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: pimatic service
+# Description:       pimatic home automation framework init.d script for debian systems.
+### END INIT INFO
+
+# Author: Oliver Schneider <oliverschneider89+sweetpi@gmail.com>
+# Install:
+# cp pimatic-init-d /etc/init.d/pimatic
+# chmod +x /etc/init.d/pimatic
+# chown root:root /etc/init.d/pimatic
+# update-rc.d pimatic defaults
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/sbin:/usr/local/bin
+
+if [ "$1" = "start" ] || [ "$1" = "stop" ] || [ "$1" = "restart" ] || [ "$1" = "status" ] 
+then
+	pimatic.js $1
+	exit "$?"
+else 
+	echo "Usage: service pimatic {start|stop|status|restart}" >&2
+	exit 3
+fi

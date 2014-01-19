@@ -14,6 +14,22 @@ module.exports = (grunt) ->
     "./lib/*.coffee"
   ]
 
+  # some realy dirty tricks:
+  try
+    usedGroc = require('./node_modules/grunt-groc/node_modules/groc')
+    ownGroc = require('./node_modules/groc')
+    for name, prop of ownGroc
+      usedGroc[name] = prop
+  catch e
+    grunt.log.writeln "Could not use own groc version: #{e.message}." 
+
+  links =
+    'pimatic framework': '.'
+
+  for l in plugins
+    short = l.replace 'pimatic-', ''
+    links[short] = l
+
   grocTasks =
     pimatic:
       src: [
@@ -26,9 +42,18 @@ module.exports = (grunt) ->
       options: 
         root: "."
         out: "doc"
-        "repository-url": "https://github.com/pimatic/pimatic"
-        strip: false
+        "repository-url": "https://github.com/sweetpi/pimatic"
+        style: 'pimatic'
+        links: JSON.stringify links
 
+  pluginLinks =
+    'pimatic framework': '..'
+
+  for l in plugins
+    short = l.replace 'pimatic-', ''
+    pluginLinks[short] = "../#{l}"
+ 
+          
   for plugin in plugins
     grocTasks[plugin] =
       src: [
@@ -38,8 +63,10 @@ module.exports = (grunt) ->
       options: 
         root: "../#{plugin}"
         out: "../#{plugin}/doc"
-        "repository-url": "https://github.com/pimatic/pimatic"
-        strip: false
+        "repository-url": "https://github.com/sweetpi/pimatic"
+        links: JSON.stringify pluginLinks
+
+
 
   ftpTasks = {}
   for plugin in ["pimatic"].concat plugins 
@@ -51,7 +78,6 @@ module.exports = (grunt) ->
       src: path.resolve __dirname, '..', plugin, "doc"
       dest: (if plugin is "pimatic" then "/sweetpi/pimatic/docs"
       else "/sweetpi/pimatic/docs/#{plugin}")
-
 
   # package.json files of plugins
   pluginPackageJson = ("../#{plugin}/package.json" for plugin in plugins)
@@ -88,17 +114,21 @@ module.exports = (grunt) ->
           reporter: "spec"
           require: ['coffee-errors'] #needed for right line numbers in errors
         src: ["test/*"]
+      testPlugin:
+        options:
+          reporter: "spec"
+          require: ['coffee-errors'] #needed for right line numbers in errors
+        src: ["test/plugins-test.coffee"]
       # blanket is used to record coverage
       testBlanket:
         options:
           reporter: "dot"
-          require: ["coverage/blanket"]
         src: ["test/*"]
       coverage:
         options:
           reporter: "html-cov"
           quiet: true
-          captureFile: "coverage/coverage.html"
+          captureFile: "coverage.html"
         src: ["test/*"]
     bump:
       options:
@@ -120,27 +150,42 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks "grunt-groc"
   grunt.loadNpmTasks "grunt-ftp-deploy"
   grunt.loadNpmTasks "grunt-mocha-test"
-  grunt.registerTask "publish-plugins", "publish all pimatic-plugins", ->
-    done = @async()
-    cwd = process.cwd()
-    require("async").eachSeries plugins, ((file, cb) ->
-      grunt.log.writeln "publishing: " + file
-      path.resolve __dirname, '..', file
-      child = grunt.util.spawn(
-        opts:
-          stdio: "inherit"
-        cmd: "npm"
-        args: ["publish"]
-      , (err) ->
-        console.log err.message  if err
-        cb()
-      )
-    ), (err) ->
-      process.chdir cwd
-      done()
 
+
+  grunt.registerTask "blanket", =>
+    blanket = require "blanket"
+
+    blanket(
+      pattern: (file) ->
+        if file.match "pimatic/lib" then return true
+        #if file.match "pimatic/node_modules" then return false
+        withoutPrefix = file.replace(/.*\/node_modules\/pimatic/, "")
+        return (not withoutPrefix.match 'node_modules') and (not withoutPrefix.match "/test/")
+      loader: "./node-loaders/coffee-script"
+    )
+
+  grunt.registerTask "clean-coverage", =>
+    fs = require "fs"
+    path = require "path"
+
+    replaceAll = (find, replace, str) => 
+      escapeRegExp = (str) => str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")
+      str.replace(new RegExp(escapeRegExp(find), 'g'), replace)
+
+    file = "#{__dirname}/coverage.html"
+    html = fs.readFileSync(file).toString()
+    html = replaceAll path.dirname(__dirname), "", html
+    fs.writeFileSync file, html
 
   # Default task(s).
   grunt.registerTask "default", ["coffeelint", "mochaTest:test", "groc"]
   grunt.registerTask "test", ["coffeelint", "mochaTest:test"]
-  grunt.registerTask "coverage", ["mochaTest:testBlanket", "mochaTest:coverage"]
+  grunt.registerTask "coverage", 
+    ["blanket", "mochaTest:testBlanket", "mochaTest:coverage", "clean-coverage"]
+
+  for plugin in plugins
+    do (plugin) =>
+      grunt.registerTask "setEnv:#{plugin}", =>
+        process.env['PIMATIC_PLUGIN_TEST'] = plugin
+
+      grunt.registerTask "test:#{plugin}", ["setEnv:#{plugin}", "mochaTest:testPlugin"]

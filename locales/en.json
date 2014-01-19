@@ -1,7 +1,6 @@
 {
 	"on": "on",
 	"turned %s on": "turned %s on",
-	"^(?:turn)?(?:\\s+the)?(.+?)(on|off)$": "^(?:turn)?(?:\\s+the)?(.+?)(on|off)$",
 	"Please enter a id": "Please enter a id",
 	"would turn %s on": "would turn %s on",
 	"would log \"%s\"": "would log \"%s\"",
@@ -62,5 +61,22 @@
 	"Restart pimatic": "Restart pimatic",
 	"Add a group header": "Add a group header",
 	"Other": "Other",
-	"Enabled": "Enabled"
+	"Enabled": "Enabled",
+	"Sensor value log": "Sensor value log",
+	"Yes": "Yes",
+	"No": "No",
+	"Sensor values": "Sensor values",
+	"Show": "Show",
+	"Graph": "Graph",
+	"Log data: ": "Log data: ",
+	"Show data of: ": "Show data of: ",
+	"Last 24 hours": "Last 24 hours",
+	"Last 7 days": "Last 7 days",
+	"Last 30 days": "Last 30 days",
+	"Last 365 days": "Last 365 days",
+	"Id": "Id",
+	"Name": "Name",
+	"ID": "ID",
+	"Device info": "Device info",
+	"Attributes": "Attributes"
 }

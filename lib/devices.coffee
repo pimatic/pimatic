@@ -1,99 +1,229 @@
 # Povides the `Actuator` class and some basic common subclasses for the Backend modules. 
 # 
-assert = require 'cassert'
+cassert = require 'cassert'
+assert = require 'assert'
 Q = require 'q'
+_ = require 'lodash'
 
-
+# #Device class
+# The Deive class is the common Superclass for all Devices like Actuators or Sensors
 class Device extends require('events').EventEmitter
+  # A unic id defined by the config or by the plugin that provies the device.
+  id: null
+  # The name of the actuator to display at the frontend.
+  name: null
+
+  # Defines the actions an device has.
+  actions: {}
+  # attributes the device has. For examples see devices below. 
+  attributes: {}
+
+  _checkAttributes: ->
+
+    for attr of @attributes 
+      @_checkAttribute attr
+
+  _checkAttribute: (attrName) ->
+    attr = @attributes[attrName]
+    assert attr.description?, "no description for #{attrName} of #{@name} given"
+    assert attr.type?, "no type for #{attrName} of #{@name} given"
+    validTypes = [Boolean, String, Number, Date]
+    isValidType = (t) => _.any(validTypes, (t) -> attr.type is t) or Array.isArray attr.type
+    assert isValidType(attr.type), "#{attrName} of #{@name} has no valid type."
+    
+    # If it is a Number it must have a unit
+    if attr.type is Number and not attr.unit? then attr.unit = ''
+    # If it is a Boolean it must have labels
+    if attr.type is Boolean and not attr.labels then attr.labels = ["true", "false"]
+    unless attr.label then attr.label = upperCaseFirst(attrName)
+
+  constructor: ->
+    assert @id?, "the device has no id"
+    assert @name?, "the device has no name"
+    assert @id.lenght isnt 0, "the id of the device is empty"
+    assert @name.lenght isnt 0, "the name of the device is empty"
+    @_checkAttributes()
+    @_constructorCalled = yes
+
+  # Checks if the actuator has a given action.
+  hasAction: (name) -> @actions[name]?
+
+  # Checks if the actuator has the attribute event.
+  hasAttribute: (name) -> @attributes[name]?
+
+  getAttributeValue: (attribute) ->
+    getter = 'get' + upperCaseFirst(attribute)
+    # call the getter
+    result = @[getter]()
+    # Be sure that it is a promise!
+    assert Q.isPromise result, "#{getter} of #{@name} should always return a promise!"
+    return result
+
+  # Checks if find matches the id or name in lower case.
+  matchesIdOrName: (find) ->
+    find = find.toLowerCase()
+    return find is @id.toLowerCase() or find is @name.toLowerCase()
+
+  # Returns a template name to use in frontends.
+  getTemplateName: -> "device"
+
 
 # An Actuator is an physical or logical element you can control by triggering an action on it.
 # For example a power outlet, a light or door opener.
 class Actuator extends Device
-  # Defines the actions an Actuator has.
-  actions: []
-  # A unic id defined by the config or by the backend module that provies the actuator.
-  id: null
-  # The name of the actuator to display at the frontend.
-  name: null
-  # Events of the actuator.
-  events: []
 
-  # Checks if the actuator has a given action.
-  hasAction: (name) ->
-    name in @actions
-
-  # Checks if the actuator has the given event.
-  hasEvent: (name) ->
-    name in @events
+  getTemplateName: -> "actuator"
 
 # A class for all you can switch on and off.
 class SwitchActuator extends Actuator
-  type: 'SwitchActuator'
   _state: null
-  actions: ["turnOn", "turnOff", "changeStateTo", "getState"]
-  events: ["state"]
+
+  actions: 
+    turnOn:
+      description: "turns the switch on"
+    turnOff:
+      description: "turns the switch off"
+    changeStateTo:
+      description: "changes the switch to on or off"
+      params:
+        state:
+          type: Boolean
+    getState:
+      description: "returns the current state of the switch"
+      returns:
+        state:
+          type: Boolean
+      
+  attributes:
+    state:
+      description: "the current state of the switch"
+      type: Boolean
+      labels: ['on', 'off']
 
   # Returns a promise
-  turnOn: ->
-    @changeStateTo on
+  turnOn: -> @changeStateTo on
 
   # Retuns a promise
-  turnOff: ->
-    @changeStateTo off
+  turnOff: -> @changeStateTo off
 
-  # Retuns a promise
+  # Retuns a promise that is fulfilled when done.
   changeStateTo: (state) ->
     throw new Error "Function \"changeStateTo\" is not implemented!"
 
-  getState: ->
-    self = this
-    return Q.fcall -> self._state
+  # Returns a promise that will be fulfilled with the state
+  getState: -> Q(@_state)
 
   _setState: (state) ->
-    self = this
-    self._state = state
-    self.emit "state", state
+    if @_state is state then return
+    @_state = state
+    @emit "state", state
+
+  getTemplateName: -> "switch"
+
+
+class DimmerActuator extends SwitchActuator
+  _dimlevel: null
+
+  actions: 
+    changeDimlevelTo:
+      description: "sets the level of the dimmer"
+      params:
+        dimlevel:
+          type: Number
+    changeStateTo:
+      description: "changes the switch to on or off"
+      params:
+        state:
+          type: Boolean
+    turnOn:
+      description: "turns the dim level to 100%"
+    turnOff:
+      description: "turns the dim level to 0%"
+      
+  attributes:
+    dimlevel:
+      description: "the current dim level"
+      type: Number
+      unit: "%"
+    state:
+      description: "the current state of the switch"
+      type: Boolean
+      labels: ['on', 'off']
+
+  # Returns a promise
+  turnOn: -> @changeDimlevelTo 100
+
+  # Retuns a promise
+  turnOff: -> @changeDimlevelTo 0
+
+  # Retuns a promise that is fulfilled when done.
+  changeDimlevelTo: (state) ->
+    throw new Error "Function \"changeDimlevelTo\" is not implemented!"
+
+  _setDimlevel: (level) =>
+    assert not isNaN(level) 
+    level = parseFloat(level)
+    cassert level >= 0
+    cassert level <= 100
+    if @_dimlevel is level then return
+    @_dimlevel = level
+    @emit "dimlevel", level
+    @_setState(level > 0)
+
+  # Returns a promise that will be fulfilled with the dim level
+  getDimlevel: -> Q(@_dimlevel)
+
+  getTemplateName: -> "dimmer"
 
 class PowerSwitch extends SwitchActuator
 
-
 # #Sensor
 class Sensor extends Device
-  type: 'unknwon'
-  name: null
 
-  getSensorValuesNames: ->
-    throw new Error("your sensor must implement getSensorValuesNames")
-
-  getSensorValue: (name) ->
-    throw new Error("your sensor must implement getSensorValue")
+  getTemplateName: -> "device"
 
 
 class TemperatureSensor extends Sensor
-  type: 'TemperatureSensor'
 
-class PresentsSensor extends Sensor
-  type: 'PresentsSensor'
-  _present: undefined
+  attributes:
+    temperature:
+      description: "the messured temperature"
+      type: Number
+      unit: '°C'
 
-  getSensorValuesNames: -> ["present"]
+  getTemplateName: -> "temperature"
 
-  getSensorValue: (name) ->
-    switch name
-      when "present" then return Q.fcall => @_present
-      else throw new Error "Illegal sensor value name"
+class PresenceSensor extends Sensor
+  _presence: undefined
 
-  _setPresent: (value) ->
-    if @_present is value then return
-    @_present = value
-    #@_notifyListener()
-    @emit 'present', value
+  attributes:
+    presence:
+      description: "presence of the human/device"
+      type: Boolean
+      labels: ['present', 'absent']
+      
+
+  _setPresence: (value) ->
+    if @_presence is value then return
+    @_presence = value
+    @emit 'presence', value
+
+
+  getPresence: -> Q(@_presence)
+
+  getTemplateName: -> "presence"
+
+upperCaseFirst = (string) -> 
+  unless string.length is 0
+    string[0].toUpperCase() + string.slice(1)
+  else ""
 
 
 module.exports.Device = Device
 module.exports.Actuator = Actuator
 module.exports.SwitchActuator = SwitchActuator
 module.exports.PowerSwitch = PowerSwitch
+module.exports.DimmerActuator = DimmerActuator
 module.exports.Sensor = Sensor
 module.exports.TemperatureSensor = TemperatureSensor
-module.exports.PresentsSensor = PresentsSensor
+module.exports.PresenceSensor = PresenceSensor

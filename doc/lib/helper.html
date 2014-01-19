@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><title>lib/helper</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="lib/helper"><meta name="groc-project-path" content="lib/helper.coffee"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path">lib/helper.coffee</div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><p>Must be assert NOT 'cassert' because of  AssertionError class</p></div></div><div class="code"><div class="wrapper"><span class="nv">assert = </span><span class="nx">require</span> <span class="s">&#39;assert&#39;</span>
+<!DOCTYPE html><html lang="en"><head><title>lib/helper</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="lib/helper"><meta name="groc-project-path" content="lib/helper.coffee"><meta name="groc-github-url" content="https://github.com/sweetpi/pimatic"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><link rel="stylesheet" type="text/css" media="all" href="../assets/customStyle.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/sweetpi/pimatic/blob/master/lib/helper.coffee">lib/helper.coffee</a></div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><p>Must be assert NOT 'cassert' because of  AssertionError class</p></div></div><div class="code"><div class="wrapper"><span class="nv">assert = </span><span class="nx">require</span> <span class="s">&#39;assert&#39;</span>
 
 <span class="nv">module.exports.checkConfig = </span><span class="nf">(env, moduleName, checker) -&gt;</span>
   <span class="k">try</span> 
@@ -11,4 +11,23 @@
       <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="s">&quot;details: </span><span class="si">#{</span><span class="nx">msg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s">&quot;</span> <span class="k">if</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">2</span>
       <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span> <span class="mi">1</span>
     <span class="k">else</span> 
-    <span class="k">throw</span> <span class="nx">err</span></div></div></div></div></body></html>
+    <span class="k">throw</span> <span class="nx">err</span>
+
+
+<span class="nv">module.exports.find = </span><span class="nf">(array, key, value) =&gt;</span>
+  <span class="nx">assert</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span> <span class="nx">array</span>
+  <span class="nx">assert</span> <span class="nx">key</span><span class="o">?</span>
+  <span class="nx">assert</span> <span class="nx">value</span><span class="o">?</span>
+  <span class="k">for</span> <span class="nx">e</span><span class="p">,</span> <span class="nx">i</span> <span class="k">in</span> <span class="nx">array</span> 
+    <span class="k">if</span> <span class="nx">e</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">is</span> <span class="nx">value</span> <span class="k">then</span> <span class="k">return</span> <span class="nx">array</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span>
+  <span class="k">return</span> <span class="kc">null</span>
+
+<span class="nv">module.exports.delete = </span><span class="nf">(array, key, value) =&gt;</span>
+  <span class="nx">assert</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span> <span class="nx">array</span>
+  <span class="nx">assert</span> <span class="nx">key</span><span class="o">?</span>
+  <span class="nx">assert</span> <span class="nx">value</span><span class="o">?</span>
+  <span class="k">for</span> <span class="nx">e</span><span class="p">,</span> <span class="nx">i</span> <span class="k">in</span> <span class="nx">array</span> 
+    <span class="k">if</span> <span class="nx">e</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">is</span> <span class="nx">value</span>
+      <span class="nx">array</span><span class="p">.</span><span class="nx">splice</span> <span class="nx">i</span>
+      <span class="k">return</span> <span class="kc">true</span>
+  <span class="k">return</span> <span class="kc">false</span></div></div></div></div></body></html>

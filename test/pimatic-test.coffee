@@ -25,8 +25,7 @@ describe "pimatic", ->
   configFile = "#{os.tmpdir()}/pimatic-test-config.json"
 
   before ->
-    fs.writeFile configFile, JSON.stringify(config), (err) ->
-      throw err  if err
+    fs.writeFileSync configFile, JSON.stringify(config)
     process.env.PIMATIC_CONFIG = configFile
 
   after ->
@@ -81,17 +80,3 @@ describe "pimatic", ->
 
     it 'should not find antother actuator in config', ->
       assert not framework.isDeviceInConfig 'a-not-present-id'
-
-
-  describe '#updateDeviceConfig()', ->
-
-    deviceConfigNew = 
-      id: 'test-actuator'
-      class: 'TestActuatorClass'
-      test: 'bla'
-
-
-    it 'should update actuator in config', ->
-      framework.updateDeviceConfig deviceConfigNew
-      assert framework.config.devices[0].test is 'bla'
-
