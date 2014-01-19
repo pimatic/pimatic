@@ -437,10 +437,13 @@ class RuleManager extends require('events').EventEmitter
     )
     
   executeActionAndLogResult: (rule) ->
+    # Returns the current time as string: `2012-11-04 14:55:45`
+    now = => new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')
     return @executeAction(rule.action, false).then( (message) =>
-      if message? then logger.info "Rule #{rule.id}: #{message}"
+      if message? 
+        logger.info "#{now()}: rule #{rule.id}: #{message}"
     ).catch( (error)=>
-      logger.error "Rule #{rule.id} error: #{error}"
+      logger.error "#{now()}: rule #{rule.id} error: #{error}"
     )
 
   # ###executeAction
