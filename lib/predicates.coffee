@@ -76,11 +76,11 @@ class PresencePredicateProvider extends DeviceEventPredicateProvider
 
   _parsePredicate: (predicate) ->
     predicate = predicate.toLowerCase()
-    regExpString = '^(.+)\\s+is\\s+(not\\s+)?present$'
+    regExpString = '^(.+)\\s+is\\s+(not\\s+present|present|absent)$'
     matches = predicate.match (new RegExp regExpString)
     if matches?
       deviceName = matches[1].trim()
-      negated = (if matches[2]? then yes else no) 
+      negated = (if matches[2] isnt "present" then yes else no) 
       for id, d of @framework.devices
         if d.hasAttribute 'presence'
           if d.matchesIdOrName deviceName

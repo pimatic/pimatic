@@ -52,6 +52,12 @@ describe "PresencePredicateProvider", ->
       assert info.device.id is "test"
       assert info.negated is yes
 
+    it 'should parse "test is absent"', ->
+      info = provider._parsePredicate "test is absent"
+      assert info?
+      assert info.device.id is "test"
+      assert info.negated is yes
+
     it 'should return null if id is wrong', ->
       info = provider._parsePredicate "foo is present"
       assert(not info?)
