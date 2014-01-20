@@ -83,8 +83,8 @@ exports.start = ({ pidfile, logfile, run, success, failure }) ->
       )(process.stderr.write)
 
       process.on 'uncaughtException', (err) =>
+        console.log('uncaughtException:')
         console.log(err.stack)
-        console.log("exiting...")
 
       # write the pidfile
       fs.writeFile pidfile, process.pid, (err) ->
