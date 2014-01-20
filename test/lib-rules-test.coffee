@@ -1,4 +1,5 @@
-assert = require "cassert"
+cassert = require "cassert"
+assert = require "assert"
 Q = require 'q'
 
 describe "RuleManager", ->
@@ -23,7 +24,7 @@ describe "RuleManager", ->
     name: 'test'
 
     canDecide: (predicate) -> 
-      assert predicate is "predicate 1"
+      cassert predicate is "predicate 1"
       return 'event'
     isTrue: (id, predicate) -> Q.fcall -> false
     notifyWhen: (id, predicate, callback) -> true
@@ -31,7 +32,7 @@ describe "RuleManager", ->
 
   class DummyActionHandler
     executeAction: (actionString, simulate) =>
-      assert actionString is "action 1"
+      cassert actionString is "action 1"
       return Q.fcall -> "action 1 executed"
 
 
@@ -48,69 +49,69 @@ describe "RuleManager", ->
     it 'should parse valid rule', (finish) ->
       ruleManager.parseRuleString("test1", "if predicate 1 then action 1")
       .then( (rule) -> 
-        assert rule.id is 'test1'
-        assert rule.orgCondition is 'predicate 1'
-        assert rule.tokens.length > 0
-        assert rule.predicates.length is 1
-        assert rule.action is 'action 1'
-        assert rule.string is 'if predicate 1 then action 1'
+        cassert rule.id is 'test1'
+        cassert rule.orgCondition is 'predicate 1'
+        cassert rule.tokens.length > 0
+        cassert rule.predicates.length is 1
+        cassert rule.action is 'action 1'
+        cassert rule.string is 'if predicate 1 then action 1'
         finish() 
       ).catch(finish).done()
 
     it 'should parse rule with for "10 seconds" suffix', (finish) ->
 
       provider.canDecide = (predicate) -> 
-        assert predicate is "predicate 1"
+        cassert predicate is "predicate 1"
         return 'state'
 
       ruleManager.parseRuleString("test1", "if predicate 1 for 10 seconds then action 1")
       .then( (rule) -> 
-        assert rule.id is 'test1'
-        assert rule.orgCondition is 'predicate 1 for 10 seconds'
-        assert rule.tokens.length > 0
-        assert rule.predicates.length is 1
-        assert rule.predicates[0].forToken is '10 seconds'
-        assert rule.predicates[0].for is 10*1000
-        assert rule.action is 'action 1'
-        assert rule.string is 'if predicate 1 for 10 seconds then action 1'
+        cassert rule.id is 'test1'
+        cassert rule.orgCondition is 'predicate 1 for 10 seconds'
+        cassert rule.tokens.length > 0
+        cassert rule.predicates.length is 1
+        cassert rule.predicates[0].forToken is '10 seconds'
+        cassert rule.predicates[0].for is 10*1000
+        cassert rule.action is 'action 1'
+        cassert rule.string is 'if predicate 1 for 10 seconds then action 1'
         finish() 
       ).catch(finish).done()
 
     it 'should parse rule with for "2 hours" suffix', (finish) ->
 
       provider.canDecide = (predicate) -> 
-        assert predicate is "predicate 1"
+        cassert predicate is "predicate 1"
         return 'state'
 
       ruleManager.parseRuleString("test1", "if predicate 1 for 2 hours then action 1")
       .then( (rule) -> 
-        assert rule.id is 'test1'
-        assert rule.orgCondition is 'predicate 1 for 2 hours'
-        assert rule.tokens.length > 0
-        assert rule.predicates.length is 1
-        assert rule.predicates[0].forToken is '2 hours'
-        assert rule.predicates[0].for is 2*60*60*1000
-        assert rule.action is 'action 1'
-        assert rule.string is 'if predicate 1 for 2 hours then action 1'
+        cassert rule.id is 'test1'
+        cassert rule.orgCondition is 'predicate 1 for 2 hours'
+        cassert rule.tokens.length > 0
+        cassert rule.predicates.length is 1
+        cassert rule.predicates[0].forToken is '2 hours'
+        cassert rule.predicates[0].for is 2*60*60*1000
+        cassert rule.action is 'action 1'
+        cassert rule.string is 'if predicate 1 for 2 hours then action 1'
         finish() 
       ).catch(finish).done()
 
     it 'should not detect for "42 foo" as for suffix', (finish) ->
 
       provider.canDecide = (predicate) -> 
-        assert predicate is "predicate 1 for 42 foo"
+        cassert predicate is "predicate 1 for 42 foo"
         return 'state'
 
       ruleManager.parseRuleString("test1", "if predicate 1 for 42 foo then action 1")
       .then( (rule) -> 
-        assert rule.id is 'test1'
-        assert rule.orgCondition is 'predicate 1 for 42 foo'
-        assert rule.tokens.length > 0
-        assert rule.predicates.length is 1
-        assert rule.predicates[0].forToken is null
-        assert rule.predicates[0].for is null
-        assert rule.action is 'action 1'
-        assert rule.string is 'if predicate 1 for 42 foo then action 1'
+        cassert rule.id is 'test1'
+        cassert rule.orgCondition is 'predicate 1 for 42 foo'
+        cassert rule.tokens.length > 0
+        cassert rule.predicates.length is 1
+        cassert rule.predicates[0].forToken is null
+        cassert rule.predicates[0].for is null
+        cassert rule.action is 'action 1'
+        cassert rule.string is 'if predicate 1 for 42 foo then action 1'
         finish() 
       ).catch(finish).done()
 
@@ -121,46 +122,46 @@ describe "RuleManager", ->
       .then( -> 
         finish new Error 'Accepted invalid rule'
       ).catch( (error) -> 
-        assert error?
-        assert error.message is 'The rule must start with "if" and contain a "then" part!'
+        cassert error?
+        cassert error.message is 'The rule must start with "if" and contain a "then" part!'
         finish()
       ).done()
 
     it 'should reject unknown predicate', (finish) ->
 
       provider.canDecide = (predicate) ->
-        assert predicate is 'predicate 2'
+        cassert predicate is 'predicate 2'
         return false
 
       ruleManager.parseRuleString('test3', 'if predicate 2 then action 1').then( -> 
         finish new Error 'Accepted invalid rule'
       ).catch( (error) -> 
-        assert error?
-        assert error.message is 'Could not find an provider that decides "predicate 2"'
+        cassert error?
+        cassert error.message is 'Could not find an provider that decides "predicate 2"'
         finish()
       ).done()
 
     it 'should reject unknown action', (finish) ->
       canDecideCalled = false
       provider.canDecide = (predicate) ->
-        assert predicate is "predicate 1"
+        cassert predicate is "predicate 1"
         canDecideCalled = true
         return 'event'
 
       executeActionCalled = false
       actionHandler.executeAction = (actionString, simulate) =>
-        assert actionString is "action 2"
-        assert simulate
+        cassert actionString is "action 2"
+        cassert simulate
         executeActionCalled = true
         return
 
       ruleManager.parseRuleString('test4', 'if predicate 1 then action 2').then( -> 
         finish new Error 'Accepted invalid rule'
       ).catch( (error) -> 
-        assert error?
-        assert error.message is 'Could not find a actuator to execute "action 2"'
-        assert canDecideCalled
-        assert executeActionCalled
+        cassert error?
+        cassert error.message is 'Could not find a actuator to execute "action 2"'
+        cassert canDecideCalled
+        cassert executeActionCalled
         finish()
       ).done()
 
@@ -173,32 +174,32 @@ describe "RuleManager", ->
 
     it 'should add the rule', (finish) ->
       provider.notifyWhen = (id, predicate, callback) -> 
-        assert id?
-        assert predicate is 'predicate 1'
-        assert typeof callback is 'function'
+        cassert id?
+        cassert predicate is 'predicate 1'
+        cassert typeof callback is 'function'
         notifyCallback = callback
         notifyId = id
         return true
 
       executeActionCallCount = 0
       actionHandler.executeAction = (actionString, simulate) =>
-        assert actionString is "action 1"
-        assert simulate
+        cassert actionString is "action 1"
+        cassert simulate
         executeActionCallCount++
         return Q.fcall -> "execute action"
 
       ruleManager.addRuleByString('test5', 'if predicate 1 then action 1').then( ->
-        assert notifyCallback?
-        assert executeActionCallCount is 1
-        assert ruleManager.rules['test5']?
+        cassert notifyCallback?
+        cassert executeActionCallCount is 1
+        cassert ruleManager.rules['test5']?
         finish()
       ).catch(finish).done()
 
     it 'should react to notifies', (finish) ->
 
       actionHandler.executeAction = (actionString, simulate) =>
-        assert actionString is "action 1"
-        assert not simulate
+        cassert actionString is "action 1"
+        cassert not simulate
         finish()
         return Q.fcall -> "execute action"
 
@@ -210,7 +211,7 @@ describe "RuleManager", ->
     it 'should decide predicate 1', (finish)->
 
       provider.canDecide = (predicate) -> 
-        assert predicate is "predicate 1"
+        cassert predicate is "predicate 1"
         return 'state'
 
       provider.isTrue = (id, predicate) -> Q.fcall -> true
@@ -237,18 +238,18 @@ describe "RuleManager", ->
 
 
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
-        assert isTrue is true
+        cassert isTrue is true
       ).then( -> 
         provider.isTrue = (id, predicate) -> Q.fcall -> false 
       ).then( -> ruleManager.doesRuleCondtionHold rule).then( (isTrue) ->
-        assert isTrue is false
+        cassert isTrue is false
         finish()
       ).catch(finish).done()
 
     it 'should decide predicate 1 and predicate 2', (finish)->
 
       provider.canDecide = (predicate) -> 
-        assert predicate is "predicate 1" or predicate is "predicate 2"
+        cassert predicate is "predicate 1" or predicate is "predicate 2"
         return 'state'
 
       provider.isTrue = (id, predicate) -> Q.fcall -> true
@@ -289,18 +290,18 @@ describe "RuleManager", ->
 
 
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
-        assert isTrue is true
+        cassert isTrue is true
       ).then( -> 
         provider.isTrue = (id, predicate) -> Q.fcall -> (predicate is 'predicate 1') 
       ).then( -> ruleManager.doesRuleCondtionHold rule ).then( (isTrue) ->
-        assert isTrue is false
+        cassert isTrue is false
         finish()
       ).catch(finish).done()
 
     it 'should decide predicate 1 or predicate 2', (finish)->
 
       provider.canDecide = (predicate) -> 
-        assert predicate is "predicate 1" or predicate is "predicate 2"
+        cassert predicate is "predicate 1" or predicate is "predicate 2"
         return 'state'
 
       provider.isTrue = (id, predicate) -> Q.fcall -> true
@@ -341,11 +342,11 @@ describe "RuleManager", ->
 
 
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
-        assert isTrue is true
+        cassert isTrue is true
       ).then( -> 
         provider.isTrue = (id, predicate) -> Q.fcall -> (predicate is 'predicate 1') 
       ).then( -> ruleManager.doesRuleCondtionHold rule ).then( (isTrue) ->
-        assert isTrue is true
+        cassert isTrue is true
         finish()
       ).catch(finish).done()
 
@@ -355,12 +356,12 @@ describe "RuleManager", ->
       start = getTime()
 
       provider.canDecide = (predicate) -> 
-        assert predicate is "predicate 1"
+        cassert predicate is "predicate 1"
         return 'state'
 
       provider.isTrue = (id, predicate) -> Q.fcall -> true
       provider.notifyWhen = (id, predicate, callback) -> 
-        assert predicate is "predicate 1"
+        cassert predicate is "predicate 1"
         return true
 
       rule =
@@ -386,8 +387,8 @@ describe "RuleManager", ->
 
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
-        assert isTrue is true
-        assert elapsed >= 1000
+        cassert isTrue is true
+        cassert elapsed >= 1000
         finish()
       ).done()
 
@@ -396,14 +397,14 @@ describe "RuleManager", ->
       start = getTime()
 
       provider.canDecide = (predicate) -> 
-        assert predicate is "predicate 1"
+        cassert predicate is "predicate 1"
         return 'state'
 
       provider.isTrue = (id, predicate) -> Q.fcall -> true
 
       notifyCallback = null
       provider.notifyWhen = (id, predicate, callback) -> 
-        assert predicate is "predicate 1"
+        cassert predicate is "predicate 1"
         notifyCallback = callback
         return true
 
@@ -434,8 +435,8 @@ describe "RuleManager", ->
 
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
-        assert isTrue is false
-        assert elapsed < 1000
+        cassert isTrue is false
+        cassert elapsed < 1000
         finish()
       ).done()
 
@@ -444,12 +445,12 @@ describe "RuleManager", ->
       start = getTime()
 
       provider.canDecide = (predicate) -> 
-        assert predicate is "predicate 1" or predicate is "predicate 2"
+        cassert predicate is "predicate 1" or predicate is "predicate 2"
         return 'state'
 
       provider.isTrue = (id, predicate) -> Q.fcall -> true
       provider.notifyWhen = (id, predicate, callback) -> 
-        assert predicate is "predicate 1" or predicate is "predicate 2"
+        cassert predicate is "predicate 1" or predicate is "predicate 2"
         return true
 
       rule =
@@ -489,8 +490,8 @@ describe "RuleManager", ->
 
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
-        assert isTrue is true
-        assert elapsed >= 2000
+        cassert isTrue is true
+        cassert elapsed >= 2000
         finish()
       ).done()
 
@@ -500,12 +501,12 @@ describe "RuleManager", ->
       start = getTime()
 
       provider.canDecide = (predicate) -> 
-        assert predicate is "predicate 1" or predicate is "predicate 2"
+        cassert predicate is "predicate 1" or predicate is "predicate 2"
         return 'state'
 
       provider.isTrue = (id, predicate) -> Q.fcall -> true
       provider.notifyWhen = (id, predicate, callback) -> 
-        assert predicate is "predicate 1" or predicate is "predicate 2"
+        cassert predicate is "predicate 1" or predicate is "predicate 2"
         if predicate is "predicate 1"
           setTimeout ->
             callback false
@@ -548,8 +549,8 @@ describe "RuleManager", ->
 
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
-        assert isTrue is false
-        assert elapsed < 3000
+        cassert isTrue is false
+        cassert elapsed < 3000
         finish()
       ).done()
 
@@ -558,13 +559,13 @@ describe "RuleManager", ->
       start = getTime()
 
       provider.canDecide = (predicate) -> 
-        assert predicate is "predicate 1" or predicate is "predicate 2"
+        cassert predicate is "predicate 1" or predicate is "predicate 2"
         return 'state'
 
       provider.isTrue = (id, predicate) -> Q.fcall -> true
 
       provider.notifyWhen = (id, predicate, callback) -> 
-        assert predicate is "predicate 1" or predicate is "predicate 2"
+        cassert predicate is "predicate 1" or predicate is "predicate 2"
         if predicate is "predicate 1"
           setTimeout ->
             callback false
@@ -607,8 +608,8 @@ describe "RuleManager", ->
 
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
-        assert isTrue is true
-        assert elapsed >= 2000
+        cassert isTrue is true
+        cassert elapsed >= 2000
         finish()
       ).done()
 
@@ -618,13 +619,13 @@ describe "RuleManager", ->
       start = getTime()
 
       provider.canDecide = (predicate) -> 
-        assert predicate is "predicate 1" or predicate is "predicate 2"
+        cassert predicate is "predicate 1" or predicate is "predicate 2"
         return 'state'
 
       provider.isTrue = (id, predicate) -> Q.fcall -> true
 
       provider.notifyWhen = (id, predicate, callback) -> 
-        assert predicate is "predicate 1" or predicate is "predicate 2"
+        cassert predicate is "predicate 1" or predicate is "predicate 2"
         setTimeout ->
           callback false
         , 500
@@ -666,8 +667,8 @@ describe "RuleManager", ->
 
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
-        assert isTrue is false
-        assert elapsed < 1000
+        cassert isTrue is false
+        cassert elapsed < 1000
         finish()
       ).done()
 
@@ -683,24 +684,24 @@ describe "RuleManager", ->
 
       canDecideCalled = false
       provider.canDecide = (predicate) ->
-        assert predicate is 'predicate 2'
+        cassert predicate is 'predicate 2'
         canDecideCalled = i
         i++
         return 'event'
 
       cancleNotifyCalled = false
       provider.cancelNotify = (id) ->
-        assert id?
-        assert id is notifyId
+        cassert id?
+        cassert id is notifyId
         cancleNotifyCalled = i
         i++
         return true
 
       notifyWhenCalled = false
       provider.notifyWhen = (id, predicate, callback) -> 
-        assert id?
-        assert predicate is 'predicate 2'
-        assert typeof callback is 'function'
+        cassert id?
+        cassert predicate is 'predicate 2'
+        cassert typeof callback is 'function'
         notfyCallback = callback
         notifyWhenCalled = i
         i++
@@ -711,12 +712,12 @@ describe "RuleManager", ->
       actionHandler.executeAction = (actionString, simulate) => Q.fcall -> "execute action"
 
       ruleManager.updateRuleByString('test5', 'if predicate 2 then action 1').then( ->
-        assert canDecideCalled is 1
-        assert cancleNotifyCalled is 2
-        assert notifyWhenCalled is 3
+        cassert canDecideCalled is 1
+        cassert cancleNotifyCalled is 2
+        cassert notifyWhenCalled is 3
 
-        assert ruleManager.rules['test5']?
-        assert ruleManager.rules['test5'].string is 'if predicate 2 then action 1'
+        cassert ruleManager.rules['test5']?
+        cassert ruleManager.rules['test5'].string is 'if predicate 2 then action 1'
         finish()
       ).catch(finish).done()
 
@@ -724,8 +725,8 @@ describe "RuleManager", ->
     it 'should react to notifies', (finish) ->
 
       actionHandler.executeAction = (actionString, simulate) =>
-        assert actionString is "action 1"
-        assert not simulate
+        cassert actionString is "action 1"
+        cassert not simulate
         finish()
         return Q.fcall -> "execute action"
 
@@ -737,11 +738,40 @@ describe "RuleManager", ->
     it 'should remove the rule', ->
       cancleNotifyCalled = false
       provider.cancelNotify = (id) ->
-        assert id?
+        cassert id?
         cancleNotifyCalled = true
         return true
 
       ruleManager.removeRule 'test5'
-      assert not ruleManager.rules['test5']?
-      assert cancleNotifyCalled
+      cassert not ruleManager.rules['test5']?
+      cassert cancleNotifyCalled
 
+  # ###Tests for `executeAction()`
+  describe '#executeAction()', ->
+
+    it 'should execute action 1', (finish) ->
+
+      executeActionCallCount = 0
+      actionHandler.executeAction = (actionString, simulate) =>
+        cassert actionString is "action 1"
+        cassert simulate
+        executeActionCallCount++
+        return Q.fcall -> "execute action"
+
+      ruleManager.executeAction('action 1', true).then( ->
+        cassert executeActionCallCount is 1
+        finish()
+      ).catch(finish).done()
+
+    it 'should execute action 1 and action 2', (finish) ->
+
+      executedWith = []
+      actionHandler.executeAction = (actionString, simulate) =>
+        executedWith.push actionString
+        cassert simulate
+        return Q.fcall -> "execute action"
+
+      ruleManager.executeAction('action 1 and action 2', true).then( ->
+        assert.deepEqual executedWith, ["action 1", "action 2"]
+        finish()
+      ).catch(finish).done()

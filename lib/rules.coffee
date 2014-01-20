@@ -4,7 +4,9 @@ assert = require 'cassert'
 logger = require "./logger"
 util = require 'util'
 Q = require 'q'
+_ = require 'lodash'
 require "date-format-lite"
+
 milliseconds = require './milliseconds'
 
 # ##RuleManager
@@ -440,9 +442,11 @@ class RuleManager extends require('events').EventEmitter
   executeActionAndLogResult: (rule) ->
     # Returns the current time as string: `2012-11-04 14:55:45`
     now = => new Date().format 'YYYY-MM-DD hh:mm:ss'
-    return @executeAction(rule.action, false).then( (message) =>
-      if message? 
-        logger.info "#{now()}: rule #{rule.id}: #{message}"
+    return @executeAction(rule.action, false).then( (messages) =>
+      assert Array.isArray messages
+      # concat the messages: `["a", "b"] => "a and b"`
+      message = _.reduce(messages, (ms, m) => if m? then "#{ms} and #{m}" else ms)
+      logger.info "#{now()}: rule #{rule.id}: #{message}"
     ).catch( (error)=>
       logger.error "#{now()}: rule #{rule.id} error: #{error}"
     )
@@ -452,10 +456,27 @@ class RuleManager extends require('events').EventEmitter
     assert actionString? and typeof actionString is "string" 
     assert simulate? and typeof simulate is "boolean"
 
-    for aH in @actionHandlers
-      promise = aH.executeAction actionString, simulate
-      if promise?.then?
-        return promise
-    return Q.fcall => throw new Error("No actionhandler found!")
+    actionResults = []
+    for token in actionString.split /\s+and\s+/
+      ahFound = false
+      for aH in @actionHandlers
+        unless ahFound
+          try 
+            # Check if the action handler can execute the action. If it can execute it then
+            # it should do it and return a promise that get fullfilled with a description string.
+            # If the action handler can't handle the action it should return null.
+            promise = aH.executeAction token, simulate
+            # If the action was handled
+            if Q.isPromise promise
+              # push it to the results and continue with the next token
+              actionResults.push promise
+              ahFound = true
+              continue
+          catch e 
+            logger.error "Error executing a action handler: ", e.message
+            logger.debug e.stack
+      unless ahFound
+        return Q.fcall => throw new Error("No actionhandler found!")
+    return Q.all(actionResults)
 
 module.exports.RuleManager = RuleManager
