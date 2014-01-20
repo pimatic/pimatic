@@ -200,9 +200,19 @@ module.exports = (env) ->
       assert device?
       assert device instanceof env.devices.Device
       assert device._constructorCalled
-
       if @devices[device.id]?
         throw new assert.AssertionError("dublicate device id \"#{device.id}\"")
+      unless device.id.mach /^[a-z0-9]+$/i
+        env.logger.warn """
+          The id of #{device.id} contains a non alphanumeric letter or symbol.
+          This could lead to errors.
+        """
+      for reservedWord in ["and", "or", "then"]
+        if device.name.indexOf(" and ") isnt -1
+          env.logger.warn """
+            Name of device "#{device.id}" contains an "#{reservedWord}". 
+            This could lead to errors in rules.
+          """
 
       env.logger.info "new device \"#{device.name}\"..."
       @devices[device.id]=device

@@ -19,7 +19,6 @@ class Device extends require('events').EventEmitter
   attributes: {}
 
   _checkAttributes: ->
-
     for attr of @attributes 
       @_checkAttribute attr
 
