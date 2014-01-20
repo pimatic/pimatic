@@ -202,7 +202,7 @@ module.exports = (env) ->
       assert device._constructorCalled
       if @devices[device.id]?
         throw new assert.AssertionError("dublicate device id \"#{device.id}\"")
-      unless device.id.mach /^[a-z0-9]+$/i
+      unless device.id.match /^[a-z0-9\-_]+$/i
         env.logger.warn """
           The id of #{device.id} contains a non alphanumeric letter or symbol.
           This could lead to errors.
