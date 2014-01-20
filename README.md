@@ -1,7 +1,7 @@
 pimatic
 =======
 
-[![Build Status](https://travis-ci.org/sweetpi/pimatic.png?branch=master)](https://travis-ci.org/sweetpi/pimatic)
+[![Build Status](https://travis-ci.org/sweetpi/pimatic.png?branch=devlopment)](https://travis-ci.org/sweetpi/pimatic)
 [![NPM version](https://badge.fury.io/js/pimatic.png)](http://badge.fury.io/js/pimatic)
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/sweetpi/pimatic/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 
