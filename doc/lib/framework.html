@@ -174,9 +174,19 @@
       <span class="nx">assert</span> <span class="nx">device</span><span class="o">?</span>
       <span class="nx">assert</span> <span class="nx">device</span> <span class="k">instanceof</span> <span class="nx">env</span><span class="p">.</span><span class="nx">devices</span><span class="p">.</span><span class="nx">Device</span>
       <span class="nx">assert</span> <span class="nx">device</span><span class="p">.</span><span class="nx">_constructorCalled</span>
-
       <span class="k">if</span> <span class="nx">@devices</span><span class="p">[</span><span class="nx">device</span><span class="p">.</span><span class="nx">id</span><span class="p">]</span><span class="o">?</span>
         <span class="k">throw</span> <span class="k">new</span> <span class="nx">assert</span><span class="p">.</span><span class="nx">AssertionError</span><span class="p">(</span><span class="s">&quot;dublicate device id \&quot;</span><span class="si">#{</span><span class="nx">device</span><span class="p">.</span><span class="nx">id</span><span class="si">}</span><span class="s">\&quot;&quot;</span><span class="p">)</span>
+      <span class="k">unless</span> <span class="nx">device</span><span class="p">.</span><span class="nx">id</span><span class="p">.</span><span class="nx">mach</span> <span class="sr">/^[a-z0-9]+$/i</span>
+        <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">warn</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">          The id of </span><span class="si">#{</span><span class="nx">device</span><span class="p">.</span><span class="nx">id</span><span class="si">}</span><span class="s"> contains a non alphanumeric letter or symbol.</span>
+<span class="s">          This could lead to errors.</span>
+<span class="s">        &quot;&quot;&quot;</span>
+      <span class="k">for</span> <span class="nx">reservedWord</span> <span class="k">in</span> <span class="p">[</span><span class="s">&quot;and&quot;</span><span class="p">,</span> <span class="s">&quot;or&quot;</span><span class="p">,</span> <span class="s">&quot;then&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nx">device</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s">&quot; and &quot;</span><span class="p">)</span> <span class="o">isnt</span> <span class="o">-</span><span class="mi">1</span>
+          <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">warn</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">            Name of device &quot;</span><span class="si">#{</span><span class="nx">device</span><span class="p">.</span><span class="nx">id</span><span class="si">}</span><span class="s">&quot; contains an &quot;</span><span class="si">#{</span><span class="nx">reservedWord</span><span class="si">}</span><span class="s">&quot;. </span>
+<span class="s">            This could lead to errors in rules.</span>
+<span class="s">          &quot;&quot;&quot;</span>
 
       <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="s">&quot;new device \&quot;</span><span class="si">#{</span><span class="nx">device</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="s">\&quot;...&quot;</span>
       <span class="nx">@devices</span><span class="p">[</span><span class="nx">device</span><span class="p">.</span><span class="nx">id</span><span class="p">]</span><span class="o">=</span><span class="nx">device</span>

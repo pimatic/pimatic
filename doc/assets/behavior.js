@@ -302,10 +302,95 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "projectPath": "lib/actions.coffee",
             "targetPath": "lib/actions",
             "pageTitle": "lib/actions",
-            "title": "actions"
+            "firstHeader": {
+              "type": "heading",
+              "data": {
+                "level": 1,
+                "title": "Action Handler",
+                "slug": "action-handler",
+                "isFileHeader": true
+              },
+              "depth": 1,
+              "children": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "The Action Handler",
+                    "slug": "the-action-handler"
+                  },
+                  "depth": 2,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "executeAction()",
+                        "slug": "executeaction"
+                      },
+                      "depth": 3
+                    }
+                  ]
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "The Log Action Handler",
+                    "slug": "the-log-action-handler"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "The Switch Action Handler",
+                    "slug": "the-switch-action-handler"
+                  },
+                  "depth": 2
+                }
+              ]
+            },
+            "title": "Action Handler"
           },
           "depth": 2,
-          "outline": []
+          "outline": [
+            {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "The Action Handler",
+                "slug": "the-action-handler"
+              },
+              "depth": 2,
+              "children": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "executeAction()",
+                    "slug": "executeaction"
+                  },
+                  "depth": 3
+                }
+              ]
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "The Log Action Handler",
+                "slug": "the-log-action-handler"
+              },
+              "depth": 2
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "The Switch Action Handler",
+                "slug": "the-switch-action-handler"
+              },
+              "depth": 2
+            }
+          ]
         }, {
           "type": "file",
           "data": {
@@ -485,10 +570,175 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "projectPath": "lib/predicates.coffee",
             "targetPath": "lib/predicates",
             "pageTitle": "lib/predicates",
-            "title": "predicates"
+            "firstHeader": {
+              "type": "heading",
+              "data": {
+                "level": 1,
+                "title": "Predicate Provider",
+                "slug": "predicate-provider",
+                "isFileHeader": true
+              },
+              "depth": 1,
+              "children": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "The Predicate Provider",
+                    "slug": "the-predicate-provider"
+                  },
+                  "depth": 2,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "canDecide()",
+                        "slug": "candecide"
+                      },
+                      "depth": 3
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "isTrue()",
+                        "slug": "istrue"
+                      },
+                      "depth": 3
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "notifyWhen()",
+                        "slug": "notifywhen"
+                      },
+                      "depth": 3
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "cancelNotify()",
+                        "slug": "cancelnotify"
+                      },
+                      "depth": 3
+                    }
+                  ]
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "The Device-Event Predicate Provider",
+                    "slug": "the-device-event-predicate-provider"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "The Presence Predicate Provider",
+                    "slug": "the-presence-predicate-provider"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "The Switch Predicate Provider",
+                    "slug": "the-switch-predicate-provider"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "The Device-Attribute Predicate Provider",
+                    "slug": "the-device-attribute-predicate-provider"
+                  },
+                  "depth": 2
+                }
+              ]
+            },
+            "title": "Predicate Provider"
           },
           "depth": 2,
-          "outline": []
+          "outline": [
+            {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "The Predicate Provider",
+                "slug": "the-predicate-provider"
+              },
+              "depth": 2,
+              "children": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "canDecide()",
+                    "slug": "candecide"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "isTrue()",
+                    "slug": "istrue"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "notifyWhen()",
+                    "slug": "notifywhen"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "cancelNotify()",
+                    "slug": "cancelnotify"
+                  },
+                  "depth": 3
+                }
+              ]
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "The Device-Event Predicate Provider",
+                "slug": "the-device-event-predicate-provider"
+              },
+              "depth": 2
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "The Presence Predicate Provider",
+                "slug": "the-presence-predicate-provider"
+              },
+              "depth": 2
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "The Switch Predicate Provider",
+                "slug": "the-switch-predicate-provider"
+              },
+              "depth": 2
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "The Device-Attribute Predicate Provider",
+                "slug": "the-device-attribute-predicate-provider"
+              },
+              "depth": 2
+            }
+          ]
         }, {
           "type": "file",
           "data": {
@@ -510,8 +760,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "type": "heading",
               "data": {
                 "level": 1,
-                "title": "rules handling",
-                "slug": "rules-handling",
+                "title": "The Rule System",
+                "slug": "the-rule-system",
                 "isFileHeader": true
               },
               "depth": 1,
@@ -520,8 +770,16 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "type": "heading",
                   "data": {
                     "level": 2,
-                    "title": "RuleManager",
-                    "slug": "rulemanager"
+                    "title": "What's a rule",
+                    "slug": "whats-a-rule"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "The Rule Manager",
+                    "slug": "the-rule-manager"
                   },
                   "depth": 2,
                   "children": [
@@ -529,7 +787,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                       "type": "heading",
                       "data": {
                         "level": 3,
-                        "title": "parseRuleString",
+                        "title": "parseRuleString()",
                         "slug": "parserulestring"
                       },
                       "depth": 3
@@ -537,23 +795,15 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                       "type": "heading",
                       "data": {
                         "level": 3,
-                        "title": "_whenPredicateIsTrue",
-                        "slug": "-whenpredicateistrue"
+                        "title": "_registerPredicateProviderNotify()",
+                        "slug": "-registerpredicateprovidernotify"
                       },
                       "depth": 3
                     }, {
                       "type": "heading",
                       "data": {
                         "level": 3,
-                        "title": "whenPredicateIsTrue",
-                        "slug": "whenpredicateistrue"
-                      },
-                      "depth": 3
-                    }, {
-                      "type": "heading",
-                      "data": {
-                        "level": 3,
-                        "title": "_cancelPredicateproviderNotify",
+                        "title": "_cancelPredicateproviderNotify()",
                         "slug": "-cancelpredicateprovidernotify"
                       },
                       "depth": 3
@@ -561,7 +811,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                       "type": "heading",
                       "data": {
                         "level": 3,
-                        "title": "AddRuleByString",
+                        "title": "addRuleByString()",
                         "slug": "addrulebystring"
                       },
                       "depth": 3
@@ -569,7 +819,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                       "type": "heading",
                       "data": {
                         "level": 3,
-                        "title": "removeRule",
+                        "title": "removeRule()",
                         "slug": "removerule"
                       },
                       "depth": 3
@@ -577,7 +827,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                       "type": "heading",
                       "data": {
                         "level": 3,
-                        "title": "updateRuleByString",
+                        "title": "updateRuleByString()",
                         "slug": "updaterulebystring"
                       },
                       "depth": 3
@@ -585,7 +835,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                       "type": "heading",
                       "data": {
                         "level": 3,
-                        "title": "evaluateConditionOfRule",
+                        "title": "evaluateConditionOfRule()",
                         "slug": "evaluateconditionofrule"
                       },
                       "depth": 3
@@ -593,7 +843,23 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                       "type": "heading",
                       "data": {
                         "level": 3,
-                        "title": "executeAction",
+                        "title": "doesRuleCondtionHold()",
+                        "slug": "doesrulecondtionhold"
+                      },
+                      "depth": 3
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "executeActionAndLogResult()",
+                        "slug": "executeactionandlogresult"
+                      },
+                      "depth": 3
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "executeAction()",
                         "slug": "executeaction"
                       },
                       "depth": 3
@@ -602,7 +868,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                 }
               ]
             },
-            "title": "rules handling"
+            "title": "The Rule System"
           },
           "depth": 2,
           "outline": [
@@ -610,8 +876,16 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "type": "heading",
               "data": {
                 "level": 2,
-                "title": "RuleManager",
-                "slug": "rulemanager"
+                "title": "What's a rule",
+                "slug": "whats-a-rule"
+              },
+              "depth": 2
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "The Rule Manager",
+                "slug": "the-rule-manager"
               },
               "depth": 2,
               "children": [
@@ -619,7 +893,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "type": "heading",
                   "data": {
                     "level": 3,
-                    "title": "parseRuleString",
+                    "title": "parseRuleString()",
                     "slug": "parserulestring"
                   },
                   "depth": 3
@@ -627,23 +901,15 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "type": "heading",
                   "data": {
                     "level": 3,
-                    "title": "_whenPredicateIsTrue",
-                    "slug": "-whenpredicateistrue"
+                    "title": "_registerPredicateProviderNotify()",
+                    "slug": "-registerpredicateprovidernotify"
                   },
                   "depth": 3
                 }, {
                   "type": "heading",
                   "data": {
                     "level": 3,
-                    "title": "whenPredicateIsTrue",
-                    "slug": "whenpredicateistrue"
-                  },
-                  "depth": 3
-                }, {
-                  "type": "heading",
-                  "data": {
-                    "level": 3,
-                    "title": "_cancelPredicateproviderNotify",
+                    "title": "_cancelPredicateproviderNotify()",
                     "slug": "-cancelpredicateprovidernotify"
                   },
                   "depth": 3
@@ -651,7 +917,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "type": "heading",
                   "data": {
                     "level": 3,
-                    "title": "AddRuleByString",
+                    "title": "addRuleByString()",
                     "slug": "addrulebystring"
                   },
                   "depth": 3
@@ -659,7 +925,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "type": "heading",
                   "data": {
                     "level": 3,
-                    "title": "removeRule",
+                    "title": "removeRule()",
                     "slug": "removerule"
                   },
                   "depth": 3
@@ -667,7 +933,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "type": "heading",
                   "data": {
                     "level": 3,
-                    "title": "updateRuleByString",
+                    "title": "updateRuleByString()",
                     "slug": "updaterulebystring"
                   },
                   "depth": 3
@@ -675,7 +941,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "type": "heading",
                   "data": {
                     "level": 3,
-                    "title": "evaluateConditionOfRule",
+                    "title": "evaluateConditionOfRule()",
                     "slug": "evaluateconditionofrule"
                   },
                   "depth": 3
@@ -683,7 +949,23 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                   "type": "heading",
                   "data": {
                     "level": 3,
-                    "title": "executeAction",
+                    "title": "doesRuleCondtionHold()",
+                    "slug": "doesrulecondtionhold"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "executeActionAndLogResult()",
+                    "slug": "executeactionandlogresult"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "executeAction()",
                     "slug": "executeaction"
                   },
                   "depth": 3
@@ -787,8 +1069,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
     "plugin-template": "pimatic-plugin-template",
     "redirect": "pimatic-redirect",
     "rest-api": "pimatic-rest-api",
-    "sispmctl": "pimatic-sispmctl",
-    "speak-api": "pimatic-speak-api"
+    "sispmctl": "pimatic-sispmctl"
   };
 
   nav$ = null;

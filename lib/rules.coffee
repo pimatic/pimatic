@@ -1,5 +1,46 @@
-# #rules handling
+###
+The Rule System
+===============
 
+This file handles the parsing and executing of rules. 
+
+What's a rule
+------------
+A rule is a string that has the format: "if _this_ then _that_". The _this_ part will be called 
+the condition of the rule and the _that_ the actions of the rule.
+
+__Examples:__
+
+  * if its 10pm then turn the tv off
+  * if its friday and its 8am then turn the light on
+  * if (music is playing or the light is on) and somebody is present then turn the speaker on
+  * if temperatue of living room is below 15°C for 5 minutes then log "its getting cold" 
+
+__The condition and predicates__
+
+The condition of a rule consists of one or more predicates. The predicates can be combined with
+"and", "or" and can be grouped by parentheses. A predicate is either true or false at a given time. 
+There are special predicates that represnted events. These predicate are just true in the moment a 
+special event happen.
+
+Each predicate is handled by an Predicate Provider. Take a look at the 
+[predicates file](predicates.html) for more details.
+
+__for-suffix__
+
+A predicate can have a "for" as a suffix like in "music is playing for 5 seconds" or 
+"tv is on for 2 hours". If the predicate has a for-suffix then the rule action is only triggered,
+when the predicate stays true the given time. Predicates that represent one time events like "10pm"
+can't have a for-suffix because the condition can never hold.
+
+__The actions__
+
+The actions of a rule can consists of one or more actions. Each action describes a command that 
+should be executed when the confition of the rule is true. Take a look at the 
+[actions.coffee](actions.html) for more details.
+###
+
+ 
 assert = require 'cassert'
 logger = require "./logger"
 util = require 'util'
@@ -9,7 +50,18 @@ require "date-format-lite"
 
 milliseconds = require './milliseconds'
 
-# ##RuleManager
+###
+The Rule Manager
+----------------
+The Rule Manager holds a collection of rules. Rules can be added to this collection. When a rule
+is added the rule is parsed by the Rule Manager and for each predicate a Predicate Provider will
+be searched. Predicate Provider that should be considered can be added to the Rule Manager.
+
+If all predicates of the added rule can be handled by an Predicate Provider for each action of
+the actions of the rule a Action Handler is searched. Action Handler can be added to the
+Rule Manager, too.
+
+###
 class RuleManager extends require('events').EventEmitter
   # Array of the added rules
   # If a rule was successfully added, the rule has the form:
@@ -46,7 +98,7 @@ class RuleManager extends require('events').EventEmitter
   addActionHandler: (ah) -> @actionHandlers.push ah
   addPredicateProvider: (pv) -> @predicateProviders.push pv
 
-  # ###parseRuleString
+  # ###parseRuleString()
   # This function parses a rule given by a string and returns a rule object.
   # A rule string is for example 'if its 10pm and light is on then turn the light off'
   # it get parsed to the follwoing rule object:
@@ -76,47 +128,61 @@ class RuleManager extends require('events').EventEmitter
 
     # Allways return a promise
     return Q.fcall( =>
-      # First take the string apart, so that 
-      # `parts` gets `["", "its 10pm and light is on", "turn the light off"]`.
+      ###
+      First take the string apart, so that
+       
+          parts = ["", "its 10pm and light is on", "turn the light off"].
+      
+      ###
       parts = ruleString.split /^if\s|\sthen\s/
-      # Check for the right parts count. Note the empty string at the beginning
+      # Check for the right parts count. Note the empty string at the beginning.
       switch
         when parts.length < 3
           throw new Error('The rule must start with "if" and contain a "then" part!')
         when parts.length > 3 
           throw new Error('The rule must exactly contain one "if" and one "then"!')
-      # Now `condition` gets `"its 10pm and light is on"`
+      ###
+      Then extraxt the condition and actions from the rule 
+       
+          rule.orgCondition = "its 10pm and light is on"
+          rule.actions = "turn the light off"
+       
+      ###
       rule.orgCondition = parts[1].trim()
-      # and `actions` gets `" turn the light off"`.
       rule.action = parts[2].trim()
 
-      # Utility function, that finds a provider, that can decide the given predicate like `its 10pm`
-      findPredicateProvider = (predicate) =>
-        assert predicate? and typeof predicate is "string" and predicate.length isnt 0
-        for provider in @predicateProviders
-          type = provider.canDecide predicate
-          assert type is 'event' or type is 'state' or type is no
-          if type is 'event' or type is 'state'
-            return [type, provider]
-        return [null, null]
-
-      # Now split the condition in a token stream.
-      # For example: `"12:30 and temperature > 10"` becomes 
-      # `['12:30', 'and', 'temperature > 30 C']`
-      # 
-      # Then we replace all predicates throw predicate tokens:
-      # `['predicate', '(', 0, ')', 'and', 'predicate', '(', 1, ')']`
-      # 
-      # and remember the predicates:
-      # `predicates = [ {token: '12:30'}, {token: 'temperature > 10'}]`
+      ###
+      Now split the condition in a token stream.
+      For example: 
+        
+          "12:30 and temperature > 10"
+       
+      becomes 
+       
+          ['12:30', 'and', 'temperature > 30 C']
+       
+      Then we replace all predicates with tokens of the following form
+       
+          tokens = ['predicate', '(', 0, ')', 'and', 'predicate', '(', 1, ')']
+       
+      and remember the predicates:
+       
+          predicates = [ {token: '12:30'}, {token: 'temperature > 10'}]
+       
+      We do this because we want o parse the condition with [bet](https://github.com/paulmoore/BET) 
+      later and bet can only parse mathematical functions.
+      ### 
       predicates = []
       tokens = []
+      # For each token
       for token in rule.orgCondition.split /(\sand\s|\sor\s|\)|\()/ 
         do (token) =>
           token = token.trim()
+          # if its no predicate then push it into the token stream
           if token in ["and", "or", ")", "("]
             tokens.push token
           else
+            # else generate a unique id.
             i = predicates.length
             predId = id+i
 
@@ -136,6 +202,23 @@ class RuleManager extends require('events').EventEmitter
                 token = beforeFor
                 forSuffix = afterFor
                 forTime = ms
+
+            ###
+            This is a utility function that tries to find a Predicate Provider that can decide the 
+            given predicate.
+            ###
+            findPredicateProvider = (predicate) =>
+              assert predicate? and typeof predicate is "string" and predicate.length isnt 0
+              # For each registered Predicate Provider
+              for provider in @predicateProviders
+                # check if the provider can decide the predicate.
+                type = provider.canDecide predicate
+                # Thren provider should return 'event' or 'state' if it can decide the predicate.
+                # else it returns no.
+                assert type is 'event' or type is 'state' or type is no
+                if type is 'event' or type is 'state'
+                  return [type, provider]
+              return [null, null]
 
             [type, provider] = findPredicateProvider token
             if type is 'event' and forSuffix?
@@ -174,15 +257,24 @@ class RuleManager extends require('events').EventEmitter
       throw error
     )
 
-  # ###_whenPredicateIsTrue
+  # ###_registerPredicateProviderNotify()
   # Register for every predicate the callback function that should be called
   # when the predicate becomes true.
   _registerPredicateProviderNotify: (rule) ->
     assert rule?
     assert rule.predicates?
+    
+    # For all predicate providers
+    for p in rule.predicates
+      do (p) =>
+        # let us be notified when the predicate state changes.
+        p.provider.notifyWhen p.id, p.token, (state) =>
+          assert state is 'event' or state is true or state is false
+          #If the state is true then call the `whenPredicateIsTrue` function.
+          if state is true or state is 'event'
+            whenPredicateIsTrue rule.id, p.id, state
 
-    # ###whenPredicateIsTrue
-    # This function should be called by a provider if a predicate becomes true
+    # This function should be called by a provider if a predicate becomes true.
     whenPredicateIsTrue = (ruleId, predicateId, state) =>
       assert ruleId? and typeof ruleId is "string" and ruleId.length isnt 0
       assert predicateId? and typeof predicateId is "string" and predicateId.length isnt 0
@@ -203,16 +295,8 @@ class RuleManager extends require('events').EventEmitter
         return
       ).done()
       return
-    
-    # Register the whenPredicateIsTrue for all providers:
-    for p in rule.predicates
-      do (p) =>
-        p.provider.notifyWhen p.id, p.token, (state) =>
-          assert state is 'event' or state is true or state is false
-          if state is true or state is 'event'
-            whenPredicateIsTrue rule.id, p.id, state
           
-  # ###_cancelPredicateproviderNotify
+  # ###_cancelPredicateproviderNotify()
   # Cancels for every predicate the callback that should be called
   # when the predicate becomes true.
   _cancelPredicateProviderNotify: (rule) ->
@@ -222,7 +306,7 @@ class RuleManager extends require('events').EventEmitter
     if rule.valid
       p.provider.cancelNotify p.id for p in rule.predicates
 
-  # ###AddRuleByString
+  # ###addRuleByString()
   addRuleByString: (id, ruleString, active=yes, force=false) ->
     assert id? and typeof id is "string" and id.length isnt 0
     assert ruleString? and typeof ruleString is "string"
@@ -246,7 +330,7 @@ class RuleManager extends require('events').EventEmitter
       return
     ).catch( (error) =>
       # If there was an error pasring the rule, but the rule is forced to be added, then add
-      # the rule with an error
+      # the rule with an error.
       if force
         if error.rule?
           rule = error.rule
@@ -261,8 +345,8 @@ class RuleManager extends require('events').EventEmitter
       throw error
     )
 
-  # ###removeRule
-  # Removes a rule, from the RuleManager
+  # ###removeRule()
+  # Removes a rule, from the Rule Manager.
   removeRule: (id) ->
     assert id? and typeof id is "string" and id.length isnt 0
     throw new Error("Invalid ruleId: \"#{id}\"") unless @rules[id]?
@@ -277,7 +361,7 @@ class RuleManager extends require('events').EventEmitter
     @emit "remove", rule
     return
 
-  # ###updateRuleByString
+  # ###updateRuleByString()
   updateRuleByString: (id, ruleString, active=yes) ->
     assert id? and typeof id is "string" and id.length isnt 0
     assert ruleString? and typeof ruleString is "string"
@@ -307,8 +391,11 @@ class RuleManager extends require('events').EventEmitter
       return
     )
 
-  # ###evaluateConditionOfRule
-  # Uses 'bet' to evaluate rule.tokens
+  # ###evaluateConditionOfRule()
+  # Uses the 'bet' node.js module to evaluate rule.tokens. This function returnes a promise that
+  # will be fulfilled with true if the condition of the rule is true. This function ignores all 
+  # the "for"-suffixes of predicates. The `knownPredicates` is an object containing a value for
+  # each predicate for that the state is already known.
   evaluateConditionOfRule: (rule, knownPredicates = {}) ->
     assert rule? and rule instanceof Object
     assert knownPredicates? and knownPredicates instanceof Object
@@ -350,7 +437,8 @@ class RuleManager extends require('events').EventEmitter
       return isTrue
     )
 
-
+  # ###doesRuleCondtionHold()
+  # The same as evaluateConditionOfRule but does not ignore the for-suffixes.
   doesRuleCondtionHold: (rule, knownPredicates = {}) ->
     assert rule? and rule instanceof Object   
     assert knownPredicates? and knownPredicates instanceof Object
@@ -438,7 +526,9 @@ class RuleManager extends require('events').EventEmitter
       # At then end return the deferred promise. 
       return deferred.promise
     )
-    
+
+  # ###executeActionAndLogResult()
+  # Executes the actions of the string using `executeAction` and logs the result to the logger.    
   executeActionAndLogResult: (rule) ->
     # Returns the current time as string: `2012-11-04 14:55:45`
     now = => new Date().format 'YYYY-MM-DD hh:mm:ss'
@@ -451,11 +541,13 @@ class RuleManager extends require('events').EventEmitter
       logger.error "#{now()}: rule #{rule.id} error: #{error}"
     )
 
-  # ###executeAction
+  # ###executeAction()
+  # Executes the actions in the given actionString
   executeAction: (actionString, simulate) ->
     assert actionString? and typeof actionString is "string" 
     assert simulate? and typeof simulate is "boolean"
 
+    # Split the actionString at "and" and search for an Action Handler in each partt.
     actionResults = []
     for token in actionString.split /\s+and\s+/
       ahFound = false
@@ -463,12 +555,12 @@ class RuleManager extends require('events').EventEmitter
         unless ahFound
           try 
             # Check if the action handler can execute the action. If it can execute it then
-            # it should do it and return a promise that get fullfilled with a description string.
+            # it should do it and return a promise that get fulfilled with a description string.
             # If the action handler can't handle the action it should return null.
             promise = aH.executeAction token, simulate
             # If the action was handled
             if Q.isPromise promise
-              # push it to the results and continue with the next token
+              # push it to the results and continue with the next token.
               actionResults.push promise
               ahFound = true
               continue

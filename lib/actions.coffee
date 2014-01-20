@@ -1,13 +1,56 @@
+###
+Action Handler
+=================
+A action handler can execute action for the Rule System. For actions and rule explenations
+take a look at the [rules file](rules.html).
+###
+
 __ = require("i18n").__
 Q = require 'q'
 assert = require 'cassert'
 
+###
+The Action Handler
+----------------
+###
 class ActionHandler
+
+  # ### executeAction()
+  ###
+  This function is executed by the rule system for every action on an rule. If the Action Handler
+  can execute the Action it should return a promise that gets fulfilled with describing string,
+  that explains what was done. Take a look at the Log Action Handler for a simple example.
+  ###
   executeAction: (actionString, simulate) =>
-    throw new Error("unimplemented")  
+    throw new Error("should be implemented by a subclass")  
 
 env = null
 
+###
+The Log Action Handler
+-------------
+###
+class LogActionHandler extends ActionHandler
+
+  constructor: (_env, @framework) ->
+    env = _env
+
+  executeAction: (actionString, simulate) =>
+    regExpString = '^log\\s+"(.*)?"$'
+    matches = actionString.match (new RegExp regExpString)
+    if matches?
+      stringToLog = matches[1]
+      if simulate
+        return Q.fcall -> __("would log \"%s\"", stringToLog)
+      else
+        return Q.fcall -> 
+          env.logger.info stringToLog
+          return null
+
+###
+The Switch Action Handler
+-------------
+###
 class SwitchActionHandler extends ActionHandler
 
   constructor: (_env, @framework) ->
@@ -63,23 +106,6 @@ class SwitchActionHandler extends ActionHandler
               )
         else return null
     return result
-
-class LogActionHandler extends ActionHandler
-
-  constructor: (_env, @framework) ->
-    env = _env
-
-  executeAction: (actionString, simulate) =>
-    regExpString = '^log\\s+"(.*)?"$'
-    matches = actionString.match (new RegExp regExpString)
-    if matches?
-      stringToLog = matches[1]
-      if simulate
-        return Q.fcall -> __("would log \"%s\"", stringToLog)
-      else
-        return Q.fcall -> 
-          env.logger.info stringToLog
-          return null
 
 module.exports.ActionHandler = ActionHandler
 module.exports.SwitchActionHandler = SwitchActionHandler

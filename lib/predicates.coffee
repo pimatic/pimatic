@@ -1,35 +1,63 @@
+###
+Predicate Provider
+=================
+A predicate provider provides a predicate for the Rule System. For predicate and rule explenations
+take a look at the [rules file](rules.html).
+###
+
 __ = require("i18n").__
 Q = require 'q'
 assert = require 'cassert'
 
+###
+The Predicate Provider
+----------------
+###
 class PredicateProvider
-  # This function should return 'event' or 'state' if the sensor can decide the given predicate.
-  # If the sensor can decide the predicate and it is a one shot event like 'its 10pm' then the
-  # canDecide should return `'event'`
-  # If the sensor can decide the predicate and it can be true or false like 'x is present' then 
-  # canDecide should return `'state'`
-  # If the sensor can not decide the given predicate then canDecide should return `false`
+
+  # ### canDecide()
+  ###
+  This function should return 'event' or 'state' if the sensor can decide the given predicate.
+  If the sensor can decide the predicate and it is a one shot event like 'its 10pm' then the
+  canDecide should return `'event'`
+  If the sensor can decide the predicate and it can be true or false like 'x is present' then 
+  canDecide should return `'state'`
+  If the sensor can not decide the given predicate then canDecide should return `false`
+  ###
   canDecide: (predicate) ->
     throw new Error("your sensor must implement canDecide")
 
-  # The sensor should return `true` if the predicate is true and `false` if it is false.
-  # If the sensor can not decide the predicate or the predicate is an eventthis function 
-  # should throw an Error.
+  # ### isTrue()
+  ###
+  The sensor should return `true` if the predicate is true and `false` if it is false.
+  If the sensor can not decide the predicate or the predicate is an eventthis function 
+  should throw an Error.
+  ###
   isTrue: (id, predicate) ->
     throw new Error("your sensor must implement itTrue")
 
-  # The sensor should call the callback if the state of the predicate changes (it becomes true or 
-  # false).
-  # If the sensor can not decide the predicate this function should throw an Error.
+  # ### notifyWhen()
+  ###
+  The sensor should call the callback if the state of the predicate changes (it becomes true or 
+  false).
+  If the sensor can not decide the predicate this function should throw an Error.
+  ###
   notifyWhen: (id, predicate, callback) ->
     throw new Error("your sensor must implement notifyWhen")
 
-  # Cancels the notification for the predicate with the id given id.
+  # ### cancelNotify()
+  ###
+  Cancels the notification for the predicate with the id given id.
+  ###
   cancelNotify: (id) ->
     throw new Error("your sensor must implement cancelNotify")
 
 env = null
 
+###
+The Device-Event Predicate Provider
+----------------
+####
 class DeviceEventPredicateProvider extends PredicateProvider
   _listener: {}
 
@@ -68,7 +96,10 @@ class DeviceEventPredicateProvider extends PredicateProvider
   _parsePredicate: (predicate) ->
     throw new Error 'Should be implemented by supper class.'
 
-
+###
+The Presence Predicate Provider
+----------------
+####
 class PresencePredicateProvider extends DeviceEventPredicateProvider
 
   constructor: (_env, @framework) ->
@@ -96,6 +127,10 @@ class PresencePredicateProvider extends DeviceEventPredicateProvider
               negated: negated # for testing only
     return null
 
+###
+The Switch Predicate Provider
+----------------
+####
 class SwitchPredicateProvider extends DeviceEventPredicateProvider
 
   constructor: (_env, @framework) ->
@@ -121,6 +156,10 @@ class SwitchPredicateProvider extends DeviceEventPredicateProvider
               state: state # for testing only
     return null
 
+###
+The Device-Attribute Predicate Provider
+----------------
+####
 class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
 
   constructor: (_env, @framework) ->

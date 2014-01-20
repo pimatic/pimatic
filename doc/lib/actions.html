@@ -1,14 +1,31 @@
-<!DOCTYPE html><html lang="en"><head><title>lib/actions</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="lib/actions"><meta name="groc-project-path" content="lib/actions.coffee"><meta name="groc-github-url" content="https://github.com/sweetpi/pimatic"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><link rel="stylesheet" type="text/css" media="all" href="../assets/customStyle.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/sweetpi/pimatic/blob/master/lib/actions.coffee">lib/actions.coffee</a></div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="nv">__ = </span><span class="nx">require</span><span class="p">(</span><span class="s">&quot;i18n&quot;</span><span class="p">).</span><span class="nx">__</span>
+<!DOCTYPE html><html lang="en"><head><title>lib/actions</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="lib/actions"><meta name="groc-project-path" content="lib/actions.coffee"><meta name="groc-github-url" content="https://github.com/sweetpi/pimatic"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><link rel="stylesheet" type="text/css" media="all" href="../assets/customStyle.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/sweetpi/pimatic/blob/master/lib/actions.coffee">lib/actions.coffee</a></div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><h1 id="action-handler">Action Handler</h1>
+
+<p>A action handler can execute action for the Rule System. For actions and rule explenations
+take a look at the <a href="rules.html">rules file</a>.</p></div></div><div class="code"><div class="wrapper"><span class="nv">__ = </span><span class="nx">require</span><span class="p">(</span><span class="s">&quot;i18n&quot;</span><span class="p">).</span><span class="nx">__</span>
 <span class="nv">Q = </span><span class="nx">require</span> <span class="s">&#39;q&#39;</span>
-<span class="nv">assert = </span><span class="nx">require</span> <span class="s">&#39;cassert&#39;</span>
+<span class="nv">assert = </span><span class="nx">require</span> <span class="s">&#39;cassert&#39;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="the-action-handler">The Action Handler</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">ActionHandler</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h3 id="executeaction">executeAction()</h3>
 
-<span class="k">class</span> <span class="nx">ActionHandler</span>
+<p>This function is executed by the rule system for every action on an rule. If the Action Handler
+can execute the Action it should return a promise that gets fulfilled with describing string,
+that explains what was done. Take a look at the Log Action Handler for a simple example.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">executeAction: </span><span class="nf">(actionString, simulate) =&gt;</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;should be implemented by a subclass&quot;</span><span class="p">)</span>  
+
+<span class="nv">env = </span><span class="kc">null</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="the-log-action-handler">The Log Action Handler</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">LogActionHandler</span> <span class="k">extends</span> <span class="nx">ActionHandler</span>
+
+  <span class="nv">constructor: </span><span class="nf">(_env, @framework) -&gt;</span>
+    <span class="nv">env = </span><span class="nx">_env</span>
+
   <span class="nv">executeAction: </span><span class="nf">(actionString, simulate) =&gt;</span>
-    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;unimplemented&quot;</span><span class="p">)</span>  
-
-<span class="nv">env = </span><span class="kc">null</span>
-
-<span class="k">class</span> <span class="nx">SwitchActionHandler</span> <span class="k">extends</span> <span class="nx">ActionHandler</span>
+    <span class="nv">regExpString = </span><span class="s">&#39;^log\\s+&quot;(.*)?&quot;$&#39;</span>
+    <span class="nv">matches = </span><span class="nx">actionString</span><span class="p">.</span><span class="nx">match</span> <span class="p">(</span><span class="k">new</span> <span class="nb">RegExp</span> <span class="nx">regExpString</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">matches</span><span class="o">?</span>
+      <span class="nv">stringToLog = </span><span class="nx">matches</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+      <span class="k">if</span> <span class="nx">simulate</span>
+        <span class="k">return</span> <span class="nx">Q</span><span class="p">.</span><span class="nx">fcall</span> <span class="nf">-&gt;</span> <span class="nx">__</span><span class="p">(</span><span class="s">&quot;would log \&quot;%s\&quot;&quot;</span><span class="p">,</span> <span class="nx">stringToLog</span><span class="p">)</span>
+      <span class="k">else</span>
+        <span class="k">return</span> <span class="nx">Q</span><span class="p">.</span><span class="nx">fcall</span> <span class="nf">-&gt;</span> 
+          <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="nx">stringToLog</span>
+          <span class="k">return</span> <span class="kc">null</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="the-switch-action-handler">The Switch Action Handler</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">SwitchActionHandler</span> <span class="k">extends</span> <span class="nx">ActionHandler</span>
 
   <span class="nv">constructor: </span><span class="nf">(_env, @framework) -&gt;</span>
     <span class="nv">env = </span><span class="nx">_env</span>
@@ -59,23 +76,6 @@
               <span class="p">)</span>
         <span class="k">else</span> <span class="k">return</span> <span class="kc">null</span>
     <span class="k">return</span> <span class="nx">result</span>
-
-<span class="k">class</span> <span class="nx">LogActionHandler</span> <span class="k">extends</span> <span class="nx">ActionHandler</span>
-
-  <span class="nv">constructor: </span><span class="nf">(_env, @framework) -&gt;</span>
-    <span class="nv">env = </span><span class="nx">_env</span>
-
-  <span class="nv">executeAction: </span><span class="nf">(actionString, simulate) =&gt;</span>
-    <span class="nv">regExpString = </span><span class="s">&#39;^log\\s+&quot;(.*)?&quot;$&#39;</span>
-    <span class="nv">matches = </span><span class="nx">actionString</span><span class="p">.</span><span class="nx">match</span> <span class="p">(</span><span class="k">new</span> <span class="nb">RegExp</span> <span class="nx">regExpString</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nx">matches</span><span class="o">?</span>
-      <span class="nv">stringToLog = </span><span class="nx">matches</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-      <span class="k">if</span> <span class="nx">simulate</span>
-        <span class="k">return</span> <span class="nx">Q</span><span class="p">.</span><span class="nx">fcall</span> <span class="nf">-&gt;</span> <span class="nx">__</span><span class="p">(</span><span class="s">&quot;would log \&quot;%s\&quot;&quot;</span><span class="p">,</span> <span class="nx">stringToLog</span><span class="p">)</span>
-      <span class="k">else</span>
-        <span class="k">return</span> <span class="nx">Q</span><span class="p">.</span><span class="nx">fcall</span> <span class="nf">-&gt;</span> 
-          <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="nx">stringToLog</span>
-          <span class="k">return</span> <span class="kc">null</span>
 
 <span class="nv">module.exports.ActionHandler = </span><span class="nx">ActionHandler</span>
 <span class="nv">module.exports.SwitchActionHandler = </span><span class="nx">SwitchActionHandler</span>

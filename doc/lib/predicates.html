@@ -1,24 +1,32 @@
-<!DOCTYPE html><html lang="en"><head><title>lib/predicates</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="lib/predicates"><meta name="groc-project-path" content="lib/predicates.coffee"><meta name="groc-github-url" content="https://github.com/sweetpi/pimatic"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><link rel="stylesheet" type="text/css" media="all" href="../assets/customStyle.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/sweetpi/pimatic/blob/master/lib/predicates.coffee">lib/predicates.coffee</a></div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="nv">__ = </span><span class="nx">require</span><span class="p">(</span><span class="s">&quot;i18n&quot;</span><span class="p">).</span><span class="nx">__</span>
-<span class="nv">Q = </span><span class="nx">require</span> <span class="s">&#39;q&#39;</span>
-<span class="nv">assert = </span><span class="nx">require</span> <span class="s">&#39;cassert&#39;</span>
+<!DOCTYPE html><html lang="en"><head><title>lib/predicates</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="lib/predicates"><meta name="groc-project-path" content="lib/predicates.coffee"><meta name="groc-github-url" content="https://github.com/sweetpi/pimatic"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><link rel="stylesheet" type="text/css" media="all" href="../assets/customStyle.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/sweetpi/pimatic/blob/master/lib/predicates.coffee">lib/predicates.coffee</a></div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><h1 id="predicate-provider">Predicate Provider</h1>
 
-<span class="k">class</span> <span class="nx">PredicateProvider</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>This function should return 'event' or 'state' if the sensor can decide the given predicate.
+<p>A predicate provider provides a predicate for the Rule System. For predicate and rule explenations
+take a look at the <a href="rules.html">rules file</a>.</p></div></div><div class="code"><div class="wrapper"><span class="nv">__ = </span><span class="nx">require</span><span class="p">(</span><span class="s">&quot;i18n&quot;</span><span class="p">).</span><span class="nx">__</span>
+<span class="nv">Q = </span><span class="nx">require</span> <span class="s">&#39;q&#39;</span>
+<span class="nv">assert = </span><span class="nx">require</span> <span class="s">&#39;cassert&#39;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="the-predicate-provider">The Predicate Provider</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">PredicateProvider</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h3 id="candecide">canDecide()</h3>
+
+<p>This function should return 'event' or 'state' if the sensor can decide the given predicate.
 If the sensor can decide the predicate and it is a one shot event like 'its 10pm' then the
 canDecide should return <code>'event'</code>
 If the sensor can decide the predicate and it can be true or false like 'x is present' then 
 canDecide should return <code>'state'</code>
 If the sensor can not decide the given predicate then canDecide should return <code>false</code></p></div></div><div class="code"><div class="wrapper">  <span class="nv">canDecide: </span><span class="nf">(predicate) -&gt;</span>
-    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement canDecide&quot;</span><span class="p">)</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>The sensor should return <code>true</code> if the predicate is true and <code>false</code> if it is false.
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement canDecide&quot;</span><span class="p">)</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h3 id="istrue">isTrue()</h3>
+
+<p>The sensor should return <code>true</code> if the predicate is true and <code>false</code> if it is false.
 If the sensor can not decide the predicate or the predicate is an eventthis function 
 should throw an Error.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">isTrue: </span><span class="nf">(id, predicate) -&gt;</span>
-    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement itTrue&quot;</span><span class="p">)</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>The sensor should call the callback if the state of the predicate changes (it becomes true or 
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement itTrue&quot;</span><span class="p">)</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h3 id="notifywhen">notifyWhen()</h3>
+
+<p>The sensor should call the callback if the state of the predicate changes (it becomes true or 
 false).
 If the sensor can not decide the predicate this function should throw an Error.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">notifyWhen: </span><span class="nf">(id, predicate, callback) -&gt;</span>
-    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement notifyWhen&quot;</span><span class="p">)</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Cancels the notification for the predicate with the id given id.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">cancelNotify: </span><span class="nf">(id) -&gt;</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement notifyWhen&quot;</span><span class="p">)</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h3 id="cancelnotify">cancelNotify()</h3>
+
+<p>Cancels the notification for the predicate with the id given id.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">cancelNotify: </span><span class="nf">(id) -&gt;</span>
     <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;your sensor must implement cancelNotify&quot;</span><span class="p">)</span>
 
-<span class="nv">env = </span><span class="kc">null</span>
-
+<span class="nv">env = </span><span class="kc">null</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="the-device-event-predicate-provider">The Device-Event Predicate Provider</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="c1">#</span>
 <span class="k">class</span> <span class="nx">DeviceEventPredicateProvider</span> <span class="k">extends</span> <span class="nx">PredicateProvider</span>
   <span class="nv">_listener: </span><span class="p">{}</span>
 
@@ -49,9 +57,7 @@ If the sensor can not decide the predicate this function should throw an Error.<
     <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&quot;DeviceEventPredicateProvider can not decide \&quot;</span><span class="si">#{</span><span class="nx">predicate</span><span class="si">}</span><span class="s">\&quot;!&quot;</span>
 
   <span class="nv">_parsePredicate: </span><span class="nf">(predicate) -&gt;</span>
-    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&#39;Should be implemented by supper class.&#39;</span>
-
-
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span> <span class="s">&#39;Should be implemented by supper class.&#39;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="the-presence-predicate-provider">The Presence Predicate Provider</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="c1">#</span>
 <span class="k">class</span> <span class="nx">PresencePredicateProvider</span> <span class="k">extends</span> <span class="nx">DeviceEventPredicateProvider</span>
 
   <span class="nv">constructor: </span><span class="nf">(_env, @framework) -&gt;</span>
@@ -77,8 +83,7 @@ If the sensor can not decide the predicate this function should throw an Error.<
                 <span class="k">return</span> <span class="nv">eventListener = </span><span class="nf">(presence) =&gt;</span> 
                   <span class="nx">callback</span><span class="p">(</span><span class="k">if</span> <span class="nx">negated</span> <span class="k">then</span> <span class="o">not</span> <span class="nx">presence</span> <span class="k">else</span> <span class="nx">presence</span><span class="p">)</span>
               <span class="nv">negated: </span><span class="nx">negated</span> <span class="c1"># for testing only</span>
-    <span class="k">return</span> <span class="kc">null</span>
-
+    <span class="k">return</span> <span class="kc">null</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="the-switch-predicate-provider">The Switch Predicate Provider</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="c1">#</span>
 <span class="k">class</span> <span class="nx">SwitchPredicateProvider</span> <span class="k">extends</span> <span class="nx">DeviceEventPredicateProvider</span>
 
   <span class="nv">constructor: </span><span class="nf">(_env, @framework) -&gt;</span>
@@ -102,8 +107,7 @@ If the sensor can not decide the predicate this function should throw an Error.<
               <span class="nv">getEventListener: </span><span class="nf">(callback) =&gt;</span> 
                 <span class="k">return</span> <span class="nv">eventListener = </span><span class="nf">(s) =&gt;</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">s</span> <span class="o">is</span> <span class="nx">state</span><span class="p">)</span>
               <span class="nv">state: </span><span class="nx">state</span> <span class="c1"># for testing only</span>
-    <span class="k">return</span> <span class="kc">null</span>
-
+    <span class="k">return</span> <span class="kc">null</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="the-device-attribute-predicate-provider">The Device-Attribute Predicate Provider</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="c1">#</span>
 <span class="k">class</span> <span class="nx">DeviceAttributePredicateProvider</span> <span class="k">extends</span> <span class="nx">DeviceEventPredicateProvider</span>
 
   <span class="nv">constructor: </span><span class="nf">(_env, @framework) -&gt;</span>
@@ -148,8 +152,9 @@ If the sensor can not decide the predicate this function should throw an Error.<
                 <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">error</span> <span class="s">&quot;Illegal comparator \&quot;</span><span class="si">#{</span><span class="nx">comparator</span><span class="si">}</span><span class="s">\&quot;&quot;</span>
                 <span class="kc">false</span>
 
-            <span class="k">unless</span> <span class="nx">comparator</span> <span class="o">is</span> <span class="kc">false</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>if the attribute has a unit</p></div></div><div class="code"><div class="wrapper">              <span class="nv">unit = </span><span class="nx">d</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">attributeName</span><span class="p">].</span><span class="nx">unit</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">()</span>
-              <span class="k">if</span> <span class="nx">unit</span><span class="o">?</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>then remove it from the reference value and
+            <span class="k">unless</span> <span class="nx">comparator</span> <span class="o">is</span> <span class="kc">false</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>if the attribute has a unit</p></div></div><div class="code"><div class="wrapper">              <span class="nv">unit = </span><span class="nx">d</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">attributeName</span><span class="p">].</span><span class="nx">unit</span>
+              <span class="k">if</span> <span class="nx">unit</span><span class="o">?</span>
+                <span class="nv">unit = </span><span class="nx">unit</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">()</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>then remove it from the reference value and
 allow just "c" for "°C"</p></div></div><div class="code"><div class="wrapper">                <span class="nv">lastIndex = </span><span class="nx">referenceValue</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s">&#39;°c&#39;</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">).</span><span class="nx">lastIndexOf</span> <span class="nx">unit</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s">&#39;°c&#39;</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="nx">lastIndex</span> <span class="o">isnt</span> <span class="o">-</span><span class="mi">1</span>
                   <span class="nv">referenceValue = </span><span class="nx">referenceValue</span><span class="p">.</span><span class="nx">substring</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">lastIndex</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>If the attribute is numerical</p></div></div><div class="code"><div class="wrapper">              <span class="k">if</span> <span class="nx">d</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">attributeName</span><span class="p">].</span><span class="nx">type</span> <span class="o">is</span> <span class="nb">Number</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>then check the referenceValue</p></div></div><div class="code"><div class="wrapper">                <span class="k">if</span> <span class="nb">isNaN</span><span class="p">(</span><span class="nx">referenceValue</span><span class="p">)</span>
