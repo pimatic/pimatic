@@ -175,7 +175,21 @@ class RuleManager extends require('events').EventEmitter
       predicates = []
       tokens = []
       # For each token
-      for token in rule.orgCondition.split /(\sand\s|\sor\s|\)|\()/ 
+      #(\sand\s|\sor\s)(?=(?:[^"]*"[^"]*")*[^"]*$)
+      for token in rule.orgCondition.split /// 
+        (             # split at
+           \sand\s    # " and "
+         | \sor\s     # " or "
+         | \)         # ")"
+         | \(         # "("
+        ) 
+        (?=           # fowolled by
+          (?:
+            [^"]*     # a string not containing an quote
+            "[^"]*"   # a string in quotes
+          )*          # multiples times
+          [^"]*       # a string not containing quotes
+        $) /// 
         do (token) =>
           token = token.trim()
           # if its no predicate then push it into the token stream
@@ -549,10 +563,19 @@ class RuleManager extends require('events').EventEmitter
 
     # Split the actionString at "and" and search for an Action Handler in each partt.
     actionResults = []
-    for token in actionString.split /\s+and\s+/
+    for token in actionString.split /// 
+      \sand\s     # " and " 
+      (?=           # fowolled by
+        (?:
+          [^"]*     # a string not containing an quote
+          "[^"]*"   # a string in quotes
+        )*          # multiples times
+        [^"]*       # a string not containing quotes
+      $) /// 
       ahFound = false
       for aH in @actionHandlers
         unless ahFound
+          token = token.trim()
           try 
             # Check if the action handler can execute the action. If it can execute it then
             # it should do it and return a promise that get fulfilled with a description string.
