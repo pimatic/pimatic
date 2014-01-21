@@ -12,6 +12,8 @@ assert = require 'cassert'
 ###
 The Action Handler
 ----------------
+The base class for all Action Handler. If you want to provide actions in your plugin then 
+you should create a sub class that implements a `executeAction` function.
 ###
 class ActionHandler
 
@@ -19,7 +21,15 @@ class ActionHandler
   ###
   This function is executed by the rule system for every action on an rule. If the Action Handler
   can execute the Action it should return a promise that gets fulfilled with describing string,
-  that explains what was done. Take a look at the Log Action Handler for a simple example.
+  that explains what was done or would be done.
+
+  If the simulate is true Action Handler should not execute the action. It should just
+  return a promise fulfilled with a descrbing string like "would _..._".
+
+  If the Action Handler can't handle the action (the string is not in the right format) then it
+  should return `null`.
+
+  Take a look at the Log Action Handler for a simple example.
   ###
   executeAction: (actionString, simulate) =>
     throw new Error("should be implemented by a subclass")  
@@ -29,23 +39,36 @@ env = null
 ###
 The Log Action Handler
 -------------
+Provides log action, so that rules can use `log "some string"` in the actions part. It just prints
+the given string to the logger.
 ###
 class LogActionHandler extends ActionHandler
 
   constructor: (_env, @framework) ->
     env = _env
 
+  # ### executeAction()
+  ###
+  This function handles action in the form of `log "some string"`
+  ###
   executeAction: (actionString, simulate) =>
+    # If the action string matches the expected format
     regExpString = '^log\\s+"(.*)?"$'
     matches = actionString.match (new RegExp regExpString)
     if matches?
+      # extract the string to log.
       stringToLog = matches[1]
+      # If we should just simulate
       if simulate
-        return Q.fcall -> __("would log \"%s\"", stringToLog)
+        # just return a promise fulfilled with a description about what we would do.
+        return Q __("would log \"%s\"", stringToLog)
       else
-        return Q.fcall -> 
-          env.logger.info stringToLog
-          return null
+        # else log the string.
+        env.logger.info stringToLog
+        # We don't return a description in this case. Because it would be logged and we did logging
+        # already. We don't want it to be dublicated outputted.
+        #return Q __("logged \"%s\", stringToLog)
+        return Q null
 
 ###
 The Switch Action Handler
