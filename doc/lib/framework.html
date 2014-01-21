@@ -176,7 +176,7 @@
       <span class="nx">assert</span> <span class="nx">device</span><span class="p">.</span><span class="nx">_constructorCalled</span>
       <span class="k">if</span> <span class="nx">@devices</span><span class="p">[</span><span class="nx">device</span><span class="p">.</span><span class="nx">id</span><span class="p">]</span><span class="o">?</span>
         <span class="k">throw</span> <span class="k">new</span> <span class="nx">assert</span><span class="p">.</span><span class="nx">AssertionError</span><span class="p">(</span><span class="s">&quot;dublicate device id \&quot;</span><span class="si">#{</span><span class="nx">device</span><span class="p">.</span><span class="nx">id</span><span class="si">}</span><span class="s">\&quot;&quot;</span><span class="p">)</span>
-      <span class="k">unless</span> <span class="nx">device</span><span class="p">.</span><span class="nx">id</span><span class="p">.</span><span class="nx">mach</span> <span class="sr">/^[a-z0-9]+$/i</span>
+      <span class="k">unless</span> <span class="nx">device</span><span class="p">.</span><span class="nx">id</span><span class="p">.</span><span class="nx">match</span> <span class="sr">/^[a-z0-9\-_]+$/i</span>
         <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">warn</span> <span class="s">&quot;&quot;&quot;</span>
 <span class="s">          The id of </span><span class="si">#{</span><span class="nx">device</span><span class="p">.</span><span class="nx">id</span><span class="si">}</span><span class="s"> contains a non alphanumeric letter or symbol.</span>
 <span class="s">          This could lead to errors.</span>
