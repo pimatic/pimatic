@@ -17,7 +17,7 @@
     "plugins.md",
     "LICENSE"
   ],
-  "version": "0.5.2",
+  "version": "0.5.3",
   "homepage": "http://github.com/sweetpi/pimatic",
   "repository": {
     "type": "git",
@@ -29,7 +29,7 @@
   "scripts": {
     "test": "grunt test"
   },
-  "dependencies": {
+  "bundledDependencies": {
     "coffee-script": "1.6.*",
     "express": "3.0.*",
     "convict": "0.4.*",
