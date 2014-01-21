@@ -3,29 +3,38 @@
 <p>A action handler can execute action for the Rule System. For actions and rule explenations
 take a look at the <a href="rules.html">rules file</a>.</p></div></div><div class="code"><div class="wrapper"><span class="nv">__ = </span><span class="nx">require</span><span class="p">(</span><span class="s">&quot;i18n&quot;</span><span class="p">).</span><span class="nx">__</span>
 <span class="nv">Q = </span><span class="nx">require</span> <span class="s">&#39;q&#39;</span>
-<span class="nv">assert = </span><span class="nx">require</span> <span class="s">&#39;cassert&#39;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="the-action-handler">The Action Handler</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">ActionHandler</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h3 id="executeaction">executeAction()</h3>
+<span class="nv">assert = </span><span class="nx">require</span> <span class="s">&#39;cassert&#39;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="the-action-handler">The Action Handler</h2>
+
+<p>The base class for all Action Handler. If you want to provide actions in your plugin then 
+you should create a sub class that implements a <code>executeAction</code> function.</p></div></div><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">ActionHandler</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h3 id="executeaction">executeAction()</h3>
 
 <p>This function is executed by the rule system for every action on an rule. If the Action Handler
 can execute the Action it should return a promise that gets fulfilled with describing string,
-that explains what was done. Take a look at the Log Action Handler for a simple example.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">executeAction: </span><span class="nf">(actionString, simulate) =&gt;</span>
+that explains what was done or would be done.</p>
+
+<p>If the simulate is true Action Handler should not execute the action. It should just
+return a promise fulfilled with a descrbing string like "would <em>...</em>".</p>
+
+<p>If the Action Handler can't handle the action (the string is not in the right format) then it
+should return <code>null</code>.</p>
+
+<p>Take a look at the Log Action Handler for a simple example.</p></div></div><div class="code"><div class="wrapper">  <span class="nv">executeAction: </span><span class="nf">(actionString, simulate) =&gt;</span>
     <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s">&quot;should be implemented by a subclass&quot;</span><span class="p">)</span>  
 
-<span class="nv">env = </span><span class="kc">null</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="the-log-action-handler">The Log Action Handler</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">LogActionHandler</span> <span class="k">extends</span> <span class="nx">ActionHandler</span>
+<span class="nv">env = </span><span class="kc">null</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="the-log-action-handler">The Log Action Handler</h2>
+
+<p>Provides log action, so that rules can use <code>log "some string"</code> in the actions part. It just prints
+the given string to the logger.</p></div></div><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">LogActionHandler</span> <span class="k">extends</span> <span class="nx">ActionHandler</span>
 
   <span class="nv">constructor: </span><span class="nf">(_env, @framework) -&gt;</span>
-    <span class="nv">env = </span><span class="nx">_env</span>
+    <span class="nv">env = </span><span class="nx">_env</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h3 id="executeaction">executeAction()</h3>
 
-  <span class="nv">executeAction: </span><span class="nf">(actionString, simulate) =&gt;</span>
-    <span class="nv">regExpString = </span><span class="s">&#39;^log\\s+&quot;(.*)?&quot;$&#39;</span>
+<p>This function handles action in the form of <code>log "some string"</code></p></div></div><div class="code"><div class="wrapper">  <span class="nv">executeAction: </span><span class="nf">(actionString, simulate) =&gt;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>If the action string matches the expected format</p></div></div><div class="code"><div class="wrapper">    <span class="nv">regExpString = </span><span class="s">&#39;^log\\s+&quot;(.*)?&quot;$&#39;</span>
     <span class="nv">matches = </span><span class="nx">actionString</span><span class="p">.</span><span class="nx">match</span> <span class="p">(</span><span class="k">new</span> <span class="nb">RegExp</span> <span class="nx">regExpString</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nx">matches</span><span class="o">?</span>
-      <span class="nv">stringToLog = </span><span class="nx">matches</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-      <span class="k">if</span> <span class="nx">simulate</span>
-        <span class="k">return</span> <span class="nx">Q</span><span class="p">.</span><span class="nx">fcall</span> <span class="nf">-&gt;</span> <span class="nx">__</span><span class="p">(</span><span class="s">&quot;would log \&quot;%s\&quot;&quot;</span><span class="p">,</span> <span class="nx">stringToLog</span><span class="p">)</span>
-      <span class="k">else</span>
-        <span class="k">return</span> <span class="nx">Q</span><span class="p">.</span><span class="nx">fcall</span> <span class="nf">-&gt;</span> 
-          <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="nx">stringToLog</span>
-          <span class="k">return</span> <span class="kc">null</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="the-switch-action-handler">The Switch Action Handler</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">SwitchActionHandler</span> <span class="k">extends</span> <span class="nx">ActionHandler</span>
+    <span class="k">if</span> <span class="nx">matches</span><span class="o">?</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>extract the string to log.</p></div></div><div class="code"><div class="wrapper">      <span class="nv">stringToLog = </span><span class="nx">matches</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>If we should just simulate</p></div></div><div class="code"><div class="wrapper">      <span class="k">if</span> <span class="nx">simulate</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>just return a promise fulfilled with a description about what we would do.</p></div></div><div class="code"><div class="wrapper">        <span class="k">return</span> <span class="nx">Q</span> <span class="nx">__</span><span class="p">(</span><span class="s">&quot;would log \&quot;%s\&quot;&quot;</span><span class="p">,</span> <span class="nx">stringToLog</span><span class="p">)</span>
+      <span class="k">else</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>else log the string.</p></div></div><div class="code"><div class="wrapper">        <span class="nx">env</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">info</span> <span class="nx">stringToLog</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>We don't return a description in this case. Because it would be logged and we did logging
+already. We don't want it to be dublicated outputted.</p></div></div><div class="code"><div class="wrapper">        <span class="c1">#return Q __(&quot;logged \&quot;%s\&quot;, stringToLog)</span>
+        <span class="k">return</span> <span class="nx">Q</span> <span class="kc">null</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="the-switch-action-handler">The Switch Action Handler</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper"><span class="k">class</span> <span class="nx">SwitchActionHandler</span> <span class="k">extends</span> <span class="nx">ActionHandler</span>
 
   <span class="nv">constructor: </span><span class="nf">(_env, @framework) -&gt;</span>
     <span class="nv">env = </span><span class="nx">_env</span>

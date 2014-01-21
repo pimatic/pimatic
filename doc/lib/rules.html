@@ -145,7 +145,21 @@ For example: </p>
 <p>We do this because we want o parse the condition with <a href="https://github.com/paulmoore/BET">bet</a> 
 later and bet can only parse mathematical functions.</p></div></div><div class="code"><div class="wrapper"> 
       <span class="nv">predicates = </span><span class="p">[]</span>
-      <span class="nv">tokens = </span><span class="p">[]</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>For each token</p></div></div><div class="code"><div class="wrapper">      <span class="k">for</span> <span class="nx">token</span> <span class="k">in</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">orgCondition</span><span class="p">.</span><span class="nx">split</span> <span class="sr">/(\sand\s|\sor\s|\)|\()/</span> 
+      <span class="nv">tokens = </span><span class="p">[]</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>For each token</p></div></div><div class="code"><div class="wrapper">      <span class="c1">#(\sand\s|\sor\s)(?=(?:[^&quot;]*&quot;[^&quot;]*&quot;)*[^&quot;]*$)</span>
+      <span class="k">for</span> <span class="nx">token</span> <span class="k">in</span> <span class="nx">rule</span><span class="p">.</span><span class="nx">orgCondition</span><span class="p">.</span><span class="nx">split</span> <span class="sr">/// </span>
+<span class="sr">        (             # split at</span>
+<span class="sr">           \sand\s    # &quot; and &quot;</span>
+<span class="sr">         | \sor\s     # &quot; or &quot;</span>
+<span class="sr">         | \)         # &quot;)&quot;</span>
+<span class="sr">         | \(         # &quot;(&quot;</span>
+<span class="sr">        ) </span>
+<span class="sr">        (?=           # fowolled by</span>
+<span class="sr">          (?:</span>
+<span class="sr">            [^&quot;]*     # a string not containing an quote</span>
+<span class="sr">            &quot;[^&quot;]*&quot;   # a string in quotes</span>
+<span class="sr">          )*          # multiples times</span>
+<span class="sr">          [^&quot;]*       # a string not containing quotes</span>
+<span class="sr">        $) ///</span> 
         <span class="nx">do</span> <span class="nf">(token) =&gt;</span>
           <span class="nv">token = </span><span class="nx">token</span><span class="p">.</span><span class="nx">trim</span><span class="p">()</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>if its no predicate then push it into the token stream</p></div></div><div class="code"><div class="wrapper">          <span class="k">if</span> <span class="nx">token</span> <span class="k">in</span> <span class="p">[</span><span class="s">&quot;and&quot;</span><span class="p">,</span> <span class="s">&quot;or&quot;</span><span class="p">,</span> <span class="s">&quot;)&quot;</span><span class="p">,</span> <span class="s">&quot;(&quot;</span><span class="p">]</span>
             <span class="nx">tokens</span><span class="p">.</span><span class="nx">push</span> <span class="nx">token</span>
@@ -344,10 +358,19 @@ hold (its just one time)</p></div></div><div class="code"><div class="wrapper"> 
 <p>Executes the actions in the given actionString</p></div></div><div class="code"><div class="wrapper">  <span class="nv">executeAction: </span><span class="nf">(actionString, simulate) -&gt;</span>
     <span class="nx">assert</span> <span class="nx">actionString</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">actionString</span> <span class="o">is</span> <span class="s">&quot;string&quot;</span> 
     <span class="nx">assert</span> <span class="nx">simulate</span><span class="o">?</span> <span class="o">and</span> <span class="k">typeof</span> <span class="nx">simulate</span> <span class="o">is</span> <span class="s">&quot;boolean&quot;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Split the actionString at "and" and search for an Action Handler in each partt.</p></div></div><div class="code"><div class="wrapper">    <span class="nv">actionResults = </span><span class="p">[]</span>
-    <span class="k">for</span> <span class="nx">token</span> <span class="k">in</span> <span class="nx">actionString</span><span class="p">.</span><span class="nx">split</span> <span class="sr">/\s+and\s+/</span>
+    <span class="k">for</span> <span class="nx">token</span> <span class="k">in</span> <span class="nx">actionString</span><span class="p">.</span><span class="nx">split</span> <span class="sr">/// </span>
+<span class="sr">      \sand\s     # &quot; and &quot; </span>
+<span class="sr">      (?=           # fowolled by</span>
+<span class="sr">        (?:</span>
+<span class="sr">          [^&quot;]*     # a string not containing an quote</span>
+<span class="sr">          &quot;[^&quot;]*&quot;   # a string in quotes</span>
+<span class="sr">        )*          # multiples times</span>
+<span class="sr">        [^&quot;]*       # a string not containing quotes</span>
+<span class="sr">      $) ///</span> 
       <span class="nv">ahFound = </span><span class="kc">false</span>
       <span class="k">for</span> <span class="nx">aH</span> <span class="k">in</span> <span class="nx">@actionHandlers</span>
         <span class="k">unless</span> <span class="nx">ahFound</span>
+          <span class="nv">token = </span><span class="nx">token</span><span class="p">.</span><span class="nx">trim</span><span class="p">()</span>
           <span class="k">try</span> </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Check if the action handler can execute the action. If it can execute it then
 it should do it and return a promise that get fulfilled with a description string.
 If the action handler can't handle the action it should return null.</p></div></div><div class="code"><div class="wrapper">            <span class="nv">promise = </span><span class="nx">aH</span><span class="p">.</span><span class="nx">executeAction</span> <span class="nx">token</span><span class="p">,</span> <span class="nx">simulate</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>If the action was handled</p></div></div><div class="code"><div class="wrapper">            <span class="k">if</span> <span class="nx">Q</span><span class="p">.</span><span class="nx">isPromise</span> <span class="nx">promise</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>push it to the results and continue with the next token.</p></div></div><div class="code"><div class="wrapper">              <span class="nx">actionResults</span><span class="p">.</span><span class="nx">push</span> <span class="nx">promise</span>
