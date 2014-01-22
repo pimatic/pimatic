@@ -20,8 +20,8 @@ __The condition and predicates__
 
 The condition of a rule consists of one or more predicates. The predicates can be combined with
 "and", "or" and can be grouped by parentheses. A predicate is either true or false at a given time. 
-There are special predicates that represnted events. These predicate are just true in the moment a 
-special event happen.
+There are special predicates, called event-predicates, that represent events. These predicate are 
+just true in the moment a special event happen.
 
 Each predicate is handled by an Predicate Provider. Take a look at the 
 [predicates file](predicates.html) for more details.

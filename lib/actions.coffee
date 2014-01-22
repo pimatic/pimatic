@@ -156,6 +156,7 @@ class SwitchActionHandler extends ActionHandler
                 )
     return result
 
+# Export the classes so that they can be accessed by the framewor-
 module.exports.ActionHandler = ActionHandler
 module.exports.SwitchActionHandler = SwitchActionHandler
 module.exports.LogActionHandler = LogActionHandler

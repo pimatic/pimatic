@@ -165,6 +165,17 @@ describe "SwitchPredicateProvider", ->
       assert info.device.id is "test"
       assert info.state is off
 
+    it 'should parse "test is switched on"', ->
+      info = provider._parsePredicate "test is switched on"
+      assert info?
+      assert info.device.id is "test"
+      assert info.state is on
+
+    it 'should parse "test is switched off"', ->
+      info = provider._parsePredicate "test is switched off"
+      assert info?
+      assert info.device.id is "test"
+      assert info.state is off
 
 
   describe '#notifyWhen()', ->
