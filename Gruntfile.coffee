@@ -15,13 +15,22 @@ module.exports = (grunt) ->
   ]
 
   # some realy dirty tricks:
-  try
-    usedGroc = require('./node_modules/grunt-groc/node_modules/groc')
-    ownGroc = require('./node_modules/groc')
-    for name, prop of ownGroc
-      usedGroc[name] = prop
-  catch e
-    grunt.log.writeln "Could not use own groc version: #{e.message}." 
+  orgGrocPath = require("fs").existsSync './node_modules/grunt-groc/node_modules/groc'
+  ownGrocPath = require("fs").existsSync './node_modules/groc'
+
+  if orgGrocPath
+    orgGroc = require './node_modules/grunt-groc/node_modules/groc'
+    if ownGrocPath
+      # Use our own groc implementation
+      ownGroc = require './node_modules/groc'
+      for name, prop of ownGroc
+        orgGroc[name] = prop
+    else
+      grunt.log.writeln "Could not use own groc version. Not found!" 
+  else
+    unless ownGrocPath
+      grunt.log.writeln "Could not use own groc version. Not found!" 
+
 
   links =
     'pimatic framework': '.'
