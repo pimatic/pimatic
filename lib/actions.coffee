@@ -97,25 +97,25 @@ class SwitchActionHandler extends ActionHandler
     state = null
     matches = actionString.match ///
       ^(?:turn|switch)? # Must begin with "turn" or "switch"
-      (?:\s+the\s+|\s+)? #followed by a " the " or a space
+      \s+ #followed by whitespace
       (.+?) #followed by the device name or id,
-      \s+ # a space
-      (on|off)$ #and ends with "on" or "off"
+      \s+ # whitespace
+      (on|off)$ #and ends with "on" or "off".
     ///
     if matches?
-      deviceName = matches[1].trim()
+      deviceName = matches[1]
       state = matches[2]
     else 
       # Try the other way around:
       matches = actionString.match ///
         ^(?:turn|switch) # Must begin with "turn" or "switch"
-        \s+ # folowed by a space
+        \s+ # followed by whitespace
         (on|off) #and "on" or "off"
-        (?:\s+the\s+|\s+) # a " the " or space
-        ?(.+?)$ # and a device name
+        \s+ # following whitespace
+        ?(.+?)$ # and end with a device name.
         ///
       if matches?
-        deviceName = matches[2].trim()
+        deviceName = matches[2]
         state = matches[1]
     # If we had a match
     if deviceName? and state?

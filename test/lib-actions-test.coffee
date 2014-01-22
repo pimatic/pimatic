@@ -47,8 +47,6 @@ describe "SwitchActionHandler", ->
       'turn dummy switch'
       'switch the dummy switch'
       'switch dummy switch'
-      'dummy switch'
-      'dummy-switch-id'
     ]
 
     for rulePrefix in validRulePrefixes
