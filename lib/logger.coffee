@@ -1,3 +1,9 @@
+###
+Logger
+======
+
+
+###
 winston = require 'winston'
 events = require("events")
 util = require("util")

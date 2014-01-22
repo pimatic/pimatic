@@ -1,12 +1,19 @@
-# Povides the `Actuator` class and some basic common subclasses for the Backend modules. 
-# 
+###
+Devices
+=======
+
+
+###
+
 cassert = require 'cassert'
 assert = require 'assert'
 Q = require 'q'
 _ = require 'lodash'
 
-# #Device class
-# The Deive class is the common Superclass for all Devices like Actuators or Sensors
+##A Device
+###
+The Device class is the common superclass for all devices like actuators or sensors. 
+###
 class Device extends require('events').EventEmitter
   # A unic id defined by the config or by the plugin that provies the device.
   id: null

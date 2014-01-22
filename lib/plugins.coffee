@@ -1,3 +1,9 @@
+###
+Plugin Manager
+=======
+
+
+###
 npm = require 'npm'
 fs = require 'fs'
 path = require 'path'

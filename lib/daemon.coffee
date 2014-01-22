@@ -1,6 +1,9 @@
 ###
+#Daemonizer
 
-Orginal from: https://github.com/frodwith/node-init/blob/master/init.coffee
+Orginal from [node-init](https://github.com/frodwith/node-init/blob/master/init.coffee)
+modified by Oliver Schneider.
+
 Copyright (c) 2011 Paul Driver
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

@@ -1,6 +1,6 @@
 ###
-The Rule System
-===============
+Rule System
+===========
 
 This file handles the parsing and executing of rules. 
 
