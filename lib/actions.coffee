@@ -87,46 +87,65 @@ class SwitchActionHandler extends ActionHandler
   constructor: (_env, @framework) ->
     env = _env
 
-
+  # ### executeAction()
+  ###
+  Handles the above actions.
+  ###
   executeAction: (actionString, simulate) =>
     actionString = actionString.toLowerCase()
     self = this
+    # The result the function will return:
     result = null
-
+    # The potential device name:
     deviceName = null
+    # the matched state: "on" or "off".
     state = null
+    # Try to match the input string with:
     matches = actionString.match ///
       ^(?:turn|switch)? # Must begin with "turn" or "switch"
       \s+ #followed by whitespace
+      # An optional "the " is handled in device.matchesIdOrName() we use later.
       (.+?) #followed by the device name or id,
       \s+ # whitespace
       (on|off)$ #and ends with "on" or "off".
     ///
+    # If we have a match
     if matches?
+      # then extract deviceName and state.
       deviceName = matches[1]
       state = matches[2]
     else 
-      # Try the other way around:
+      # Else try the other way around:
       matches = actionString.match ///
         ^(?:turn|switch) # Must begin with "turn" or "switch"
         \s+ # followed by whitespace
+        # An optional "the " is handled in device.matchesIdOrName() we use later.
         (on|off) #and "on" or "off"
         \s+ # following whitespace
         ?(.+?)$ # and end with a device name.
         ///
+      # If we have a match this time
       if matches?
+        # then extract deviceName and state.
         deviceName = matches[2]
         state = matches[1]
-    # If we had a match
+    # If we had a one match of the two choice above
     if deviceName? and state?
+      # then convert the state string to an boolean
       state = (state is "on")
+      # and to the corresponding functions to execute.
       actionName = (if state then "turnOn" else "turnOff")
 
+      # For all registed devices:
       for id, device of self.framework.devices
         do (id, device) =>
+          # if we have not yet found a device
           unless result?
+            # check if the device name of the current device matches 
             if device.matchesIdOrName deviceName
+              # and the device has the "turnOn" or "turnOff" action
               if device.hasAction actionName
+                # then simulate or do the action.
                 result = (
                   if simulate
                     if state then Q __("would turn %s on", device.name)
