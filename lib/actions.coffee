@@ -23,7 +23,7 @@ class ActionHandler
   can execute the Action it should return a promise that gets fulfilled with describing string,
   that explains what was done or would be done.
 
-  If the simulate is true Action Handler should not execute the action. It should just
+  If `simulate` is `true` the Action Handler should not execute the action. It should just
   return a promise fulfilled with a descrbing string like "would _..._".
 
   If the Action Handler can't handle the action (the string is not in the right format) then it
@@ -73,20 +73,20 @@ class LogActionHandler extends ActionHandler
 ###
 The Switch Action Handler
 -------------
+Provides the ability to switch devices on or off. Currently it handles the following actions:
+
+* switch [the] _device_ on|off
+* turn [the] _device_ on|off
+* switch on|off [the] _device_ 
+* turn on|off [the] _device_ 
+
+where _device_ is the name or id of a device and "the" is optional.
 ###
 class SwitchActionHandler extends ActionHandler
 
   constructor: (_env, @framework) ->
     env = _env
 
-  runOnDeviceByNameOrId: (deviceName, doCallback) ->
-    self = this
-    assert typeof self.framework.devices is 'object'
-    for id, device of self.framework.devices
-      if device.matchesIdOrName deviceName
-        result = doCallback device
-        #"break" when result was given by callback 
-        if result? then return result
 
   executeAction: (actionString, simulate) =>
     actionString = actionString.toLowerCase()
@@ -95,15 +95,25 @@ class SwitchActionHandler extends ActionHandler
 
     deviceName = null
     state = null
-    regExpString = '^(?:turn|switch)?(?:\\s+the|\\s+)?(.+?)(on|off)$'
-    matches = actionString.match (new RegExp regExpString)
+    matches = actionString.match ///
+      ^(?:turn|switch)? # Must begin with "turn" or "switch"
+      (?:\s+the\s+|\s+)? #followed by a " the " or a space
+      (.+?) #followed by the device name or id,
+      \s+ # a space
+      (on|off)$ #and ends with "on" or "off"
+    ///
     if matches?
       deviceName = matches[1].trim()
       state = matches[2]
     else 
       # Try the other way around:
-      regExpString = '^(?:turn|switch)\\s+(on|off)(?:\\s+the|\\s+)?(.+?)$'
-      matches = actionString.match (new RegExp regExpString)
+      matches = actionString.match ///
+        ^(?:turn|switch) # Must begin with "turn" or "switch"
+        \s+ # folowed by a space
+        (on|off) #and "on" or "off"
+        (?:\s+the\s+|\s+) # a " the " or space
+        ?(.+?)$ # and a device name
+        ///
       if matches?
         deviceName = matches[2].trim()
         state = matches[1]
@@ -111,23 +121,20 @@ class SwitchActionHandler extends ActionHandler
     if deviceName? and state?
       state = (state is "on")
       actionName = (if state then "turnOn" else "turnOff")
-      result = self.runOnDeviceByNameOrId deviceName, (device)->
-        if device.hasAction actionName
-          if simulate
-            if state
-              return Q.fcall -> __("would turn %s on", device.name)
-            else 
-              return Q.fcall -> __("would turn %s off", device.name)
-          else
-            if state
-              return device.turnOn().then( ->
-                __("turned %s on", device.name)
-              )
-            else 
-              return device.turnOff().then( ->
-                __("turned %s off", device.name)
-              )
-        else return null
+
+      for id, device of self.framework.devices
+        do (id, device) =>
+          unless result?
+            if device.matchesIdOrName deviceName
+              if device.hasAction actionName
+                result = (
+                  if simulate
+                    if state then Q __("would turn %s on", device.name)
+                    else Q __("would turn %s off", device.name)
+                  else
+                    if state then device.turnOn().then( => __("turned %s on", device.name) )
+                    else device.turnOff().then( => __("turned %s off", device.name) )
+                )
     return result
 
 module.exports.ActionHandler = ActionHandler
