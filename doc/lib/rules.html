@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><title>lib/rules</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="lib/rules"><meta name="groc-project-path" content="lib/rules.coffee"><meta name="groc-github-url" content="https://github.com/sweetpi/pimatic"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><link rel="stylesheet" type="text/css" media="all" href="../assets/customStyle.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/sweetpi/pimatic/blob/master/lib/rules.coffee">lib/rules.coffee</a></div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><h1 id="the-rule-system">The Rule System</h1>
+<!DOCTYPE html><html lang="en"><head><title>lib/rules</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../"><meta name="groc-document-path" content="lib/rules"><meta name="groc-project-path" content="lib/rules.coffee"><meta name="groc-github-url" content="https://github.com/sweetpi/pimatic"><link rel="stylesheet" type="text/css" media="all" href="../assets/style.css"><link rel="stylesheet" type="text/css" media="all" href="../assets/customStyle.css"><script type="text/javascript" src="../assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/sweetpi/pimatic/blob/master/lib/rules.coffee">lib/rules.coffee</a></div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><h1 id="rule-system">Rule System</h1>
 
 <p>This file handles the parsing and executing of rules. </p>
 
@@ -20,8 +20,8 @@ the condition of the rule and the <em>that</em> the actions of the rule.</p>
 
 <p>The condition of a rule consists of one or more predicates. The predicates can be combined with
 "and", "or" and can be grouped by parentheses. A predicate is either true or false at a given time. 
-There are special predicates that represnted events. These predicate are just true in the moment a 
-special event happen.</p>
+There are special predicates, called event-predicates, that represent events. These predicate are 
+just true in the moment a special event happen.</p>
 
 <p>Each predicate is handled by an Predicate Provider. Take a look at the 
 <a href="predicates.html">predicates file</a> for more details.</p>

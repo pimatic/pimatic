@@ -357,7 +357,18 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                     "title": "The Switch Action Handler",
                     "slug": "the-switch-action-handler"
                   },
-                  "depth": 2
+                  "depth": 2,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "executeAction()",
+                        "slug": "executeaction"
+                      },
+                      "depth": 3
+                    }
+                  ]
                 }
               ]
             },
@@ -410,7 +421,18 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                 "title": "The Switch Action Handler",
                 "slug": "the-switch-action-handler"
               },
-              "depth": 2
+              "depth": 2,
+              "children": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "executeAction()",
+                    "slug": "executeaction"
+                  },
+                  "depth": 3
+                }
+              ]
             }
           ]
         }, {
@@ -430,7 +452,17 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "projectPath": "lib/daemon.coffee",
             "targetPath": "lib/daemon",
             "pageTitle": "lib/daemon",
-            "title": "daemon"
+            "firstHeader": {
+              "type": "heading",
+              "data": {
+                "level": 1,
+                "title": "Daemonizer",
+                "slug": "daemonizer",
+                "isFileHeader": true
+              },
+              "depth": 1
+            },
+            "title": "Daemonizer"
           },
           "depth": 2,
           "outline": []
@@ -451,19 +483,21 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "projectPath": "lib/devices.coffee",
             "targetPath": "lib/devices",
             "pageTitle": "lib/devices",
-            "title": "devices"
+            "firstHeader": {
+              "type": "heading",
+              "data": {
+                "level": 1,
+                "title": "Devices",
+                "slug": "devices",
+                "isFileHeader": true
+              },
+              "depth": 1
+            },
+            "title": "Devices"
           },
           "depth": 2,
           "outline": [
             {
-              "type": "heading",
-              "data": {
-                "level": 1,
-                "title": "Device class",
-                "slug": "device-class"
-              },
-              "depth": 1
-            }, {
               "type": "heading",
               "data": {
                 "level": 1,
@@ -490,7 +524,36 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "projectPath": "lib/framework.coffee",
             "targetPath": "lib/framework",
             "pageTitle": "lib/framework",
-            "title": "framework"
+            "firstHeader": {
+              "type": "heading",
+              "data": {
+                "level": 1,
+                "title": "Framework",
+                "slug": "framework",
+                "isFileHeader": true
+              },
+              "depth": 1,
+              "children": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Setup express",
+                    "slug": "setup-express"
+                  },
+                  "depth": 2
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "Setup authentication",
+                    "slug": "setup-authentication"
+                  },
+                  "depth": 2
+                }
+              ]
+            },
+            "title": "Framework"
           },
           "depth": 2,
           "outline": [
@@ -529,7 +592,17 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "projectPath": "lib/logger.coffee",
             "targetPath": "lib/logger",
             "pageTitle": "lib/logger",
-            "title": "logger"
+            "firstHeader": {
+              "type": "heading",
+              "data": {
+                "level": 1,
+                "title": "Logger",
+                "slug": "logger",
+                "isFileHeader": true
+              },
+              "depth": 1
+            },
+            "title": "Logger"
           },
           "depth": 2,
           "outline": []
@@ -550,7 +623,17 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "projectPath": "lib/milliseconds.coffee",
             "targetPath": "lib/milliseconds",
             "pageTitle": "lib/milliseconds",
-            "title": "milliseconds"
+            "firstHeader": {
+              "type": "heading",
+              "data": {
+                "level": 1,
+                "title": "Milliseconds Helper",
+                "slug": "milliseconds-helper",
+                "isFileHeader": true
+              },
+              "depth": 1
+            },
+            "title": "Milliseconds Helper"
           },
           "depth": 2,
           "outline": []
@@ -571,7 +654,17 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "projectPath": "lib/plugins.coffee",
             "targetPath": "lib/plugins",
             "pageTitle": "lib/plugins",
-            "title": "plugins"
+            "firstHeader": {
+              "type": "heading",
+              "data": {
+                "level": 1,
+                "title": "Plugin Manager",
+                "slug": "plugin-manager",
+                "isFileHeader": true
+              },
+              "depth": 1
+            },
+            "title": "Plugin Manager"
           },
           "depth": 2,
           "outline": []
@@ -652,15 +745,50 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                     "title": "The Device-Event Predicate Provider",
                     "slug": "the-device-event-predicate-provider"
                   },
-                  "depth": 2
-                }, {
-                  "type": "heading",
-                  "data": {
-                    "level": 2,
-                    "title": "The Presence Predicate Provider",
-                    "slug": "the-presence-predicate-provider"
-                  },
-                  "depth": 2
+                  "depth": 2,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "canDecide()",
+                        "slug": "candecide"
+                      },
+                      "depth": 3
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "isTrue()",
+                        "slug": "istrue"
+                      },
+                      "depth": 3
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "notifyWhen()",
+                        "slug": "notifywhen"
+                      },
+                      "depth": 3
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "cancelNotify()",
+                        "slug": "cancelnotify"
+                      },
+                      "depth": 3
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "_parsePredicate()",
+                        "slug": "-parsepredicate"
+                      },
+                      "depth": 3
+                    }
+                  ]
                 }, {
                   "type": "heading",
                   "data": {
@@ -668,7 +796,37 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                     "title": "The Switch Predicate Provider",
                     "slug": "the-switch-predicate-provider"
                   },
-                  "depth": 2
+                  "depth": 2,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "_parsePredicate()",
+                        "slug": "-parsepredicate"
+                      },
+                      "depth": 3
+                    }
+                  ]
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 2,
+                    "title": "The Presence Predicate Provider",
+                    "slug": "the-presence-predicate-provider"
+                  },
+                  "depth": 2,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "_parsePredicate()",
+                        "slug": "-parsepredicate"
+                      },
+                      "depth": 3
+                    }
+                  ]
                 }, {
                   "type": "heading",
                   "data": {
@@ -676,7 +834,26 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                     "title": "The Device-Attribute Predicate Provider",
                     "slug": "the-device-attribute-predicate-provider"
                   },
-                  "depth": 2
+                  "depth": 2,
+                  "children": [
+                    {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "_compareValues()",
+                        "slug": "-comparevalues"
+                      },
+                      "depth": 3
+                    }, {
+                      "type": "heading",
+                      "data": {
+                        "level": 3,
+                        "title": "_parsePredicate()",
+                        "slug": "-parsepredicate"
+                      },
+                      "depth": 3
+                    }
+                  ]
                 }
               ]
             },
@@ -734,15 +911,50 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                 "title": "The Device-Event Predicate Provider",
                 "slug": "the-device-event-predicate-provider"
               },
-              "depth": 2
-            }, {
-              "type": "heading",
-              "data": {
-                "level": 2,
-                "title": "The Presence Predicate Provider",
-                "slug": "the-presence-predicate-provider"
-              },
-              "depth": 2
+              "depth": 2,
+              "children": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "canDecide()",
+                    "slug": "candecide"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "isTrue()",
+                    "slug": "istrue"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "notifyWhen()",
+                    "slug": "notifywhen"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "cancelNotify()",
+                    "slug": "cancelnotify"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "_parsePredicate()",
+                    "slug": "-parsepredicate"
+                  },
+                  "depth": 3
+                }
+              ]
             }, {
               "type": "heading",
               "data": {
@@ -750,7 +962,37 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                 "title": "The Switch Predicate Provider",
                 "slug": "the-switch-predicate-provider"
               },
-              "depth": 2
+              "depth": 2,
+              "children": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "_parsePredicate()",
+                    "slug": "-parsepredicate"
+                  },
+                  "depth": 3
+                }
+              ]
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "The Presence Predicate Provider",
+                "slug": "the-presence-predicate-provider"
+              },
+              "depth": 2,
+              "children": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "_parsePredicate()",
+                    "slug": "-parsepredicate"
+                  },
+                  "depth": 3
+                }
+              ]
             }, {
               "type": "heading",
               "data": {
@@ -758,7 +1000,26 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                 "title": "The Device-Attribute Predicate Provider",
                 "slug": "the-device-attribute-predicate-provider"
               },
-              "depth": 2
+              "depth": 2,
+              "children": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "_compareValues()",
+                    "slug": "-comparevalues"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "_parsePredicate()",
+                    "slug": "-parsepredicate"
+                  },
+                  "depth": 3
+                }
+              ]
             }
           ]
         }, {
@@ -782,8 +1043,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
               "type": "heading",
               "data": {
                 "level": 1,
-                "title": "The Rule System",
-                "slug": "the-rule-system",
+                "title": "Rule System",
+                "slug": "rule-system",
                 "isFileHeader": true
               },
               "depth": 1,
@@ -890,7 +1151,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                 }
               ]
             },
-            "title": "The Rule System"
+            "title": "Rule System"
           },
           "depth": 2,
           "outline": [
