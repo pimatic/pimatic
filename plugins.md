@@ -13,7 +13,6 @@ Available Plugins:
     * [filebrowser plugin](http://www.pimatic.org/docs/pimatic-filebrowser/)
     * [redirect plugin](http://www.pimatic.org/docs/pimatic-redirect/)
     * [rest-api plugin](http://www.pimatic.org/docs/pimatic-rest-api/)
-    * [speak-api plugin](http://www.pimatic.org/docs/pimatic-speak-api/)  
   * rule predicates:
     * [cron plugin](http://www.pimatic.org/docs/pimatic-cron/)
     * [ping plugin](http://www.pimatic.org/docs/pimatic-ping/)
