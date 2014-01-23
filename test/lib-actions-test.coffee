@@ -97,13 +97,7 @@ describe "LogActionHandler", ->
 
     it 'should execute: log "a test message"', (finish)->
 
-      logCalled = false
-      envDummy.logger.info = (message) =>
-        logCalled = true
-        assert message is 'a test message'
-
       logActionHandler.executeAction('log "a test message"', false).then( (message) ->
-        assert message is null
-        assert logCalled
+        assert message is "a test message"
         finish()
       ).done()

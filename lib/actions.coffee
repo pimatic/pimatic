@@ -63,12 +63,11 @@ class LogActionHandler extends ActionHandler
         # just return a promise fulfilled with a description about what we would do.
         return Q __("would log \"%s\"", stringToLog)
       else
-        # else log the string.
-        env.logger.info stringToLog
-        # We don't return a description in this case. Because it would be logged and we did logging
-        # already. We don't want it to be dublicated outputted.
-        #return Q __("logged \"%s\", stringToLog)
-        return Q null
+        # else we should log the string.
+        # But we don't do this because the framework logs the description anyway. So we would 
+        # doubly log it.
+        #env.logger.info stringToLog
+        return Q(stringToLog)
 
 ###
 The Switch Action Handler
