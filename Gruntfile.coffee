@@ -81,12 +81,12 @@ module.exports = (grunt) ->
   for plugin in ["pimatic"].concat plugins 
     ftpTasks[plugin] =
       auth:
-        host: "sweetpi.de"
+        host: "pimatic.org"
         port: 21
-      authKey: 'sweetpi.de'
+      authKey: 'pimatic.org'
       src: path.resolve __dirname, '..', plugin, "doc"
-      dest: (if plugin is "pimatic" then "/sweetpi/pimatic/docs"
-      else "/sweetpi/pimatic/docs/#{plugin}")
+      dest: (if plugin is "pimatic" then "/pimatic/docs"
+      else "/pimatic/docs/#{plugin}")
 
   # package.json files of plugins
   pluginPackageJson = ("../#{plugin}/package.json" for plugin in plugins)
