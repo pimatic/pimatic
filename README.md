@@ -8,7 +8,7 @@ pimatic
 pimatic is a home automation framework that runs on [node.js](http://nodejs.org). It provides a 
 common extensible platform for home control and automation tasks.  
 
-It defines several shemata for different home devices and sensors, so that all devices can be 
+It defines several schemata for different home devices and sensors, so that all devices can be 
 controled uniform and are presented in a common interface.
 
 Automation tasks can be defined by rules in the form of "if this then that", where the "this" and 
@@ -21,15 +21,15 @@ rule definition. The web interface is built using [express](http://expressjs.com
 
 Screenshots
 -----------
-[![Screenshot 1][screen1_thumb]](http://www.sweetpi.de/pimatic/screens/screen1.png) 
-[![Screenshot 2][screen2_thumb]](http://www.sweetpi.de/pimatic/screens/screen2.png) 
-[![Screenshot 3][screen3_thumb]](http://www.sweetpi.de/pimatic/screens/screen3.png) 
-[![Screenshot 4][screen4_thumb]](http://www.sweetpi.de/pimatic/screens/screen4.png)
+[![Screenshot 1][screen1_thumb]](http://www.pimatic.org/screens/screen1.png) 
+[![Screenshot 2][screen2_thumb]](http://www.pimatic.org/screens/screen2.png) 
+[![Screenshot 3][screen3_thumb]](http://www.pimatic.org/screens/screen3.png) 
+[![Screenshot 4][screen4_thumb]](http://www.pimatic.org/screens/screen4.png)
 
-[screen1_thumb]: http://www.sweetpi.de/pimatic/screens/screen1_thumb.png
-[screen2_thumb]: http://www.sweetpi.de/pimatic/screens/screen2_thumb.png
-[screen3_thumb]: http://www.sweetpi.de/pimatic/screens/screen3_thumb.png
-[screen4_thumb]: http://www.sweetpi.de/pimatic/screens/screen4_thumb.png
+[screen1_thumb]: http://www.pimatic.org/screens/screen1_thumb.png
+[screen2_thumb]: http://www.pimatic.org/screens/screen2_thumb.png
+[screen3_thumb]: http://www.pimatic.org/screens/screen3_thumb.png
+[screen4_thumb]: http://www.pimatic.org/screens/screen4_thumb.png
 
 
 Installation
@@ -64,7 +64,7 @@ The `"settings"`-section contains the configuration for the http- and https-serv
 to set `"username"` and `"password"` for the authentication or disable it. In the default config 
 just the http-server is enabled and configurated to run on port 80.
 
-See the [config-shema](http://sweetpi.de/pimatic/docs/config-shema.html) for more details and
+See the [config-shema](http://www.pimatic.org/docs/config-shema.html) for more details and
 all configuration options.
 
 ### The "plugins"-section
@@ -80,19 +80,19 @@ installed in the `node_modules` directory and prefixed with `pimatic-`.
 #### Available Plugins:
 
   * devices and sensors:
-    * [pilight plugin](http://sweetpi.de/pimatic/docs/pimatic-pilight/)
-    * [sispmctl plugin](http://sweetpi.de/pimatic/docs/pimatic-sispmctl/)
-    * [gpio plugin](http://sweetpi.de/pimatic/docs/pimatic-gpio/)
+    * [pilight plugin](http://www.pimatic.org/docs/pimatic-pilight/)
+    * [sispmctl plugin](http://www.pimatic.org/docs/pimatic-sispmctl/)
+    * [gpio plugin](http://www.pimatic.org/docs/pimatic-gpio/)
   * frontend or api:
-    * [mobile-frontend plugin](http://sweetpi.de/pimatic/docs/pimatic-mobile-frontend/)
-    * [filebrowser plugin](http://sweetpi.de/pimatic/docs/pimatic-filebrowser/)
-    * [redirect plugin](http://sweetpi.de/pimatic/docs/pimatic-redirect/)
-    * [rest-api plugin](http://sweetpi.de/pimatic/docs/pimatic-rest-api/)
-    * [speak-api plugin](http://sweetpi.de/pimatic/docs/pimatic-speak-api/)  
+    * [mobile-frontend plugin](http://www.pimatic.org/docs/pimatic-mobile-frontend/)
+    * [filebrowser plugin](http://www.pimatic.org/docs/pimatic-filebrowser/)
+    * [redirect plugin](http://www.pimatic.org/docs/pimatic-redirect/)
+    * [rest-api plugin](http://www.pimatic.org/docs/pimatic-rest-api/)
+    * [speak-api plugin](http://www.pimatic.org/docs/pimatic-speak-api/)  
   * rule predicates:
-    * [cron plugin](http://sweetpi.de/pimatic/docs/pimatic-cron/)
-    * [ping plugin](http://sweetpi.de/pimatic/docs/pimatic-ping/)
-    * [log-reader plugin](http://sweetpi.de/pimatic/docs/pimatic-log-reader/)
+    * [cron plugin](http://www.pimatic.org/docs/pimatic-cron/)
+    * [ping plugin](http://www.pimatic.org/docs/pimatic-ping/)
+    * [log-reader plugin](http://www.pimatic.org/docs/pimatic-log-reader/)
 
 ### The "devices"-section
 The `"devices"`-section should contain all devices, you want to have registered in the 
@@ -150,7 +150,7 @@ Documentation
 
 pimatics source files are annotated with 
 [literate programming](http://en.wikipedia.org/wiki/Literate_programming) style comments and docs. 
-You can [browse the self generated documentation](http://sweetpi.de/pimatic/docs/) with the 
+You can [browse the self generated documentation](http://www.pimatic.org/docs/) with the 
 source code side by side.
 
 Extensions and Hacking
