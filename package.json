@@ -18,10 +18,10 @@
     "LICENSE"
   ],
   "version": "0.5.4",
-  "homepage": "http://github.com/sweetpi/pimatic",
+  "homepage": "http://github.com/pimatic/pimatic",
   "repository": {
     "type": "git",
-    "url": "git://github.com/sweetpi/pimatic.git"
+    "url": "git://github.com/pimatic/pimatic.git"
   },
   "bin": {
     "pimatic.js": "./pimatic.js"
