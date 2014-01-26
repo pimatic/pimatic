@@ -159,7 +159,7 @@ describe "RuleManager", ->
         finish new Error 'Accepted invalid rule'
       ).catch( (error) -> 
         cassert error?
-        cassert error.message is 'Could not find a actuator to execute "action 2"'
+        cassert error.message is 'Could not find an action handler for: action 2'
         cassert canDecideCalled
         cassert executeActionCalled
         finish()
