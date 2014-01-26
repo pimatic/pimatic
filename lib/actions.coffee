@@ -68,6 +68,7 @@ class LogActionHandler extends ActionHandler
         # doubly log it.
         #env.logger.info stringToLog
         return Q(stringToLog)
+    else return null
 
 ###
 The Switch Action Handler

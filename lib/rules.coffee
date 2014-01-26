@@ -261,11 +261,12 @@ class RuleManager extends require('events').EventEmitter
         return rule 
       ).catch( (error) =>
         # If there was a Errror simulation the action exeution, return an error.
-        logger.debug error
-        throw new Error "Could not find a actuator to execute \"#{rule.action}\""
+        logger.error error.message
+        logger.debug error.stack
+        throw error
       )
     ).catch( (error) =>
-      logger.info "rethrowing error: #{error.message}"
+      logger.debug "rethrowing error: #{error.message}"
       logger.debug error.stack
       error.rule = rule
       throw error
@@ -561,7 +562,7 @@ class RuleManager extends require('events').EventEmitter
     assert actionString? and typeof actionString is "string" 
     assert simulate? and typeof simulate is "boolean"
 
-    # Split the actionString at "and" and search for an Action Handler in each partt.
+    # Split the actionString at " and " and search for an Action Handler in each partt.
     actionResults = []
     for token in actionString.split /// 
       \sand\s     # " and " 
@@ -591,7 +592,7 @@ class RuleManager extends require('events').EventEmitter
             logger.error "Error executing a action handler: ", e.message
             logger.debug e.stack
       unless ahFound
-        return Q.fcall => throw new Error("No actionhandler found!")
+        return Q.fcall => throw new Error("Could not find an action handler for: #{token}")
     return Q.all(actionResults)
 
 module.exports.RuleManager = RuleManager
