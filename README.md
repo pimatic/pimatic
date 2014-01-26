@@ -1,9 +1,8 @@
 pimatic
 =======
 
-[![Build Status](https://travis-ci.org/sweetpi/pimatic.png?branch=master)](https://travis-ci.org/sweetpi/pimatic)
+[![Build Status](https://travis-ci.org/pimatic/pimatic.png?branch=master)](https://travis-ci.org/pimatic/pimatic)
 [![NPM version](https://badge.fury.io/js/pimatic.png)](http://badge.fury.io/js/pimatic)
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/sweetpi/pimatic/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 
 pimatic is a home automation framework that runs on [node.js](http://nodejs.org). It provides a 
 common extensible platform for home control and automation tasks.  
