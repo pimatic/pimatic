@@ -10,7 +10,7 @@ module.exports = (grunt) ->
   grocFiles = [
     "./README.md"
     "./startup.coffee"
-    "./config-shema.coffee"
+    "./config-schema.coffee"
     "./lib/*.coffee"
   ]
 
@@ -45,7 +45,7 @@ module.exports = (grunt) ->
         "./README.md"
         "./plugins.md"
         "./startup.coffee"
-        "./config-shema.coffee"
+        "./config-schema.coffee"
         "./lib/*.coffee"
       ]
       options: 

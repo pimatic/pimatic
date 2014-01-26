@@ -11,7 +11,7 @@
     "pimatic.js",
     "startup.coffee",
     "Cuntfile.coffee",
-    "config-shema.coffee",
+    "config-schema.coffee",
     "config_default.json",
     "README.md",
     "plugins.md",

@@ -84,5 +84,7 @@
 	"Added %s to the list.": "Added %s to the list.",
 	"You can now edit your list.": "You can now edit your list.",
 	"Editing the list locked.": "Editing the list locked.",
-	"The list is now locked.": "The list is now locked."
+	"The list is now locked.": "The list is now locked.",
+	"would execute \"%s\"": "would execute \"%s\"",
+	"executed \"%s\": %s": "executed \"%s\": %s"
 }

@@ -36,8 +36,8 @@ module.exports = (env) ->
 
     loadConfig: () ->
       # * Uses `node-convict` for config loading. All config options are in the 
-      #   [config-shema](config-shema.html) file.
-      conf = convict require("../config-shema")
+      #   [config-schema](config-schema.html) file.
+      conf = convict require("../config-schema")
       
       conf.loadFile @configFile
       # * Performs the validation.

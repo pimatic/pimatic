@@ -64,7 +64,7 @@ The `"settings"`-section contains the configuration for the http- and https-serv
 to set `"username"` and `"password"` for the authentication or disable it. In the default config 
 just the http-server is enabled and configurated to run on port 80.
 
-See the [config-shema](http://www.pimatic.org/docs/config-shema.html) for more details and
+See the [config-schema](http://www.pimatic.org/docs/config-schema.html) for more details and
 all configuration options.
 
 ### The "plugins"-section
