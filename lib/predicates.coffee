@@ -241,8 +241,8 @@ class SwitchPredicateAutocompleter
       ^(.+?) # the device name
       (\s+is\s*)?$ # followed by whitespace
     ///
-    console.log "predicate=#{predicate}"
     if predicate.length is 0 
+      # autocomplete empty string with device names
       matches = ["",""]
     if matches?
       deviceNameLower = matches[1].toLowerCase()
@@ -259,9 +259,6 @@ class SwitchPredicateAutocompleter
         if d.name.toLowerCase() is deviceNameTrimed or d.id.toLowerCase() is deviceNameTrimed
           unless matches[2]? then context.addHint(autocomplete: "#{predicate.trim()} is")
           else context.addHint(autocomplete: ["#{predicate.trim()} on", "#{predicate.trim()} off"])
-
-
-
 
   _findAllSwitchDevices: (context) ->
     # For all registed devices:
@@ -286,17 +283,16 @@ class PresencePredicateProvider extends DeviceEventPredicateProvider
 
   constructor: (_env, @framework) ->
     env = _env
+    @autocompleter = new PresencePredicateAutocompleter(framework)
 
   # ### _parsePredicate()
   ###
   Parses the string and setups the info object as explained in the DeviceEventPredicateProvider.
   Read the description of it to understand the return value.
   ###
-  _parsePredicate: (predicate) ->
-    # Just to be sure convert the predicate to lower case.
-    predicate = predicate.toLowerCase()
+  _parsePredicate: (predicate, context) ->
     # Then try to match:
-    matches = predicate.match ///
+    matches = predicate.toLowerCase().match ///
       ^(.+)? # the device name
       \s+ # whitespace
       is # is
@@ -327,7 +323,51 @@ class PresencePredicateProvider extends DeviceEventPredicateProvider
                   callback(if negated then not presence else presence)
               negated: negated # for testing only
     # If we have no match then return null.
+    else if context?
+      # If we can add hints then we maybe can add some autocomplete hints
+      @autocompleter.addHints predicate, context
+    # If we have no match then return null.
     return null
+
+class PresencePredicateAutocompleter
+
+  constructor: (@framework) ->
+
+  addHints: (predicate, context) ->
+    matches = predicate.match ///
+      ^(.+?) # the device name
+      (\s+is\s*)?$ # followed by whitespace
+    ///
+    if predicate.length is 0 
+      # autocomplete empty string with device names
+      matches = ["",""]
+    if matches?
+      deviceNameLower = matches[1].toLowerCase()
+      switchDevices = @_findAllSwitchDevices()
+      deviceNameTrimed = deviceNameLower.trim()
+      for d in switchDevices
+        # autocomplete name
+        if d.name.toLowerCase().indexOf(deviceNameLower) is 0
+          unless matches[2]? then context.addHint(autocomplete: "#{d.name} ")
+        # autocomplete id
+        if d.id.toLowerCase().indexOf(deviceNameLower) is 0
+          unless matches[2]? then context.addHint(autocomplete: "#{d.id} ")
+        # autocomplete name is
+        if d.name.toLowerCase() is deviceNameTrimed or d.id.toLowerCase() is deviceNameTrimed
+          unless matches[2]? then context.addHint(autocomplete: "#{predicate.trim()} is")
+          else context.addHint(autocomplete: [
+            "#{predicate.trim()} present", 
+            "#{predicate.trim()} absent"
+          ])
+
+  _findAllSwitchDevices: (context) ->
+    # For all registed devices:
+    matchingDevices = []
+    for id, device of @framework.devices
+      # check if the device has a state attribute
+      if device.hasAttribute 'presence'
+        matchingDevices.push device
+    return matchingDevices
 
 ###
 The Device-Attribute Predicate Provider
@@ -346,6 +386,7 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
 
   constructor: (_env, @framework) ->
     env = _env
+    @autocompleter = new DeviceAttributePredicateAutocompleter(framework)
 
   # ### _compareValues()
   ###
@@ -366,17 +407,16 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
   Parses the string and setups the info object as explained in the DeviceEventPredicateProvider.
   Read the description of it to understand the return value.
   ###
-  _parsePredicate: (predicate) ->
-    predicate = predicate.toLowerCase()
-    matches = predicate.match ///
+  _parsePredicate: (predicate, context) ->
+    matches = predicate.toLowerCase().match ///
       ^(.+)\s+ # the attribute
       of\s+ # of
       (.+?)\s+ # the device
       (?:is\s+)? # is
-      (equal\s+to|equals*|lower|less|greater|is\s+not|is) 
+      (equal\s+to|equals*|lower|less|below|greater|higher|above|is\s+not|is) 
       # is, is not, equal, equals, lower, less, greater
       (?:|\s+equal|\s+than|\s+as)?\s+ # equal to, equal, than, as
-      (.+)?$ # reference value
+      (.+)$ # reference value
     ///
     if matches?
       attributeName = matches[1].trim().toLowerCase()
@@ -390,8 +430,8 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
             comparator = switch comparator
               when 'is', 'equal', 'equals', 'equal to', 'equals to' then '=='
               when 'is not' then '!='
-              when 'greater' then '>'
-              when 'lower', 'less' then '<'
+              when 'greater', 'higher', 'above' then '>'
+              when 'lower', 'less', 'below' then '<'
               else 
                 env.logger.error "Illegal comparator \"#{comparator}\""
                 false
@@ -436,7 +476,34 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
                 comparator: comparator # for testing only
                 attributeName: attributeName # for testing only
                 referenceValue: referenceValue
+    else if context?
+      @autocompleter.addHints(predicate, context)
     return null
+
+class DeviceAttributePredicateAutocompleter
+
+  constructor: (@framework) ->
+
+  addHints: (predicate, context) ->
+    # console.log "match: ", predicate
+    # matches = predicate.match ///
+    #   ^(
+    #     (.+?) # the attribute
+    #     (
+    #       (\sof\s) # of
+    #       (
+    #         (.+?)# the device
+    #         (
+    #           (\s+(?:is\ssequal|is|less\sthan|greater\sthan)\s+) # comparator
+    #           (
+    #             (.+) # reference value
+    #           )?
+    #         )?
+    #       )?
+    #     )?
+    #   )?$ 
+    #   ///
+    # console.log matches
 
 
 module.exports.PredicateProvider = PredicateProvider
