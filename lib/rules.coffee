@@ -151,109 +151,9 @@ class RuleManager extends require('events').EventEmitter
       rule.orgCondition = parts[1].trim()
       rule.action = parts[2].trim()
 
-      ###
-      Now split the condition in a token stream.
-      For example: 
-        
-          "12:30 and temperature > 10"
-       
-      becomes 
-       
-          ['12:30', 'and', 'temperature > 30 C']
-       
-      Then we replace all predicates with tokens of the following form
-       
-          tokens = ['predicate', '(', 0, ')', 'and', 'predicate', '(', 1, ')']
-       
-      and remember the predicates:
-       
-          predicates = [ {token: '12:30'}, {token: 'temperature > 10'}]
-       
-      We do this because we want o parse the condition with [bet](https://github.com/paulmoore/BET) 
-      later and bet can only parse mathematical functions.
-      ### 
-      predicates = []
-      tokens = []
-      # For each token
-      #(\sand\s|\sor\s)(?=(?:[^"]*"[^"]*")*[^"]*$)
-      for token in rule.orgCondition.split /// 
-        (             # split at
-           \sand\s    # " and "
-         | \sor\s     # " or "
-         | \)         # ")"
-         | \(         # "("
-        ) 
-        (?=           # fowolled by
-          (?:
-            [^"]*     # a string not containing an quote
-            "[^"]*"   # a string in quotes
-          )*          # multiples times
-          [^"]*       # a string not containing quotes
-        $) /// 
-        do (token) =>
-          token = token.trim()
-          # if its no predicate then push it into the token stream
-          if token in ["and", "or", ")", "("]
-            tokens.push token
-          else
-            # else generate a unique id.
-            i = predicates.length
-            predId = id+i
-
-            forSuffix = null
-            forTime = null
-
-            # Try to split the predicate at the last `for` to handle 
-            # predicates in the form `"the light is on for 10 seconds"`
-            forMatches = token.match /(.+)\sfor\s(.+)/
-            if forMatches? and forMatches?.length is 3
-              beforeFor = forMatches[1].trim()
-              afterFor = forMatches[2].trim()
-
-              # Test if we can parse the afterFor part.
-              ms = milliseconds.parse afterFor
-              if ms?
-                token = beforeFor
-                forSuffix = afterFor
-                forTime = ms
-
-            ###
-            This is a utility function that tries to find a Predicate Provider that can decide the 
-            given predicate.
-            ###
-            findPredicateProvider = (predicate) =>
-              assert predicate? and typeof predicate is "string" and predicate.length isnt 0
-              # For each registered Predicate Provider
-              for provider in @predicateProviders
-                # check if the provider can decide the predicate.
-                type = provider.canDecide predicate
-                # Thren provider should return 'event' or 'state' if it can decide the predicate.
-                # else it returns no.
-                assert type is 'event' or type is 'state' or type is no
-                if type is 'event' or type is 'state'
-                  return [type, provider]
-              return [null, null]
-
-            [type, provider] = findPredicateProvider token
-            if type is 'event' and forSuffix?
-              throw new Error "\"#{token}\" is an event it can not be true for \"#{forSuffix}\""
-
-            predicate =
-              id: predId
-              token: token
-              type: type
-              provider: provider
-              forToken: forSuffix
-              for: forTime
-
-            if not predicate.provider?
-              throw new Error "Could not find an provider that decides \"#{predicate.token}\""
-
-            predicates.push(predicate)
-            tokens = tokens.concat ["predicate", "(", i, ")"]
-              
-      rule.tokens = tokens
-      rule.predicates = predicates
+      result = @parseRuleCondition(id, rule.orgCondition)
+      rule.predicates = result.predicates
+      rule.tokens = result.tokens
 
       # Simulate the action execution to try if it can be executed-
       return @executeAction(rule.action, true).then( =>
@@ -271,6 +171,112 @@ class RuleManager extends require('events').EventEmitter
       error.rule = rule
       throw error
     )
+
+  parseRuleCondition: (id, conditionString) ->
+    ###
+    Split the condition in a token stream.
+    For example: 
+      
+        "12:30 and temperature > 10"
+     
+    becomes 
+     
+        ['12:30', 'and', 'temperature > 30 C']
+     
+    Then we replace all predicates with tokens of the following form
+     
+        tokens = ['predicate', '(', 0, ')', 'and', 'predicate', '(', 1, ')']
+     
+    and remember the predicates:
+     
+        predicates = [ {token: '12:30'}, {token: 'temperature > 10'}]
+     
+    We do this because we want o parse the condition with [bet](https://github.com/paulmoore/BET) 
+    later and bet can only parse mathematical functions.
+    ### 
+    predicates = []
+    tokens = []
+    # For each token
+    #(\sand\s|\sor\s)(?=(?:[^"]*"[^"]*")*[^"]*$)
+    for token in conditionString.split /// 
+      (             # split at
+         \sand\s    # " and "
+       | \sor\s     # " or "
+       | \)         # ")"
+       | \(         # "("
+      ) 
+      (?=           # fowolled by
+        (?:
+          [^"]*     # a string not containing an quote
+          "[^"]*"   # a string in quotes
+        )*          # multiples times
+        [^"]*       # a string not containing quotes
+      $) /// 
+      do (token) =>
+        token = token.trim()
+        # if its no predicate then push it into the token stream
+        if token in ["and", "or", ")", "("]
+          tokens.push token
+        else
+          # else generate a unique id.
+          i = predicates.length
+          predId = id+i
+
+          forSuffix = null
+          forTime = null
+
+          # Try to split the predicate at the last `for` to handle 
+          # predicates in the form `"the light is on for 10 seconds"`
+          forMatches = token.match /(.+)\sfor\s(.+)/
+          if forMatches? and forMatches?.length is 3
+            beforeFor = forMatches[1].trim()
+            afterFor = forMatches[2].trim()
+
+            # Test if we can parse the afterFor part.
+            ms = milliseconds.parse afterFor
+            if ms?
+              token = beforeFor
+              forSuffix = afterFor
+              forTime = ms
+
+          ###
+          This is a utility function that tries to find a Predicate Provider that can decide the 
+          given predicate.
+          ###
+          findPredicateProvider = (predicate) =>
+            assert predicate? and typeof predicate is "string" and predicate.length isnt 0
+            # For each registered Predicate Provider
+            for provider in @predicateProviders
+              # check if the provider can decide the predicate.
+              type = provider.canDecide predicate
+              # Thren provider should return 'event' or 'state' if it can decide the predicate.
+              # else it returns no.
+              assert type is 'event' or type is 'state' or type is no
+              if type is 'event' or type is 'state'
+                return [type, provider]
+            return [null, null]
+
+          [type, provider] = findPredicateProvider token
+          if type is 'event' and forSuffix?
+            throw new Error "\"#{token}\" is an event it can not be true for \"#{forSuffix}\""
+
+          predicate =
+            id: predId
+            token: token
+            type: type
+            provider: provider
+            forToken: forSuffix
+            for: forTime
+
+          if not predicate.provider?
+            throw new Error "Could not find an provider that decides \"#{predicate.token}\""
+
+          predicates.push(predicate)
+          tokens = tokens.concat ["predicate", "(", i, ")"]
+    return {
+      predicates: predicates
+      tokens: tokens
+    }
 
   # ###_registerPredicateProviderNotify()
   # Register for every predicate the callback function that should be called
@@ -574,13 +580,7 @@ class RuleManager extends require('events').EventEmitter
         [^"]*       # a string not containing quotes
       $) /// 
       ahFound = false
-      context = {
-        autocomplete: []
-        addHint: ({autocomplete: a}) ->
-          if Array.isArray a 
-            @autocomplete = @autocomplete.concat a
-          else @autocomplete.push a
-      }
+      context = @_createParseContext()
       for aH in @actionHandlers
         unless ahFound
           try 
@@ -603,5 +603,14 @@ class RuleManager extends require('events').EventEmitter
           error.context = context
           throw error
     return Q.all(actionResults)
+
+  _createParseContext: ->
+    return context = {
+      autocomplete: []
+      addHint: ({autocomplete: a}) ->
+        if Array.isArray a 
+          @autocomplete = @autocomplete.concat a
+        else @autocomplete.push a
+    }
 
 module.exports.RuleManager = RuleManager
