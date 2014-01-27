@@ -31,7 +31,7 @@ class ActionHandler
 
   Take a look at the Log Action Handler for a simple example.
   ###
-  executeAction: (actionString, simulate) =>
+  executeAction: (actionString, simulate, context) =>
     throw new Error("should be implemented by a subclass")  
 
 env = null
@@ -51,7 +51,7 @@ class LogActionHandler extends ActionHandler
   ###
   This function handles action in the form of `log "some string"`
   ###
-  executeAction: (actionString, simulate) =>
+  executeAction: (actionString, simulate, context) ->
     # If the action string matches the expected format
     regExpString = '^log\\s+"(.*)?"$'
     matches = actionString.match (new RegExp regExpString)
@@ -68,7 +68,24 @@ class LogActionHandler extends ActionHandler
         # doubly log it.
         #env.logger.info stringToLog
         return Q(stringToLog)
-    else return null
+    else 
+      @_addHints actionString, context
+      return null
+
+  _addHints: (actionString, context) ->
+    # We could not parse the string so maybe so some hinting.
+    # If the string is a prefix of log
+    if "log".indexOf(actionString) is 0
+      # then we could autcomplete to "log "
+      context.addHint(
+        autocomplete: "log \""
+      )
+    # if it stats with "log \"some text" then we can autocomplete to
+    # "log \"some text\"" 
+    else if actionString.match /log\s+"[^"]+$/
+      context.addHint(
+        autocomplete: actionString + '"'
+      )
 
 ###
 The Switch Action Handler
@@ -91,9 +108,8 @@ class SwitchActionHandler extends ActionHandler
   ###
   Handles the above actions.
   ###
-  executeAction: (actionString, simulate) =>
+  executeAction: (actionString, simulate, context) =>
     actionString = actionString.toLowerCase()
-    self = this
     # The result the function will return:
     result = null
     # The potential device name:
@@ -102,7 +118,7 @@ class SwitchActionHandler extends ActionHandler
     state = null
     # Try to match the input string with:
     matches = actionString.match ///
-      ^(?:turn|switch)? # Must begin with "turn" or "switch"
+      ^(?:turn|switch) # Must begin with "turn" or "switch"
       \s+ #followed by whitespace
       # An optional "the " is handled in device.matchesIdOrName() we use later.
       (.+?) #followed by the device name or id,
@@ -135,26 +151,73 @@ class SwitchActionHandler extends ActionHandler
       state = (state is "on")
       # and to the corresponding functions to execute.
       actionName = (if state then "turnOn" else "turnOff")
-
-      # For all registed devices:
-      for id, device of self.framework.devices
-        do (id, device) =>
-          # if we have not yet found a device
-          unless result?
-            # check if the device name of the current device matches 
-            if device.matchesIdOrName deviceName
-              # and the device has the "turnOn" or "turnOff" action
-              if device.hasAction actionName
-                # then simulate or do the action.
-                result = (
-                  if simulate
-                    if state then Q __("would turn %s on", device.name)
-                    else Q __("would turn %s off", device.name)
-                  else
-                    if state then device.turnOn().then( => __("turned %s on", device.name) )
-                    else device.turnOff().then( => __("turned %s off", device.name) )
-                )
+      # Find all matching devices.
+      matchingDevices = @_findMatchingSwitchDevices deviceName, actionName, context
+      # if we find exactly one device
+      if matchingDevices.length is 1
+        device = matchingDevices[0]
+        # then call the action on it
+        result = (
+          if simulate
+            if state then Q __("would turn %s on", device.name)
+            else Q __("would turn %s off", device.name)
+          else
+            if state then device.turnOn().then( => __("turned %s on", device.name) )
+            else device.turnOff().then( => __("turned %s off", device.name) )
+        )
+      else if matchingDevices.length > 1 then throw new Error("#{deviceName.trim()} is ambiguous.")
+    else
+      #we have no match but maybe we can add some hints
+      @_addHints actionString, context
     return result
+
+  _findMatchingSwitchDevices: (deviceName, actionName, context) ->
+    # For all registed devices:
+    matchingDevices = []
+    for id, device of @framework.devices
+      # check if the device name of the current device matches 
+      if device.matchesIdOrName deviceName
+        # and the device has the "turnOn" or "turnOff" action
+        if device.hasAction actionName
+          matchingDevices.push device
+    return matchingDevices
+
+  _findAllSwitchDevices: () ->
+    # For all registed devices:
+    matchingDevices = []
+    for id, device of @framework.devices
+      # and the device has the "turnOn" or "turnOff" action
+      if device.hasAction("turnOn") or device.hasAction("turnOff") 
+        # then simulate or do the action.
+        matchingDevices.push device
+    return matchingDevices
+
+  _addHints: (actionString, context) ->
+    if "switch".indexOf(actionString) is 0
+      context.addHint(
+        autocomplete: "switch "
+      )
+    else if "turn".indexOf(actionString) is 0
+      context.addHint(
+        autocomplete: "turn "
+      )
+    # if it stats with "log \"some text" then we can autocomplete to
+    # "log \"some text\"" 
+    else 
+      match = actionString.match ///^(turn|switch) # Must begin with "turn" or "switch"
+        \s+ #followed by whitespace
+        (.*?)$
+      ///
+      if match?
+        prefix = match[1]
+        deviceName = match[2]
+        switchDevices = @_findAllSwitchDevices()
+        console.log switchDevices
+        for d in switchDevices
+          if d.name.toLowerCase().indexOf(deviceName.toLowerCase()) is 0
+            context.addHint(
+              autocomplete: "#{prefix} #{d.name}" 
+            )
 
 # Export the classes so that they can be accessed by the framewor-
 module.exports.ActionHandler = ActionHandler

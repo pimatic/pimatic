@@ -562,10 +562,10 @@ class RuleManager extends require('events').EventEmitter
     assert actionString? and typeof actionString is "string" 
     assert simulate? and typeof simulate is "boolean"
 
-    # Split the actionString at " and " and search for an Action Handler in each partt.
+    # Split the actionString at " and " and search for an Action Handler in each part.
     actionResults = []
     for token in actionString.split /// 
-      \sand\s     # " and " 
+      \s+and\s+     # " and " 
       (?=           # fowolled by
         (?:
           [^"]*     # a string not containing an quote
@@ -574,14 +574,20 @@ class RuleManager extends require('events').EventEmitter
         [^"]*       # a string not containing quotes
       $) /// 
       ahFound = false
+      context = {
+        autocomplete: []
+        addHint: ({autocomplete: a}) ->
+          if Array.isArray a 
+            @autocomplete = @autocomplete.concat a
+          else @autocomplete.push a
+      }
       for aH in @actionHandlers
         unless ahFound
-          token = token.trim()
           try 
             # Check if the action handler can execute the action. If it can execute it then
             # it should do it and return a promise that get fulfilled with a description string.
             # If the action handler can't handle the action it should return null.
-            promise = aH.executeAction token, simulate
+            promise = aH.executeAction token, simulate, context
             # If the action was handled
             if Q.isPromise promise
               # push it to the results and continue with the next token.
@@ -592,7 +598,10 @@ class RuleManager extends require('events').EventEmitter
             logger.error "Error executing a action handler: ", e.message
             logger.debug e.stack
       unless ahFound
-        return Q.fcall => throw new Error("Could not find an action handler for: #{token}")
+        return Q.fcall => 
+          error = new Error("Could not find an action handler for: #{token}")
+          error.context = context
+          throw error
     return Q.all(actionResults)
 
 module.exports.RuleManager = RuleManager
