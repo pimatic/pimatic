@@ -118,7 +118,6 @@ class SwitchActionHandler extends ActionHandler
   Handles the above actions.
   ###
   executeAction: (actionString, simulate, context) =>
-    actionString = actionString.toLowerCase()
     # The result the function will return:
     result = null
     # The potential device name:
@@ -126,7 +125,7 @@ class SwitchActionHandler extends ActionHandler
     # the matched state: "on" or "off".
     state = null
     # Try to match the input string with:
-    matches = actionString.match ///
+    matches = actionString.toLowerCase().match ///
       ^(?:turn|switch) # Must begin with "turn" or "switch"
       \s+ #followed by whitespace
       # An optional "the " is handled in device.matchesIdOrName() we use later.
@@ -223,12 +222,25 @@ class SwitchActionAutocompleter
       if match?
         prefix = match[1]
         deviceName = match[2]
+        deviceNameLower = deviceName.toLowerCase()
+        deviceNameTrimed = deviceNameLower.trim()
         switchDevices = @_findAllSwitchDevices()
-        console.log switchDevices
+
         for d in switchDevices
-          if d.name.toLowerCase().indexOf(deviceName.toLowerCase()) is 0
+          # autocomplete name
+          if d.name.toLowerCase().indexOf(deviceNameLower) is 0
             context.addHint(
               autocomplete: "#{prefix} #{d.name} " 
+            )
+          # autocomplete id
+          if d.id.toLowerCase().indexOf(deviceNameLower) is 0
+            context.addHint(
+              autocomplete: "#{prefix} #{d.id} " 
+            )
+          # autocomplete name od id and on off
+          if d.name.toLowerCase() is deviceNameTrimed or d.id.toLowerCase() is deviceNameTrimed
+            context.addHint(
+              autocomplete: ["#{actionString.trim()} on", "#{actionString.trim()} off"]
             )
 
   _findAllSwitchDevices: () ->
