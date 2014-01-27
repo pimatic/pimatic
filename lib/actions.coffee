@@ -46,6 +46,7 @@ class LogActionHandler extends ActionHandler
 
   constructor: (_env, @framework) ->
     env = _env
+    @autocompleter = new LogActionAutocompleter()
 
   # ### executeAction()
   ###
@@ -69,11 +70,18 @@ class LogActionHandler extends ActionHandler
         #env.logger.info stringToLog
         return Q(stringToLog)
     else 
-      @_addHints actionString, context
+      @autocompleter.addHints actionString, context
       return null
 
-  _addHints: (actionString, context) ->
-    # We could not parse the string so maybe so some hinting.
+###
+The Log Action Autocompleter
+-------------
+A helper that adds some autocomplete hints for the format of the log action. Just internal used
+by the LogActionHandler to keep code clean and seperated.
+###
+class LogActionAutocompleter
+
+  addHints: (actionString, context) ->
     # If the string is a prefix of log
     if "log".indexOf(actionString) is 0
       # then we could autcomplete to "log "
@@ -103,6 +111,7 @@ class SwitchActionHandler extends ActionHandler
 
   constructor: (_env, @framework) ->
     env = _env
+    @autocompleter = new SwitchActionAutocompleter(framework)
 
   # ### executeAction()
   ###
@@ -168,7 +177,7 @@ class SwitchActionHandler extends ActionHandler
       else if matchingDevices.length > 1 then throw new Error("#{deviceName.trim()} is ambiguous.")
     else
       #we have no match but maybe we can add some hints
-      @_addHints actionString, context
+      @autocompleter.addHints actionString, context
     return result
 
   _findMatchingSwitchDevices: (deviceName, actionName, context) ->
@@ -182,17 +191,20 @@ class SwitchActionHandler extends ActionHandler
           matchingDevices.push device
     return matchingDevices
 
-  _findAllSwitchDevices: () ->
-    # For all registed devices:
-    matchingDevices = []
-    for id, device of @framework.devices
-      # and the device has the "turnOn" or "turnOff" action
-      if device.hasAction("turnOn") or device.hasAction("turnOff") 
-        # then simulate or do the action.
-        matchingDevices.push device
-    return matchingDevices
 
-  _addHints: (actionString, context) ->
+
+
+###
+The Switch Action Autocompleter
+-------------
+A helper that adds some autocomplete hints for the format of the switch action. Just internal used
+by the SwitchActionHandler to keep code clean and seperated.
+###
+class SwitchActionAutocompleter 
+
+  constructor: (@framework) ->
+
+  addHints: (actionString, context) ->
     if "switch".indexOf(actionString) is 0
       context.addHint(
         autocomplete: "switch "
@@ -216,8 +228,19 @@ class SwitchActionHandler extends ActionHandler
         for d in switchDevices
           if d.name.toLowerCase().indexOf(deviceName.toLowerCase()) is 0
             context.addHint(
-              autocomplete: "#{prefix} #{d.name}" 
+              autocomplete: "#{prefix} #{d.name} " 
             )
+
+  _findAllSwitchDevices: () ->
+    # For all registed devices:
+    matchingDevices = []
+    for id, device of @framework.devices
+      # and the device has the "turnOn" or "turnOff" action
+      if device.hasAction("turnOn") or device.hasAction("turnOff") 
+        # then simulate or do the action.
+        matchingDevices.push device
+    return matchingDevices
+
 
 # Export the classes so that they can be accessed by the framewor-
 module.exports.ActionHandler = ActionHandler
