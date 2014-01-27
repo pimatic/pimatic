@@ -31,9 +31,10 @@ class PredicateProvider
 
   __params__
 
-   * `preicate`: the predicate as string like `"its 10pm"` 
+   * `predicate`: the predicate as string like `"its 10pm"` 
+   * `context`: is used to add optional autocomplete hints or other hints
   ###
-  canDecide: (predicate) ->
+  canDecide: (predicate, context) ->
     throw new Error("your predicate provider must implement canDecide")
 
   # ### isTrue()
@@ -103,8 +104,8 @@ class DeviceEventPredicateProvider extends PredicateProvider
   ###
   Gets the info object from `_parsePredicate` implementation and checks if it returned null.
   ###
-  canDecide: (predicate) ->
-    info = @_parsePredicate predicate
+  canDecide: (predicate, context) ->
+    info = @_parsePredicate predicate, context
     return if info? then 'state' else no 
 
   # ### isTrue()
@@ -178,18 +179,17 @@ class SwitchPredicateProvider extends DeviceEventPredicateProvider
 
   constructor: (_env, @framework) ->
     env = _env
+    @autocompleter = new SwitchPredicateAutocompleter(framework)
 
   # ### _parsePredicate()
   ###
   Parses the string and setups the info object as explained in the DeviceEventPredicateProvider.
   Read the description of it to understand the return value.
   ###
-  _parsePredicate: (predicate) ->
-    # Just to be sure convert the predicate to lower case.
-    predicate = predicate.toLowerCase()
-    # Then try to match:
-    matches = predicate.match ///
-      ^(.+)? # the device name
+  _parsePredicate: (predicate, context) ->
+    # Try to match:
+    matches = predicate.toLowerCase().match ///
+      ^(.+?) # the device name
       \s+ # followed by whitespace
       is # and an "is"
       \s+ # a whitespace
@@ -202,23 +202,76 @@ class SwitchPredicateProvider extends DeviceEventPredicateProvider
       deviceName = matches[1].trim()
       # and state as boolean.
       state = (matches[2] is "on")
-      # For each device
-      for id, d of @framework.devices
-        # If the device name matches
-        if d.matchesIdOrName deviceName
-          # and the device has a state attribute
-          if d.hasAttribute 'state'
-            # return a info object.
-            return info =
-              device: d
-              event: 'state'
-              getPredicateValue: => 
-                d.getAttributeValue('state').then (s) => s is state
-              getEventListener: (callback) => 
-                return eventListener = (s) => callback(s is state)
-              state: state # for testing only
+
+      matchingSwitchDevices = @_findMatchingSwitchDevices(deviceName, context)
+      if matchingSwitchDevices.length is 1
+        device = matchingSwitchDevices[0]
+        return info =
+          device: device
+          event: 'state'
+          getPredicateValue: => 
+            device.getAttributeValue('state').then (s) => s is state
+          getEventListener: (callback) => 
+            return eventListener = (s) => callback(s is state)
+          state: state # for testing only
+    else if context?
+      # If we can add hints then we maybe can add some autocomplete hints
+      @autocompleter.addHints predicate, context
     # If we have no match then return null.
     return null
+
+  _findMatchingSwitchDevices: (deviceName, context) ->
+    # For all registed devices:
+    matchingDevices = []
+    for id, device of @framework.devices
+      # check if the device name of the current device matches 
+      if device.matchesIdOrName deviceName
+        # and the device has a state attribute
+        if device.hasAttribute 'state'
+          matchingDevices.push device
+    return matchingDevices
+
+
+class SwitchPredicateAutocompleter
+
+  constructor: (@framework) ->
+
+  addHints: (predicate, context) ->
+    matches = predicate.match ///
+      ^(.+?) # the device name
+      (\s+is\s*)?$ # followed by whitespace
+    ///
+    console.log "predicate=#{predicate}"
+    if predicate.length is 0 
+      matches = ["",""]
+    if matches?
+      deviceNameLower = matches[1].toLowerCase()
+      switchDevices = @_findAllSwitchDevices()
+      deviceNameTrimed = deviceNameLower.trim()
+      for d in switchDevices
+        # autocomplete name
+        if d.name.toLowerCase().indexOf(deviceNameLower) is 0
+          unless matches[2]? then context.addHint(autocomplete: "#{d.name} ")
+        # autocomplete id
+        if d.id.toLowerCase().indexOf(deviceNameLower) is 0
+          unless matches[2]? then context.addHint(autocomplete: "#{d.id} ")
+        # autocomplete name is
+        if d.name.toLowerCase() is deviceNameTrimed or d.id.toLowerCase() is deviceNameTrimed
+          unless matches[2]? then context.addHint(autocomplete: "#{predicate.trim()} is")
+          else context.addHint(autocomplete: ["#{predicate.trim()} on", "#{predicate.trim()} off"])
+
+
+
+
+  _findAllSwitchDevices: (context) ->
+    # For all registed devices:
+    matchingDevices = []
+    for id, device of @framework.devices
+      # check if the device has a state attribute
+      if device.hasAttribute 'state'
+        matchingDevices.push device
+    return matchingDevices
+
 
 ###
 The Presence Predicate Provider

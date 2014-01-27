@@ -213,14 +213,16 @@ class RuleManager extends require('events').EventEmitter
         [^"]*       # a string not containing quotes
       $) /// 
       do (token) =>
-        token = token.trim()
+        tokenTrimed = token.trim()
         # if its no predicate then push it into the token stream
-        if token in ["and", "or", ")", "("]
-          tokens.push token
+        if tokenTrimed in ["and", "or", ")", "("]
+          tokens.push tokenTrimed
         else
           # else generate a unique id.
           i = predicates.length
           predId = id+i
+
+          context = @_createParseContext()
 
           forSuffix = null
           forTime = null
@@ -248,7 +250,7 @@ class RuleManager extends require('events').EventEmitter
             # For each registered Predicate Provider
             for provider in @predicateProviders
               # check if the provider can decide the predicate.
-              type = provider.canDecide predicate
+              type = provider.canDecide predicate, context
               # Thren provider should return 'event' or 'state' if it can decide the predicate.
               # else it returns no.
               assert type is 'event' or type is 'state' or type is no
@@ -269,7 +271,9 @@ class RuleManager extends require('events').EventEmitter
             for: forTime
 
           if not predicate.provider?
-            throw new Error "Could not find an provider that decides \"#{predicate.token}\""
+            error = new Error "Could not find an provider that decides \"#{predicate.token}\""
+            error.context = context
+            throw error
 
           predicates.push(predicate)
           tokens = tokens.concat ["predicate", "(", i, ")"]
