@@ -76,7 +76,7 @@ __Examples:__
 
   * its 8am
   * its 8:00
-  * its friday 10p
+  * its friday 10pm
 
 ###mobile-frontend
 
