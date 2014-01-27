@@ -4,7 +4,7 @@ rule overview
 What's a rule
 ------------
 A rule is a string that has the format: "if _this_ then _that_". The _this_ part will be called 
-the condition of the rule and the _that_ the actions of the rule.
+the condition of the rule and the _that_ part the actions of the rule.
 
 __Examples:__
 
