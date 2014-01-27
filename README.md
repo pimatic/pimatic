@@ -121,6 +121,9 @@ The `"rules"`-section can contain a list of rules in the form of:
 
 where `"id"` should be a unique string and rule a string of the form "if ... then ...". 
 
+However its easyer to add rules at the frontend. For more details take a look at the 
+[rule overview](http://www.pimatic.org/docs/rules.html).
+
 Running
 -------
 The server can be started with 

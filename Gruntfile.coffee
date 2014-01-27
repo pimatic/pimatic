@@ -44,6 +44,7 @@ module.exports = (grunt) ->
       src: [
         "./README.md"
         "./plugins.md"
+        "./rules.md"
         "./startup.coffee"
         "./config-schema.coffee"
         "./lib/*.coffee"
