@@ -204,17 +204,23 @@ class SwitchActionAutocompleter
   constructor: (@framework) ->
 
   addHints: (actionString, context) ->
-    if "switch".indexOf(actionString) is 0
+    # autcomplete empty string
+    if actionString is ""
+      context.addHint(
+        autocomplete: ["switch ", "turn "]
+      )
+    # autocomplete switch
+    else if "switch".indexOf(actionString) is 0
       context.addHint(
         autocomplete: "switch "
       )
+    # autocomplete turn
     else if "turn".indexOf(actionString) is 0
       context.addHint(
         autocomplete: "turn "
       )
-    # if it stats with "log \"some text" then we can autocomplete to
-    # "log \"some text\"" 
     else 
+      # autocomplete turn|switch some-device
       match = actionString.match ///^(turn|switch) # Must begin with "turn" or "switch"
         \s+ #followed by whitespace
         (.*?)$
