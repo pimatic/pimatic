@@ -246,7 +246,7 @@ class RuleManager extends require('events').EventEmitter
           given predicate.
           ###
           findPredicateProvider = (predicate) =>
-            assert predicate? and typeof predicate is "string" and predicate.length isnt 0
+            assert predicate? and typeof predicate is "string"
             # For each registered Predicate Provider
             for provider in @predicateProviders
               # check if the provider can decide the predicate.
