@@ -30,6 +30,9 @@ Screenshots
 [screen3_thumb]: http://www.pimatic.org/screens/screen3_thumb.png
 [screen4_thumb]: http://www.pimatic.org/screens/screen4_thumb.png
 
+Motivation - Why Node.js?
+------------
+Why not just using php with apache, nginx or C++? Because Node.js is fancy and cool and javaScript is the language of the internet of things. No, to be seriously: Because Node.js with its event loop, asynchronously and non-blocking programming model is well suited for home automation tasks. Have you ever tryed implementing a cron like job in php? In addition there are tons of easy to use [packages and libs](https://npmjs.org/). But the Raspberry Pi ist not very powerful won't JavaScript be very slow? Yes and No, JavaScript is surely slower than C, but its getting faster and faster and runs very well on arm devices. Because disk access and network latency should be the real bottleneck of the pi, Node.js could perform well better than c++ because of its non blocking nature.
 
 Installation
 ------------
