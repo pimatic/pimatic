@@ -8,6 +8,8 @@ take a look at the [rules file](rules.html).
 __ = require("i18n").__
 Q = require 'q'
 assert = require 'cassert'
+_ = require('lodash')
+S = require('string')
 
 ###
 The Action Handler
@@ -83,7 +85,7 @@ class LogActionAutocompleter
 
   addHints: (actionString, context) ->
     # If the string is a prefix of log
-    if "log".indexOf(actionString) is 0
+    if "log \"".indexOf(actionString) is 0
       # then we could autcomplete to "log "
       context.addHint(
         autocomplete: "log \""
@@ -205,25 +207,18 @@ class SwitchActionAutocompleter
 
   addHints: (actionString, context) ->
     # autcomplete empty string
-    if actionString is ""
-      context.addHint(
-        autocomplete: ["switch ", "turn "]
-      )
-    # autocomplete switch
-    else if "switch".indexOf(actionString) is 0
-      context.addHint(
-        autocomplete: "switch "
-      )
-    # autocomplete turn
-    else if "turn".indexOf(actionString) is 0
-      context.addHint(
-        autocomplete: "turn "
-      )
+    firstWord = _.filter(["switch", "turn"], (s) => S(s).startsWith(actionString) )
+    switchDevices = @_findAllSwitchDevices()
+
+    if firstWord.length > 0
+        context.addHint(
+          autocomplete: _.map(firstWord, (w) => "#{w} ")
+        )
     else 
       # autocomplete turn|switch some-device
       match = actionString.match ///^(turn|switch) # Must begin with "turn" or "switch"
         \s+ #followed by whitespace
-        (.*?)$
+        (.*?)(?:\s(o?n?|o?f?f?)$|$)
       ///
       if match?
         prefix = match[1]
@@ -234,19 +229,20 @@ class SwitchActionAutocompleter
 
         for d in switchDevices
           # autocomplete name
-          if d.name.toLowerCase().indexOf(deviceNameLower) is 0
+          if S(d.name.toLowerCase()).startsWith(deviceNameLower)
             context.addHint(
               autocomplete: "#{prefix} #{d.name} " 
             )
           # autocomplete id
-          if d.id.toLowerCase().indexOf(deviceNameLower) is 0
+          if S(d.id.toLowerCase()).startsWith(deviceNameLower)
             context.addHint(
               autocomplete: "#{prefix} #{d.id} " 
             )
           # autocomplete name od id and on off
           if d.name.toLowerCase() is deviceNameTrimed or d.id.toLowerCase() is deviceNameTrimed
             context.addHint(
-              autocomplete: ["#{actionString.trim()} on", "#{actionString.trim()} off"]
+              autocomplete: ["#{prefix} #{deviceName.trim()} on", 
+                "#{prefix} #{deviceName.trim()} off"]
             )
 
   _findAllSwitchDevices: () ->

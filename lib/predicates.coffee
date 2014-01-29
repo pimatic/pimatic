@@ -10,6 +10,7 @@ special event happen.
 
 __ = require("i18n").__
 Q = require 'q'
+S = require 'string'
 assert = require 'cassert'
 _ = require 'lodash'
 
@@ -240,26 +241,30 @@ class SwitchPredicateAutocompleter
   addHints: (predicate, context) ->
     matches = predicate.match ///
       ^(.+?) # the device name
-      (\s+is\s*)?$ # followed by whitespace
+      (?:(\s+is?\s?)(o?n?|o?f?f?)$|$)
     ///
+    console.log predicate, matches
     if predicate.length is 0 
       # autocomplete empty string with device names
       matches = ["",""]
     if matches?
-      deviceNameLower = matches[1].toLowerCase()
+      deviceName = matches[1]
+      deviceNameLower = deviceName.toLowerCase()
       switchDevices = @_findAllSwitchDevices()
       deviceNameTrimed = deviceNameLower.trim()
+      completeIs = matches[2]? and matches[2] is " is "
       for d in switchDevices
         # autocomplete name
-        if d.name.toLowerCase().indexOf(deviceNameLower) is 0
-          unless matches[2]? then context.addHint(autocomplete: "#{d.name} ")
+        if S(d.name.toLowerCase()).startsWith(deviceNameLower)
+          unless completeIs then context.addHint(autocomplete: "#{d.name} ")
         # autocomplete id
-        if d.id.toLowerCase().indexOf(deviceNameLower) is 0
-          unless matches[2]? then context.addHint(autocomplete: "#{d.id} ")
+        if S(d.id.toLowerCase()).startsWith(deviceNameLower)
+          unless completeIs then context.addHint(autocomplete: "#{d.id} ")
         # autocomplete name is
         if d.name.toLowerCase() is deviceNameTrimed or d.id.toLowerCase() is deviceNameTrimed
-          unless matches[2]? then context.addHint(autocomplete: "#{predicate.trim()} is")
-          else context.addHint(autocomplete: ["#{predicate.trim()} on", "#{predicate.trim()} off"])
+          unless completeIs then context.addHint(autocomplete: "#{deviceName.trim()} is")
+          else context.addHint(autocomplete: ["#{deviceName.trim()} is on", 
+            "#{deviceName.trim()} is off"])
 
   _findAllSwitchDevices: (context) ->
     # For all registed devices:
@@ -505,9 +510,14 @@ class DeviceAttributePredicateAutocompleter
   _partlyMatchPredicate: (predicate) ->
     match = predicate.match ///
       ^(.*?)
-       (?:(\sof\s)
+       (?:(\so?f?\s?)
           (?:(.*?)
-             (?:(?:(?:\s(equals|is\snot|is\sless\sthan|is\sgreater\sthan|is))
+             (?:(?:(?:\s(
+                e?q?u?a?l?s?|
+                i?s?\s?n?o?t?|
+                i?s?\s?l?e?s?s?\s?t?h?a?n?|
+                i?s?\s?g?r?e?a?t?e?r?\s?t?h?a?n?|
+                i?s?))
                 (?:\s(.*?)$
               |$))
             $|$)
@@ -574,36 +584,39 @@ class DeviceAttributePredicateAutocompleter
       return
     prefix = "#{matches.attribute}"
 
-
     matchingDevice = matchingDevices[0]
     # check if the attribut is numeric
     attributeType = matchingDevice.attributes[matches.attribute].type
     prefix = "#{prefix} of #{matches.device.trim()}"
-    unless matches.comparator?
-      if attributeType is Number
-        context.addHint(
-          autocomplete: _.map(
-            ['equals to', 'is', 'is not', 'is less than', 'is greater than']
-            , (comparator) => "#{prefix} #{comparator} "
+
+    if matches.comparator?
+      prefixes = ['equals to', 'is not', 'is', 'is less than', 'is greater than']
+      matchingPrefixes = _.filter(prefixes, (c) => startsWith(c, matches.comparator))
+      if matchingPrefixes.length > 0
+        if attributeType is Number
+          context.addHint(
+            autocomplete: _.map(
+              matchingPrefixes
+              , (comparator) => "#{prefix} #{comparator} "
+            )
           )
-        )
-      else if attributeType is Boolean
-        labels = matchingDevice.attributes[matches.attribute].labels
-        context.addHint(
-          autocomplete: _.map(labels,
-            (label) => "#{prefix} is #{label}"
+        else if attributeType is Boolean
+          labels = matchingDevice.attributes[matches.attribute].labels
+          context.addHint(
+            autocomplete: _.map(labels,
+              (label) => "#{prefix} is #{label}"
+            )
           )
-        )
-      else 
-        context.addHint(
-          autocomplete: _.map(['equals to', 'is', 'is not'],
-            (comparator) => "#{prefix} #{comparator} "
+        else 
+          context.addHint(
+            # todo cut with matchingPrefixes
+            autocomplete: _.map(['equals to', 'is', 'is not'],
+              (comparator) => "#{prefix} #{comparator} "
+            )
           )
-        )
-      return
 
     prefix = "#{prefix} #{matches.comparator} #{matches.valueAndUnit}"
-    if attributeType is Number and matches.valueAndUnit.length > 0 and 
+    if matches.valueAndUnit? and attributeType is Number and matches.valueAndUnit.length > 0 and 
     not isNaN(matches.valueAndUnit)
       unit = matchingDevice.attributes[matches.attribute].unit 
       if unit?
