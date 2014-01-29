@@ -10,6 +10,7 @@ Q = require 'q'
 assert = require 'cassert'
 _ = require('lodash')
 S = require('string')
+autocomplete = require './autocomplete'
 
 ###
 The Action Handler
@@ -48,7 +49,7 @@ class LogActionHandler extends ActionHandler
 
   constructor: (_env, @framework) ->
     env = _env
-    @autocompleter = new LogActionAutocompleter()
+    @autocompleter = new autocomplete.LogActionAutocompleter()
 
   # ### executeAction()
   ###
@@ -75,27 +76,6 @@ class LogActionHandler extends ActionHandler
       @autocompleter.addHints actionString, context
       return null
 
-###
-The Log Action Autocompleter
--------------
-A helper that adds some autocomplete hints for the format of the log action. Just internal used
-by the LogActionHandler to keep code clean and seperated.
-###
-class LogActionAutocompleter
-
-  addHints: (actionString, context) ->
-    # If the string is a prefix of log
-    if "log \"".indexOf(actionString) is 0
-      # then we could autcomplete to "log "
-      context.addHint(
-        autocomplete: "log \""
-      )
-    # if it stats with "log \"some text" then we can autocomplete to
-    # "log \"some text\"" 
-    else if actionString.match /log\s+"[^"]+$/
-      context.addHint(
-        autocomplete: actionString + '"'
-      )
 
 ###
 The Switch Action Handler
@@ -113,7 +93,7 @@ class SwitchActionHandler extends ActionHandler
 
   constructor: (_env, @framework) ->
     env = _env
-    @autocompleter = new SwitchActionAutocompleter(framework)
+    @autocompleter = new autocomplete.SwitchActionAutocompleter(framework)
 
   # ### executeAction()
   ###
@@ -190,69 +170,6 @@ class SwitchActionHandler extends ActionHandler
         # and the device has the "turnOn" or "turnOff" action
         if device.hasAction actionName
           matchingDevices.push device
-    return matchingDevices
-
-
-
-
-###
-The Switch Action Autocompleter
--------------
-A helper that adds some autocomplete hints for the format of the switch action. Just internal used
-by the SwitchActionHandler to keep code clean and seperated.
-###
-class SwitchActionAutocompleter 
-
-  constructor: (@framework) ->
-
-  addHints: (actionString, context) ->
-    # autcomplete empty string
-    firstWord = _.filter(["switch", "turn"], (s) => S(s).startsWith(actionString) )
-    switchDevices = @_findAllSwitchDevices()
-
-    if firstWord.length > 0
-        context.addHint(
-          autocomplete: _.map(firstWord, (w) => "#{w} ")
-        )
-    else 
-      # autocomplete turn|switch some-device
-      match = actionString.match ///^(turn|switch) # Must begin with "turn" or "switch"
-        \s+ #followed by whitespace
-        (.*?)(?:\s(o?n?|o?f?f?)$|$)
-      ///
-      if match?
-        prefix = match[1]
-        deviceName = match[2]
-        deviceNameLower = deviceName.toLowerCase()
-        deviceNameTrimed = deviceNameLower.trim()
-        switchDevices = @_findAllSwitchDevices()
-
-        for d in switchDevices
-          # autocomplete name
-          if S(d.name.toLowerCase()).startsWith(deviceNameLower)
-            context.addHint(
-              autocomplete: "#{prefix} #{d.name} " 
-            )
-          # autocomplete id
-          if S(d.id.toLowerCase()).startsWith(deviceNameLower)
-            context.addHint(
-              autocomplete: "#{prefix} #{d.id} " 
-            )
-          # autocomplete name od id and on off
-          if d.name.toLowerCase() is deviceNameTrimed or d.id.toLowerCase() is deviceNameTrimed
-            context.addHint(
-              autocomplete: ["#{prefix} #{deviceName.trim()} on", 
-                "#{prefix} #{deviceName.trim()} off"]
-            )
-
-  _findAllSwitchDevices: () ->
-    # For all registed devices:
-    matchingDevices = []
-    for id, device of @framework.devices
-      # and the device has the "turnOn" or "turnOff" action
-      if device.hasAction("turnOn") or device.hasAction("turnOff") 
-        # then simulate or do the action.
-        matchingDevices.push device
     return matchingDevices
 
 
