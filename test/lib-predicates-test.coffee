@@ -48,11 +48,17 @@ describe "PresencePredicateProvider", ->
       cassert info.device.id is "test"
       cassert info.negated is no
 
-    it 'should parse "test is not present"', ->
-      info = provider._parsePredicate "test is not present"
+    it 'should parse "test signals present"', ->
+      info = provider._parsePredicate "test signals present"
       cassert info?
       cassert info.device.id is "test"
-      cassert info.negated is yes
+      cassert info.negated is no
+
+    it 'should parse "test reports present"', ->
+      info = provider._parsePredicate "test signals present"
+      cassert info?
+      cassert info.device.id is "test"
+      cassert info.negated is no
 
     it 'should parse "test is absent"', ->
       info = provider._parsePredicate "test is absent"
@@ -76,9 +82,9 @@ describe "PresencePredicateProvider", ->
       sensorDummy._setPresence true
       cassert success
 
-    it "should notify when device is not present", (finish) ->
+    it "should notify when device is absent", (finish) ->
       sensorDummy._presence = true
-      success = provider.notifyWhen "test-id-2", "test is not present", (state)->
+      success = provider.notifyWhen "test-id-2", "test is absent", (state)->
         cassert state is true
         provider.cancelNotify "test-id-2"
         finish()
@@ -91,7 +97,7 @@ describe "PresencePredicateProvider", ->
     it "should cancel notify test-id-3", ->
 
       provider.notifyWhen "test-id-3", "test is present", ->
-      provider.notifyWhen "test-id-4", "test is not present", ->
+      provider.notifyWhen "test-id-4", "test is absent", ->
 
       provider.cancelNotify "test-id-3"
       cassert not provider._listener['test-id-3']?
@@ -198,6 +204,10 @@ describe "SwitchPredicateProvider", ->
 describe "DeviceAttributePredicateProvider", ->
 
 
+  context = {
+    addHint: ->
+  }
+
   frameworkDummy = 
     devices: {}
 
@@ -254,27 +264,27 @@ describe "DeviceAttributePredicateProvider", ->
         testPredicate = "testvalue of test sensor #{comp} 42"
 
         it "should parse \"#{testPredicate}\"", ->
-          info = provider._parsePredicate testPredicate
+          info = provider._parsePredicate testPredicate, context
           cassert info?
           cassert info.device.id is "test"
           cassert info.comparator is sign
-          cassert info.attributeName is 'testvalue'
+          cassert info.event is 'testvalue'
           cassert info.referenceValue is 42
 
     it "should parse predicate with unit: testvalue of test sensor is 42 °C", ->
-      info = provider._parsePredicate "testvalue of test sensor is 42 °C"
+      info = provider._parsePredicate "testvalue of test sensor is 42 °C", context
       cassert info?
       cassert info.device.id is "test"
       cassert info.comparator is "=="
-      cassert info.attributeName is 'testvalue'
+      cassert info.event is 'testvalue'
       cassert info.referenceValue is 42
 
     it "should parse predicate with unit: testvalue of test sensor is 42 C", ->
-      info = provider._parsePredicate "testvalue of test sensor is 42 C"
+      info = provider._parsePredicate "testvalue of test sensor is 42 C", context
       cassert info?
       cassert info.device.id is "test"
       cassert info.comparator is "=="
-      cassert info.attributeName is 'testvalue'
+      cassert info.event is 'testvalue'
       cassert info.referenceValue is 42
 
 
@@ -316,81 +326,81 @@ describe "DeviceAttributePredicateProvider", ->
       cassert not provider._listener['test-id-3']?
       cassert not provider._listener['test-id-4']?
 
-describe "DeviceAttributePredicateAutocompleter", ->
+# describe "DeviceAttributePredicateAutocompleter", ->
 
-  ac = new env.predicates.DeviceAttributePredicateAutocompleter()
+#   ac = new env.predicates.DeviceAttributePredicateAutocompleter()
 
-  describe '#_partlyMatchPredicate()', ->
+#   describe '#_partlyMatchPredicate()', ->
 
-    it "should match ''", ->
-      matches = ac._partlyMatchPredicate('')
-      assert.deepEqual matches, {
-        attribute: ''
-        of: undefined
-        device: undefined
-        comparator: undefined
-        valueAndUnit: undefined
-      }
+#     it "should match ''", ->
+#       matches = ac._partlyMatchPredicate('')
+#       assert.deepEqual matches, {
+#         attribute: ''
+#         of: undefined
+#         device: undefined
+#         comparator: undefined
+#         valueAndUnit: undefined
+#       }
 
-    it "should match 'attribute'", ->
-      matches = ac._partlyMatchPredicate('attribute')
-      assert.deepEqual matches, {
-        attribute: 'attribute'
-        of: undefined
-        device: undefined
-        comparator: undefined
-        valueAndUnit: undefined
-      }
+#     it "should match 'attribute'", ->
+#       matches = ac._partlyMatchPredicate('attribute')
+#       assert.deepEqual matches, {
+#         attribute: 'attribute'
+#         of: undefined
+#         device: undefined
+#         comparator: undefined
+#         valueAndUnit: undefined
+#       }
 
-    it "should match 'attribute '", ->
-      matches = ac._partlyMatchPredicate('attribute ')
-      assert.deepEqual matches, {
-        attribute: 'attribute '
-        of: undefined
-        device: undefined
-        comparator: undefined
-        valueAndUnit: undefined
-      }
+#     it "should match 'attribute '", ->
+#       matches = ac._partlyMatchPredicate('attribute ')
+#       assert.deepEqual matches, {
+#         attribute: 'attribute '
+#         of: undefined
+#         device: undefined
+#         comparator: undefined
+#         valueAndUnit: undefined
+#       }
 
 
-    it "should match 'attribute of '", ->
-      matches = ac._partlyMatchPredicate('attribute of ')
-      assert.deepEqual matches, {
-        attribute: 'attribute'
-        of: ' of '
-        device: ''
-        comparator: undefined
-        valueAndUnit: undefined
-      }
+#     it "should match 'attribute of '", ->
+#       matches = ac._partlyMatchPredicate('attribute of ')
+#       assert.deepEqual matches, {
+#         attribute: 'attribute'
+#         of: ' of '
+#         device: ''
+#         comparator: undefined
+#         valueAndUnit: undefined
+#       }
 
-    it "should match 'attribute of device name'", ->
-      matches = ac._partlyMatchPredicate('attribute of device name')
-      assert.deepEqual matches, {
-        attribute: 'attribute'
-        of: ' of '
-        device: 'device name'
-        comparator: undefined
-        valueAndUnit: undefined
-      }
+#     it "should match 'attribute of device name'", ->
+#       matches = ac._partlyMatchPredicate('attribute of device name')
+#       assert.deepEqual matches, {
+#         attribute: 'attribute'
+#         of: ' of '
+#         device: 'device name'
+#         comparator: undefined
+#         valueAndUnit: undefined
+#       }
 
-    for comp in ['is', 'is not', 'equals', 'is less than', 'is greater than']
-      do (comp) =>
-        it "should match 'attribute of device name #{comp}'", ->
-          matches = ac._partlyMatchPredicate("attribute of device name #{comp}")
-          assert.deepEqual matches, {
-            attribute: 'attribute'
-            of: ' of '
-            device: 'device name'
-            comparator: comp
-            valueAndUnit: undefined
-          }
+#     for comp in ['is', 'is not', 'equals', 'is less than', 'is greater than']
+#       do (comp) =>
+#         it "should match 'attribute of device name #{comp}'", ->
+#           matches = ac._partlyMatchPredicate("attribute of device name #{comp}")
+#           assert.deepEqual matches, {
+#             attribute: 'attribute'
+#             of: ' of '
+#             device: 'device name'
+#             comparator: comp
+#             valueAndUnit: undefined
+#           }
 
-        it "should match 'attribute of device name #{comp} val'", ->
-          matches = ac._partlyMatchPredicate("attribute of device name #{comp} val")
-          assert.deepEqual matches, {
-            attribute: 'attribute'
-            of: ' of '
-            device: 'device name'
-            comparator: comp
-            valueAndUnit: 'val'
-          }
+#         it "should match 'attribute of device name #{comp} val'", ->
+#           matches = ac._partlyMatchPredicate("attribute of device name #{comp} val")
+#           assert.deepEqual matches, {
+#             attribute: 'attribute'
+#             of: ' of '
+#             device: 'device name'
+#             comparator: comp
+#             valueAndUnit: 'val'
+#           }

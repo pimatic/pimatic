@@ -65,14 +65,6 @@ class Device extends require('events').EventEmitter
     assert Q.isPromise result, "#{getter} of #{@name} should always return a promise!"
     return result
 
-  # Checks if `find` matches the id or name in lower case ignoring "the " prefixes in the search 
-  # string and name.
-  matchesIdOrName: (find) ->
-    cleanFind = find.toLowerCase().replace('the ', '').trim()
-    cleanId = @id.toLowerCase()
-    cleanName = @name.toLowerCase().replace('the ', '').trim()
-    return cleanFind in [cleanId, cleanName]
-
   # Returns a template name to use in frontends.
   getTemplateName: -> "device"
 

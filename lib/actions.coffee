@@ -10,7 +10,7 @@ Q = require 'q'
 assert = require 'cassert'
 _ = require('lodash')
 S = require('string')
-autocomplete = require './autocomplete'
+M = require './matcher'
 
 ###
 The Action Handler
@@ -49,33 +49,29 @@ class LogActionHandler extends ActionHandler
 
   constructor: (_env, @framework) ->
     env = _env
-    @autocompleter = new autocomplete.LogActionAutocompleter()
 
   # ### executeAction()
   ###
   This function handles action in the form of `log "some string"`
   ###
   executeAction: (actionString, simulate, context) ->
-    # If the action string matches the expected format
-    regExpString = '^log\\s+"(.*)?"$'
-    matches = actionString.match (new RegExp regExpString)
-    if matches?
-      # extract the string to log.
-      stringToLog = matches[1]
-      # If we should just simulate
+    stringToLog = null
+    retVal = null
+    # Parse the actionString: "log " -> '"' -> someString -> '"'
+    M(actionString, context).match("log ").matchString((m, str) =>
+      stringToLog = str
+    ).onEnd(->
       if simulate
         # just return a promise fulfilled with a description about what we would do.
-        return Q __("would log \"%s\"", stringToLog)
+        retVal = Q __("would log \"%s\"", stringToLog)
       else
         # else we should log the string.
         # But we don't do this because the framework logs the description anyway. So we would 
         # doubly log it.
         #env.logger.info stringToLog
-        return Q(stringToLog)
-    
-    @autocompleter.addHints actionString, context
-    return null
-
+        retVal = Q(stringToLog)
+    )
+    return retVal
 
 ###
 The Switch Action Handler
@@ -93,7 +89,6 @@ class SwitchActionHandler extends ActionHandler
 
   constructor: (_env, @framework) ->
     env = _env
-    @autocompleter = new autocomplete.SwitchActionAutocompleter(framework)
 
   # ### executeAction()
   ###
@@ -101,77 +96,50 @@ class SwitchActionHandler extends ActionHandler
   ###
   executeAction: (actionString, simulate, context) =>
     # The result the function will return:
-    result = null
-    # The potential device name:
-    deviceName = null
-    # the matched state: "on" or "off".
-    state = null
+    retVar = null
+
+    switchDevices = _(@framework.devices).values().filter( 
+      (device) => device.hasAction("turnOn") and device.hasAction("turnOff") 
+    ).value()
     # Try to match the input string with:
-    matches = actionString.toLowerCase().match ///
-      ^(?:turn|switch) # Must begin with "turn" or "switch"
-      \s+ #followed by whitespace
-      # An optional "the " is handled in device.matchesIdOrName() we use later.
-      (.+?) #followed by the device name or id,
-      \s+ # whitespace
-      (on|off)$ #and ends with "on" or "off".
-    ///
-    # If we have a match
-    if matches?
-      # then extract deviceName and state.
-      deviceName = matches[1]
-      state = matches[2]
-    else 
-      # Else try the other way around:
-      matches = actionString.match ///
-        ^(?:turn|switch) # Must begin with "turn" or "switch"
-        \s+ # followed by whitespace
-        # An optional "the " is handled in device.matchesIdOrName() we use later.
-        (on|off) #and "on" or "off"
-        \s+ # following whitespace
-        ?(.+?)$ # and end with a device name.
-        ///
-      # If we have a match this time
-      if matches?
-        # then extract deviceName and state.
-        deviceName = matches[2]
-        state = matches[1]
-    # If we had a one match of the two choice above
-    if deviceName? and state?
-      # then convert the state string to an boolean
-      state = (state is "on")
-      # and to the corresponding functions to execute.
-      actionName = (if state then "turnOn" else "turnOff")
-      # Find all matching devices.
-      matchingDevices = @_findMatchingSwitchDevices deviceName, actionName, context
-      # if we find exactly one device
-      if matchingDevices.length is 1
-        device = matchingDevices[0]
-        # then call the action on it
-        result = (
-          if simulate
-            if state then Q __("would turn %s on", device.name)
-            else Q __("would turn %s off", device.name)
-          else
-            if state then device.turnOn().then( => __("turned %s on", device.name) )
-            else device.turnOff().then( => __("turned %s off", device.name) )
-        )
-      else if matchingDevices.length > 1 then throw new Error("#{deviceName.trim()} is ambiguous.")
+    m = M(actionString, context).match(['turn ', 'switch '])
 
-      #we have no match but maybe we can add some hints
-    @autocompleter.addHints actionString, context
-    return result
+    device = null
+    state = null
+    fullMatchCount = 0
 
-  _findMatchingSwitchDevices: (deviceName, actionName, context) ->
-    # For all registed devices:
-    matchingDevices = []
-    for id, device of @framework.devices
-      # check if the device name of the current device matches 
-      if device.matchesIdOrName deviceName
-        # and the device has the "turnOn" or "turnOff" action
-        if device.hasAction actionName
-          matchingDevices.push device
-    return matchingDevices
+    # device name -> on|off
+    m.matchDevice(switchDevices, (m, d) ->
+      device = d
+      m.match([' on', ' off'], (m, s) ->
+        state = s.trim()
+        m.onEnd( -> fullMatchCount++)
+      )
+    )
 
+    # on|off -> deviceName
+    m.match(['on ', 'off '], (m, s) ->
+      state = s.trim()
+      m.matchDevice(switchDevices, (m, d) ->
+        device = d
+        m.onEnd( -> fullMatchCount++)
+      )
+    )
+
+    if fullMatchCount is 1
+      state = (state is 'on')
+      retVar = (
+        if simulate
+          if state then Q __("would turn %s on", device.name)
+          else Q __("would turn %s off", device.name)
+        else
+          if state then device.turnOn().then( => __("turned %s on", device.name) )
+          else device.turnOff().then( => __("turned %s off", device.name) )
+      )
+    else if fullMatchCount > 1
+      throw new Error("#{deviceName.trim()} is ambiguous.")
+
+    return retVar
 
 # Export the classes so that they can be accessed by the framewor-
 module.exports.ActionHandler = ActionHandler
