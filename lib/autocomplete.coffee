@@ -51,38 +51,94 @@ class SwitchPredicateAutocompleter
         matchingDevices.push device
     return matchingDevices
 
+class Autocompleter
+
+  matches: (inStr, searchStr) ->
+    assert typeof inStr is "string"
+    assert typeof searchStr is "string"
+    return {
+      isPrefix: S(inStr).startsWith(searchStr)
+      isRealPrefix: isPrefix and searchStr.length < inStr.trim().length
+      fullMatch: inStr.trim() is searchStr
+    }
+
+  matchesSome: (inStr, searchStrings) ->
+    assert typeof inStr is "string"
+    assert Array.isArray searchStrings
+    assert(if searchStrings.length > 0 then typeof searchStrings[0] is "string")
+
+    isPrefix = _.filter(searchStrings, (s) => S(s).startsWith(inStr))
+    return {
+      isPrefix: isPrefix
+      isRealPrefix: _.filter(isPrefix, (s) => inStr.trim().length < s.length)
+      fullMatches: _.filter(searchStrings, (s) => inStr.trim() is s)      
+    }
 
 
-class PresencePredicateAutocompleter
+  getRemainer: (inStr, searchStr) ->
+    return (
+      if inStr.length > searchStr
+        inStr.substring(startsWith.length, inStr.lenght-startsWith.length)
+      else null
+    )
+
+
+class PresencePredicateAutocompleter extends Autocompleter
 
   constructor: (@framework) ->
 
   addHints: (predicate, context) ->
-    matches = predicate.match ///
-      ^(.+?) # the device name
-      (\s+is\s*)?$ # followed by whitespace
-    ///
-    if predicate.length is 0 
-      # autocomplete empty string with device names
-      matches = ["",""]
-    if matches?
-      deviceNameLower = matches[1].toLowerCase()
-      switchDevices = @_findAllSwitchDevices()
-      deviceNameTrimed = deviceNameLower.trim()
-      for d in switchDevices
-        # autocomplete name
-        if d.name.toLowerCase().indexOf(deviceNameLower) is 0
-          unless matches[2]? then context.addHint(autocomplete: "#{d.name} ")
-        # autocomplete id
-        if d.id.toLowerCase().indexOf(deviceNameLower) is 0
-          unless matches[2]? then context.addHint(autocomplete: "#{d.id} ")
-        # autocomplete name is
-        if d.name.toLowerCase() is deviceNameTrimed or d.id.toLowerCase() is deviceNameTrimed
-          unless matches[2]? then context.addHint(autocomplete: "#{predicate.trim()} is")
-          else context.addHint(autocomplete: [
-            "#{predicate.trim()} present", 
-            "#{predicate.trim()} absent"
-          ])
+    switchDevices = @_findAllSwitchDevices()
+    switchDeviceNames = _.map(switchDevices, (d) => d.name)
+    console.log "switchDeviceNames", switchDeviceNames
+    
+    deviceMatch = @matchesSome predicate, switchDeviceNames
+    console.log "deive matches",deviceMatch
+    # autocomplete device names
+    context.addHint(autocomplete: deviceMatch.isRealPrefix)
+
+    for matchinName in deviceMatch.isPrefix
+      afterMatchinName = @getRemainer(predicate, matchinName)
+      console.log afterMatchinName
+      if afterMatchinName.trim().length is 0
+        context.addHint(autocomplete: "#{matchinName.trim()} is")
+      # else
+      #   matchingIs = @matches(afterMatchinName, " is ")
+      #   if matchingIs.isRealPrefix then context.addHint(autocomplete: "#{matchinName.trim()} is ")
+      #   else if matchingIs.isPrefix
+      #     afterMatchingIs = @getRemainer(matchingIs.isPrefix, " is ")
+      #     matchingState = matchesSome(afterMatchingIs, ["present", "absent"])
+      #     if matchingState.isRealPredix
+      #       context.addHint(autocomplete: [
+      #         "#{matchinName.trim()} is present", 
+      #         "#{matchinName.trim()} is absent"
+      #       ])
+
+    # matches = predicate.match ///
+    #   ^(.+?) # the device name
+    #   (\s+is\s*)?$ # followed by whitespace
+    # ///
+    # if predicate.length is 0 
+    #   # autocomplete empty string with device names
+    #   matches = ["",""]
+    # if matches?
+    #   deviceNameLower = matches[1].toLowerCase()
+    #   switchDevices = @_findAllSwitchDevices()
+    #   deviceNameTrimed = deviceNameLower.trim()
+    #   for d in switchDevices
+    #     # autocomplete name
+    #     if d.name.toLowerCase().indexOf(deviceNameLower) is 0
+    #       unless matches[2]? then context.addHint(autocomplete: "#{d.name} ")
+    #     # autocomplete id
+    #     if d.id.toLowerCase().indexOf(deviceNameLower) is 0
+    #       unless matches[2]? then context.addHint(autocomplete: "#{d.id} ")
+    #     # autocomplete name is
+    #     if d.name.toLowerCase() is deviceNameTrimed or d.id.toLowerCase() is deviceNameTrimed
+    #       unless matches[2]? then context.addHint(autocomplete: "#{predicate.trim()} is")
+    #       else context.addHint(autocomplete: [
+    #         "#{predicate.trim()} present", 
+    #         "#{predicate.trim()} absent"
+    #       ])
 
   _findAllSwitchDevices: (context) ->
     # For all registed devices:
