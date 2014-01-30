@@ -30,6 +30,13 @@ Screenshots
 [screen3_thumb]: http://www.pimatic.org/screens/screen3_thumb.png
 [screen4_thumb]: http://www.pimatic.org/screens/screen4_thumb.png
 
+Motivation - Why Node.js?
+------------
+__Why not just using php with apache, nginx or C++?__  
+Because Node.js is fancy and cool and javaScript is the language of the internet of things. No, to be seriously: Because Node.js with its event loop, asynchronously and non-blocking programming model is well suited for home automation tasks. Have you ever tryed implementing a cron like job in php? In addition there are tons of easy to use [packages and libs](https://npmjs.org/).
+
+__But the Raspberry Pi ist not very powerful, won't JavaScript be very slow?__  
+Yes and No, JavaScript is surely slower than C, but its getting faster and faster and runs very well on arm devices. Because disk access and network latency should be the real bottleneck of the pi, Node.js could perform well better than c++ because of its non blocking nature.
 
 Installation
 ------------
@@ -120,9 +127,6 @@ The `"rules"`-section can contain a list of rules in the form of:
     }
 
 where `"id"` should be a unique string and rule a string of the form "if ... then ...". 
-
-However its easyer to add rules at the frontend. For more details take a look at the 
-[rule overview](http://www.pimatic.org/docs/rules.html).
 
 Running
 -------
