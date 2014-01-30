@@ -10,265 +10,113 @@ assert = require 'cassert'
 _ = require 'lodash'
 
 
+class Matcher
+
+  constructor: (@inputs, @context) ->
+    unless Array.isArray inputs then @inputs = [inputs]
+
+  match: (patterns, callback = null) ->
+    unless Array.isArray patterns then patterns = [patterns]
+    rightParts = []
+
+    for input in @inputs
+      for p in patterns
+        if typeof p is "string"
+          if S(p).startsWith(input) and input.length < p.length
+            @context.addHint(autocomplete: p)
+        switch 
+          when typeof p is "string" 
+            doesMatch = S(input).startsWith(p)
+            if doesMatch 
+              match = p
+              nextToken = S(input).chompLeft(p).s
+          when p instanceof RegExp
+            matches = input.match(p)
+            if matches?
+              doesMatch = yes
+              match = matches[1]
+              nextToken = matches[2]
+          else throw new Error("Illegal object in patterns")
+        if doesMatch
+          if callback? then callback(new M(nextToken, @context), match)
+          rightParts.push nextToken
+
+    return new M(rightParts, @context)
+
+  matchNumber: (callback) -> @match /^([0-9]+\.?[0-9]*)(.*)$/, callback
+
+  matchString: (callback) -> 
+    ret = M([], @context)
+    @match('"').match(/^([^"]+)(.*)$/, (m, str) =>
+      if str.length is 0 then @context.addHint(autocomplete: "")
+      ret = m.match('"', callback)
+    )
+    return ret
+
+  matchDevice: (devices, callback = null) ->
+    unless Array.isArray devices then @devices = [devices]
+    rightParts = []
+
+    for input in @inputs
+      for d in devices
+        for p in [d.name, d.id]
+          if S(p).startsWith(input) and input.length < p.length
+            @context.addHint(autocomplete: p)
+          if S(input).startsWith(p)
+            nextToken = S(input).chompLeft(p).s
+            if callback? then callback(new M(nextToken, @context), d)
+            else rightParts.push nextToken
+
+    unless callback? then return new M(rightParts, @context)
+
+  onEnd: (callback) ->
+    for input in @inputs
+      if input.length is 0 then callback()
+
+M = (args...) -> new Matcher(args...)
+
+
+
 class SwitchPredicateAutocompleter
 
   constructor: (@framework) ->
 
   addHints: (predicate, context) ->
-    matches = predicate.match ///
-      ^(.+?) # the device name
-      (?:(\s+is?\s?)(o?n?|o?f?f?)$|$)
-    ///
-    console.log predicate, matches
-    if predicate.length is 0 
-      # autocomplete empty string with device names
-      matches = ["",""]
-    if matches?
-      deviceName = matches[1]
-      deviceNameLower = deviceName.toLowerCase()
-      switchDevices = @_findAllSwitchDevices()
-      deviceNameTrimed = deviceNameLower.trim()
-      completeIs = matches[2]? and matches[2] is " is "
-      for d in switchDevices
-        # autocomplete name
-        if S(d.name.toLowerCase()).startsWith(deviceNameLower)
-          unless completeIs then context.addHint(autocomplete: "#{d.name} ")
-        # autocomplete id
-        if S(d.id.toLowerCase()).startsWith(deviceNameLower)
-          unless completeIs then context.addHint(autocomplete: "#{d.id} ")
-        # autocomplete name is
-        if d.name.toLowerCase() is deviceNameTrimed or d.id.toLowerCase() is deviceNameTrimed
-          unless completeIs then context.addHint(autocomplete: "#{deviceName.trim()} is")
-          else context.addHint(autocomplete: ["#{deviceName.trim()} is on", 
-            "#{deviceName.trim()} is off"])
+    switchDevices = _(@framework.devices).values()
+      .filter((device) => device.hasAttribute( 'state')).value()
+    M(predicate, context).matchDevice(switchDevices).match([' is']).match([' on', ' off'])
 
-  _findAllSwitchDevices: (context) ->
-    # For all registed devices:
-    matchingDevices = []
-    for id, device of @framework.devices
-      # check if the device has a state attribute
-      if device.hasAttribute 'state'
-        matchingDevices.push device
-    return matchingDevices
-
-class Autocompleter
-
-  matches: (inStr, searchStr) ->
-    assert typeof inStr is "string"
-    assert typeof searchStr is "string"
-    return {
-      isPrefix: S(inStr).startsWith(searchStr)
-      isRealPrefix: isPrefix and searchStr.length < inStr.trim().length
-      fullMatch: inStr.trim() is searchStr
-    }
-
-  matchesSome: (inStr, searchStrings) ->
-    assert typeof inStr is "string"
-    assert Array.isArray searchStrings
-    assert(if searchStrings.length > 0 then typeof searchStrings[0] is "string")
-
-    isPrefix = _.filter(searchStrings, (s) => S(s).startsWith(inStr))
-    return {
-      isPrefix: isPrefix
-      isRealPrefix: _.filter(isPrefix, (s) => inStr.trim().length < s.length)
-      fullMatches: _.filter(searchStrings, (s) => inStr.trim() is s)      
-    }
-
-
-  getRemainer: (inStr, searchStr) ->
-    return (
-      if inStr.length > searchStr
-        inStr.substring(startsWith.length, inStr.lenght-startsWith.length)
-      else null
-    )
-
-
-class PresencePredicateAutocompleter extends Autocompleter
+class PresencePredicateAutocompleter
 
   constructor: (@framework) ->
 
   addHints: (predicate, context) ->
-    switchDevices = @_findAllSwitchDevices()
-    switchDeviceNames = _.map(switchDevices, (d) => d.name)
-    console.log "switchDeviceNames", switchDeviceNames
-    
-    deviceMatch = @matchesSome predicate, switchDeviceNames
-    console.log "deive matches",deviceMatch
-    # autocomplete device names
-    context.addHint(autocomplete: deviceMatch.isRealPrefix)
-
-    for matchinName in deviceMatch.isPrefix
-      afterMatchinName = @getRemainer(predicate, matchinName)
-      console.log afterMatchinName
-      if afterMatchinName.trim().length is 0
-        context.addHint(autocomplete: "#{matchinName.trim()} is")
-      # else
-      #   matchingIs = @matches(afterMatchinName, " is ")
-      #   if matchingIs.isRealPrefix then context.addHint(autocomplete: "#{matchinName.trim()} is ")
-      #   else if matchingIs.isPrefix
-      #     afterMatchingIs = @getRemainer(matchingIs.isPrefix, " is ")
-      #     matchingState = matchesSome(afterMatchingIs, ["present", "absent"])
-      #     if matchingState.isRealPredix
-      #       context.addHint(autocomplete: [
-      #         "#{matchinName.trim()} is present", 
-      #         "#{matchinName.trim()} is absent"
-      #       ])
-
-    # matches = predicate.match ///
-    #   ^(.+?) # the device name
-    #   (\s+is\s*)?$ # followed by whitespace
-    # ///
-    # if predicate.length is 0 
-    #   # autocomplete empty string with device names
-    #   matches = ["",""]
-    # if matches?
-    #   deviceNameLower = matches[1].toLowerCase()
-    #   switchDevices = @_findAllSwitchDevices()
-    #   deviceNameTrimed = deviceNameLower.trim()
-    #   for d in switchDevices
-    #     # autocomplete name
-    #     if d.name.toLowerCase().indexOf(deviceNameLower) is 0
-    #       unless matches[2]? then context.addHint(autocomplete: "#{d.name} ")
-    #     # autocomplete id
-    #     if d.id.toLowerCase().indexOf(deviceNameLower) is 0
-    #       unless matches[2]? then context.addHint(autocomplete: "#{d.id} ")
-    #     # autocomplete name is
-    #     if d.name.toLowerCase() is deviceNameTrimed or d.id.toLowerCase() is deviceNameTrimed
-    #       unless matches[2]? then context.addHint(autocomplete: "#{predicate.trim()} is")
-    #       else context.addHint(autocomplete: [
-    #         "#{predicate.trim()} present", 
-    #         "#{predicate.trim()} absent"
-    #       ])
-
-  _findAllSwitchDevices: (context) ->
-    # For all registed devices:
-    matchingDevices = []
-    for id, device of @framework.devices
-      # check if the device has a state attribute
-      if device.hasAttribute 'presence'
-        matchingDevices.push device
-    return matchingDevices
-
+    presenceDevices = _(@framework.devices).values()
+      .filter((device) => device.hasAttribute( 'presence')).value()
+    M(predicate, context).matchDevice(presenceDevices).match([' is']).match([' present', ' absent'])
 
 class DeviceAttributePredicateAutocompleter
 
   constructor: (@framework) ->
 
-
-  _partlyMatchPredicate: (predicate) ->
-    match = predicate.match ///
-      ^(.*?)
-       (?:(\so?f?\s?)
-          (?:(.*?)
-             (?:(?:(?:\s(
-                e?q?u?a?l?s?|
-                i?s?\s?n?o?t?|
-                i?s?\s?l?e?s?s?\s?t?h?a?n?|
-                i?s?\s?g?r?e?a?t?e?r?\s?t?h?a?n?|
-                i?s?))
-                (?:\s(.*?)$
-              |$))
-            $|$)
-          |$)
-        |$)
-    ///
-    return {
-      attribute: match[1]
-      of: match[2]
-      device: match[3]
-      comparator: match[4]
-      valueAndUnit: match[5]
-    }
-
-
-
   addHints: (predicate, context) ->
 
-    startsWith = (str, prefix) -> str.indexOf(prefix) is 0
-    endsWith = (str, suffix) -> str.lastIndexOf(suffix) is str.length - suffix.length
-
-    getAllPossibleAttributes = () =>
-      return _.uniq(
-        _.reduce(d for i,d of @framework.devices, (result, device) => 
-          result.concat (name for name of device.attributes)
-        , [])
+    allAttributes = _(@framework.devices).values().map((device) => _.keys(device.attributes))
+      .flatten().uniq().value()
+    M(predicate, context)
+    .match(allAttributes, (m, attr) =>
+      devices = _(@framework.devices).values().filter((device) => device.hasAttribute(attr)).value()
+      m.match(' of ').matchDevice(devices, (m, device) =>
+        attr = device.attributes[attr]
+        if attr.type is Boolean
+          m.match(' is ').match(attr.labels)
+        else if attr.type is Number
+          m.match( [' equals to ', ' is not ', ' is ', ' is less than ', ' is greater than '])
+           .matchNumber().match("#{attr.unit}")
+        else
+          m.match([' equals to ', ' is ', ' is not '])
       )
-
-    getAllPossibleDevices = (attribute) =>
-      return _.filter(d for i,d of @framework.devices, (d) => 
-        d.hasAttribute attribute
-      )
-
-    matchesAttribute = (attributes, str) => _.filter(attributes, (a)=>startsWith(a, str.trim()))
-    matchesDevice = (devices, str) => _.filter(devices, (d) =>
-      startsWith(d.name, str.trim()) or startsWith(d.id, str.trim())
-    ) 
-
-    matches = @_partlyMatchPredicate(predicate)
-    console.log matches
-    unless matches.attribute? then return
-
-    attributes = getAllPossibleAttributes()
-    matchingAttributes = matchesAttribute(attributes, matches.attribute)
-
-    if matchingAttributes.length is 0 then return
-    
-    unless matches.of?
-      context.addHint(autocomplete: _.map(matchingAttributes, (a)=>"#{a} of "))
-      return
-
-    possibleDevices = getAllPossibleDevices(matches.attribute)
-    matchingDevices = matchesDevice(possibleDevices, matches.device)
-
-    matchingDevice = _.first _.filter(matchingDevices, (d)=> 
-      d.name is matches.device.trim() or d.id is matches.device.trim()
     )
-
-    unless matchingDevice?
-      context.addHint(autocomplete: _.map(matchingDevices, (d)=>"#{matches.attribute} of #{d.id} "))
-      context.addHint(autocomplete: _.map(matchingDevices, (d) => 
-        "#{matches.attribute} of #{d.name} "
-      ))
-      return
-    prefix = "#{matches.attribute}"
-
-    matchingDevice = matchingDevices[0]
-    # check if the attribut is numeric
-    attributeType = matchingDevice.attributes[matches.attribute].type
-    prefix = "#{prefix} of #{matches.device.trim()}"
-
-    if matches.comparator?
-      prefixes = ['equals to', 'is not', 'is', 'is less than', 'is greater than']
-      matchingPrefixes = _.filter(prefixes, (c) => startsWith(c, matches.comparator))
-      if matchingPrefixes.length > 0
-        if attributeType is Number
-          context.addHint(
-            autocomplete: _.map(
-              matchingPrefixes
-              , (comparator) => "#{prefix} #{comparator} "
-            )
-          )
-        else if attributeType is Boolean
-          labels = matchingDevice.attributes[matches.attribute].labels
-          context.addHint(
-            autocomplete: _.map(labels,
-              (label) => "#{prefix} is #{label}"
-            )
-          )
-        else 
-          context.addHint(
-            # todo cut with matchingPrefixes
-            autocomplete: _.map(['equals to', 'is', 'is not'],
-              (comparator) => "#{prefix} #{comparator} "
-            )
-          )
-
-    prefix = "#{prefix} #{matches.comparator} #{matches.valueAndUnit}"
-    if matches.valueAndUnit? and attributeType is Number and matches.valueAndUnit.length > 0 and 
-    not isNaN(matches.valueAndUnit)
-      unit = matchingDevice.attributes[matches.attribute].unit 
-      if unit?
-        context.addHint(autocomplete: "#{prefix}#{unit}")
 
 ###
 The Log Action Autocompleter
@@ -279,18 +127,12 @@ by the LogActionHandler to keep code clean and seperated.
 class LogActionAutocompleter
 
   addHints: (actionString, context) ->
-    # If the string is a prefix of log
-    if "log \"".indexOf(actionString) is 0
-      # then we could autcomplete to "log "
-      context.addHint(
-        autocomplete: "log \""
-      )
-    # if it stats with "log \"some text" then we can autocomplete to
-    # "log \"some text\"" 
-    else if actionString.match /log\s+"[^"]+$/
-      context.addHint(
-        autocomplete: actionString + '"'
-      )
+    stringToLog = null
+    M(actionString, context).match("log ").matchString((m, str) =>
+      stringToLog = str
+    ).onEnd(->
+      console.log "end log"
+    )
 
 
 ###
@@ -304,55 +146,18 @@ class SwitchActionAutocompleter
   constructor: (@framework) ->
 
   addHints: (actionString, context) ->
-    # autcomplete empty string
-    firstWord = _.filter(["switch", "turn"], (s) => S(s).startsWith(actionString) )
-    switchDevices = @_findAllSwitchDevices()
 
-    if firstWord.length > 0
-        context.addHint(
-          autocomplete: _.map(firstWord, (w) => "#{w} ")
-        )
-    else 
-      # autocomplete turn|switch some-device
-      match = actionString.match ///^(turn|switch) # Must begin with "turn" or "switch"
-        \s+ #followed by whitespace
-        (.*?)(?:\s(o?n?|o?f?f?)$|$)
-      ///
-      if match?
-        prefix = match[1]
-        deviceName = match[2]
-        deviceNameLower = deviceName.toLowerCase()
-        deviceNameTrimed = deviceNameLower.trim()
-        switchDevices = @_findAllSwitchDevices()
+    switchDevices = _(@framework.devices).values().filter( 
+      (device) => device.hasAction("turnOn") and device.hasAction("turnOff") 
+    ).value()
 
-        for d in switchDevices
-          # autocomplete name
-          if S(d.name.toLowerCase()).startsWith(deviceNameLower)
-            context.addHint(
-              autocomplete: "#{prefix} #{d.name} " 
-            )
-          # autocomplete id
-          if S(d.id.toLowerCase()).startsWith(deviceNameLower)
-            context.addHint(
-              autocomplete: "#{prefix} #{d.id} " 
-            )
-          # autocomplete name od id and on off
-          if d.name.toLowerCase() is deviceNameTrimed or d.id.toLowerCase() is deviceNameTrimed
-            context.addHint(
-              autocomplete: ["#{prefix} #{deviceName.trim()} on", 
-                "#{prefix} #{deviceName.trim()} off"]
-            )
-
-  _findAllSwitchDevices: () ->
-    # For all registed devices:
-    matchingDevices = []
-    for id, device of @framework.devices
-      # and the device has the "turnOn" or "turnOff" action
-      if device.hasAction("turnOn") or device.hasAction("turnOff") 
-        # then simulate or do the action.
-        matchingDevices.push device
-    return matchingDevices
-
+    m = M(actionString, context).match(['turn ', 'switch '])
+    m.matchDevice(switchDevices).match([' on', ' off']).onEnd(->
+      console.log "end 1"
+    )
+    m.match(['on ', 'off ']).matchDevice(switchDevices).onEnd(->
+      console.log "end 2"
+    )
 
 module.exports.SwitchPredicateAutocompleter = SwitchPredicateAutocompleter
 module.exports.PresencePredicateAutocompleter = PresencePredicateAutocompleter

@@ -72,9 +72,9 @@ class LogActionHandler extends ActionHandler
         # doubly log it.
         #env.logger.info stringToLog
         return Q(stringToLog)
-    else 
-      @autocompleter.addHints actionString, context
-      return null
+    
+    @autocompleter.addHints actionString, context
+    return null
 
 
 ###
@@ -156,9 +156,9 @@ class SwitchActionHandler extends ActionHandler
             else device.turnOff().then( => __("turned %s off", device.name) )
         )
       else if matchingDevices.length > 1 then throw new Error("#{deviceName.trim()} is ambiguous.")
-    else
+
       #we have no match but maybe we can add some hints
-      @autocompleter.addHints actionString, context
+    @autocompleter.addHints actionString, context
     return result
 
   _findMatchingSwitchDevices: (deviceName, actionName, context) ->
