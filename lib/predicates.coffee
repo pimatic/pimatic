@@ -340,23 +340,34 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
       devices = _(@framework.devices).values().filter((device) => device.hasAttribute(attr)).value()
       m.match(' of ').matchDevice(devices, (m, device) =>
         info.device = device
-        attr = device.attributes[attr]
-        #console.log attr
+        unless device.hasAttribute(attr) then return
+        attribute = device.attributes[attr]
 
         setComparator =  (m, c) => info.comparator = c.trim()
         setRefValue = (m, v) => info.referenceValue = v
         end =  => matchCount++
 
-        if attr.type is Boolean
-          m = m.match(' is ', setComparator).match(attr.labels, setRefValue)
-        else if attr.type is Number
+        if attribute.type is Boolean
+          m = m.match(' is ', setComparator).match(attribute.labels, setRefValue)
+        else if attribute.type is Number
           possibleComparators = _(@comparators).values().flatten().map((c)=>" #{c} ").value()
           m = m.match(possibleComparators, setComparator).matchNumber( (m,v) =>
             setRefValue(m, parseFloat(v))
           )
           m.onEnd(end)
-          m = m.match("#{attr.unit}")
-        else if attr.type is String
+          if attribute.unit? and attribute.unit.length > 0 
+            possibleUnits = _.uniq([
+              "#{attribute.unit}", 
+              " #{attribute.unit}", 
+              "#{attribute.unit.toLowerCase()}", 
+              " #{attribute.unit.toLowerCase()}",
+              "#{attribute.unit.replace('°', '')}", 
+              " #{attribute.unit.replace('°', '')}",
+              "#{attribute.unit.toLowerCase().replace('°', '')}", 
+              " #{attribute.unit.toLowerCase().replace('°', '')}",
+              ])
+            m = m.match(possibleUnits)
+        else if attribute.type is String
           m = m.match([' equals to ', ' is ', ' is not '], setComparator).matchString(setRefValue)
         m.onEnd(end)
       )
@@ -375,7 +386,6 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
           found = true
           break
       assert found
-      #console.log info
       device = info.device
       lastValue = null
       info.event = info.attributeName
@@ -391,95 +401,6 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
       return info
 
     return null
-
-      #  id more than one match
-
-
-    # matches = predicate.toLowerCase().match ///
-    #   ^(.+)\s+ # the attribute
-    #   of\s+ # of
-    #   (.+?)\s+ # the device
-    #   (?:is\s+)? # is
-    #   (equal\s+to|equals*|lower|less|below|greater|higher|above|not|is) 
-    #   # is, is not, equal, equals, lower, less, greater
-    #   (?:|\s+equal|\s+than|\s+as)?\s+ # equal to, equal, than, as
-    #   (.+)$ # reference value
-    # ///
-    # info = null
-    # if matches?
-    #   attributeName = matches[1].trim().toLowerCase()
-    #   deviceName = matches[2].trim().toLowerCase()
-    #   comparator = matches[3].trim() 
-    #   referenceValue = matches[4].trim()
-    #   #console.log "#{attributeName}, #{deviceName}, #{comparator}, #{referenceValue}"
-
-    #   matchingDevices = _.filter(d for i,d of @framework.devices, (d) => 
-    #     d.matchesIdOrName(deviceName) and d.hasAttribute(attributeName)
-    #   )
-      
-    #   if matchingDevices.length is 1
-    #     d = matchingDevices[0]
-
-    #     comparator = switch comparator
-    #       when 'is', 'equal', 'equals', 'equal to', 'equals to' then '=='
-    #       when 'not' then '!='
-    #       when 'greater', 'higher', 'above' then '>'
-    #       when 'lower', 'less', 'below' then '<'
-    #       else 
-    #         env.logger.error "Illegal comparator \"#{comparator}\""
-    #         false
-
-    #     unless comparator is false
-    #       isValid = yes
-    #       # if the attribute has a unit
-    #       unit = d.attributes[attributeName].unit
-    #       if unit?
-    #         unit = unit.toLowerCase()
-    #         # then remove it from the reference value and
-    #         # allow just "c" for "°C"
-    #         lastIndex = referenceValue.replace('°c', 'c').lastIndexOf unit.replace('°c', 'c')
-    #         if lastIndex isnt -1
-    #           referenceValue = referenceValue.substring 0, lastIndex
-
-    #       # If the attribute is numerical
-    #       if d.attributes[attributeName].type is Number
-    #         # then check the referenceValue
-    #         if isNaN(referenceValue)
-    #           if context?
-    #             #addHint "Expected \"#{referenceValue}\" in \"#{predicate}\" to be a number."
-    #             isValid = no
-    #         else 
-    #           # and convert it to a float.
-    #           referenceValue = parseFloat referenceValue
-    #       else
-    #         # if its not numerical but comparator is less or greater
-    #         if comparator in ["<", ">"]
-    #           # then something gone wrong.
-    #           #addHint "Can not compare a non numerical attribute with less or creater."
-    #           isValid = no
-
-    #       if isValid 
-    #         lastValue = null
-    #         info =
-    #           device: d
-    #           event: attributeName
-    #           getPredicateValue: => 
-    #             d.getAttributeValue(attributeName).then (value) =>
-    #               @_compareValues comparator, value, referenceValue
-    #           getEventListener: (callback) => 
-    #             return attributeListener = (value) =>
-    #               state = @_compareValues comparator, value, referenceValue
-    #               if state isnt lastValue
-    #                 lastValue = state
-    #                 callback state
-    #           comparator: comparator # for testing only
-    #           attributeName: attributeName # for testing only
-    #           referenceValue: referenceValue
-    #   #  id more than one match
-    #   else matchingDevices.length > 1
-    #     #addHint "device name is ambigious"
-
-
 
 
 module.exports.PredicateProvider = PredicateProvider
