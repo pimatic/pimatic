@@ -137,7 +137,7 @@ class SwitchActionHandler extends ActionHandler
           else device.turnOff().then( => __("turned %s off", device.name) )
       )
     else if fullMatchCount > 1
-      throw new Error("#{deviceName.trim()} is ambiguous.")
+      context.addError(""""#{actionString.trim()}" is ambiguous.""")
 
     return retVar
 

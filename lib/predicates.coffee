@@ -216,7 +216,8 @@ class SwitchPredicateProvider extends DeviceEventPredicateProvider
         getEventListener: (callback) => 
           return eventListener = (s) => callback(s is state)
         state: state # for testing only
-
+    else if matchCount > 1
+      context.addError(""""#{predicate.trim()}" is ambiguous.""")
     return null
 
 ###
@@ -253,9 +254,7 @@ class PresencePredicateProvider extends DeviceEventPredicateProvider
       .match([' present', ' absent'], (m, s) => state = s)
       .onEnd( => matchCount++)
 
-
     if matchCount is 1
-
       assert device?
       assert state?
 
@@ -271,6 +270,8 @@ class PresencePredicateProvider extends DeviceEventPredicateProvider
           return eventListener = (presence) => 
             callback(if negated then not presence else presence)
         negated: negated # for testing only
+    else if matchCount > 1
+      context.addError(""""#{predicate.trim()}" is ambiguous.""")
     # If we have no match then return null.
     return null
 
@@ -399,7 +400,8 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
             lastValue = state
             callback state
       return info
-
+    else if matchCount > 1
+      context.addError(""""#{predicate.trim()}" is ambiguous.""")
     return null
 
 
