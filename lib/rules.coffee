@@ -345,7 +345,7 @@ class RuleManager extends require('events').EventEmitter
     return @parseRuleString(id, ruleString, context).then( (rule)=>
       # If we have parse error we don't need to continue here
       if context.hasErrors()
-        error = new Error("Could not parse Rule.")
+        error = new Error context.getErrorsAsString()
         error.rule = rule
         error.context = context
         throw error
@@ -408,7 +408,7 @@ class RuleManager extends require('events').EventEmitter
     # First try to parse the updated ruleString.
     return @parseRuleString(id, ruleString, context).then( (rule)=>
       if context.hasErrors()
-        error = new Error("Could not parse Rule.")
+        error = new Error context.getErrorsAsString()
         error.rule = rule
         error.context = context
         throw error
@@ -631,7 +631,7 @@ class RuleManager extends require('events').EventEmitter
 
     if not simulate and context.hasErrors()
       return Q.fcall => 
-        error = new Error("Could not execute an action.")
+        error = new Error("Could not execute an action: #{context.getErrorsAsString()}")
         error.context = context
         throw error
 
@@ -649,6 +649,7 @@ class RuleManager extends require('events').EventEmitter
       addError: (message) -> @errors.push message
       addWarning: (message) -> @warnings.push message
       hasErrors: -> (@errors.length > 0)
+      getErrorsAsString: -> _(@errors).reduce((ms, m) => "#{ms}, #{m}")
     }
 
 module.exports.RuleManager = RuleManager
