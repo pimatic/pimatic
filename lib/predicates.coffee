@@ -370,6 +370,9 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
             m = m.match(possibleUnits)
         else if attribute.type is String
           m = m.match([' equals to ', ' is ', ' is not '], setComparator).matchString(setRefValue)
+        else if Array.isArray attribute.type
+           m = m.match([' equals to ', ' is ', ' is not '], setComparator)
+            .match(_(attribute.type).map((a)=>" #{a}").value(), setRefValue)
         m.onEnd(end)
       )
     )
