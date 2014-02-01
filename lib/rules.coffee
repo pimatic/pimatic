@@ -160,7 +160,7 @@ class RuleManager extends require('events').EventEmitter
         return rule
 
       # Simulate the action execution to try if it can be executed-
-      return @executeAction(rule.action, true).then( =>
+      return @executeAction(rule.action, true, context).then( =>
         # If the execution was sussessful then return the rule object.
         return rule 
       ).catch( (error) =>
@@ -576,7 +576,10 @@ class RuleManager extends require('events').EventEmitter
   executeActionAndLogResult: (rule) ->
     # Returns the current time as string: `2012-11-04 14:55:45`
     now = => new Date().format 'YYYY-MM-DD hh:mm:ss'
-    return @executeAction(rule.action, false).then( (messages) =>
+    context = @createParseContext()
+    return @executeAction(rule.action, false, context).then( (messages) =>
+      if context.hasErrors()
+        throw new Error(context.errors[0])
       assert Array.isArray messages
       # concat the messages: `["a", "b"] => "a and b"`
       message = _.reduce(messages, (ms, m) => if m? then "#{ms} and #{m}" else ms)
@@ -587,9 +590,11 @@ class RuleManager extends require('events').EventEmitter
 
   # ###executeAction()
   # Executes the actions in the given actionString
-  executeAction: (actionString, simulate) ->
+  executeAction: (actionString, simulate, context) ->
     assert actionString? and typeof actionString is "string" 
     assert simulate? and typeof simulate is "boolean"
+
+    unless context? then context = @createParseContext()
 
     # Split the actionString at " and " and search for an Action Handler in each part.
     actionResults = []
@@ -603,7 +608,6 @@ class RuleManager extends require('events').EventEmitter
         [^"]*       # a string not containing quotes
       $) /// 
       ahFound = false
-      context = @createParseContext()
       for aH in @actionHandlers
         unless ahFound
           try 
@@ -618,13 +622,19 @@ class RuleManager extends require('events').EventEmitter
               ahFound = true
               continue
           catch e 
-            logger.error "Error executing a action handler: ", e.message
+            errorMsg = "Error executing a action handler: #{e.message}"
+            context.addError(errorMsg)
+            logger.error errorMsg
             logger.debug e.stack
       unless ahFound
-        return Q.fcall => 
-          error = new Error("Could not find an action handler for: #{token}")
-          error.context = context
-          throw error
+        context.addError("Could not find an action handler for: #{token}")
+
+    if not simulate and context.hasErrors()
+      return Q.fcall => 
+        error = new Error("Could not execute an action.")
+        error.context = context
+        throw error
+
     return Q.all(actionResults)
 
   createParseContext: ->

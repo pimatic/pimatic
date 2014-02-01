@@ -163,14 +163,13 @@ describe "RuleManager", ->
         return
 
       ruleManager.parseRuleString('test4', 'if predicate 1 then action 2', context).then( -> 
-        finish new Error 'Accepted invalid rule'
-      ).catch( (error) -> 
-        cassert error?
-        cassert error.message is 'Could not find an action handler for: action 2'
-        cassert canDecideCalled
+        cassert context.hasErrors()
+        cassert context.errors.length is 1
+        errorMsg = context.errors[0]
+        cassert errorMsg is 'Could not find an action handler for: action 2'
         cassert executeActionCalled
         finish()
-      ).done()
+      ).catch(finish)
 
   notifyId = null
 
