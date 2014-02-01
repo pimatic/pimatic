@@ -46,8 +46,13 @@ describe "RuleManager", ->
   # ###Tests for `parseRuleString()`
   describe '#parseRuleString()', ->
 
+    context = null
+
+    beforeEach ->
+      context = ruleManager.createParseContext()
+
     it 'should parse valid rule', (finish) ->
-      ruleManager.parseRuleString("test1", "if predicate 1 then action 1")
+      ruleManager.parseRuleString("test1", "if predicate 1 then action 1", context)
       .then( (rule) -> 
         cassert rule.id is 'test1'
         cassert rule.orgCondition is 'predicate 1'
@@ -64,7 +69,7 @@ describe "RuleManager", ->
         cassert predicate is "predicate 1"
         return 'state'
 
-      ruleManager.parseRuleString("test1", "if predicate 1 for 10 seconds then action 1")
+      ruleManager.parseRuleString("test1", "if predicate 1 for 10 seconds then action 1", context)
       .then( (rule) -> 
         cassert rule.id is 'test1'
         cassert rule.orgCondition is 'predicate 1 for 10 seconds'
@@ -83,7 +88,7 @@ describe "RuleManager", ->
         cassert predicate is "predicate 1"
         return 'state'
 
-      ruleManager.parseRuleString("test1", "if predicate 1 for 2 hours then action 1")
+      ruleManager.parseRuleString("test1", "if predicate 1 for 2 hours then action 1", context)
       .then( (rule) -> 
         cassert rule.id is 'test1'
         cassert rule.orgCondition is 'predicate 1 for 2 hours'
@@ -102,7 +107,7 @@ describe "RuleManager", ->
         cassert predicate is "predicate 1 for 42 foo"
         return 'state'
 
-      ruleManager.parseRuleString("test1", "if predicate 1 for 42 foo then action 1")
+      ruleManager.parseRuleString("test1", "if predicate 1 for 42 foo then action 1", context)
       .then( (rule) -> 
         cassert rule.id is 'test1'
         cassert rule.orgCondition is 'predicate 1 for 42 foo'
@@ -118,7 +123,7 @@ describe "RuleManager", ->
 
     it 'should reject wrong rule format', (finish) ->
       # Missing `then`:
-      ruleManager.parseRuleString("test2", "if predicate 1 and action 1")
+      ruleManager.parseRuleString("test2", "if predicate 1 and action 1", context)
       .then( -> 
         finish new Error 'Accepted invalid rule'
       ).catch( (error) -> 
@@ -128,18 +133,20 @@ describe "RuleManager", ->
       ).done()
 
     it 'should reject unknown predicate', (finish) ->
-
+      canDecideCalled = false
       provider.canDecide = (predicate) ->
         cassert predicate is 'predicate 2'
+        canDecideCalled = true
         return false
 
-      ruleManager.parseRuleString('test3', 'if predicate 2 then action 1').then( -> 
-        finish new Error 'Accepted invalid rule'
-      ).catch( (error) -> 
-        cassert error?
-        cassert error.message is 'Could not find an provider that decides "predicate 2"'
+      ruleManager.parseRuleString('test3', 'if predicate 2 then action 1', context).then( -> 
+        cassert context.hasErrors()
+        cassert context.errors.length is 1
+        errorMsg = context.errors[0]
+        cassert errorMsg is 'Could not find an provider that decides "predicate 2".'
+        cassert canDecideCalled
         finish()
-      ).done()
+      ).catch(finish)
 
     it 'should reject unknown action', (finish) ->
       canDecideCalled = false
@@ -155,7 +162,7 @@ describe "RuleManager", ->
         executeActionCalled = true
         return
 
-      ruleManager.parseRuleString('test4', 'if predicate 1 then action 2').then( -> 
+      ruleManager.parseRuleString('test4', 'if predicate 1 then action 2', context).then( -> 
         finish new Error 'Accepted invalid rule'
       ).catch( (error) -> 
         cassert error?

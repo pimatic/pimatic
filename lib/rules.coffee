@@ -118,7 +118,7 @@ class RuleManager extends require('events').EventEmitter
   #     active: false or true
   #  
   # The function returns a promise!
-  parseRuleString: (id, ruleString) ->
+  parseRuleString: (id, ruleString, context) ->
     assert id? and typeof id is "string" and id.length isnt 0
     assert ruleString? and typeof ruleString is "string"
 
@@ -128,6 +128,7 @@ class RuleManager extends require('events').EventEmitter
 
     # Allways return a promise
     return Q.fcall( =>
+      
       ###
       First take the string apart, so that
        
@@ -151,9 +152,12 @@ class RuleManager extends require('events').EventEmitter
       rule.orgCondition = parts[1].trim()
       rule.action = parts[2].trim()
 
-      result = @parseRuleCondition(id, rule.orgCondition)
+      result = @parseRuleCondition(id, rule.orgCondition, context)
       rule.predicates = result.predicates
       rule.tokens = result.tokens
+
+      if context.hasErrors()
+        return rule
 
       # Simulate the action execution to try if it can be executed-
       return @executeAction(rule.action, true).then( =>
@@ -172,7 +176,10 @@ class RuleManager extends require('events').EventEmitter
       throw error
     )
 
-  parseRuleCondition: (id, conditionString) ->
+  parseRuleCondition: (id, conditionString, context) ->
+    assert typeof id is "string" and id.length isnt 0
+    assert typeof conditionString is "string"
+    assert context?
     ###
     Split the condition in a token stream.
     For example: 
@@ -221,7 +228,7 @@ class RuleManager extends require('events').EventEmitter
           # else generate a unique id.
           i = predicates.length
           predId = id+i
-          predicate = @parsePredicate(predId, token)
+          predicate = @parsePredicate(predId, token, context)
           predicates.push(predicate)
           tokens = tokens.concat ["predicate", "(", i, ")"]
     return {
@@ -229,8 +236,10 @@ class RuleManager extends require('events').EventEmitter
       tokens: tokens
     }
 
-  parsePredicate: (predId, predicateString) =>
-    context = @_createParseContext()
+  parsePredicate: (predId, predicateString, context) =>
+    assert typeof predId is "string" and predId.length isnt 0
+    assert typeof predicateString is "string"
+    assert context?
 
     forSuffix = null
     forTime = null
@@ -261,13 +270,13 @@ class RuleManager extends require('events').EventEmitter
     type = null
     switch suitedPredProvider.length
       when 0
-        throw new Error("""Could not find an provider that decides "#{predicateString}".""")
+        context.addError("""Could not find an provider that decides "#{predicateString}".""")
       when 1
         [provider, type] = suitedPredProvider[0]
         if type is 'event' and forSuffix?
-          throw new Error "\"#{token}\" is an event it can not be true for \"#{forSuffix}\""
+          context.addError("\"#{token}\" is an event it can not be true for \"#{forSuffix}\"")
       else
-        throw new Error("""Predicate "#{predicateString}" is ambiguous.""")
+        context.addError("""Predicate "#{predicateString}" is ambiguous.""")
 
     predicate =
       id: predId
@@ -276,7 +285,6 @@ class RuleManager extends require('events').EventEmitter
       provider: provider
       forToken: forSuffix
       for: forTime
-
 
   # ###_registerPredicateProviderNotify()
   # Register for every predicate the callback function that should be called
@@ -332,8 +340,16 @@ class RuleManager extends require('events').EventEmitter
     assert id? and typeof id is "string" and id.length isnt 0
     assert ruleString? and typeof ruleString is "string"
 
+    context = @createParseContext()
     # First parse the rule.
-    return @parseRuleString(id, ruleString).then( (rule)=>
+    return @parseRuleString(id, ruleString, context).then( (rule)=>
+      # If we have parse error we don't need to continue here
+      if context.hasErrors()
+        error = new Error("Could not parse Rule.")
+        error.rule = rule
+        error.context = context
+        throw error
+
       @_registerPredicateProviderNotify rule
       # If the rules was successful parsed add it to the rule array.
       rule.active = active
@@ -348,7 +364,7 @@ class RuleManager extends require('events').EventEmitter
             @executeActionAndLogResult(rule).done()
           return
         ).done()
-      return
+      return context
     ).catch( (error) =>
       # If there was an error pasring the rule, but the rule is forced to be added, then add
       # the rule with an error.
@@ -388,8 +404,15 @@ class RuleManager extends require('events').EventEmitter
     assert ruleString? and typeof ruleString is "string"
     throw new Error("Invalid ruleId: \"#{id}\"") unless @rules[id]?
 
+    context = @createParseContext()
     # First try to parse the updated ruleString.
-    return @parseRuleString(id, ruleString).then( (rule)=>
+    return @parseRuleString(id, ruleString, context).then( (rule)=>
+      if context.hasErrors()
+        error = new Error("Could not parse Rule.")
+        error.rule = rule
+        error.context = context
+        throw error
+
       rule.active = active
       rule.valid = yes
       # If the rule was successfully parsed then get the old rule
@@ -580,7 +603,7 @@ class RuleManager extends require('events').EventEmitter
         [^"]*       # a string not containing quotes
       $) /// 
       ahFound = false
-      context = @_createParseContext()
+      context = @createParseContext()
       for aH in @actionHandlers
         unless ahFound
           try 
@@ -604,13 +627,18 @@ class RuleManager extends require('events').EventEmitter
           throw error
     return Q.all(actionResults)
 
-  _createParseContext: ->
+  createParseContext: ->
     return context = {
       autocomplete: []
+      errors: []
+      warnings: []
       addHint: ({autocomplete: a}) ->
         if Array.isArray a 
           @autocomplete = @autocomplete.concat a
         else @autocomplete.push a
+      addError: (message) -> @errors.push message
+      addWarning: (message) -> @warnings.push message
+      hasErrors: -> (@errors.length > 0)
     }
 
 module.exports.RuleManager = RuleManager
