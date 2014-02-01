@@ -11,10 +11,19 @@ _ = require 'lodash'
 
 
 class Matcher
-
+  # ###constructor()
+  # Create a matcher for the input string, with the given parse context
   constructor: (@inputs, @context) ->
     unless Array.isArray inputs then @inputs = [inputs]
-
+  
+  # ###match()
+  ###
+  Matches the current inputs against the given pattern
+  pattern can be an string, an regexp or an array of strings or regexps.
+  If a callback is given it is called with a new Matcher for the remaining part of the string
+  and the matching part of the input
+  In addition a matcher is returned that hast the remaining parts as input.
+  ###
   match: (patterns, callback = null) ->
     unless Array.isArray patterns then patterns = [patterns]
     rightParts = []
@@ -44,6 +53,10 @@ class Matcher
 
     return new M(rightParts, @context)
 
+  # ###matchNumber()
+  ###
+  Matches any Number.
+  ###
   matchNumber: (callback) -> @match /^([0-9]+\.?[0-9]*)(.*?)$/, callback
 
   matchString: (callback) -> 
@@ -56,6 +69,10 @@ class Matcher
     )
     return ret
 
+  # ###matchDevice()
+  ###
+  Matches any of the given devices.
+  ###
   matchDevice: (devices, callback = null) ->
     unless Array.isArray devices then @devices = [devices]
     rightParts = []
@@ -91,6 +108,10 @@ class Matcher
 
     return new M(rightParts, @context)
 
+  # ###onEnd()
+  ###
+  The given callback will be called for every empty string in the inputs of ther current matcher
+  ###
   onEnd: (callback) ->
     for input in @inputs
       if input.length is 0 then callback()
