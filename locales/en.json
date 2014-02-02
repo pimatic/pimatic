@@ -86,5 +86,8 @@
 	"Editing the list locked.": "Editing the list locked.",
 	"The list is now locked.": "The list is now locked.",
 	"would execute \"%s\"": "would execute \"%s\"",
-	"executed \"%s\": %s": "executed \"%s\": %s"
+	"executed \"%s\": %s": "executed \"%s\": %s",
+	"dimmed %s to %s%": "dimmed %s to %s%",
+	"dimmed %s to %s\\%": "dimmed %s to %s\\%",
+	"dimmed %s to %s%%": "dimmed %s to %s%%"
 }

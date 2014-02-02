@@ -270,6 +270,7 @@ module.exports = (env) ->
 
       initActionHandler = =>
         @ruleManager.addActionHandler new env.actions.SwitchActionHandler env, this
+        @ruleManager.addActionHandler new env.actions.DimmerActionHandler env, this
         @ruleManager.addActionHandler new env.actions.LogActionHandler env, this
 
       initPredicateProvider = =>

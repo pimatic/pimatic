@@ -85,6 +85,47 @@ describe "SwitchActionHandler", ->
       assert not result?
       assert not turnOnCalled
 
+describe "DimmerActionHandler", ->
+
+  envDummy =
+    logger: {}
+
+  frameworkDummy =
+    devices: {}
+
+  switchActionHandler = new actions.DimmerActionHandler envDummy, frameworkDummy
+
+  class DimmerDevice extends devices.DimmerActuator
+    id: 'dummy-dimmer-id'
+    name: 'dummy dimmer'
+
+  dummyDimmer = new DimmerDevice()
+  frameworkDummy.devices['dummy-dimmer-id'] = dummyDimmer
+
+  describe "#executeAction()", ->
+    dimlevel = null
+
+    beforeEach ->
+      dimlevel = null
+      dummyDimmer.changeDimlevelTo = (dl) ->
+        dimlevel = dl
+        return Q()
+
+    validRulePrefixes = [
+      'dim the dummy dimmer to'
+      'dim dummy dimmer to'
+    ]
+
+    for rulePrefix in validRulePrefixes
+      do (rulePrefix) ->
+        action = "#{rulePrefix} 10%"
+        it "should execute: #{action}", (finish) ->
+          switchActionHandler.executeAction(action, false).then( (message) ->
+            assert dimlevel is 10
+            assert message is "dimmed dummy dimmer to 10%"
+            finish()
+          ).done()
+
 describe "LogActionHandler", ->
 
   envDummy =

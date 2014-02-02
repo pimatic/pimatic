@@ -55,12 +55,19 @@ class LogActionHandler extends ActionHandler
   This function handles action in the form of `log "some string"`
   ###
   executeAction: (actionString, simulate, context) ->
-    stringToLog = null
     retVal = null
-    # Parse the actionString: "log " -> '"' -> someString -> '"'
-    M(actionString, context).match("log ").matchString((m, str) =>
-      stringToLog = str
-    ).onEnd(->
+    stringToLog = null
+    fullMatch = no
+
+    setLogString = (m, str) => stringToLog = str
+    onEnd = () => fullMatch = yes
+
+    M(actionString, context)
+      .match("log ")
+      .matchString(setLogString)
+      .onEnd(onEnd)
+
+    if fullMatch
       if simulate
         # just return a promise fulfilled with a description about what we would do.
         retVal = Q __("would log \"%s\"", stringToLog)
@@ -70,7 +77,7 @@ class LogActionHandler extends ActionHandler
         # doubly log it.
         #env.logger.info stringToLog
         retVal = Q(stringToLog)
-    )
+    
     return retVal
 
 ###
@@ -141,7 +148,78 @@ class SwitchActionHandler extends ActionHandler
 
     return retVar
 
+###
+The Dimmer Action Handler
+-------------
+Provides the ability to change the dim level of dimmer devices. Currently it handles the 
+following actions:
+
+* dim [the] _device_ to _value_%
+
+where _device_ is the name or id of a device and "the" is optional.
+###
+class DimmerActionHandler extends ActionHandler
+
+  constructor: (_env, @framework) ->
+    env = _env
+
+  # ### executeAction()
+  ###
+  Handles the above actions.
+  ###
+  executeAction: (actionString, simulate, context) =>
+    # The result the function will return:
+    retVar = null
+
+    dimmers = _(@framework.devices).values().filter( 
+      (device) => device.hasAction("changeDimlevelTo") 
+    ).value()
+
+    if dimmers.length is 0 then return
+
+    device = null
+    value = null
+    fullMatchCount = 0
+
+    setDevice = (m, d) -> device = d
+    setValue = (m, v) -> value = v 
+    onEnd = () => fullMatchCount++
+
+    # Try to match the input string with:
+    m = M(actionString, context)
+      .match('dim ')
+      .matchDevice(dimmers, setDevice)
+      .match(' to ')
+      .matchNumber(setValue)
+      .match('%', optional: yes)
+      .onEnd(onEnd)
+
+    if fullMatchCount is 1
+      if isNaN(value)
+        context?.addError("Expexted \"#{value}\" to be a number.")
+        return
+      value = parseFloat(value)
+      if value < 0.0
+        context?.addError("Can't dim to a negativ dimlevel.")
+        return
+      if value > 100.0
+        context?.addError("Can't dim to greaer than 100%.")
+        return
+
+      retVar = (
+        if simulate
+          Q __("would dim %s to %s%%", device.name, value)
+        else
+          device.changeDimlevelTo(value).then( => __("dimmed %s to %s%%", device.name, value) )
+      )
+    else if fullMatchCount > 1
+      context.addError(""""#{actionString.trim()}" is ambiguous.""")
+
+    return retVar
+
+
 # Export the classes so that they can be accessed by the framewor-
 module.exports.ActionHandler = ActionHandler
 module.exports.SwitchActionHandler = SwitchActionHandler
+module.exports.DimmerActionHandler = DimmerActionHandler
 module.exports.LogActionHandler = LogActionHandler
