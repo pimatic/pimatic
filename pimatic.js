@@ -3,6 +3,12 @@ require('coffee-script');
 var path = require('path');
 var fs = require('fs');
 var init = require('./lib/daemon');
+var semver = require('semver');
+
+if(semver.lt(process.version, '0.9.0')) {
+  console.log("Warning: You node.js version " + process.version + "seems to be very old. "
+    + "Please update Node.js to >0.9.0 to run pimatic without problems!");
+}
 
 run = function () {
   require('./startup');
