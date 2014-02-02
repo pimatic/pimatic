@@ -24,8 +24,12 @@ class Matcher
   and the matching part of the input
   In addition a matcher is returned that hast the remaining parts as input.
   ###
-  match: (patterns, callback = null) ->
+  match: (patterns, options = {}, callback = null) ->
     unless Array.isArray patterns then patterns = [patterns]
+    if typeof options is "function"
+      callback = options
+      options = {}
+
     rightParts = []
 
     for input in @inputs
@@ -50,6 +54,8 @@ class Matcher
         if doesMatch
           if callback? then callback(new M(nextToken, @context), match)
           rightParts.push nextToken
+        else if options.optional
+          rightParts.push input
 
     return new M(rightParts, @context)
 
