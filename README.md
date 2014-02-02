@@ -166,7 +166,7 @@ You can autostart pimatic by additional installing the init.d script:
 
 It should now start with:
   
-  sudo service pimatic start
+    sudo service pimatic start
 
 and log the outputs to: `pimatic-app/pimatic-daemon.log`
 
