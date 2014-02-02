@@ -119,3 +119,4 @@ class Matcher
 M = (args...) -> new Matcher(args...)
 
 module.exports = M
+module.exports.Matcher = Matcher
