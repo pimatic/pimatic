@@ -217,7 +217,7 @@ class SwitchPredicateProvider extends DeviceEventPredicateProvider
           return eventListener = (s) => callback(s is state)
         state: state # for testing only
     else if matchCount > 1
-      context.addError(""""#{predicate.trim()}" is ambiguous.""")
+      context?.addError(""""#{predicate.trim()}" is ambiguous.""")
     return null
 
 ###
@@ -271,7 +271,7 @@ class PresencePredicateProvider extends DeviceEventPredicateProvider
             callback(if negated then not presence else presence)
         negated: negated # for testing only
     else if matchCount > 1
-      context.addError(""""#{predicate.trim()}" is ambiguous.""")
+      context?.addError(""""#{predicate.trim()}" is ambiguous.""")
     # If we have no match then return null.
     return null
 
@@ -355,7 +355,6 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
           m = m.match(possibleComparators, setComparator).matchNumber( (m,v) =>
             setRefValue(m, parseFloat(v))
           )
-          m.onEnd(end)
           if attribute.unit? and attribute.unit.length > 0 
             possibleUnits = _.uniq([
               "#{attribute.unit}", 
@@ -367,7 +366,7 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
               "#{attribute.unit.toLowerCase().replace('°', '')}", 
               " #{attribute.unit.toLowerCase().replace('°', '')}",
               ])
-            m = m.match(possibleUnits)
+            m = m.match(possibleUnits, optional: yes)
         else if attribute.type is String
           m = m.match([' equals to ', ' is ', ' is not '], setComparator).matchString(setRefValue)
         else if Array.isArray attribute.type
@@ -404,7 +403,7 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
             callback state
       return info
     else if matchCount > 1
-      context.addError(""""#{predicate.trim()}" is ambiguous.""")
+      context?.addError(""""#{predicate.trim()}" is ambiguous.""")
     return null
 
 

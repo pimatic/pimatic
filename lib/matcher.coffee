@@ -30,6 +30,7 @@ class Matcher
       callback = options
       options = {}
 
+    matches = {}
     rightParts = []
 
     for input in @inputs
@@ -51,10 +52,12 @@ class Matcher
               match = matches[1]
               nextToken = matches[2]
           else throw new Error("Illegal object in patterns")
-        if doesMatch
+        if doesMatch and not matches[match]?
+          matches[match] = yes
           if callback? then callback(new M(nextToken, @context), match)
           rightParts.push nextToken
-        else if options.optional
+        else if options.optional and not matches['']?
+          matches[''] = yes
           rightParts.push input
 
     return new M(rightParts, @context)

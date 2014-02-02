@@ -89,5 +89,6 @@
 	"executed \"%s\": %s": "executed \"%s\": %s",
 	"dimmed %s to %s%": "dimmed %s to %s%",
 	"dimmed %s to %s\\%": "dimmed %s to %s\\%",
-	"dimmed %s to %s%%": "dimmed %s to %s%%"
+	"dimmed %s to %s%%": "dimmed %s to %s%%",
+	"would dim %s to %s%%": "would dim %s to %s%%"
 }
