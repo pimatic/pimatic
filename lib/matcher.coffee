@@ -71,7 +71,6 @@ class Matcher
   matchString: (callback) -> 
     ret = M([], @context)
     @match('"').match(/^([^"]+)(.*?)$/, (m, str) =>
-      m.onEnd( => @context.addHint(autocomplete: ""))
       ret = m.match('"', (m) => 
         callback(m, str)
       )
