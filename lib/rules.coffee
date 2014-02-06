@@ -87,7 +87,7 @@ class RuleManager extends require('events').EventEmitter
   #     error: 'Could not find a provider that decides bla'
   #     active: false 
   #  
-  rules: []
+  rules: {}
   # Array of ActionHandlers: see [actions.coffee](actions.html)
   actionHandlers: []
   # Array of predicateProviders: see [actions.coffee](actions.html)
