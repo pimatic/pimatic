@@ -41,9 +41,18 @@ class Matcher
         if Array.isArray p
           assert p.length is 2
           [matchId, p] = p
+
+        # handle ignore case for string
+        [pT, inputT] = (
+          if options.ignoreCase and typeof p is "string"
+            [p.toLowerCase(), input.toLowerCase()]
+          else
+            [p, input]
+        )
+
         # if pattern is an string, then we cann add an autocomplete for it
-        if typeof p is "string" and @context?
-          if S(p).startsWith(input) and input.length < p.length
+        if typeof p is "string" and @context
+          if S(pT).startsWith(inputT) and input.length < p.length
             @context.addHint(autocomplete: p)
 
         # Now try to match the pattern against the input string
@@ -51,12 +60,14 @@ class Matcher
         switch 
           # do a normal string match
           when typeof p is "string" 
-            doesMatch = S(input).startsWith(p)
+            doesMatch = S(inputT).startsWith(pT)
             if doesMatch 
               match = p
-              nextToken = S(input).chompLeft(p).s
+              nextToken = input.substring(p.length)
           # do a regax match
           when p instanceof RegExp
+            if options.ignoreCase?
+              throw new new Error("ignoreCase option can't be used with regexp")
             matches = input.match(p)
             if matches?
               doesMatch = yes
@@ -74,7 +85,7 @@ class Matcher
           matches[''] = yes
           rightParts.push input
 
-    return new M(rightParts, @context)
+    return M(rightParts, @context)
 
   # ###matchNumber()
   ###
@@ -96,34 +107,19 @@ class Matcher
   Matches any of the given devices.
   ###
   matchDevice: (devices, callback = null) ->
-    @match('the ', optional: true)._matchDevice(devices, callback)
-
-  _matchDevice: (devices, callback = null) ->
-    unless Array.isArray devices then @devices = [devices]
-    rightParts = []
-
-    for input in @inputs
-      for d in devices
-        # add autcompletes
-        for p in [d.name, d.id]
-          if S(p).startsWith(input) and input.length < p.length
-            @context.addHint(autocomplete: p)
-
-        nextTokenId = null
-        # try to exactly case insensitive match the id
-        if S(input.toLowerCase()).startsWith(d.id.toLowerCase())
-          nextTokenId = input.substring(d.id.length, input.length)
-          if callback? then callback(new M(nextTokenId, @context), d)
-          rightParts.push nextTokenId
-
-        # try to case insensitive match the name
-        if S(input.toLowerCase()).startsWith(d.name.toLowerCase())
-          nextTokenName = input.substring(d.name.length, input.length)
-          unless nextTokenName is nextTokenId
-            if callback? then callback(new M(nextTokenName, @context), d)
-            rightParts.push nextTokenName
-
-    return new M(rightParts, @context)
+    devices = _(devices).clone()
+    devicesWithId = _(devices).map( (d) => [d, d.id] ).value()
+    m = @match('the ', optional: true)
+    # first try to match by id
+    m.match(devicesWithId, (m, d) => 
+      callback(m, d)
+      #if it matches here we remove it from the array so it don't 
+      # get matched twice
+      _(devices).remove(d)
+    )
+    # then to try match names
+    devicesWithNames = _(devices).map( (d) => [d, d.name] ).value() 
+    m.match(devicesWithNames, ignoreCase: yes, callback)
 
   # ###onEnd()
   ###
@@ -132,6 +128,37 @@ class Matcher
   onEnd: (callback) ->
     for input in @inputs
       if input.length is 0 then callback()
+
+  inAnyOrder: (callbacks) ->
+    assert Array.isArray callbacks
+    hadMatch = yes
+    current = this
+    while hadMatch
+      hadMatch = no
+      for next in callbacks
+        assert typeof next is "function"
+        # try to match with this matcher
+        m = next(current)
+        assert m instanceof Matcher
+        unless m.hadNoMatches()
+          hadMatch = yes
+          current = m
+    return current
+
+  or: (callbacks) ->
+    assert Array.isArray callbacks
+    ms = (
+      for next in callbacks
+        m = next(this)
+        assert m instanceof Matcher
+        m
+    )
+    # join all inputs together
+    newInputs = _(ms).map((m)=>m.inputs).flatten().value()
+    return M(newInputs, @context)
+
+    
+  hadNoMatches: -> inputs.length is 0
 
 M = (args...) -> new Matcher(args...)
 
