@@ -34,7 +34,7 @@ class Matcher
     rightParts = []
 
     for input in @inputs
-      for p in patterns
+      for p, i in patterns
         # If pattern is a array then assume that first element is an id that should be returned
         # on match
         matchId = null
@@ -52,8 +52,10 @@ class Matcher
 
         # if pattern is an string, then we cann add an autocomplete for it
         if typeof p is "string" and @context
-          if S(pT).startsWith(inputT) and input.length < p.length
-            @context.addHint(autocomplete: p)
+          showAc = (if options.acFilter? then options.acFilter(p, i) else true) 
+          if showAc
+            if S(pT).startsWith(inputT) and input.length < p.length
+              @context.addHint(autocomplete: p)
 
         # Now try to match the pattern against the input string
         doesMatch = false
@@ -68,11 +70,11 @@ class Matcher
           when p instanceof RegExp
             if options.ignoreCase?
               throw new new Error("ignoreCase option can't be used with regexp")
-            matches = input.match(p)
-            if matches?
+            regexpMatch = input.match(p)
+            if regexpMatch?
               doesMatch = yes
-              match = matches[1]
-              nextToken = matches[2]
+              match = regexpMatch[1]
+              nextToken = regexpMatch[2]
           else throw new Error("Illegal object in patterns")
 
         if doesMatch and not matches[match]?
