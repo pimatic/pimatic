@@ -196,9 +196,14 @@ class SwitchPredicateProvider extends DeviceEventPredicateProvider
     device = null
     state = null
     matchCount = 0
-    M(predicate, context).matchDevice(switchDevices, (m, d) => device = d)
-      .match([' is', ' is turned', ' is switched'])
-      .match([' on', ' off'], (m, s) =>state = s)
+
+    setDevice = (m, d) => device = d
+    setState = (m, s) => state = s
+    stateAcFilter = (v) => v.trim() isnt 'is switched' 
+
+    M(predicate, context).matchDevice(switchDevices, setDevice)
+      .match([' is', ' is turned', ' is switched'], acFilter: stateAcFilter)
+      .match([' on', ' off'], setState)
       .onEnd( => matchCount++)
 
     # If we have a macht
@@ -244,14 +249,18 @@ class PresencePredicateProvider extends DeviceEventPredicateProvider
     presenceDevices = _(@framework.devices).values()
       .filter((device) => device.hasAttribute( 'presence')).value()
 
-
     device = null
     state = null
     matchCount = 0
+
+    setDevice = (m, d) => device = d
+    setState =  (m, s) => state = s
+    stateAcFilter = (v) => v isnt 'not present'
+
     M(predicate, context)
-      .matchDevice(presenceDevices, (m, d) => device = d)
+      .matchDevice(presenceDevices, setDevice)
       .match([' is', ' reports', ' signals'])
-      .match([' present', ' absent'], (m, s) => state = s)
+      .match([' present', ' absent', 'not present'], acFilter: stateAcFilter, setState)
       .onEnd( => matchCount++)
 
     if matchCount is 1
@@ -352,13 +361,14 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
           m = m.match(' is ', setComparator).match(attribute.labels, setRefValue)
         else if attribute.type is Number
           possibleComparators = _(@comparators).values().flatten().map((c)=>" #{c} ").value()
-          m = m.match(possibleComparators, setComparator).matchNumber( (m,v) =>
-            setRefValue(m, parseFloat(v))
-          )
+          autocompleteFilter = (v) => 
+            v.trim() in ['is', 'is not', 'equals', 'is greater than', 'is less than']
+          m = m.match(possibleComparators, acFilter: autocompleteFilter, setComparator)
+            .matchNumber( (m,v) => setRefValue(m, parseFloat(v)) )
           if attribute.unit? and attribute.unit.length > 0 
             possibleUnits = _.uniq([
-              "#{attribute.unit}", 
               " #{attribute.unit}", 
+              "#{attribute.unit}", 
               "#{attribute.unit.toLowerCase()}", 
               " #{attribute.unit.toLowerCase()}",
               "#{attribute.unit.replace('°', '')}", 
@@ -366,7 +376,8 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
               "#{attribute.unit.toLowerCase().replace('°', '')}", 
               " #{attribute.unit.toLowerCase().replace('°', '')}",
               ])
-            m = m.match(possibleUnits, optional: yes)
+            autocompleteFilter = (v) => v is " #{attribute.unit}"
+            m = m.match(possibleUnits, optional: yes, acFilter: autocompleteFilter)
         else if attribute.type is String
           m = m.match([' equals to ', ' is ', ' is not '], setComparator).matchString(setRefValue)
         else if Array.isArray attribute.type
