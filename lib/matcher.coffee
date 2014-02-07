@@ -35,16 +35,27 @@ class Matcher
 
     for input in @inputs
       for p in patterns
+        # If pattern is a array then assume that first element is an id that should be returned
+        # on match
+        matchId = null
+        if Array.isArray p
+          assert p.length is 2
+          [matchId, p] = p
+        # if pattern is an string, then we cann add an autocomplete for it
         if typeof p is "string" and @context?
           if S(p).startsWith(input) and input.length < p.length
             @context.addHint(autocomplete: p)
+
+        # Now try to match the pattern against the input string
         doesMatch = false
         switch 
+          # do a normal string match
           when typeof p is "string" 
             doesMatch = S(input).startsWith(p)
             if doesMatch 
               match = p
               nextToken = S(input).chompLeft(p).s
+          # do a regax match
           when p instanceof RegExp
             matches = input.match(p)
             if matches?
@@ -52,9 +63,12 @@ class Matcher
               match = matches[1]
               nextToken = matches[2]
           else throw new Error("Illegal object in patterns")
+
         if doesMatch and not matches[match]?
           matches[match] = yes
-          if callback? then callback(new M(nextToken, @context), match)
+          # If no matchId was provided then use the matching string itself
+          unless matchId? then matchId = match
+          if callback? then callback(new M(nextToken, @context), matchId)
           rightParts.push nextToken
         else if options.optional and not matches['']?
           matches[''] = yes
