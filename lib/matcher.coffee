@@ -109,19 +109,30 @@ class Matcher
   Matches any of the given devices.
   ###
   matchDevice: (devices, callback = null) ->
-    devices = _(devices).clone()
     devicesWithId = _(devices).map( (d) => [d, d.id] ).value()
-    m = @match('the ', optional: true)
-    # first try to match by id
-    m.match(devicesWithId, (m, d) => 
-      callback(m, d)
-      #if it matches here we remove it from the array so it don't 
-      # get matched twice
-      _(devices).remove(d)
-    )
-    # then to try match names
     devicesWithNames = _(devices).map( (d) => [d, d.name] ).value() 
-    m.match(devicesWithNames, ignoreCase: yes, callback)
+
+    matches = []
+    onIdMatch = (m, d) => 
+      matches.push(nextToken: m.inputs[0], device: d)
+      callback(m, d)
+    onNameMatch = (m, d) => 
+      # only call callback if not yet called with his device and nextToken
+      # This could ne if device name equals id of the same device
+      alreadyCalled = no
+      for match in matches
+        if match.nextToken is m.inputs[0] and match.device is d
+          alreadyCalled = yes
+          break
+      unless alreadyCalled then callback(m, d)
+
+    @match('the ', optional: true).or([
+       # first try to match by id
+      (m) => m.match(devicesWithId, onIdMatch)
+      # then to try match names
+      (m) => m.match(devicesWithNames, ignoreCase: yes, onNameMatch)
+    ])
+    
 
   # ###onEnd()
   ###
