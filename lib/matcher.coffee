@@ -82,6 +82,9 @@ class Matcher
   Matches any of the given devices.
   ###
   matchDevice: (devices, callback = null) ->
+    @match('the ', optional: true)._matchDevice(devices, callback)
+
+  _matchDevice: (devices, callback = null) ->
     unless Array.isArray devices then @devices = [devices]
     rightParts = []
 
@@ -94,22 +97,14 @@ class Matcher
 
         nextTokenId = null
         # try to exactly case insensitive match the id
-        if S(input.toLowerCase()).startsWith(d.id)
+        if S(input.toLowerCase()).startsWith(d.id.toLowerCase())
           nextTokenId = input.substring(d.id.length, input.length)
           if callback? then callback(new M(nextTokenId, @context), d)
           rightParts.push nextTokenId
-        
-        # try to match the name case insensitive and ignoring 'the ' prefix
-        inputTmp = S(input).toLowerCase()
-        if inputTmp.startsWith('the ')
-          inputTmp = inputTmp.substring('the '.length, inputTmp.length)
-        nameTmp = S(d.name).toLowerCase()
-        if nameTmp.startsWith('the ')
-          nameTmp = nameTmp.substring('the '.length, nameTmp.length)
-        if inputTmp.startsWith(nameTmp)
-          prefixSize = input.length - inputTmp.length + nameTmp.length
-          nextTokenName = input.substring(prefixSize, input.size)
-          # Don't call again with the same next token
+
+        # try to case insensitive match the name
+        if S(input.toLowerCase()).startsWith(d.name.toLowerCase())
+          nextTokenName = input.substring(d.name.length, input.length)
           unless nextTokenName is nextTokenId
             if callback? then callback(new M(nextTokenName, @context), d)
             rightParts.push nextTokenName
