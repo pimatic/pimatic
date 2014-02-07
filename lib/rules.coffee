@@ -650,6 +650,8 @@ class RuleManager extends require('events').EventEmitter
       addWarning: (message) -> @warnings.push message
       hasErrors: -> (@errors.length > 0)
       getErrorsAsString: -> _(@errors).reduce((ms, m) => "#{ms}, #{m}")
+      finalize: () -> 
+        @autocomplete = _(@autocomplete).uniq().sortBy((s)=>s.toLowerCase()).value()
     }
 
 module.exports.RuleManager = RuleManager
