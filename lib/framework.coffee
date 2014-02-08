@@ -91,8 +91,8 @@ module.exports = (env) ->
           # not authorized yet
 
           # if we don't should promp for a password, just fail
-          if req.query.noAuthPromp then return res.send(401)
-          
+          if req.query.noAuthPromp? then return res.send(401)
+
           # else use authorization
           express.basicAuth( (user, pass) =>
             valid = (user is auth.username and pass is auth.password)
