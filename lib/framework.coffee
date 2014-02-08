@@ -72,8 +72,9 @@ module.exports = (env) ->
       # -------------
       @app = express()
       #@app.use express.logger()
+      @app.use express.cookieParser()
       @app.use express.bodyParser()
-
+      @app.use express.session(secret: 'keyboard cat')
       # Setup authentication
       # ----------------------
       # Use http-basicAuth if authentication is not disabled.
@@ -82,7 +83,23 @@ module.exports = (env) ->
         #Check authentication.
         assert auth.username and typeof auth.username is "string" and auth.username.length isnt 0 
         assert auth.password and typeof auth.password is "string" and auth.password.length isnt 0 
-        @app.use express.basicAuth(auth.username, auth.password)
+        
+        #req.path
+        @app.use (req, res, next) =>
+          # if already logged in so just continue
+          if req.session.username is auth.username then return next()
+          # not authorized yet
+
+          # if we don't should promp for a password, just fail
+          if req.query.noAuthPromp then return res.send(401)
+          
+          # else use authorization
+          express.basicAuth( (user, pass) =>
+            valid = (user is auth.username and pass is auth.password)
+            # when valid then keep logged in
+            if valid then req.session.username = user 
+            return valid
+          )(req, res, next)
 
       if not @config.settings.httpsServer?.enabled and 
          not @config.settings.httpServer?.enabled
