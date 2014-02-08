@@ -74,11 +74,17 @@ module.exports = (env) ->
       #@app.use express.logger()
       @app.use express.cookieParser()
       @app.use express.bodyParser()
-      @app.use express.session(secret: 'keyboard cat')
+      auth = @config.settings.authentication
+      secret = "pimatic-#{auth.username}-#{auth.password}"
+      @app.use express.cookieSession(
+        secret: secret, 
+        key: 'pimatic.sess', 
+        cookie: { maxAge: (if auth.loginTime is 0 then null else auth.loginTime) }
+      )
       # Setup authentication
       # ----------------------
       # Use http-basicAuth if authentication is not disabled.
-      auth = @config.settings.authentication
+      
       if auth.enabled
         #Check authentication.
         assert auth.username and typeof auth.username is "string" and auth.username.length isnt 0 
