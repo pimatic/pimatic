@@ -96,7 +96,11 @@ module.exports = (env) ->
           if req.session.username is auth.username then return next()
           # not authorized yet
 
-          # if we don't should promp for a password, just fail
+          ###
+            if we don't should promp for a password, just fail.
+            This does not allow unauthorizied access, it just a workaround to let the browser
+            don't show the password prompt on certain ajax requests
+          ###
           if req.query.noAuthPromp? then return res.send(401)
 
           # else use authorization
