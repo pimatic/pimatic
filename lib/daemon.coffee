@@ -86,8 +86,11 @@ exports.start = ({ pidfile, logfile, run, success, failure }) ->
       )(process.stderr.write)
 
       process.on 'uncaughtException', (err) =>
-        console.log('uncaughtException:')
-        console.log(err.stack)
+        if err.silent is yes
+          console.log('pimatic is still running...')
+        else
+          console.log('a uncaught exception occured: ', err.stack)
+          console.log('keeping pimatic alive but could be in an undefined state...')
 
       # write the pidfile
       fs.writeFile pidfile, process.pid, (err) ->

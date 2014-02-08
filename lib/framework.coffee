@@ -112,15 +112,15 @@ module.exports = (env) ->
         return (err) =>
           msg = "Could not listen on port #{serverConfig.port}. " + 
                 "Error: #{err.message}. "
-          switch err.message 
-            when "listen EACCES" then  msg += "Are you root?."
-            when "listen EADDRINUSE" then msg += "Is a server already running?"
+          switch err.code 
+            when "EACCES" then msg += "Are you root?."
+            when "EADDRINUSE" then msg += "Is a server already running?"
             else msg = null
           if msg?
             env.logger.error msg
-            env.logger.debug err.stack  
-          else throw err
-          process.exit 1
+            env.logger.debug err.stack
+            err.silent = yes  
+          throw err
 
       if @app.httpsServer?
         httpsServerConfig = @config.settings.httpsServer
