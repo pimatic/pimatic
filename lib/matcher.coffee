@@ -171,7 +171,7 @@ class Matcher
     return M(newInputs, @context)
 
     
-  hadNoMatches: -> inputs.length is 0
+  hadNoMatches: -> @inputs.length is 0
 
 M = (args...) -> new Matcher(args...)
 
