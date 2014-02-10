@@ -142,6 +142,13 @@ class Matcher
     for input in @inputs
       if input.length is 0 then callback()
 
+  ###
+    m.inAnyOrder([
+      (m) => m.match(' title:').matchString(setTitle)
+      (m) => m.match(' message:').matchString(setMessage)  
+    ]).onEnd(...)
+  ###
+
   inAnyOrder: (callbacks) ->
     assert Array.isArray callbacks
     hadMatch = yes
