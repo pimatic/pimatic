@@ -27,11 +27,11 @@ module.exports =
         format: Boolean
         default: true
       loginTime:
-        doc: """The time in milliseconds to keep the session cookie. If 0 then delete the cookie
-        on browser close.
+        doc: """The time in milliseconds to keep the session cookie if rememberMe is checked. 
+        If 0 then delete the cookie on browser close.
         """
         format: Number
-        default: 0
+        default: 30 * 24 * 60 * 60 * 1000 #thirty days
     logLevel:
       doc: "The log level: debug, info, warn, error" 
       format: String

@@ -77,9 +77,9 @@ module.exports = (env) ->
       auth = @config.settings.authentication
       secret = "pimatic-#{auth.username}-#{auth.password}"
       @app.use express.cookieSession(
-        secret: secret, 
-        key: 'pimatic.sess', 
-        cookie: { maxAge: (if auth.loginTime is 0 then null else auth.loginTime) }
+        secret: secret
+        key: 'pimatic.sess'
+        cookie: { maxAge: null }
       )
       # Setup authentication
       # ----------------------
@@ -92,6 +92,18 @@ module.exports = (env) ->
         
         #req.path
         @app.use (req, res, next) =>
+          
+          # set expire date if we should keep loggedin
+          if req.query.rememberMe is 'true' then req.session.rememberMe = yes
+          if req.query.rememberMe is 'false' then req.session.rememberMe = false
+
+          if req.session.rememberMe and auth.loginTime isnt 0
+            req.session.cookie.maxAge = auth.loginTime
+          else
+            req.session.cookie.maxAge = null
+          #touch session to set cookie
+          req.session.maxAge = auth.loginTime
+
           # if already logged in so just continue
           if req.session.username is auth.username then return next()
           # not authorized yet

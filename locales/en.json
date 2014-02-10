@@ -90,5 +90,6 @@
 	"dimmed %s to %s%": "dimmed %s to %s%",
 	"dimmed %s to %s\\%": "dimmed %s to %s\\%",
 	"dimmed %s to %s%%": "dimmed %s to %s%%",
-	"would dim %s to %s%%": "would dim %s to %s%%"
+	"would dim %s to %s%%": "would dim %s to %s%%",
+	"Remember me": "Remember me"
 }
