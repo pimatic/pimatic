@@ -75,12 +75,12 @@ module.exports = (env) ->
       @app.use express.cookieParser()
       @app.use express.bodyParser()
       auth = @config.settings.authentication
-      secret = "pimatic-#{auth.username}-#{auth.password}"
-      @app.use express.cookieSession(
-        secret: secret
+      @app.cookieSessionOptions = {
+        secret: "pimatic-#{auth.username}-#{auth.password}"
         key: 'pimatic.sess'
-        cookie: { maxAge: null }
-      )
+        cookie: { maxAge: null }        
+      }
+      @app.use express.cookieSession(@app.cookieSessionOptions)
       # Setup authentication
       # ----------------------
       # Use http-basicAuth if authentication is not disabled.
@@ -136,8 +136,8 @@ module.exports = (env) ->
 
         httpsOptions = {}
         httpsOptions[name]=value for name, value of httpsConfig
-        httpsOptions.key = fs.readFileSync httpsConfig.keyFile
-        httpsOptions.cert = fs.readFileSync httpsConfig.certFile
+        httpsOptions.key = fs.readFileSync path.resolve(@maindir, '../..', httpsConfig.keyFile)
+        httpsOptions.cert = fs.readFileSync path.resolve(@maindir, '../..', httpsConfig.certFile)
         https = require "https"
         @app.httpsServer = https.createServer httpsOptions, @app
 
