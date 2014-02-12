@@ -582,8 +582,6 @@ class RuleManager extends require('events').EventEmitter
         return Q()
     rule.lastExecuteTime = currentTime
 
-    # Returns the current time as string: `2012-11-04 14:55:45`
-    now = => new Date().format 'YYYY-MM-DD hh:mm:ss'
     context = @createParseContext()
     return @executeAction(rule.action, false, context).then( (messages) =>
       if context.hasErrors()
@@ -591,9 +589,9 @@ class RuleManager extends require('events').EventEmitter
       assert Array.isArray messages
       # concat the messages: `["a", "b"] => "a and b"`
       message = _.reduce(messages, (ms, m) => if m? then "#{ms} and #{m}" else ms)
-      logger.info "#{now()}: rule #{rule.id}: #{message}"
+      logger.info "rule #{rule.id}: #{message}"
     ).catch( (error)=>
-      logger.error "#{now()}: rule #{rule.id} error: #{error}"
+      logger.error "rule #{rule.id} error: #{error}"
     )
 
   # ###executeAction()
