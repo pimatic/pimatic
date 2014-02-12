@@ -1,11 +1,13 @@
 #!/bin/sh
 # run with: curl -s https://raw.github.com/pimatic/pimatic/development/install/install-git | bash /dev/stdin development
 BRANCH=$1
-mkdir pimatic-app
-cd pimatic-app
+mkdir pimatic-git
+cd pimatic-git
 for name in pimatic pimatic-cron pimatic-filebrowser pimatic-gpio pimatic-log-reader pimatic-mobile-frontend pimatic-pilight pimatic-ping pimatic-redirect pimatic-rest-api pimatic-sispmctl pimatic-datalogger pimatic-shell-execute
 do
   echo "Installing $name from git..." 
   npm install git+https://github.com/pimatic/$name.git#$BRANCH
 done
+echo "Installing pushover from git..." 
+npm install git+https://github.com/thexperiments/pimatic-pushover#$BRANCH
 cp -i ./node_modules/pimatic/config_default.json ./config.json
