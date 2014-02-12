@@ -574,6 +574,14 @@ class RuleManager extends require('events').EventEmitter
   # ###executeActionAndLogResult()
   # Executes the actions of the string using `executeAction` and logs the result to the logger.    
   executeActionAndLogResult: (rule) ->
+    currentTime = (new Date).getTime()
+    if rule.lastExecuteTime?
+      delta = currentTime - rule.lastExecuteTime
+      if delta <= 2
+        logger.debug "Suppressing rule #{rule.id} execute because it was executed resently."
+        return Q()
+    rule.lastExecuteTime = currentTime
+
     # Returns the current time as string: `2012-11-04 14:55:45`
     now = => new Date().format 'YYYY-MM-DD hh:mm:ss'
     context = @createParseContext()
