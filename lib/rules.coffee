@@ -577,7 +577,7 @@ class RuleManager extends require('events').EventEmitter
     currentTime = (new Date).getTime()
     if rule.lastExecuteTime?
       delta = currentTime - rule.lastExecuteTime
-      if delta <= 2
+      if delta <= 500
         logger.debug "Suppressing rule #{rule.id} execute because it was executed resently."
         return Q()
     rule.lastExecuteTime = currentTime

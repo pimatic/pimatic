@@ -202,6 +202,7 @@ describe "RuleManager", ->
       ).catch(finish).done()
 
     it 'should react to notifies', (finish) ->
+      this.timeout 3000
 
       actionHandler.executeAction = (actionString, simulate) =>
         cassert actionString is "action 1"
@@ -209,7 +210,11 @@ describe "RuleManager", ->
         finish()
         return Q.fcall -> "execute action"
 
-      notifyCallback('event')
+      setTimeout( ->
+        notifyCallback('event')
+      , 2001
+      )
+
 
   # ###Tests for `updateRuleByString()`
   describe '#doesRuleCondtionHold', ->
@@ -683,7 +688,7 @@ describe "RuleManager", ->
   # ###Tests for `updateRuleByString()`
   describe '#updateRuleByString()', ->
 
-    notfyCallback = null
+    notifyCallback = null
     i = 1
 
     it 'should update the rule', (finish) ->
@@ -708,7 +713,7 @@ describe "RuleManager", ->
         cassert id?
         cassert predicate is 'predicate 2'
         cassert typeof callback is 'function'
-        notfyCallback = callback
+        notifyCallback = callback
         notifyWhenCalled = i
         i++
         return true
@@ -729,6 +734,7 @@ describe "RuleManager", ->
 
 
     it 'should react to notifies', (finish) ->
+      this.timeout 3000
 
       actionHandler.executeAction = (actionString, simulate) =>
         cassert actionString is "action 1"
@@ -736,7 +742,11 @@ describe "RuleManager", ->
         finish()
         return Q.fcall -> "execute action"
 
-      notfyCallback 'event'
+      setTimeout( ->
+        notifyCallback('event')
+      , 2001
+      )
+
 
   # ###Tests for `removeRule()`
   describe '#removeRule()', ->
