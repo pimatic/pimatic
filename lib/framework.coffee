@@ -11,6 +11,7 @@ i18n = require 'i18n'
 express = require "express"
 Q = require 'q'
 path = require 'path'
+S = require 'string'
 
 module.exports = (env) ->
 
@@ -327,6 +328,15 @@ module.exports = (env) ->
         addRulePromises = (for rule in @config.rules
           do (rule) =>
             unless rule.active? then rule.active = yes
+
+            unless rule.id.match /^[a-z0-9\-_]+$/i
+              newId = S(rule.id).slugify().s
+              env.logger.warn """
+                The id of the rule "#{rule.id}" contains a non alphanumeric letter or symbol.
+                Changing the id of the rule to "#{newId}".
+              """
+              rule.id = newId
+
             @ruleManager.addRuleByString(rule.id, rule.rule, rule.active, true).catch( (err) =>
               env.logger.error "Could not parse rule \"#{rule.rule}\": " + err.message 
               env.logger.debug err.stack

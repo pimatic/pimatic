@@ -340,6 +340,10 @@ class RuleManager extends require('events').EventEmitter
     assert id? and typeof id is "string" and id.length isnt 0
     assert ruleString? and typeof ruleString is "string"
 
+    unless id.match /^[a-z0-9\-_]+$/i then throw new Error "rule id must only contain " +
+      "alpha numerical symbols, \"-\" and  \"_\""
+    if @rules[id]? then throw new Error "There is already a rule with the id \"#{id}\""
+
     context = @createParseContext()
     # First parse the rule.
     return @parseRuleString(id, ruleString, context).then( (rule)=>
