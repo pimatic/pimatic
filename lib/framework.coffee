@@ -163,19 +163,29 @@ module.exports = (env) ->
             err.silent = yes  
           throw err
 
+      listenPromises = []
       if @app.httpsServer?
+        deferred = Q.defer()
         httpsServerConfig = @config.settings.httpsServer
         @app.httpsServer.on 'error', genErrFunc(@config.settings.httpsServer)
-        @app.httpsServer.listen httpsServerConfig.port
-        env.logger.info "listening for https-request on port #{httpsServerConfig.port}..."
-
+        @app.httpsServer.listen httpsServerConfig.port, deferred.makeNodeResolver()
+        listenPromises.push deferred.promise.then( =>
+          env.logger.info "listening for https-request on port #{httpsServerConfig.port}..."
+        )
+        
       if @app.httpServer?
+        deferred = Q.defer()
         httpServerConfig = @config.settings.httpServer
         @app.httpServer.on 'error', genErrFunc(@config.settings.httpServer)
-        @app.httpServer.listen httpServerConfig.port
-        env.logger.info "listening for http-request on port #{httpServerConfig.port}..."
-
-      @emit "server listen", "startup"
+        @app.httpServer.listen httpServerConfig.port, deferred.makeNodeResolver()
+        listenPromises.push deferred.promise.then( =>
+          env.logger.info "listening for http-request on port #{httpServerConfig.port}..."
+        )
+        
+      Q.all(listenPromises).then( =>
+        @emit "server listen", "startup"
+      )
+      
 
     loadPlugins: -> 
 
