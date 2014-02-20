@@ -92,38 +92,42 @@ module.exports = (env) ->
         assert auth.username and typeof auth.username is "string" and auth.username.length isnt 0 
         assert auth.password and typeof auth.password is "string" and auth.password.length isnt 0 
         
-        #req.path
-        @app.use (req, res, next) =>
-          
-          # set expire date if we should keep loggedin
-          if req.query.rememberMe is 'true' then req.session.rememberMe = yes
-          if req.query.rememberMe is 'false' then req.session.rememberMe = false
+      #req.path
+      @app.use (req, res, next) =>
+        # set expire date if we should keep loggedin
+        if req.query.rememberMe is 'true' then req.session.rememberMe = yes
+        if req.query.rememberMe is 'false' then req.session.rememberMe = no
 
-          if req.session.rememberMe and auth.loginTime isnt 0
-            req.session.cookie.maxAge = auth.loginTime
-          else
-            req.session.cookie.maxAge = null
-          #touch session to set cookie
-          req.session.maxAge = auth.loginTime
+        if req.session.rememberMe and auth.loginTime isnt 0
+          req.session.cookie.maxAge = auth.loginTime
+        else
+          req.session.cookie.maxAge = null
+        #touch session to set cookie
+        req.session.maxAge = auth.loginTime
 
-          # if already logged in so just continue
-          if req.session.username is auth.username then return next()
-          # not authorized yet
+        # auth is deactivated so we allways continue
+        unless auth.enabled
+          req.session.username = ''
+          return next()
 
-          ###
-            if we don't should promp for a password, just fail.
-            This does not allow unauthorizied access, it just a workaround to let the browser
-            don't show the password prompt on certain ajax requests
-          ###
-          if req.query.noAuthPromp? then return res.send(401)
+        # if already logged in so just continue
+        if req.session.username is auth.username then return next()
+        # not authorized yet
 
-          # else use authorization
-          express.basicAuth( (user, pass) =>
-            valid = (user is auth.username and pass is auth.password)
-            # when valid then keep logged in
-            if valid then req.session.username = user 
-            return valid
-          )(req, res, next)
+        ###
+          if we don't should promp for a password, just fail.
+          This does not allow unauthorizied access, it just a workaround to let the browser
+          don't show the password prompt on certain ajax requests
+        ###
+        if req.query.noAuthPromp? then return res.send(401)
+
+        # else use authorization
+        express.basicAuth( (user, pass) =>
+          valid = (user is auth.username and pass is auth.password)
+          # when valid then keep logged in
+          if valid then req.session.username = user 
+          return valid
+        )(req, res, next)
 
       if not @config.settings.httpsServer?.enabled and 
          not @config.settings.httpServer?.enabled
