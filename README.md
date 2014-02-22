@@ -1,7 +1,7 @@
 pimatic
 =======
 
-[![Build Status](https://travis-ci.org/pimatic/pimatic.png?branch=development)](https://travis-ci.org/pimatic/pimatic)
+[![Build Status](https://travis-ci.org/pimatic/pimatic.png?branch=master)](https://travis-ci.org/pimatic/pimatic)
 [![NPM version](https://badge.fury.io/js/pimatic.png)](http://badge.fury.io/js/pimatic)
 
 pimatic is a home automation framework that runs on [node.js](http://nodejs.org). It provides a 
