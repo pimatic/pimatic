@@ -8,6 +8,9 @@ take a look at the [rules file](rules.html).
 __ = require("i18n").__
 Q = require 'q'
 assert = require 'cassert'
+_ = require('lodash')
+S = require('string')
+M = require './matcher'
 
 ###
 The Action Handler
@@ -31,7 +34,7 @@ class ActionHandler
 
   Take a look at the Log Action Handler for a simple example.
   ###
-  executeAction: (actionString, simulate) =>
+  executeAction: (actionString, simulate, context) =>
     throw new Error("should be implemented by a subclass")  
 
 env = null
@@ -51,24 +54,31 @@ class LogActionHandler extends ActionHandler
   ###
   This function handles action in the form of `log "some string"`
   ###
-  executeAction: (actionString, simulate) =>
-    # If the action string matches the expected format
-    regExpString = '^log\\s+"(.*)?"$'
-    matches = actionString.match (new RegExp regExpString)
-    if matches?
-      # extract the string to log.
-      stringToLog = matches[1]
-      # If we should just simulate
+  executeAction: (actionString, simulate, context) ->
+    retVal = null
+    stringToLog = null
+    fullMatch = no
+
+    setLogString = (m, str) => stringToLog = str
+    onEnd = () => fullMatch = yes
+
+    M(actionString, context)
+      .match("log ")
+      .matchString(setLogString)
+      .onEnd(onEnd)
+
+    if fullMatch
       if simulate
         # just return a promise fulfilled with a description about what we would do.
-        return Q __("would log \"%s\"", stringToLog)
+        retVal = Q __("would log \"%s\"", stringToLog)
       else
         # else we should log the string.
         # But we don't do this because the framework logs the description anyway. So we would 
         # doubly log it.
         #env.logger.info stringToLog
-        return Q(stringToLog)
-    else return null
+        retVal = Q(stringToLog)
+    
+    return retVal
 
 ###
 The Switch Action Handler
@@ -91,72 +101,125 @@ class SwitchActionHandler extends ActionHandler
   ###
   Handles the above actions.
   ###
-  executeAction: (actionString, simulate) =>
-    actionString = actionString.toLowerCase()
-    self = this
+  executeAction: (actionString, simulate, context) =>
     # The result the function will return:
-    result = null
-    # The potential device name:
-    deviceName = null
-    # the matched state: "on" or "off".
-    state = null
-    # Try to match the input string with:
-    matches = actionString.match ///
-      ^(?:turn|switch)? # Must begin with "turn" or "switch"
-      \s+ #followed by whitespace
-      # An optional "the " is handled in device.matchesIdOrName() we use later.
-      (.+?) #followed by the device name or id,
-      \s+ # whitespace
-      (on|off)$ #and ends with "on" or "off".
-    ///
-    # If we have a match
-    if matches?
-      # then extract deviceName and state.
-      deviceName = matches[1]
-      state = matches[2]
-    else 
-      # Else try the other way around:
-      matches = actionString.match ///
-        ^(?:turn|switch) # Must begin with "turn" or "switch"
-        \s+ # followed by whitespace
-        # An optional "the " is handled in device.matchesIdOrName() we use later.
-        (on|off) #and "on" or "off"
-        \s+ # following whitespace
-        ?(.+?)$ # and end with a device name.
-        ///
-      # If we have a match this time
-      if matches?
-        # then extract deviceName and state.
-        deviceName = matches[2]
-        state = matches[1]
-    # If we had a one match of the two choice above
-    if deviceName? and state?
-      # then convert the state string to an boolean
-      state = (state is "on")
-      # and to the corresponding functions to execute.
-      actionName = (if state then "turnOn" else "turnOff")
+    retVar = null
 
-      # For all registed devices:
-      for id, device of self.framework.devices
-        do (id, device) =>
-          # if we have not yet found a device
-          unless result?
-            # check if the device name of the current device matches 
-            if device.matchesIdOrName deviceName
-              # and the device has the "turnOn" or "turnOff" action
-              if device.hasAction actionName
-                # then simulate or do the action.
-                result = (
-                  if simulate
-                    if state then Q __("would turn %s on", device.name)
-                    else Q __("would turn %s off", device.name)
-                  else
-                    if state then device.turnOn().then( => __("turned %s on", device.name) )
-                    else device.turnOff().then( => __("turned %s off", device.name) )
-                )
-    return result
+    switchDevices = _(@framework.devices).values().filter( 
+      (device) => device.hasAction("turnOn") and device.hasAction("turnOff") 
+    ).value()
+    # Try to match the input string with:
+    m = M(actionString, context).match(['turn ', 'switch '])
+
+    device = null
+    state = null
+    fullMatchCount = 0
+
+    # device name -> on|off
+    m.matchDevice(switchDevices, (m, d) ->
+      device = d
+      m.match([' on', ' off'], (m, s) ->
+        state = s.trim()
+        m.onEnd( -> fullMatchCount++)
+      )
+    )
+
+    # on|off -> deviceName
+    m.match(['on ', 'off '], (m, s) ->
+      state = s.trim()
+      m.matchDevice(switchDevices, (m, d) ->
+        device = d
+        m.onEnd( -> fullMatchCount++)
+      )
+    )
+
+    if fullMatchCount is 1
+      state = (state is 'on')
+      retVar = (
+        if simulate
+          if state then Q __("would turn %s on", device.name)
+          else Q __("would turn %s off", device.name)
+        else
+          if state then device.turnOn().then( => __("turned %s on", device.name) )
+          else device.turnOff().then( => __("turned %s off", device.name) )
+      )
+    else if fullMatchCount > 1
+      context.addError(""""#{actionString.trim()}" is ambiguous.""")
+
+    return retVar
+
+###
+The Dimmer Action Handler
+-------------
+Provides the ability to change the dim level of dimmer devices. Currently it handles the 
+following actions:
+
+* dim [the] _device_ to _value_%
+
+where _device_ is the name or id of a device and "the" is optional.
+###
+class DimmerActionHandler extends ActionHandler
+
+  constructor: (_env, @framework) ->
+    env = _env
+
+  # ### executeAction()
+  ###
+  Handles the above actions.
+  ###
+  executeAction: (actionString, simulate, context) =>
+    # The result the function will return:
+    retVar = null
+
+    dimmers = _(@framework.devices).values().filter( 
+      (device) => device.hasAction("changeDimlevelTo") 
+    ).value()
+
+    if dimmers.length is 0 then return
+
+    device = null
+    value = null
+    fullMatchCount = 0
+
+    setDevice = (m, d) -> device = d
+    setValue = (m, v) -> value = v 
+    onEnd = () => fullMatchCount++
+
+    # Try to match the input string with:
+    m = M(actionString, context)
+      .match('dim ')
+      .matchDevice(dimmers, setDevice)
+      .match(' to ')
+      .matchNumber(setValue)
+      .match('%', optional: yes)
+      .onEnd(onEnd)
+
+    if fullMatchCount is 1
+      if isNaN(value)
+        context?.addError("Expexted \"#{value}\" to be a number.")
+        return
+      value = parseFloat(value)
+      if value < 0.0
+        context?.addError("Can't dim to a negativ dimlevel.")
+        return
+      if value > 100.0
+        context?.addError("Can't dim to greaer than 100%.")
+        return
+
+      retVar = (
+        if simulate
+          Q __("would dim %s to %s%%", device.name, value)
+        else
+          device.changeDimlevelTo(value).then( => __("dimmed %s to %s%%", device.name, value) )
+      )
+    else if fullMatchCount > 1
+      context.addError(""""#{actionString.trim()}" is ambiguous.""")
+
+    return retVar
+
 
 # Export the classes so that they can be accessed by the framewor-
 module.exports.ActionHandler = ActionHandler
 module.exports.SwitchActionHandler = SwitchActionHandler
+module.exports.DimmerActionHandler = DimmerActionHandler
 module.exports.LogActionHandler = LogActionHandler

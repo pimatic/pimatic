@@ -11,6 +11,7 @@ i18n = require 'i18n'
 express = require "express"
 Q = require 'q'
 path = require 'path'
+S = require 'string'
 
 module.exports = (env) ->
 
@@ -72,17 +73,61 @@ module.exports = (env) ->
       # -------------
       @app = express()
       #@app.use express.logger()
-      @app.use express.bodyParser()
-
+      @app.use express.cookieParser()
+      @app.use express.urlencoded()
+      @app.use express.json()
+      auth = @config.settings.authentication
+      @app.cookieSessionOptions = {
+        secret: "pimatic-#{auth.username}-#{auth.password}"
+        key: 'pimatic.sess'
+        cookie: { maxAge: null }        
+      }
+      @app.use express.cookieSession(@app.cookieSessionOptions)
       # Setup authentication
       # ----------------------
       # Use http-basicAuth if authentication is not disabled.
-      auth = @config.settings.authentication
+      
       if auth.enabled
         #Check authentication.
         assert auth.username and typeof auth.username is "string" and auth.username.length isnt 0 
         assert auth.password and typeof auth.password is "string" and auth.password.length isnt 0 
-        @app.use express.basicAuth(auth.username, auth.password)
+        
+      #req.path
+      @app.use (req, res, next) =>
+        # set expire date if we should keep loggedin
+        if req.query.rememberMe is 'true' then req.session.rememberMe = yes
+        if req.query.rememberMe is 'false' then req.session.rememberMe = no
+
+        if req.session.rememberMe and auth.loginTime isnt 0
+          req.session.cookie.maxAge = auth.loginTime
+        else
+          req.session.cookie.maxAge = null
+        #touch session to set cookie
+        req.session.maxAge = auth.loginTime
+
+        # auth is deactivated so we allways continue
+        unless auth.enabled
+          req.session.username = ''
+          return next()
+
+        # if already logged in so just continue
+        if req.session.username is auth.username then return next()
+        # not authorized yet
+
+        ###
+          if we don't should promp for a password, just fail.
+          This does not allow unauthorizied access, it just a workaround to let the browser
+          don't show the password prompt on certain ajax requests
+        ###
+        if req.query.noAuthPromp? then return res.send(401)
+
+        # else use authorization
+        express.basicAuth( (user, pass) =>
+          valid = (user is auth.username and pass is auth.password)
+          # when valid then keep logged in
+          if valid then req.session.username = user 
+          return valid
+        )(req, res, next)
 
       if not @config.settings.httpsServer?.enabled and 
          not @config.settings.httpServer?.enabled
@@ -97,8 +142,8 @@ module.exports = (env) ->
 
         httpsOptions = {}
         httpsOptions[name]=value for name, value of httpsConfig
-        httpsOptions.key = fs.readFileSync httpsConfig.keyFile
-        httpsOptions.cert = fs.readFileSync httpsConfig.certFile
+        httpsOptions.key = fs.readFileSync path.resolve(@maindir, '../..', httpsConfig.keyFile)
+        httpsOptions.cert = fs.readFileSync path.resolve(@maindir, '../..', httpsConfig.certFile)
         https = require "https"
         @app.httpsServer = https.createServer httpsOptions, @app
 
@@ -112,29 +157,39 @@ module.exports = (env) ->
         return (err) =>
           msg = "Could not listen on port #{serverConfig.port}. " + 
                 "Error: #{err.message}. "
-          switch err.message 
-            when "listen EACCES" then  msg += "Are you root?."
-            when "listen EADDRINUSE" then msg += "Is a server already running?"
+          switch err.code 
+            when "EACCES" then msg += "Are you root?."
+            when "EADDRINUSE" then msg += "Is a server already running?"
             else msg = null
           if msg?
             env.logger.error msg
-            env.logger.debug err.stack  
-          else throw err
-          process.exit 1
+            env.logger.debug err.stack
+            err.silent = yes  
+          throw err
 
+      listenPromises = []
       if @app.httpsServer?
+        deferred = Q.defer()
         httpsServerConfig = @config.settings.httpsServer
         @app.httpsServer.on 'error', genErrFunc(@config.settings.httpsServer)
-        @app.httpsServer.listen httpsServerConfig.port
-        env.logger.info "listening for https-request on port #{httpsServerConfig.port}..."
-
+        @app.httpsServer.listen httpsServerConfig.port, deferred.makeNodeResolver()
+        listenPromises.push deferred.promise.then( =>
+          env.logger.info "listening for https-request on port #{httpsServerConfig.port}..."
+        )
+        
       if @app.httpServer?
+        deferred = Q.defer()
         httpServerConfig = @config.settings.httpServer
         @app.httpServer.on 'error', genErrFunc(@config.settings.httpServer)
-        @app.httpServer.listen httpServerConfig.port
-        env.logger.info "listening for http-request on port #{httpServerConfig.port}..."
-
-      @emit "server listen", "startup"
+        @app.httpServer.listen httpServerConfig.port, deferred.makeNodeResolver()
+        listenPromises.push deferred.promise.then( =>
+          env.logger.info "listening for http-request on port #{httpServerConfig.port}..."
+        )
+        
+      Q.all(listenPromises).then( =>
+        @emit "server listen", "startup"
+      )
+      
 
     loadPlugins: -> 
 
@@ -270,6 +325,7 @@ module.exports = (env) ->
 
       initActionHandler = =>
         @ruleManager.addActionHandler new env.actions.SwitchActionHandler env, this
+        @ruleManager.addActionHandler new env.actions.DimmerActionHandler env, this
         @ruleManager.addActionHandler new env.actions.LogActionHandler env, this
 
       initPredicateProvider = =>
@@ -286,6 +342,15 @@ module.exports = (env) ->
         addRulePromises = (for rule in @config.rules
           do (rule) =>
             unless rule.active? then rule.active = yes
+
+            unless rule.id.match /^[a-z0-9\-_]+$/i
+              newId = S(rule.id).slugify().s
+              env.logger.warn """
+                The id of the rule "#{rule.id}" contains a non alphanumeric letter or symbol.
+                Changing the id of the rule to "#{newId}".
+              """
+              rule.id = newId
+
             @ruleManager.addRuleByString(rule.id, rule.rule, rule.active, true).catch( (err) =>
               env.logger.error "Could not parse rule \"#{rule.rule}\": " + err.message 
               env.logger.debug err.stack

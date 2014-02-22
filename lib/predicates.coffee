@@ -10,7 +10,10 @@ special event happen.
 
 __ = require("i18n").__
 Q = require 'q'
+S = require 'string'
 assert = require 'cassert'
+_ = require 'lodash'
+M = require './matcher'
 
 ###
 The Predicate Provider
@@ -31,9 +34,10 @@ class PredicateProvider
 
   __params__
 
-   * `preicate`: the predicate as string like `"its 10pm"` 
+   * `predicate`: the predicate as string like `"its 10pm"` 
+   * `context`: is used to add optional autocomplete hints or other hints
   ###
-  canDecide: (predicate) ->
+  canDecide: (predicate, context) ->
     throw new Error("your predicate provider must implement canDecide")
 
   # ### isTrue()
@@ -103,8 +107,8 @@ class DeviceEventPredicateProvider extends PredicateProvider
   ###
   Gets the info object from `_parsePredicate` implementation and checks if it returned null.
   ###
-  canDecide: (predicate) ->
-    info = @_parsePredicate predicate
+  canDecide: (predicate, context) ->
+    info = @_parsePredicate predicate, context
     return if info? then 'state' else no 
 
   # ### isTrue()
@@ -184,40 +188,41 @@ class SwitchPredicateProvider extends DeviceEventPredicateProvider
   Parses the string and setups the info object as explained in the DeviceEventPredicateProvider.
   Read the description of it to understand the return value.
   ###
-  _parsePredicate: (predicate) ->
-    # Just to be sure convert the predicate to lower case.
-    predicate = predicate.toLowerCase()
-    # Then try to match:
-    matches = predicate.match ///
-      ^(.+)? # the device name
-      \s+ # followed by whitespace
-      is # and an "is"
-      \s+ # a whitespace
-      (?:turned\s+|switched\s+)? # optional an "turned " or "switched "
-      (on|off)$ # and ends in "on" or "off"
-    ///
+  _parsePredicate: (predicate, context) ->  
+
+    switchDevices = _(@framework.devices).values()
+      .filter((device) => device.hasAttribute( 'state')).value()
+
+    device = null
+    state = null
+    matchCount = 0
+
+    setDevice = (m, d) => device = d
+    setState = (m, s) => state = s
+    stateAcFilter = (v) => v.trim() isnt 'is switched' 
+
+    M(predicate, context).matchDevice(switchDevices, setDevice)
+      .match([' is', ' is turned', ' is switched'], acFilter: stateAcFilter)
+      .match([' on', ' off'], setState)
+      .onEnd( => matchCount++)
+
     # If we have a macht
-    if matches?
-      # extract the device name
-      deviceName = matches[1].trim()
+    if matchCount is 1
+      assert device?
+      assert state?
       # and state as boolean.
-      state = (matches[2] is "on")
-      # For each device
-      for id, d of @framework.devices
-        # If the device name matches
-        if d.matchesIdOrName deviceName
-          # and the device has a state attribute
-          if d.hasAttribute 'state'
-            # return a info object.
-            return info =
-              device: d
-              event: 'state'
-              getPredicateValue: => 
-                d.getAttributeValue('state').then (s) => s is state
-              getEventListener: (callback) => 
-                return eventListener = (s) => callback(s is state)
-              state: state # for testing only
-    # If we have no match then return null.
+      state = (state.trim() is "on")
+
+      return info =
+        device: device
+        event: 'state'
+        getPredicateValue: => 
+          device.getAttributeValue('state').then (s) => s is state
+        getEventListener: (callback) => 
+          return eventListener = (s) => callback(s is state)
+        state: state # for testing only
+    else if matchCount > 1
+      context?.addError(""""#{predicate.trim()}" is ambiguous.""")
     return null
 
 ###
@@ -239,40 +244,43 @@ class PresencePredicateProvider extends DeviceEventPredicateProvider
   Parses the string and setups the info object as explained in the DeviceEventPredicateProvider.
   Read the description of it to understand the return value.
   ###
-  _parsePredicate: (predicate) ->
-    # Just to be sure convert the predicate to lower case.
-    predicate = predicate.toLowerCase()
-    # Then try to match:
-    matches = predicate.match ///
-      ^(.+)? # the device name
-      \s+ # whitespace
-      is # is
-      \s+ # whitespace
-      (not\s+present|present|absent)$ # and ends with "not present", "present" or "absent"
-    ///
-    # If we have a match
-    if matches?
-      # extract the device name
-      deviceName = matches[1].trim()
-      # and save if we should detect "present" or the opposite
-      negated = (if matches[2] isnt "present" then yes else no) 
-      # For each device
-      for id, d of @framework.devices
-        # check if the device name matches
-        if d.matchesIdOrName deviceName
-          # and the device has a attribute named presence
-          if d.hasAttribute 'presence'
-            # then return a info object.
-            return info =
-              device: d
-              event: 'presence'
-              getPredicateValue: => 
-                d.getAttributeValue('presence').then (presence) =>
-                  if negated then not presence else presence
-              getEventListener: (callback) => 
-                return eventListener = (presence) => 
-                  callback(if negated then not presence else presence)
-              negated: negated # for testing only
+  _parsePredicate: (predicate, context) ->
+
+    presenceDevices = _(@framework.devices).values()
+      .filter((device) => device.hasAttribute( 'presence')).value()
+
+    device = null
+    state = null
+    matchCount = 0
+
+    setDevice = (m, d) => device = d
+    setState =  (m, s) => state = s
+    stateAcFilter = (v) => v isnt 'not present'
+
+    M(predicate, context)
+      .matchDevice(presenceDevices, setDevice)
+      .match([' is', ' reports', ' signals'])
+      .match([' present', ' absent', 'not present'], acFilter: stateAcFilter, setState)
+      .onEnd( => matchCount++)
+
+    if matchCount is 1
+      assert device?
+      assert state?
+
+      negated = (state.trim() isnt "present") 
+
+      return info =
+        device: device
+        event: 'presence'
+        getPredicateValue: => 
+          device.getAttributeValue('presence').then (presence) =>
+            if negated then not presence else presence
+        getEventListener: (callback) => 
+          return eventListener = (presence) => 
+            callback(if negated then not presence else presence)
+        negated: negated # for testing only
+    else if matchCount > 1
+      context?.addError(""""#{predicate.trim()}" is ambiguous.""")
     # If we have no match then return null.
     return null
 
@@ -294,6 +302,17 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
   constructor: (_env, @framework) ->
     env = _env
 
+    @comparators =
+    '==': ['equals', 'is equal to', 'is equal', 'is']
+    '!=': [ 'is not' ]
+    '<': ['less', 'lower', 'below']
+    '>': ['greater', 'higher', 'above']
+
+    for sign in ['<', '>']
+      @comparators[sign] = _(@comparators[sign]).map( 
+        (c) => [c, "is #{c}", "is #{c} than", "is #{c} as", "#{c} than", "#{c} as"]
+      ).flatten().value()
+
   # ### _compareValues()
   ###
   Does the comparison.
@@ -313,76 +332,89 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
   Parses the string and setups the info object as explained in the DeviceEventPredicateProvider.
   Read the description of it to understand the return value.
   ###
-  _parsePredicate: (predicate) ->
-    predicate = predicate.toLowerCase()
-    matches = predicate.match ///
-      ^(.+)\s+ # the attribute
-      of\s+ # of
-      (.+?)\s+ # the device
-      (?:is\s+)? # is
-      (equal\s+to|equals*|lower|less|greater|is\s+not|is) 
-      # is, is not, equal, equals, lower, less, greater
-      (?:|\s+equal|\s+than|\s+as)?\s+ # equal to, equal, than, as
-      (.+)?$ # reference value
-    ///
-    if matches?
-      attributeName = matches[1].trim().toLowerCase()
-      deviceName = matches[2].trim().toLowerCase()
-      comparator = matches[3].trim() 
-      referenceValue = matches[4].trim()
-      #console.log "#{attributeName}, #{deviceName}, #{comparator}, #{referenceValue}"
-      for id, d of @framework.devices
-        if d.matchesIdOrName deviceName
-          if d.hasAttribute attributeName
-            comparator = switch comparator
-              when 'is', 'equal', 'equals', 'equal to', 'equals to' then '=='
-              when 'is not' then '!='
-              when 'greater' then '>'
-              when 'lower', 'less' then '<'
-              else 
-                env.logger.error "Illegal comparator \"#{comparator}\""
-                false
+  _parsePredicate: (predicate, context) ->
 
-            unless comparator is false
-              # if the attribute has a unit
-              unit = d.attributes[attributeName].unit
-              if unit?
-                unit = unit.toLowerCase()
-                # then remove it from the reference value and
-                # allow just "c" for "°C"
-                lastIndex = referenceValue.replace('°c', 'c').lastIndexOf unit.replace('°c', 'c')
-                if lastIndex isnt -1
-                  referenceValue = referenceValue.substring 0, lastIndex
+    allAttributes = _(@framework.devices).values().map((device) => _.keys(device.attributes))
+      .flatten().uniq().value()
 
-              # If the attribute is numerical
-              if d.attributes[attributeName].type is Number
-                # then check the referenceValue
-                if isNaN(referenceValue)
-                  throw new Error "Expected #{referenceValue} in \"#{predicate}\" to be a number."
-                # and convert it to a float.
-                referenceValue = parseFloat referenceValue
-              else
-                # if its not numerical but comparator is less or greater
-                if comparator in ["<", ">"]
-                  # then something gone wrong.
-                  throw new Error "Can not compare a non numerical attribute with less or creater."
+    matchCount = 0
+    info =
+      device: null
+      attributeName: null
+      comparator: null
+      referenceValue: null
 
-              lastValue = null
-              return info =
-                device: d
-                event: attributeName
-                getPredicateValue: => 
-                  d.getAttributeValue(attributeName).then (value) =>
-                    @_compareValues comparator, value, referenceValue
-                getEventListener: (callback) => 
-                  return attributeListener = (value) =>
-                    state = @_compareValues comparator, value, referenceValue
-                    if state isnt lastValue
-                      lastValue = state
-                      callback state
-                comparator: comparator # for testing only
-                attributeName: attributeName # for testing only
-                referenceValue: referenceValue
+    M(predicate, context)
+    .match(allAttributes, (m, attr) =>
+      info.attributeName = attr
+      devices = _(@framework.devices).values().filter((device) => device.hasAttribute(attr)).value()
+      m.match(' of ').matchDevice(devices, (m, device) =>
+        info.device = device
+        unless device.hasAttribute(attr) then return
+        attribute = device.attributes[attr]
+
+        setComparator =  (m, c) => info.comparator = c.trim()
+        setRefValue = (m, v) => info.referenceValue = v
+        end =  => matchCount++
+
+        if attribute.type is Boolean
+          m = m.match(' is ', setComparator).match(attribute.labels, setRefValue)
+        else if attribute.type is Number
+          possibleComparators = _(@comparators).values().flatten().map((c)=>" #{c} ").value()
+          autocompleteFilter = (v) => 
+            v.trim() in ['is', 'is not', 'equals', 'is greater than', 'is less than']
+          m = m.match(possibleComparators, acFilter: autocompleteFilter, setComparator)
+            .matchNumber( (m,v) => setRefValue(m, parseFloat(v)) )
+          if attribute.unit? and attribute.unit.length > 0 
+            possibleUnits = _.uniq([
+              " #{attribute.unit}", 
+              "#{attribute.unit}", 
+              "#{attribute.unit.toLowerCase()}", 
+              " #{attribute.unit.toLowerCase()}",
+              "#{attribute.unit.replace('°', '')}", 
+              " #{attribute.unit.replace('°', '')}",
+              "#{attribute.unit.toLowerCase().replace('°', '')}", 
+              " #{attribute.unit.toLowerCase().replace('°', '')}",
+              ])
+            autocompleteFilter = (v) => v is " #{attribute.unit}"
+            m = m.match(possibleUnits, optional: yes, acFilter: autocompleteFilter)
+        else if attribute.type is String
+          m = m.match([' equals to ', ' is ', ' is not '], setComparator).matchString(setRefValue)
+        else if Array.isArray attribute.type
+          m = m.match([' equals to ', ' is ', ' is not '], setComparator)
+            .match(attribute.type, setRefValue) 
+        m.onEnd(end)
+      )
+    )
+
+    if matchCount is 1
+      assert info.device?
+      assert info.attributeName?
+      assert info.comparator?
+      assert info.referenceValue?
+
+      found = false
+      for sign, c of @comparators
+        if info.comparator in c
+          info.comparator = sign
+          found = true
+          break
+      assert found
+      device = info.device
+      lastValue = null
+      info.event = info.attributeName
+      info.getPredicateValue = => 
+        device.getAttributeValue(info.event).then (value) =>
+          @_compareValues info.comparator, value, info.referenceValue
+      info.getEventListener = (callback) => 
+        return attributeListener = (value) =>
+          state = @_compareValues info.comparator, value, info.referenceValue
+          if state isnt lastValue
+            lastValue = state
+            callback state
+      return info
+    else if matchCount > 1
+      context?.addError(""""#{predicate.trim()}" is ambiguous.""")
     return null
 
 

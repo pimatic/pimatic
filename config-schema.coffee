@@ -26,6 +26,12 @@ module.exports =
         doc: "Disable http-basic-authentication"
         format: Boolean
         default: true
+      loginTime:
+        doc: """The time in milliseconds to keep the session cookie if rememberMe is checked. 
+        If 0 then delete the cookie on browser close.
+        """
+        format: Number
+        default: 30 * 24 * 60 * 60 * 1000 #thirty days
     logLevel:
       doc: "The log level: debug, info, warn, error" 
       format: String

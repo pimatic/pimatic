@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "coffee-script": "1.6.3",
-    "express": "3.0.*",
+    "express": "3.4.7",
     "convict": "0.4.*",
     "bet": "0.2.*",
     "i18n": "0.4.*",
@@ -44,7 +44,8 @@
     "semver": "2.2.1",
     "fs.extra": "1.2.1",
     "daemon": "1.1.0",
-    "date-format-lite": "0.5.0"
+    "date-format-lite": "0.5.0",
+    "string": "~1.8.0"
   },
   "bundledDependencies": [
     "coffee-script",
@@ -61,23 +62,24 @@
     "semver",
     "fs.extra",
     "daemon",
-    "date-format-lite"
+    "date-format-lite",
+    "string"
   ],
   "devDependencies": {
-    "grunt-cli": "~0.1.11",
-    "grunt": "~0.4.2",
-    "grunt-coffeelint": "~0.0.8",
-    "grunt-groc": "~0.4.0",
-    "grunt-ftp-deploy": "~0.0.10",
-    "grunt-mocha-test": "~0.8.1",
-    "blanket": "~1.1.5",
-    "coffee-errors": "~0.8.4",
-    "supertest": "~0.8.2",
+    "grunt-cli": "0.1.11",
+    "grunt": "0.4.2",
+    "grunt-coffeelint": "0.0.8",
+    "grunt-groc": "0.4.0",
+    "grunt-ftp-deploy": "0.0.10",
+    "grunt-mocha-test": "0.8.1",
+    "blanket": "1.1.5",
+    "coffee-errors": "0.8.4",
+    "supertest": "0.8.2",
     "grunt-bump": "0.0.13",
     "groc": "git+https://github.com/sweetpi/groc.git#pimatic-style",
     "proxyquire": "~0.5.2",
-    "mocha": "~1.17.0",
-    "sinon": "~1.7.3"
+    "mocha": "1.17.0",
+    "sinon": "1.7.3"
   },
   "engines": {
     "node": ">0.8.x",

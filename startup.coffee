@@ -12,6 +12,7 @@ env =
   plugins: require './lib/plugins'
   actions: require './lib/actions'
   predicates: require './lib/predicates'
+  matcher: require './lib/matcher'
   require: (args...) -> module.require args...
 
 # set the config file to

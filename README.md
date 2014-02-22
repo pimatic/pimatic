@@ -1,7 +1,7 @@
 pimatic
 =======
 
-[![Build Status](https://travis-ci.org/pimatic/pimatic.png?branch=master)](https://travis-ci.org/pimatic/pimatic)
+[![Build Status](https://travis-ci.org/pimatic/pimatic.png?branch=development)](https://travis-ci.org/pimatic/pimatic)
 [![NPM version](https://badge.fury.io/js/pimatic.png)](http://badge.fury.io/js/pimatic)
 
 pimatic is a home automation framework that runs on [node.js](http://nodejs.org). It provides a 
@@ -152,6 +152,23 @@ To make pimatic available global you can run:
 Then pimatic can be used with:
 
     sudo pimatic.js [start|stop|status|restart]
+
+Autostarting
+------------
+
+You can autostart pimatic by additional installing the init.d script:
+
+    wget https://raw.github.com/pimatic/pimatic/master/install/pimatic-init-d
+    sudo cp pimatic-init-d /etc/init.d/pimatic
+    sudo chmod +x /etc/init.d/pimatic
+    sudo chown root:root /etc/init.d/pimatic
+    sudo update-rc.d pimatic defaults
+
+It should now start with:
+  
+    sudo service pimatic start
+
+and log the outputs to: `pimatic-app/pimatic-daemon.log`
 
 Documentation
 -------------

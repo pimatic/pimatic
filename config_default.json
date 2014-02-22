@@ -1,4 +1,5 @@
 {
+  "//": "Please only change this file when pimatic is NOT running else pimatic will overwrite your changes.",
   "settings": {
     "authentication": {
       "username": "admin",

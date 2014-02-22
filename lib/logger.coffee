@@ -39,6 +39,7 @@ class MemoryTransport extends winston.Transport
       level: level
       msg: msg
       meta: meta
+      time: new Date().format 'YYYY-MM-DD hh:mm:ss'
     @buffer.push msg
     @emit "logged"
     @emit "log", msg
@@ -49,6 +50,7 @@ logger = new (winston.Logger)(
     new (winston.transports.Console)(
       level: 'debug'
       colorize: not process.env['PIMATIC_DAEMONIZED']?
+      timestamp: -> new Date().format 'YYYY-MM-DD hh:mm:ss'
     ),
     new MemoryTransport()
   ]
