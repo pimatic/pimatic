@@ -55,4 +55,4 @@ For plugin development take a look at the
 [plugin template](https://github.com/pimatic/pimatic-plugin-template).
 
 Feel free to ask development questions at the 
-[plugin template repository(https://github.com/sweetpi/pimatic-plugin-template/issues).
+[plugin template repository](https://github.com/sweetpi/pimatic-plugin-template/issues).
