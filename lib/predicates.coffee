@@ -255,12 +255,12 @@ class PresencePredicateProvider extends DeviceEventPredicateProvider
 
     setDevice = (m, d) => device = d
     setState =  (m, s) => state = s
-    stateAcFilter = (v) => v isnt 'not present'
+    stateAcFilter = (v) => v.trim() isnt 'not present'
 
     M(predicate, context)
       .matchDevice(presenceDevices, setDevice)
       .match([' is', ' reports', ' signals'])
-      .match([' present', ' absent', 'not present'], acFilter: stateAcFilter, setState)
+      .match([' present', ' absent', ' not present'], {acFilter: stateAcFilter}, setState)
       .onEnd( => matchCount++)
 
     if matchCount is 1
@@ -377,7 +377,7 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
               " #{attribute.unit.toLowerCase().replace('°', '')}",
               ])
             autocompleteFilter = (v) => v is " #{attribute.unit}"
-            m = m.match(possibleUnits, optional: yes, acFilter: autocompleteFilter)
+            m = m.match(possibleUnits, {optional: yes, acFilter: autocompleteFilter})
         else if attribute.type is String
           m = m.match([' equals to ', ' is ', ' is not '], setComparator).matchString(setRefValue)
         else if Array.isArray attribute.type

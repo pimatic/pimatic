@@ -66,6 +66,13 @@ describe "PresencePredicateProvider", ->
       cassert info.device.id is "test"
       cassert info.negated is yes
 
+
+    it 'should parse "test is not present"', ->
+      info = provider._parsePredicate "test is not present"
+      cassert info?
+      cassert info.device.id is "test"
+      cassert info.negated is yes
+
     it 'should return null if id is wrong', ->
       info = provider._parsePredicate "foo is present"
       cassert(not info?)

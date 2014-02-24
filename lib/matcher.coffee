@@ -31,6 +31,7 @@ class Matcher
       options = {}
 
     matches = {}
+    matchesOpt = {}
     rightParts = []
 
     for input in @inputs
@@ -59,6 +60,8 @@ class Matcher
 
         # Now try to match the pattern against the input string
         doesMatch = false
+        match = null
+        nextToken = null
         switch 
           # do a normal string match
           when typeof p is "string" 
@@ -78,13 +81,15 @@ class Matcher
           else throw new Error("Illegal object in patterns")
 
         if doesMatch and not matches[match]?
+          assert match?
+          assert nextToken?
           matches[match] = yes
           # If no matchId was provided then use the matching string itself
           unless matchId? then matchId = match
           if callback? then callback(new M(nextToken, @context), matchId)
           rightParts.push nextToken
-        else if options.optional and not matches['']?
-          matches[''] = yes
+        else if options.optional and not matchesOpt[input]?
+          matchesOpt[input] = yes
           rightParts.push input
 
     return M(rightParts, @context)
@@ -179,6 +184,10 @@ class Matcher
 
     
   hadNoMatches: -> @inputs.length is 0
+
+  dump: -> 
+    console.log "inputs: ", @inputs
+    return @
 
 M = (args...) -> new Matcher(args...)
 
