@@ -6,14 +6,6 @@ module.exports = (grunt) ->
   # just the pimatic-* modules:
   plugins = (module for module in modules when module.match(/^pimatic-.*/)?)
 
-  # files for generating documentation:
-  grocFiles = [
-    "./README.md"
-    "./startup.coffee"
-    "./config-schema.coffee"
-    "./lib/*.coffee"
-  ]
-
   # some realy dirty tricks:
   orgGrocPath = require("fs").existsSync './node_modules/grunt-groc/node_modules/groc'
   ownGrocPath = require("fs").existsSync './node_modules/groc'
@@ -31,22 +23,11 @@ module.exports = (grunt) ->
     unless ownGrocPath
       grunt.log.writeln "Could not use own groc version. Not found!" 
 
-
-  links =
-    'pimatic framework': '.'
-
-  for l in plugins
-    short = l.replace 'pimatic-', ''
-    links[short] = l
-
   grocTasks =
     pimatic:
       src: [
-        "./README.md"
-        "./plugins.md"
-        "./rules.md"
-        "./startup.coffee"
         "./config-schema.coffee"
+        "./startup.coffee"
         "./lib/*.coffee"
       ]
       options: 
@@ -54,15 +35,6 @@ module.exports = (grunt) ->
         out: "doc"
         "repository-url": "https://github.com/sweetpi/pimatic"
         style: 'pimatic'
-        links: JSON.stringify links
-
-  pluginLinks =
-    'pimatic framework': '..'
-
-  for l in plugins
-    short = l.replace 'pimatic-', ''
-    pluginLinks[short] = "../#{l}"
- 
           
   for plugin in plugins
     grocTasks[plugin] =
@@ -74,7 +46,6 @@ module.exports = (grunt) ->
         root: "../#{plugin}"
         out: "../#{plugin}/doc"
         "repository-url": "https://github.com/sweetpi/pimatic"
-        links: JSON.stringify pluginLinks
 
 
 
