@@ -1,7 +1,6 @@
 #!/bin/sh
 CERT_INFO="/C=DE/ST=Germany/L=pimatic city/O=pimatic.org/OU=pimatic.org/CN=pimatic.org"
 
-sudo rm -R ca
 mkdir ca
 cd ca
 mkdir certs newcerts private
