@@ -1,0 +1,127 @@
+#!/bin/sh
+CERT_INFO="/C=DE/ST=Germany/L=pimatic city/O=pimatic.org/OU=pimatic.org/CN=pimatic.org"
+
+sudo rm -R ca
+mkdir ca
+cd ca
+mkdir certs newcerts private
+
+# create Certificate Authority config
+echo '01' > serial
+touch database.txt
+cat >./caconfig.cnf <<EOF
+[ ca ]
+default_ca = CA_default
+
+[ CA_default ]
+dir = ./
+certs = $dir/certs
+crl_dir = $dir/crl
+database = $dir/database.txt
+new_certs_dir = $dir/newcerts
+certificate = $dir/certs/cacert.pem
+serial = $dir/serial
+private_key = $dir/private/cakey.pem
+x509_extensions = usr_cert
+default_days = 3650
+default_md = sha1
+preserve = no
+policy = policy_match
+
+[ policy_match ]
+countryName = match
+stateOrProvinceName = match
+localityName = match
+organizationName = match
+organizationalUnitName = optional
+commonName = supplied
+emailAddress = optional
+
+[ req ]
+default_bits = 4096
+default_keyfile = cakey.pem
+distinguished_name = req_distinguished_name
+attributes = req_attributes
+x509_extensions = v3_ca
+string_mask = utf8only
+req_extensions = v3_req
+
+[ req_attributes ]
+
+[ req_distinguished_name ]
+countryName = Country Name (2 letter code)
+countryName_default = DE
+countryName_min = 2
+countryName_max = 2
+stateOrProvinceName = State or Province Name (full name)
+stateOrProvinceName_default = Germany
+localityName = Locality Name (city, district)
+organizationName = Organization Name (company)
+organizationalUnitName = Organizational Unit Name (department, division)
+commonName = Common Name (hostname, FQDN, IP, or your name)
+commonName_max = 64
+emailAddress = Email Address
+emailAddress_max = 40
+
+[ usr_cert ]
+basicConstraints= CA:FALSE
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid,issuer:always
+nsComment = ''OpenSSL Generated Certificate''
+subjectAltName=email:copy
+issuerAltName=issuer:copy
+
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+
+[ v3_ca ]
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer:always
+basicConstraints = CA:TRUE
+EOF
+
+# Certificate Authority generation
+echo "---------------------------------------------------------------"
+echo "You will have to enter a pass phrase to protect your ca root cert."
+echo "You must type in 4 to 1024 characters."
+echo "---------------------------------------------------------------"
+openssl req -new -x509 -days 3650 -config caconfig.cnf -keyform PEM -keyout private/cakey.pem -outform PEM -out certs/cacert.pem -subj "$CERT_INFO"
+# Convert root cert to DER
+openssl x509 -in certs/cacert.pem -outform der -out certs/cacert.crt
+
+# Generate server certificate for pimatic
+mkdir pimatic-ssl
+cd pimatic-ssl
+mkdir private public
+openssl genrsa -out private/privkey.pem 4096
+
+echo ""
+echo "---------------------------------------------------------------"
+echo 'Please enter the hostname of your pimatic installation. For example mypm.dyndns.org'
+echo "---------------------------------------------------------------"
+read -p "Enter hostname: " CN
+openssl req -new -key private/privkey.pem -out cert-req.pem -subj "/C=DE/ST=Germany/L=pimatic city/O=pimatic.org/OU=pimatic.org/CN=$CN"
+chmod 600 private/privkey.pem
+cd ..
+
+echo ""
+echo "---------------------------------------------------------------"
+echo "You have to enter your pass phrase from above again to make the cert request."
+echo "---------------------------------------------------------------"
+openssl x509 -days 3650 -CA certs/cacert.pem -CAkey private/cakey.pem -req -in pimatic-ssl/cert-req.pem -outform PEM -out pimatic-ssl/public/cert.pem -CAserial serial
+rm pimatic-ssl/cert-req.pem
+chmod 600 private
+cd ..
+echo ""
+echo "Gratulations you are done"
+echo "---------------------------------------------------------------"
+echo "Add these two to your config: "
+echo "---------------------------------------------------------------"
+echo "pimatic public certificate: ca/pimatic-ssl/public/cert.pem"
+echo "pimatic private key: ca/pimatic-ssl/private/privkey.pem"
+echo ""
+echo "---------------------------------------------------------------"
+echo "Import the following certificate in your devices: "
+echo "---------------------------------------------------------------"
+echo "public certificate authority certificate: ca/certs/cacert.crt"
