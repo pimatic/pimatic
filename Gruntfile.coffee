@@ -26,6 +26,7 @@ module.exports = (grunt) ->
   grocTasks =
     pimatic:
       src: [
+        "./documentation.md"
         "./config-schema.coffee"
         "./startup.coffee"
         "./lib/*.coffee"
@@ -33,7 +34,7 @@ module.exports = (grunt) ->
       options: 
         root: "."
         out: "doc"
-        "repository-url": "https://github.com/sweetpi/pimatic"
+        "repository-url": "https://github.com/pimatic/pimatic"
         style: 'pimatic'
           
   for plugin in plugins
@@ -45,7 +46,7 @@ module.exports = (grunt) ->
       options: 
         root: "../#{plugin}"
         out: "../#{plugin}/doc"
-        "repository-url": "https://github.com/sweetpi/pimatic"
+        "repository-url": "https://github.com/pimatic/pimatic/#{plugin}"
 
 
 
