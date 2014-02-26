@@ -36,6 +36,7 @@ module.exports = (grunt) ->
         out: "doc"
         "repository-url": "https://github.com/pimatic/pimatic"
         style: 'pimatic'
+        index: "documentation.md"
           
   for plugin in plugins
     grocTasks[plugin] =
