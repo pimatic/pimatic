@@ -130,7 +130,9 @@ class PluginManager
     
   _getNpm: ->
     return (
-      if @npm then Q.fcall => @npm
+      if @npm?
+        @npm.registry.log.pause()
+        Q.fcall => @npm
       else @_loadNpm().then (npm) => @npm = npm
     ).then( (npm) =>
       # Reset prefix to maindir
