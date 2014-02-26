@@ -45,7 +45,8 @@
     "fs.extra": "1.2.1",
     "daemon": "1.1.0",
     "date-format-lite": "0.5.0",
-    "string": "~1.8.0"
+    "string": "~1.8.0",
+    "byline": "~4.1.1"
   },
   "bundledDependencies": [
     "coffee-script",
@@ -63,7 +64,8 @@
     "fs.extra",
     "daemon",
     "date-format-lite",
-    "string"
+    "string",
+    "byline"
   ],
   "devDependencies": {
     "grunt-cli": "0.1.11",
