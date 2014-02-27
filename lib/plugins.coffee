@@ -132,8 +132,8 @@ class PluginManager
   spawnNpm: (args) ->
     deferred = Q.defer()
     if @npmRunning
-     deferred.reject "npm is currently in use"
-     return deferred.promise
+      deferred.reject "npm is currently in use"
+      return deferred.promise
     @npmRunning = yes
     output = ''
     npm = spawn('npm', args, cwd: @modulesParentDir)
