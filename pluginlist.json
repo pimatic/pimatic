@@ -1,0 +1,15 @@
+[ 
+"pimatic-cron",
+"pimatic-datalogger",
+"pimatic-filebrowser",
+"pimatic-gpio",
+"pimatic-log-reader",
+"pimatic-mobile-frontend",
+"pimatic-pilight",
+"pimatic-ping",
+"pimatic-plugin-template",
+"pimatic-redirect",
+"pimatic-rest-api",
+"pimatic-shell-execute",
+"pimatic-sispmctl" 
+]
