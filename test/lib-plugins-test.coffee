@@ -70,4 +70,13 @@ describe "PluginManager", ->
       pkgInfo = pluginManager.getInstalledPackageInfo('pimatic-cron')
       assert pkgInfo.name is 'pimatic-cron' 
 
+  describe '#getNpmInfo()', (done) ->
+
+    it 'should return pimatic package info from the registry', ->
+      promise = pluginManager.getNpmInfo('pimatic')
+      promise.then( (pkgInfo) ->
+        assert pkgInfo.name is "pimatic"
+        done()
+      ).catch(done)
+
  configFile = "#{os.tmpdir()}/pimatic-test-config.json"
