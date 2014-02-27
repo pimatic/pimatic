@@ -10,6 +10,9 @@ path = require 'path'
 Q = require 'q'
 util = require 'util'
 assert = require 'cassert'
+byline = require 'byline'
+_ = require 'lodash'
+spawn = require("child_process").spawn
 
 env = null
 
@@ -44,29 +47,14 @@ class PluginManager
     assert name.match(/^pimatic-.*$/)?
     return fs.existsSync(@pathToPlugin name)
 
-  # Install the plugin dependencies for an existing plugin folder
-  installDependencies: (name) ->
-    assert name?
-    assert name.match(/^pimatic-.*$/)?
-    return @_getNpm().then( (npm) =>
-      npm.prefix = @pathToPlugin name
-      return Q.ninvoke(npm.commands, 'install', [])
-    )
-
   # Install a plugin from the npm repository
   installPlugin: (name) ->
     assert name?
     assert name.match(/^pimatic-.*$/)?
-    return @_getNpm().then( (npm) =>
-      npm.prefix = @modulesParentDir
-      return Q.ninvoke(npm.commands, 'install', [name])
-    )
+    return @spawnNpm(['install', name])
 
   update: (modules) -> 
-    return @_getNpm().then( (npm) =>
-      npm.prefix = @modulesParentDir
-      return Q.ninvoke(npm.commands, 'update', modules)
-    )
+    return @spawnNpm(['update'].concat modules)
 
   pathToPlugin: (name) ->
     assert name?
@@ -92,9 +80,23 @@ class PluginManager
   #     }
   # 
   searchForPlugins: ->
-    return @_getNpm().then( (npm) =>
-      return Q.ninvoke(npm.commands, 'search', ['pimatic-'], true)
-    )
+    plugins = [ 
+      'pimatic',
+      'pimatic-cron',
+      'pimatic-datalogger',
+      'pimatic-filebrowser',
+      'pimatic-gpio',
+      'pimatic-log-reader',
+      'pimatic-mobile-frontend',
+      'pimatic-pilight',
+      'pimatic-ping',
+      'pimatic-plugin-template',
+      'pimatic-redirect',
+      'pimatic-rest-api',
+      'pimatic-shell-execute',
+      'pimatic-sispmctl'
+    ]
+    return Q(plugins)
 
   isPimaticOutdated: ->
     return @_getNpm().then( (npm) =>
@@ -127,38 +129,31 @@ class PluginManager
         )
       )
     )
+
+  spawnNpm: (args) ->
+    deferred = Q.defer()
+    output = ''
+    npm = spawn('npm', args, cwd: @modulesParentDir)
+    stdout = byline(npm.stdout)
+    stdout.on "data", (line) -> 
+      line = line.toString()
+      output += "#{line}\n"
+      if line.indexOf('npm http 304') is 0 then return
+      env.logger.info line
+    stderr = byline(npm.stderr)
+    stderr.on "data", (line) -> 
+      line = line.toString()
+      output += "#{line}\n"
+      env.logger.info line.toString()
+
+    npm.on "close", (code) ->
+      command = "npm " + _.reduce(args, (akk, a) -> "#{akk} #{a}")
+      if code isnt 0
+        deferred.reject "Error running \"#{command}\""
+      else deferred.resolve(output)
+
+    return deferred.promise
     
-  _getNpm: ->
-    return (
-      if @npm?
-        @npm.registry.log.pause()
-        Q.fcall => @npm
-      else @_loadNpm().then (npm) => @npm = npm
-    ).then( (npm) =>
-      # Reset prefix to maindir
-      @npm.prefix = @modulesParentDir
-      return npm
-    )
-
-  
-  _loadNpm: ->
-    return Q.ninvoke(npm, 'load', options = {}).then( (npm) =>
-
-      # console.log util.inspect(npm,
-      #   showHidden: true
-      #   depth: 2
-      # )
-      # Don't log to stdout or stderror:
-      npm.registry.log.pause()
-      # Proxy the log stream to our own log:
-      npm.registry.log.on 'log', (msg) ->
-        if msg.level is 'info' or msg.level is 'verbose' or msg.level is 'silly' then return
-        if msg.level is 'error' 
-          env.logger.log(msg.level, msg.prefix, msg.message)
-        else
-          env.logger.info("npm #{msg.level}", msg.prefix, msg.message)
-      return npm
-    )
 
   getInstalledPlugins: ->
     return Q.nfcall(fs.readdir, "#{@framework.maindir}/..").then( (files) =>
@@ -170,6 +165,11 @@ class PluginManager
     assert name.match(/^pimatic-.*$/)?
     return JSON.parse fs.readFileSync(
       "#{@pathToPlugin name}/package.json", 'utf-8'
+    )
+
+  getNpmInfo: (pkg) ->
+    return @spawnNpm(['info', pkg, '--json']).then( (output) ->
+      return JSON.parse(output)
     )
 
 

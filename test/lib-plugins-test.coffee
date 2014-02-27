@@ -10,7 +10,7 @@ describe "PluginManager", ->
     plugins: require '../lib/plugins'
     logger: require '../lib/logger'
 
-  env.logger.info = ->
+  #env.logger.info = ->
 
   frameworkDummy =
     maindir: "#{os.tmpdir()}/pimatic-test/node_modules/pimatic"
@@ -46,8 +46,6 @@ describe "PluginManager", ->
         assert fs.existsSync "#{os.tmpdir()}/pimatic-test/node_modules/pimatic-cron/node_modules"
         finish()
       ).done()
-
-  describe '#installDependencies()', ->
 
     it 'should install the plugin dependencies',  unless skip then (finish) ->
       this.timeout 20000
