@@ -131,6 +131,10 @@ class PluginManager
 
   spawnNpm: (args) ->
     deferred = Q.defer()
+    if @npmRunning
+     deferred.reject "npm is currently in use"
+     return deferred.promise
+    @npmRunning = yes
     output = ''
     npm = spawn('npm', args, cwd: @modulesParentDir)
     stdout = byline(npm.stdout)
@@ -145,7 +149,8 @@ class PluginManager
       output += "#{line}\n"
       env.logger.info line.toString()
 
-    npm.on "close", (code) ->
+    npm.on "close", (code) =>
+      @npmRunning = no
       command = "npm " + _.reduce(args, (akk, a) -> "#{akk} #{a}")
       if code isnt 0
         deferred.reject "Error running \"#{command}\""
