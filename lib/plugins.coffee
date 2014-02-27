@@ -81,7 +81,6 @@ class PluginManager
   # 
   searchForPlugins: ->
     plugins = [ 
-      'pimatic',
       'pimatic-cron',
       'pimatic-datalogger',
       'pimatic-filebrowser',
@@ -96,7 +95,16 @@ class PluginManager
       'pimatic-shell-execute',
       'pimatic-sispmctl'
     ]
-    return Q(plugins)
+    waiting = []
+    found = []
+    for p in plugins
+      do (p) =>
+        waiting.push @getNpmInfo( (info) =>
+          found[p] = info
+        )
+    return Q.all(waiting).then( ->
+      return found
+    )
 
   isPimaticOutdated: ->
     installed = @getInstalledPackageInfo("pimatic")
