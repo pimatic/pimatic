@@ -61,24 +61,6 @@ class PluginManager
     assert name.match(/^pimatic-.*$/)? or name is "pimatic"
     return path.resolve @framework.maindir, "..", name
 
-  # Returns plugin list of the form:  
-  # 
-  #     {
-  #      'pimatic-cron': 
-  #       { name: 'pimatic-cron',
-  #         description: 'cron plugin for pimatic',
-  #         maintainers: [ '=sweetpi' ],
-  #         url: null,
-  #         keywords: [],
-  #         version: '0.3.2',
-  #         time: '2013-12-30 09:16',
-  #         words: 'pimatic-cron cron plugin for pimatic =sweetpi' },
-  #      'pimatic-filebrowser': 
-  #       { name: ...
-  #       }
-  #      ...
-  #     }
-  # 
   searchForPlugins: ->
     plugins = [ 
       'pimatic-cron',
@@ -89,22 +71,22 @@ class PluginManager
       'pimatic-mobile-frontend',
       'pimatic-pilight',
       'pimatic-ping',
-      'pimatic-plugin-template',
       'pimatic-redirect',
       'pimatic-rest-api',
       'pimatic-shell-execute',
       'pimatic-sispmctl'
     ]
     waiting = []
-    found = []
+    found = {}
     for p in plugins
       do (p) =>
-        waiting.push @getNpmInfo( (info) =>
+        waiting.push @getNpmInfo(p).then( (info) =>
           found[p] = info
         )
-    return Q.all(waiting).then( ->
+    return Q.allSettled(waiting).then( (results) =>
+      env.logger.error(r.reason) for r in results when r.state is "rejected"
       return found
-    )
+    ).catch( (e) => env.logger.error e )
 
   isPimaticOutdated: ->
     installed = @getInstalledPackageInfo("pimatic")
@@ -120,18 +102,21 @@ class PluginManager
   getOutdatedPlugins: ->
     return @getInstalledPlugins().then( (plugins) =>
       waiting = []
+      infos = []
       for p in plugins
         do (p) =>
           installed = @getInstalledPackageInfo(p)
           waiting.push @getNpmInfo(p).then( (latest) =>
-            return {
+            infos.push {
               plugin: p
               installed: installed.version
               latest: latest.version
             }
           )
-      return Q.all(waiting).then( (infos) =>
-        ret = {}
+      return Q.allSettled(waiting).then( (results) =>
+        env.logger.error(r.reason) for r in results when r.state is "rejected"
+
+        ret = []
         for info in infos
           unless info.installed?
             env.logger.warn "Could not get installed package version of #{info.plugin}"
@@ -139,7 +124,7 @@ class PluginManager
           unless info.latest?
             env.logger.warn "Could not get latest version of #{info.plugin}"
             continue
-          ret[info.p] = info
+          ret.pushinfo
         return ret
       )
     )
@@ -189,9 +174,10 @@ class PluginManager
       res.on "end", ->
         try
           info = JSON.parse(str)
+          if info.error? then throw new Error("getting info about #{name} failed: #{info.reason}")
           deferred.resolve info
         catch e
-          deferred.reject e
+          deferred.reject e.message
     ).on "error", deferred.reject
     return deferred.promise
 
