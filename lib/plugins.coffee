@@ -91,9 +91,9 @@ class PluginManager
   isPimaticOutdated: ->
     installed = @getInstalledPackageInfo("pimatic")
     return @getNpmInfo("pimatic").then( (latest) =>
-      if semver.gt(installed.version, latest.version)
+      if semver.gt(latest.version, installed.version)
         return {
-          installed: installed.version
+          current: installed.version
           latest: latest.version
         }
       else return false
@@ -109,7 +109,7 @@ class PluginManager
           waiting.push @getNpmInfo(p).then( (latest) =>
             infos.push {
               plugin: p
-              installed: installed.version
+              current: installed.version
               latest: latest.version
             }
           )
@@ -118,7 +118,7 @@ class PluginManager
 
         ret = []
         for info in infos
-          unless info.installed?
+          unless info.current?
             env.logger.warn "Could not get installed package version of #{info.plugin}"
             continue
           unless info.latest?
@@ -153,7 +153,7 @@ class PluginManager
       @npmRunning = no
       command = "npm " + _.reduce(args, (akk, a) -> "#{akk} #{a}")
       if code isnt 0
-        deferred.reject "Error running \"#{command}\""
+        deferred.reject new Error("Error running \"#{command}\"")
       else deferred.resolve(output)
 
     return deferred.promise
