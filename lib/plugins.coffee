@@ -1,10 +1,8 @@
 ###
 Plugin Manager
 =======
-
-
 ###
-npm = require 'npm'
+
 fs = require 'fs'
 path = require 'path'
 Q = require 'q'
@@ -13,6 +11,8 @@ assert = require 'cassert'
 byline = require 'byline'
 _ = require 'lodash'
 spawn = require("child_process").spawn
+https = require "https"
+semver = require "semver"
 
 env = null
 
@@ -58,7 +58,7 @@ class PluginManager
 
   pathToPlugin: (name) ->
     assert name?
-    assert name.match(/^pimatic-.*$/)?
+    assert name.match(/^pimatic-.*$/)? or name is "pimatic"
     return path.resolve @framework.maindir, "..", name
 
   # Returns plugin list of the form:  
@@ -99,34 +99,40 @@ class PluginManager
     return Q(plugins)
 
   isPimaticOutdated: ->
-    return @_getNpm().then( (npm) =>
-      # outdated does only work, if pimatic is installed as node module
-      if path.basename(path.resolve @framework.maindir, '..' ) isnt 'node_modules'
-        throw new Error('pimatic is not in an node_modules folder. Update check does not work.')
-      # set prefix to the parent directory of the node_modules folder
-      npm.prefix = @modulesParentDir
-      return Q.ninvoke(npm.commands, 'outdated', ['pimatic'], true).then( (result) =>
-        if result.length is 1
-          result = result[0]
-          return info =
-            current: result[2]
-            latest: result[3]
-        else return false
-      )
+    installed = @getInstalledPackageInfo("pimatic")
+    return @getNpmInfo("pimatic").then( (latest) =>
+      if semver.gt(installed.version, latest.version)
+        return {
+          installed: installed.version
+          latest: latest.version
+        }
+      else return false
     )
 
   getOutdatedPlugins: ->
-    return @_getNpm().then( (npm) =>
-      return @getInstalledPlugins().then( (plugins) =>
-        npm.prefix = @modulesParentDir
-        return Q.ninvoke(npm.commands, 'outdated', plugins, true).then( (result) =>
-          return (for r in result
-            entry =
-              plugin: r[1]
-              current: r[2]
-              latest: r[3]
+    return @getInstalledPlugins().then( (plugins) =>
+      waiting = []
+      for p in plugins
+        do (p) =>
+          installed = @getInstalledPackageInfo(p)
+          waiting.push @getNpmInfo(p).then( (latest) =>
+            return {
+              plugin: p
+              installed: installed.version
+              latest: latest.version
+            }
           )
-        )
+      return Q.all(waiting).then( (infos) =>
+        ret = {}
+        for info in infos
+          unless info.installed?
+            env.logger.warn "Could not get installed package version of #{info.plugin}"
+            continue
+          unless info.latest?
+            env.logger.warn "Could not get latest version of #{info.plugin}"
+            continue
+          ret[info.p] = info
+        return ret
       )
     )
 
@@ -135,13 +141,13 @@ class PluginManager
     output = ''
     npm = spawn('npm', args, cwd: @modulesParentDir)
     stdout = byline(npm.stdout)
-    stdout.on "data", (line) -> 
+    stdout.on "data", (line) => 
       line = line.toString()
       output += "#{line}\n"
       if line.indexOf('npm http 304') is 0 then return
       env.logger.info line
     stderr = byline(npm.stderr)
-    stderr.on "data", (line) -> 
+    stderr.on "data", (line) => 
       line = line.toString()
       output += "#{line}\n"
       env.logger.info line.toString()
@@ -162,15 +168,24 @@ class PluginManager
 
   getInstalledPackageInfo: (name) ->
     assert name?
-    assert name.match(/^pimatic-.*$/)?
+    assert name.match(/^pimatic-.*$/)? or name is "pimatic"
     return JSON.parse fs.readFileSync(
       "#{@pathToPlugin name}/package.json", 'utf-8'
     )
 
-  getNpmInfo: (pkg) ->
-    return @spawnNpm(['info', pkg, '--json']).then( (output) ->
-      return JSON.parse(output)
-    )
+  getNpmInfo: (name) ->
+    deferred = Q.defer()
+    https.get("https://registry.npmjs.org/#{name}/latest", (res) =>
+      str = ""
+      res.on "data", (chunk) -> str += chunk
+      res.on "end", ->
+        try
+          info = JSON.parse(str)
+          deferred.resolve info
+        catch e
+          deferred.reject e
+    ).on "error", deferred.reject
+    return deferred.promise
 
 
 class Plugin extends require('events').EventEmitter
