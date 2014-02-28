@@ -124,7 +124,7 @@ class PluginManager
           unless info.latest?
             env.logger.warn "Could not get latest version of #{info.plugin}"
             continue
-          ret.pushinfo
+          ret.push info
         return ret
       )
     )
