@@ -54,20 +54,20 @@ module.exports =
         doc: "The port of the https-server"
         format: "port"
         default: 443
-      # To generate a privatekey and a certificate run: 
-      #  
-      #     openssl genrsa -out privatekey.pem 1024
-      #     openssl req -new -key privatekey.pem -out request.pem
-      #     openssl x509 -req -in request.pem -signkey privatekey.pem -out certificate.pem
-      #  
       keyFile:
-        doc: "Privatekey-file"
+        doc: "Privatekey file"
         format: String
-        default: "./.cert/privatekey.pem"
+        default: "ca/pimatic-ssl/private/privkey.pem"
       certFile:
-        doc: "Certification-file in pem-format"
+        doc: "Public certification file in pem-format"
         format: String
-        default: "./.cert/certificate.pem"
+        default: "ca/pimatic-ssl/public/cert.pem"
+      rootCertFile:
+        doc: """The public root certificate file of your own CA if you using a self signed certificate. 
+        This option is optional. Its just for the frontent, so that it can provide a link to the
+        the root certificate for easy importing in mobile devices."""
+        format: String
+        default: "ca/certs/cacert.crt"
   plugins:
     doc: "Array of plugins to load"
     format: Array
