@@ -63,9 +63,9 @@ module.exports =
         format: String
         default: "ca/pimatic-ssl/public/cert.pem"
       rootCertFile:
-        doc: """The public root certificate file of your own CA if you using a self signed certificate. 
-        This option is optional. Its just for the frontent, so that it can provide a link to the
-        the root certificate for easy importing in mobile devices."""
+        doc: """The public root certificate file of your own CA if you using a self signed 
+        certificate. This option is optional. Its just for the frontent, so that it can provide a 
+        link to the the root certificate for easy importing in mobile devices."""
         format: String
         default: "ca/certs/cacert.crt"
   plugins:
