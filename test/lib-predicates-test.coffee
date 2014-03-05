@@ -213,7 +213,7 @@ describe "DeviceAttributePredicateProvider", ->
 
   context = {
     addHint: ->
-    addUnmatchedSuffix: ->
+    addMatch: (@match) ->
   }
 
   frameworkDummy = 
@@ -278,6 +278,7 @@ describe "DeviceAttributePredicateProvider", ->
           cassert info.comparator is sign
           cassert info.event is 'testvalue'
           cassert info.referenceValue is 42
+          cassert context.match is testPredicate
 
     it "should parse predicate with unit: testvalue of test sensor is 42 °C", ->
       info = provider._parsePredicate "testvalue of test sensor is 42 °C", context
@@ -286,6 +287,7 @@ describe "DeviceAttributePredicateProvider", ->
       cassert info.comparator is "=="
       cassert info.event is 'testvalue'
       cassert info.referenceValue is 42
+      cassert context.match is "testvalue of test sensor is 42 °C"
 
     it "should parse predicate with unit: testvalue of test sensor is 42 C", ->
       info = provider._parsePredicate "testvalue of test sensor is 42 C", context
@@ -294,6 +296,7 @@ describe "DeviceAttributePredicateProvider", ->
       cassert info.comparator is "=="
       cassert info.event is 'testvalue'
       cassert info.referenceValue is 42
+      cassert context.match is "testvalue of test sensor is 42 C"
 
 
   describe '#notifyWhen()', ->

@@ -46,6 +46,8 @@ logger = require "./logger"
 util = require 'util'
 Q = require 'q'
 _ = require 'lodash'
+S = require 'string'
+M = require './matcher'
 require "date-format-lite"
 
 milliseconds = require './milliseconds'
@@ -204,33 +206,34 @@ class RuleManager extends require('events').EventEmitter
     predicates = []
     tokens = []
     # For each token
-    #(\sand\s|\sor\s)(?=(?:[^"]*"[^"]*")*[^"]*$)
-    for token in conditionString.split /// 
-      (             # split at
-         \sand\s    # " and "
-       | \sor\s     # " or "
-       | \)         # ")"
-       | \(         # "("
-      ) 
-      (?=           # fowolled by
-        (?:
-          [^"]*     # a string not containing an quote
-          "[^"]*"   # a string in quotes
-        )*          # multiples times
-        [^"]*       # a string not containing quotes
-      $) /// 
-      do (token) =>
-        tokenTrimed = token.trim()
-        # if its no predicate then push it into the token stream
-        if tokenTrimed in ["and", "or", ")", "("]
-          tokens.push tokenTrimed
-        else
-          # else generate a unique id.
-          i = predicates.length
-          predId = id+i
-          predicate = @parsePredicate(predId, token, context)
-          predicates.push(predicate)
-          tokens = tokens.concat ["predicate", "(", i, ")"]
+
+    nextInput = conditionString
+
+
+    parseResultsFailed = []
+    parseResultsSuccess = []
+    success = yes
+
+    while nextInput.length isnt 0 and not context.hasErrors()
+      i = predicates.length
+      predId = id+i
+
+      predicate = @parsePredicate(predId, nextInput, context)
+      unless context.hasErrors()
+        predicates.push(predicate)
+        tokens = tokens.concat ["predicate", "(", i, ")"]
+        assert S(nextInput).startsWith(predicate.token)
+        nextInput = S(nextInput).chompLeft(predicate.token).s
+        unless nextToken.length is 0
+          onMatch = (m, s) => 
+            tokens.push s.trim()
+          m = M(nextInput, context).match([' and ', ' or ', '(', ')'], onMatch)
+          if m.hadNoMatches()
+            context.addError("""Expected one of: "and", "or", "(", ")".""")
+          else
+            match = m.getFullMatches()[0]
+            assert S(nextInput).startsWith(match)
+            nextInput = S(nextInput).chompLeft(match).s
     return {
       predicates: predicates
       tokens: tokens
@@ -244,27 +247,16 @@ class RuleManager extends require('events').EventEmitter
     forSuffix = null
     forTime = null
 
-    # Try to split the predicate at the last `for` to handle 
-    # predicates in the form `"the light is on for 10 seconds"`
-    forMatches = predicateString.match /(.+)\sfor\s(.+)/
-    if forMatches? and forMatches?.length is 3
-      beforeFor = forMatches[1].trim()
-      afterFor = forMatches[2].trim()
-
-      # Test if we can parse the afterFor part.
-      ms = milliseconds.parse afterFor
-      if ms?
-        predicateString = beforeFor
-        forSuffix = afterFor
-        forTime = ms
-
-
     # find a prdicate provider for that can parse and decide the predicate:
     suitedPredProvider = _(@predicateProviders).map( (provider) => 
       type = provider.canDecide predicateString, context
       assert type is 'event' or type is 'state' or type is no
       [provider, type]
     ).filter( ([provider, type]) => type isnt no ).value()
+
+
+
+
 
     provider = null
     type = null
@@ -278,9 +270,44 @@ class RuleManager extends require('events').EventEmitter
       else
         context.addError("""Predicate "#{predicateString}" is ambiguous.""")
 
+    if suitedPredProvider.length is 1
+      assert context.matches.length is 1
+      token = context.matches[0]
+      context.matches = []
+      
+      assert S(predicateString).startsWith(token)
+      nextInput = S(predicateString).chompLeft(token).s
+
+      timeUnits = ["ms", "seconds", "s", "minutes", "m", "hours", "h", "days","d", "years", "y"]
+      time = 0
+      onTimeMatch = (m, n) => time = parseFloat(n)
+
+      m = M(nextInput, context)
+        .match(' for ')
+        .matchNumber(onTimeMatch)
+        .match(_.map(timeUnits, (u) => " #{u}"))
+
+          # Try to split the predicate at the last `for` to handle 
+    # predicates in the form `"the light is on for 10 seconds"`
+    # forMatches = predicateString.match /(.+)\sfor\s(.+)/
+    # if forMatches? and forMatches?.length is 3
+    #   beforeFor = forMatches[1].trim()
+    #   afterFor = forMatches[2].trim()
+
+    #   # Test if we can parse the afterFor part.
+    #   ms = milliseconds.parse afterFor
+    #   if ms?
+    #     predicateString = beforeFor
+    #     forSuffix = afterFor
+    #     forTime = ms
+
+    else 
+      token = predicateString
+
+
     predicate =
       id: predId
-      token: predicateString
+      token: token
       type: type
       provider: provider
       forToken: forSuffix
@@ -652,7 +679,7 @@ class RuleManager extends require('events').EventEmitter
       autocomplete: []
       errors: []
       warnings: []
-      suffixes: []
+      matches: []
       addHint: ({autocomplete: a}) ->
         if Array.isArray a 
           @autocomplete = @autocomplete.concat a
@@ -661,11 +688,7 @@ class RuleManager extends require('events').EventEmitter
       addWarning: (message) -> @warnings.push message
       hasErrors: -> (@errors.length > 0)
       getErrorsAsString: -> _(@errors).reduce((ms, m) => "#{ms}, #{m}")
-      addUnmatchedSuffix: (suffix) ->
-        assert suffix?
-        assert (Array.isArray suffix and suffix.length > 0) or typeof suffix is "string"
-        if Array.isArray suffix then @suffixes = @suffixes.concat suffix
-        else @suffixes.push suffix
+      addMatch: (match) -> @matches.push match
       finalize: () -> 
         @autocomplete = _(@autocomplete).uniq().sortBy((s)=>s.toLowerCase()).value()
     }

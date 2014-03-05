@@ -13,8 +13,15 @@ _ = require 'lodash'
 class Matcher
   # ###constructor()
   # Create a matcher for the input string, with the given parse context
-  constructor: (@inputs, @context) ->
+  constructor: (@inputs, @context = null, @prevInputs = null) ->
     unless Array.isArray inputs then @inputs = [inputs]
+    unless prevInputs?
+      @prevInputs = []
+      @prevInputs[i] = "" for input, i in @inputs 
+    else unless Array.isArray prevInputs then @prevInputs = [prevInputs]
+    assert @inputs.length is @prevInputs.length
+    assert(prevInput?) for prevInput in @prevInputs
+    assert(input?) for input in @inputs
   
   # ###match()
   ###
@@ -32,10 +39,11 @@ class Matcher
 
     matches = {}
     matchesOpt = {}
+    rightPartsPrevInputs = []
     rightParts = []
 
-    for input in @inputs
-      for p, i in patterns
+    for input, i in @inputs
+      for p, j in patterns
         # If pattern is a array then assume that first element is an id that should be returned
         # on match
         matchId = null
@@ -53,7 +61,7 @@ class Matcher
 
         # if pattern is an string, then we cann add an autocomplete for it
         if typeof p is "string" and @context
-          showAc = (if options.acFilter? then options.acFilter(p, i) else true) 
+          showAc = (if options.acFilter? then options.acFilter(p, j) else true) 
           if showAc
             if S(pT).startsWith(inputT) and input.length < p.length
               @context.addHint(autocomplete: p)
@@ -84,15 +92,21 @@ class Matcher
           assert match?
           assert nextToken?
           matches[match] = yes
+
+          assert @prevInputs[i]?
+          matchPrevInput = @prevInputs[i] + match
           # If no matchId was provided then use the matching string itself
           unless matchId? then matchId = match
-          if callback? then callback(new M(nextToken, @context), matchId)
+          if callback? then callback(M(nextToken, @context, matchPrevInput), matchId)
           rightParts.push nextToken
+          rightPartsPrevInputs.push matchPrevInput
         else if options.optional and not matchesOpt[input]?
           matchesOpt[input] = yes
           rightParts.push input
+          assert @prevInputs[i]?
+          rightPartsPrevInputs.push @prevInputs[i]
 
-    return M(rightParts, @context)
+    return M(rightParts, @context, rightPartsPrevInputs)
 
   # ###matchNumber()
   ###
@@ -188,15 +202,16 @@ class Matcher
     )
     # join all inputs together
     newInputs = _(ms).map((m)=>m.inputs).flatten().value()
-    return M(newInputs, @context)
+    newPrevInputs = _(ms).map((m)=>m.prevInputs).flatten().value()
+    return M(newInputs, @context, newPrevInputs)
 
     
   hadNoMatches: -> @inputs.length is 0
-
-  getMatchCount: ->
-    @inputs.length
+  getMatchCount: -> @inputs.length
+  getFullMatches: -> @prevInputs 
 
   dump: -> 
+    console.log "prevInputs", @prevInputs
     console.log "inputs: ", @inputs
     return @
 

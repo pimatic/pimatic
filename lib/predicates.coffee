@@ -209,12 +209,13 @@ class SwitchPredicateProvider extends DeviceEventPredicateProvider
 
     # If we have a macht
     if matchCount is 1
+      match = m.getFullMatches()[0]
       assert device?
       assert state?
       # and state as boolean.
       state = (state.trim() is "on")
 
-      context?.addUnmatchedSuffix(m.inputs)
+      context?.addMatch(match)
 
       return info =
         device: device
@@ -267,12 +268,13 @@ class PresencePredicateProvider extends DeviceEventPredicateProvider
     matchCount = m.getMatchCount()
 
     if matchCount is 1
+      match = m.getFullMatches()[0]
       assert device?
       assert state?
 
       negated = (state.trim() isnt "present") 
 
-      context?.addUnmatchedSuffix(m.inputs)
+      context?.addMatch(match)
 
       return info =
         device: device
@@ -343,7 +345,7 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
       .flatten().uniq().value()
 
     result = null
-    suffixes = []
+    matches = []
 
     M(predicate, context)
     .match(allAttributes, (m, attr) =>
@@ -392,7 +394,7 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
           m = m.match([' equals to ', ' is ', ' is not '], setComparator)
             .match(attribute.type, setRefValue) 
         if m.getMatchCount() > 0 
-          suffixes = suffixes.concat m.inputs
+          matches = matches.concat m.getFullMatches()
           if result?
             if result.device.id isnt info.device.id or result.attributeName isnt info.attributeName
               context?.addError(""""#{predicate.trim()}" is ambiguous.""")
@@ -406,7 +408,10 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
       assert result.comparator?
       assert result.referenceValue?
 
-      context?.addUnmatchedSuffix(suffixes)
+      # take the longest match
+      match = _(matches).sortBy( (s) => s.length ).last()
+
+      context?.addMatch(match)
 
       found = false
       for sign, c of @comparators
