@@ -147,6 +147,14 @@ class Matcher
     for input in @inputs
       if input.length is 0 then callback()
 
+  # ###onHadMatches()
+  ###
+  The given callback will be called for every string in the inputs of ther current matcher
+  ###
+  ifhadMatches: (callback) ->
+    for input in @inputs
+      callback(input)
+
   ###
     m.inAnyOrder([
       (m) => m.match(' title:').matchString(setTitle)
@@ -184,6 +192,9 @@ class Matcher
 
     
   hadNoMatches: -> @inputs.length is 0
+
+  getMatchCount: ->
+    @inputs.length
 
   dump: -> 
     console.log "inputs: ", @inputs

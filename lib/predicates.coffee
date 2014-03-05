@@ -195,16 +195,17 @@ class SwitchPredicateProvider extends DeviceEventPredicateProvider
 
     device = null
     state = null
-    matchCount = 0
 
     setDevice = (m, d) => device = d
     setState = (m, s) => state = s
     stateAcFilter = (v) => v.trim() isnt 'is switched' 
 
-    M(predicate, context).matchDevice(switchDevices, setDevice)
+    m = M(predicate, context)
+      .matchDevice(switchDevices, setDevice)
       .match([' is', ' is turned', ' is switched'], acFilter: stateAcFilter)
       .match([' on', ' off'], setState)
-      .onEnd( => matchCount++)
+
+    matchCount = m.getMatchCount()
 
     # If we have a macht
     if matchCount is 1
@@ -212,6 +213,8 @@ class SwitchPredicateProvider extends DeviceEventPredicateProvider
       assert state?
       # and state as boolean.
       state = (state.trim() is "on")
+
+      context?.addUnmatchedSuffix(m.inputs)
 
       return info =
         device: device
@@ -251,23 +254,25 @@ class PresencePredicateProvider extends DeviceEventPredicateProvider
 
     device = null
     state = null
-    matchCount = 0
 
     setDevice = (m, d) => device = d
     setState =  (m, s) => state = s
     stateAcFilter = (v) => v.trim() isnt 'not present'
 
-    M(predicate, context)
+    m = M(predicate, context)
       .matchDevice(presenceDevices, setDevice)
       .match([' is', ' reports', ' signals'])
       .match([' present', ' absent', ' not present'], {acFilter: stateAcFilter}, setState)
-      .onEnd( => matchCount++)
+
+    matchCount = m.getMatchCount()
 
     if matchCount is 1
       assert device?
       assert state?
 
       negated = (state.trim() isnt "present") 
+
+      context?.addUnmatchedSuffix(m.inputs)
 
       return info =
         device: device
@@ -337,15 +342,18 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
     allAttributes = _(@framework.devices).values().map((device) => _.keys(device.attributes))
       .flatten().uniq().value()
 
-    matchCount = 0
-    info =
-      device: null
-      attributeName: null
-      comparator: null
-      referenceValue: null
+    result = null
+    suffixes = []
 
     M(predicate, context)
     .match(allAttributes, (m, attr) =>
+      info = {
+        device: null
+        attributeName: null
+        comparator: null
+        referenceValue: null
+      }
+
       info.attributeName = attr
       devices = _(@framework.devices).values().filter((device) => device.hasAttribute(attr)).value()
       m.match(' of ').matchDevice(devices, (m, device) =>
@@ -383,38 +391,44 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
         else if Array.isArray attribute.type
           m = m.match([' equals to ', ' is ', ' is not '], setComparator)
             .match(attribute.type, setRefValue) 
-        m.onEnd(end)
+        if m.getMatchCount() > 0 
+          suffixes = suffixes.concat m.inputs
+          if result?
+            if result.device.id isnt info.device.id or result.attributeName isnt info.attributeName
+              context?.addError(""""#{predicate.trim()}" is ambiguous.""")
+          result = info
       )
     )
 
-    if matchCount is 1
-      assert info.device?
-      assert info.attributeName?
-      assert info.comparator?
-      assert info.referenceValue?
+    if result?
+      assert result.device?
+      assert result.attributeName?
+      assert result.comparator?
+      assert result.referenceValue?
+
+      context?.addUnmatchedSuffix(suffixes)
 
       found = false
       for sign, c of @comparators
-        if info.comparator in c
-          info.comparator = sign
+        if result.comparator in c
+          result.comparator = sign
           found = true
           break
       assert found
-      device = info.device
+      device = result.device
       lastValue = null
-      info.event = info.attributeName
-      info.getPredicateValue = => 
-        device.getAttributeValue(info.event).then (value) =>
-          @_compareValues info.comparator, value, info.referenceValue
-      info.getEventListener = (callback) => 
+      result.event = result.attributeName
+      result.getPredicateValue = => 
+        device.getAttributeValue(result.event).then (value) =>
+          @_compareValues result.comparator, value, result.referenceValue
+      result.getEventListener = (callback) => 
         return attributeListener = (value) =>
-          state = @_compareValues info.comparator, value, info.referenceValue
+          state = @_compareValues result.comparator, value, result.referenceValue
           if state isnt lastValue
             lastValue = state
             callback state
-      return info
-    else if matchCount > 1
-      context?.addError(""""#{predicate.trim()}" is ambiguous.""")
+      return result
+      
     return null
 
 

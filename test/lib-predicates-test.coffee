@@ -213,6 +213,7 @@ describe "DeviceAttributePredicateProvider", ->
 
   context = {
     addHint: ->
+    addUnmatchedSuffix: ->
   }
 
   frameworkDummy = 

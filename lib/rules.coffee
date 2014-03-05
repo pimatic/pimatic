@@ -652,6 +652,7 @@ class RuleManager extends require('events').EventEmitter
       autocomplete: []
       errors: []
       warnings: []
+      suffixes: []
       addHint: ({autocomplete: a}) ->
         if Array.isArray a 
           @autocomplete = @autocomplete.concat a
@@ -660,6 +661,11 @@ class RuleManager extends require('events').EventEmitter
       addWarning: (message) -> @warnings.push message
       hasErrors: -> (@errors.length > 0)
       getErrorsAsString: -> _(@errors).reduce((ms, m) => "#{ms}, #{m}")
+      addUnmatchedSuffix: (suffix) ->
+        assert suffix?
+        assert (Array.isArray suffix and suffix.length > 0) or typeof suffix is "string"
+        if Array.isArray suffix then @suffixes = @suffixes.concat suffix
+        else @suffixes.push suffix
       finalize: () -> 
         @autocomplete = _(@autocomplete).uniq().sortBy((s)=>s.toLowerCase()).value()
     }
