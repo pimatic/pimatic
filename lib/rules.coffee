@@ -214,26 +214,26 @@ class RuleManager extends require('events').EventEmitter
     parseResultsSuccess = []
     success = yes
 
-    while nextInput.length isnt 0 and not context.hasErrors()
+    while (not context.hasErrors()) and nextInput.length isnt 0
       i = predicates.length
       predId = id+i
 
-      predicate = @parsePredicate(predId, nextInput, context)
+      { predicate, token, nextInput } = @parsePredicate(predId, nextInput, context)
       unless context.hasErrors()
         predicates.push(predicate)
         tokens = tokens.concat ["predicate", "(", i, ")"]
-        assert S(nextInput).startsWith(predicate.token)
-        nextInput = S(nextInput).chompLeft(predicate.token).s
-        unless nextToken.length is 0
-          onMatch = (m, s) => 
-            tokens.push s.trim()
+
+        unless nextInput.length is 0
+          # Try to match " and ", " or ", ...
+          onMatch = (m, s) => tokens.push s.trim()
           m = M(nextInput, context).match([' and ', ' or ', '(', ')'], onMatch)
+
           if m.hadNoMatches()
             context.addError("""Expected one of: "and", "or", "(", ")".""")
           else
-            match = m.getFullMatches()[0]
-            assert S(nextInput).startsWith(match)
-            nextInput = S(nextInput).chompLeft(match).s
+            token = m.getLongestFullMatch()
+            assert S(nextInput).startsWith(token)
+            nextInput = S(nextInput).chompLeft(token).s
     return {
       predicates: predicates
       tokens: tokens
@@ -244,8 +244,15 @@ class RuleManager extends require('events').EventEmitter
     assert typeof predicateString is "string"
     assert context?
 
-    forSuffix = null
-    forTime = null
+
+    predicate =
+      id: predId
+      token: null
+      type: null
+      provider: null
+      forToken: null
+      for: null
+
 
     # find a prdicate provider for that can parse and decide the predicate:
     suitedPredProvider = _(@predicateProviders).map( (provider) => 
@@ -254,64 +261,54 @@ class RuleManager extends require('events').EventEmitter
       [provider, type]
     ).filter( ([provider, type]) => type isnt no ).value()
 
+    nextInput = null
+    token = null
 
-
-
-
-    provider = null
-    type = null
     switch suitedPredProvider.length
       when 0
         context.addError("""Could not find an provider that decides "#{predicateString}".""")
       when 1
-        [provider, type] = suitedPredProvider[0]
-        if type is 'event' and forSuffix?
+        # get part of predicateString that is related to the found provider
+        assert context.matches.length is 1
+        token = context.matches[0]
+        context.matches = []
+        assert token?
+        assert S(predicateString).startsWith(token)
+        # split into token and nextInput
+        predicate.token = token
+        nextInput = S(predicateString).chompLeft(token).s
+        # and clear matches.
+        
+        [predicate.provider, predicate.type] = suitedPredProvider[0]
+
+        # Parse the for-Suffix:
+        timeUnits = ["ms", "seconds", "s", "minutes", "m", "hours", "h", "days","d", "years", "y"]
+        time = 0
+        unit = ""
+        onTimeMatch = (m, n) => time = parseFloat(n)
+        onMatchUnit = (m, u) => unit = u
+
+        m = M(nextInput, context)
+          .match(' for ')
+          .matchNumber(onTimeMatch)
+          .match(_.map(timeUnits, (u) => " #{u}"), onMatchUnit)
+
+        unless m.hadNoMatches()
+          forPart = m.getLongestFullMatch()
+          assert S(nextInput).startsWith(forPart)
+          predicate.forToken = S(forPart).chompLeft(' for ').s
+          predicate.for = milliseconds.parse "#{time} #{unit}"
+          assert predicate.forToken?
+          assert predicate.for?
+          nextInput = S(nextInput).chompLeft(forPart).s
+          token += forPart
+
+        if predicate.type is 'event' and predicate.forSuffix?
           context.addError("\"#{token}\" is an event it can not be true for \"#{forSuffix}\"")
       else
         context.addError("""Predicate "#{predicateString}" is ambiguous.""")
 
-    if suitedPredProvider.length is 1
-      assert context.matches.length is 1
-      token = context.matches[0]
-      context.matches = []
-      
-      assert S(predicateString).startsWith(token)
-      nextInput = S(predicateString).chompLeft(token).s
-
-      timeUnits = ["ms", "seconds", "s", "minutes", "m", "hours", "h", "days","d", "years", "y"]
-      time = 0
-      onTimeMatch = (m, n) => time = parseFloat(n)
-
-      m = M(nextInput, context)
-        .match(' for ')
-        .matchNumber(onTimeMatch)
-        .match(_.map(timeUnits, (u) => " #{u}"))
-
-          # Try to split the predicate at the last `for` to handle 
-    # predicates in the form `"the light is on for 10 seconds"`
-    # forMatches = predicateString.match /(.+)\sfor\s(.+)/
-    # if forMatches? and forMatches?.length is 3
-    #   beforeFor = forMatches[1].trim()
-    #   afterFor = forMatches[2].trim()
-
-    #   # Test if we can parse the afterFor part.
-    #   ms = milliseconds.parse afterFor
-    #   if ms?
-    #     predicateString = beforeFor
-    #     forSuffix = afterFor
-    #     forTime = ms
-
-    else 
-      token = predicateString
-
-
-    predicate =
-      id: predId
-      token: token
-      type: type
-      provider: provider
-      forToken: forSuffix
-      for: forTime
+    return { predicate, token, nextInput }
 
   # ###_registerPredicateProviderNotify()
   # Register for every predicate the callback function that should be called

@@ -209,6 +209,12 @@ class Matcher
   hadNoMatches: -> @inputs.length is 0
   getMatchCount: -> @inputs.length
   getFullMatches: -> @prevInputs 
+  getLongestFullMatch: ->
+    if @prevInputs.length > 0
+      match = _(@prevInputs).sortBy( (s) => s.length ).last()
+    else 
+      null
+
 
   dump: -> 
     console.log "prevInputs", @prevInputs

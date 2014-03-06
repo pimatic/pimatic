@@ -1,6 +1,7 @@
 cassert = require "cassert"
 assert = require "assert"
 Q = require 'q'
+S = require 'string'
 
 describe "RuleManager", ->
 
@@ -23,8 +24,9 @@ describe "RuleManager", ->
     type: 'unknwon'
     name: 'test'
 
-    canDecide: (predicate) -> 
-      cassert predicate is "predicate 1"
+    canDecide: (predicate, context) -> 
+      cassert S(predicate).startsWith("predicate 1")
+      context.addMatch("predicate 1")
       return 'event'
     isTrue: (id, predicate) -> Q.fcall -> false
     notifyWhen: (id, predicate, callback) -> true
@@ -51,7 +53,7 @@ describe "RuleManager", ->
     beforeEach ->
       context = ruleManager.createParseContext()
 
-    it 'should parse valid rule', (finish) ->
+    it 'should parse: "if predicate 1 then action 1"', (finish) ->
       ruleManager.parseRuleString("test1", "if predicate 1 then action 1", context)
       .then( (rule) -> 
         cassert rule.id is 'test1'
@@ -63,13 +65,15 @@ describe "RuleManager", ->
         finish() 
       ).catch(finish).done()
 
-    it 'should parse rule with for "10 seconds" suffix', (finish) ->
+    ruleWithForSuffix = 'if predicate 1 for 10 seconds then action 1'
+    it """should parse rule with for "10 seconds" suffix: #{ruleWithForSuffix}'""", (finish) ->
 
-      provider.canDecide = (predicate) -> 
-        cassert predicate is "predicate 1"
+      provider.canDecide = (predicate, context) -> 
+        cassert S(predicate).startsWith("predicate 1")
+        context.addMatch("predicate 1")
         return 'state'
 
-      ruleManager.parseRuleString("test1", "if predicate 1 for 10 seconds then action 1", context)
+      ruleManager.parseRuleString("test1", ruleWithForSuffix, context)
       .then( (rule) -> 
         cassert rule.id is 'test1'
         cassert rule.orgCondition is 'predicate 1 for 10 seconds'
@@ -82,13 +86,16 @@ describe "RuleManager", ->
         finish() 
       ).catch(finish).done()
 
-    it 'should parse rule with for "2 hours" suffix', (finish) ->
 
-      provider.canDecide = (predicate) -> 
-        cassert predicate is "predicate 1"
+    ruleWithHoursSuffix = "if predicate 1 for 2 hours then action 1"
+    it """should parse rule with for "2 hours" suffix: #{ruleWithHoursSuffix}""", (finish) ->
+
+      provider.canDecide = (predicate, context) -> 
+        cassert S(predicate).startsWith("predicate 1")
+        context.addMatch("predicate 1")
         return 'state'
 
-      ruleManager.parseRuleString("test1", "if predicate 1 for 2 hours then action 1", context)
+      ruleManager.parseRuleString("test1", ruleWithHoursSuffix, context)
       .then( (rule) -> 
         cassert rule.id is 'test1'
         cassert rule.orgCondition is 'predicate 1 for 2 hours'
@@ -103,8 +110,9 @@ describe "RuleManager", ->
 
     it 'should not detect for "42 foo" as for suffix', (finish) ->
 
-      provider.canDecide = (predicate) -> 
-        cassert predicate is "predicate 1 for 42 foo"
+      provider.canDecide = (predicate, context) -> 
+        cassert S(predicate).startsWith("predicate 1")
+        context.addMatch("predicate 1")
         return 'state'
 
       ruleManager.parseRuleString("test1", "if predicate 1 for 42 foo then action 1", context)
@@ -134,8 +142,9 @@ describe "RuleManager", ->
 
     it 'should reject unknown predicate', (finish) ->
       canDecideCalled = false
-      provider.canDecide = (predicate) ->
+      provider.canDecide = (predicate, context) ->
         cassert predicate is 'predicate 2'
+        context.addMatch("predicate 1")
         canDecideCalled = true
         return false
 
@@ -150,8 +159,9 @@ describe "RuleManager", ->
 
     it 'should reject unknown action', (finish) ->
       canDecideCalled = false
-      provider.canDecide = (predicate) ->
+      provider.canDecide = (predicate, context) ->
         cassert predicate is "predicate 1"
+        context.addMatch("predicate 1")
         canDecideCalled = true
         return 'event'
 
@@ -221,7 +231,7 @@ describe "RuleManager", ->
 
     it 'should decide predicate 1', (finish)->
 
-      provider.canDecide = (predicate) -> 
+      provider.canDecide = (predicate, context) -> 
         cassert predicate is "predicate 1"
         return 'state'
 
@@ -259,7 +269,7 @@ describe "RuleManager", ->
 
     it 'should decide predicate 1 and predicate 2', (finish)->
 
-      provider.canDecide = (predicate) -> 
+      provider.canDecide = (predicate, context) -> 
         cassert predicate is "predicate 1" or predicate is "predicate 2"
         return 'state'
 
@@ -311,7 +321,7 @@ describe "RuleManager", ->
 
     it 'should decide predicate 1 or predicate 2', (finish)->
 
-      provider.canDecide = (predicate) -> 
+      provider.canDecide = (predicate, context) -> 
         cassert predicate is "predicate 1" or predicate is "predicate 2"
         return 'state'
 
@@ -366,7 +376,7 @@ describe "RuleManager", ->
       this.timeout 2000
       start = getTime()
 
-      provider.canDecide = (predicate) -> 
+      provider.canDecide = (predicate, context) -> 
         cassert predicate is "predicate 1"
         return 'state'
 
@@ -407,7 +417,7 @@ describe "RuleManager", ->
       this.timeout 2000
       start = getTime()
 
-      provider.canDecide = (predicate) -> 
+      provider.canDecide = (predicate, context) -> 
         cassert predicate is "predicate 1"
         return 'state'
 
@@ -455,7 +465,7 @@ describe "RuleManager", ->
       this.timeout 3000
       start = getTime()
 
-      provider.canDecide = (predicate) -> 
+      provider.canDecide = (predicate, context) -> 
         cassert predicate is "predicate 1" or predicate is "predicate 2"
         return 'state'
 
@@ -511,7 +521,7 @@ describe "RuleManager", ->
       this.timeout 3000
       start = getTime()
 
-      provider.canDecide = (predicate) -> 
+      provider.canDecide = (predicate, context) -> 
         cassert predicate is "predicate 1" or predicate is "predicate 2"
         return 'state'
 
@@ -569,7 +579,7 @@ describe "RuleManager", ->
       this.timeout 3000
       start = getTime()
 
-      provider.canDecide = (predicate) -> 
+      provider.canDecide = (predicate, context) -> 
         cassert predicate is "predicate 1" or predicate is "predicate 2"
         return 'state'
 
@@ -629,8 +639,9 @@ describe "RuleManager", ->
       this.timeout 3000
       start = getTime()
 
-      provider.canDecide = (predicate) -> 
+      provider.canDecide = (predicate, context) -> 
         cassert predicate is "predicate 1" or predicate is "predicate 2"
+        context.addMatch(predicate)
         return 'state'
 
       provider.isTrue = (id, predicate) -> Q.fcall -> true
@@ -694,8 +705,9 @@ describe "RuleManager", ->
     it 'should update the rule', (finish) ->
 
       canDecideCalled = false
-      provider.canDecide = (predicate) ->
+      provider.canDecide = (predicate, context) ->
         cassert predicate is 'predicate 2'
+        context.addMatch('predicate 2')
         canDecideCalled = i
         i++
         return 'event'
