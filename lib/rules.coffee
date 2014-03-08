@@ -248,7 +248,6 @@ class RuleManager extends require('events').EventEmitter
     predicate =
       id: predId
       token: null
-      type: null
       handler: null
       forToken: null
       for: null
@@ -308,7 +307,6 @@ class RuleManager extends require('events').EventEmitter
           context.addError(
             "\"#{token}\" is an event it can not be true for \"#{forSuffix}\"."
           )
-
 
         predicate.handler = predicateHandler
       else

@@ -281,16 +281,12 @@ class DeviceAttributePredicateProvider extends PredicateProvider
           found = true
           break
       assert found
-      device = result.device
-      lastValue = null
-      result.event = result.attributeName
-
-
+      
       return {
         token: match
-        nextInput: m.inputs[1]
+        nextInput: S(predicate).chompLeft(match).s
         predicateHandler: new DeviceAttributePredicateHandler(
-          device, result.event, result.comperator, result.referenceValue
+          result.device, result.attributeName, result.comparator, result.referenceValue
         )
       }
       
@@ -306,7 +302,7 @@ class DeviceAttributePredicateHandler extends PredicateHandler
       if state isnt lastState
         lastState = state
         @emit 'change', state
-    @device.on @attribute, @attribteListener
+    @device.on @attribute, @attributeListener
   getValue: -> 
     @device.getAttributeValue(@attribute).then( (value) =>
       @_compareValues(@comparator, value, @referenceValue)

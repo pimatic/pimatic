@@ -93,7 +93,6 @@ describe "PresencePredicateProvider", ->
       it "should notify when device is present", (finish) ->
         sensorDummy._presence = no
         predicateHandler.once 'change', changeListener = (state)->
-          console.log "change cevent occured"
           assert.equal state, true
           finish()
         sensorDummy._setPresence yes
@@ -113,7 +112,7 @@ describe "SwitchPredicateProvider", ->
   provider = null
   switchDummy = null
 
-  beforeEach ->
+  before ->
     provider = new env.predicates.SwitchPredicateProvider(env, frameworkDummy)
 
     class SwitchDummyDevice extends env.devices.SwitchActuator
@@ -128,72 +127,73 @@ describe "SwitchPredicateProvider", ->
     frameworkDummy.devices =
       test: switchDummy
 
-  describe '#_parsePredicate()', ->
+  describe '#parsePredicate()', ->
 
-    it 'should parse "test is on"', ->
-      info = provider._parsePredicate "test is on"
-      cassert info?
-      cassert info.device.id is "test"
-      cassert info.state is on
+    testCases = [
+      {
+        inputs: [
+          "test is on"
+          "test device is on"
+          "test is turned on"
+          "test is switched on"
+        ]
+        checkOutput: (input, result) ->
+          assert result?
+          assert.equal(result.token, input)
+          assert.equal(result.nextInput, "")
+          assert result.predicateHandler?
+          assert.equal(result.predicateHandler.state, on)
+          assert.deepEqual(result.predicateHandler.device, switchDummy)
+          result.predicateHandler.destroy()
+      },
+      {
+        inputs: [
+          "test is off"
+          "test device is off"
+          "test is turned off"
+          "test is switched off"
+        ]
+        checkOutput: (input, result) ->
+          assert result?
+          assert.equal(result.token, input)
+          assert.equal(result.nextInput, "")
+          assert result.predicateHandler?
+          assert.equal(result.predicateHandler.state, off)
+          assert.deepEqual(result.predicateHandler.device, switchDummy)
+          result.predicateHandler.destroy()
+      }
+    ]
 
-    it 'should parse "test device is on"', ->
-      info = provider._parsePredicate "test device is on"
-      cassert info?
-      cassert info.device.id is "test"
-      cassert info.state is on
+    for testCase in testCases
+      do (testCase) =>
+        for input in testCase.inputs
+          do (input) =>
+            it "should parse \"#{input}\"", =>
+              result = provider.parsePredicate input
+              testCase.checkOutput(input, result)
 
-    it 'should parse "test is off"', ->
-      info = provider._parsePredicate "test is off"
-      cassert info?
-      cassert info.device.id is "test"
-      cassert info.state is off
+  describe "SwitchPredicateHandler", ->
 
-    it 'should parse "test is turned on"', ->
-      info = provider._parsePredicate "test is turned on"
-      cassert info?
-      cassert info.device.id is "test"
-      cassert info.state is on
+    describe '#on "change"', ->  
+      predicateHandler = null
+      before ->
+        result = provider.parsePredicate "test is on"
+        assert result?
+        predicateHandler = result.predicateHandler
 
-    it 'should parse "test is turned off"', ->
-      info = provider._parsePredicate "test is turned off"
-      cassert info?
-      cassert info.device.id is "test"
-      cassert info.state is off
+      it "should notify when switch is on", (finish) ->
+        switchDummy._state = off
+        predicateHandler.once 'change', changeListener = (state)->
+          assert.equal state, on
+          finish()
+        switchDummy._setState on
 
-    it 'should parse "test is switched on"', ->
-      info = provider._parsePredicate "test is switched on"
-      cassert info?
-      cassert info.device.id is "test"
-      cassert info.state is on
-
-    it 'should parse "test is switched off"', ->
-      info = provider._parsePredicate "test is switched off"
-      cassert info?
-      cassert info.device.id is "test"
-      cassert info.state is off
-
-
-  describe '#notifyWhen()', ->
-
-    it "should notify when device is turned on", (finish) ->
-      switchDummy._state = off
-      success = provider.notifyWhen "test-id-1", "test is turned on", (predState)->
-        cassert predState is true
-        provider.cancelNotify "test-id-1"
-        finish()
-
-      switchDummy._setState on
-      cassert success
-
-    it "should notify when device is turned off", (finish) ->
-      switchDummy._state = on
-      success = provider.notifyWhen "test-id-2", "test is turned off", (predState)->
-        cassert predState is true
-        provider.cancelNotify "test-id-2"
-        finish()
-
-      switchDummy._setState off
-      cassert success
+      it "should notify when switch is off", (finish) ->
+        switchDummy._state = on
+        predicateHandler.once 'change', changeListener = (state)->
+          assert.equal state, off
+          finish()
+        switchDummy._setState off
 
 
 describe "DeviceAttributePredicateProvider", ->
@@ -210,7 +210,7 @@ describe "DeviceAttributePredicateProvider", ->
   provider = null
   sensorDummy = null
 
-  beforeEach ->
+  before ->
     provider = new env.predicates.DeviceAttributePredicateProvider(env, frameworkDummy)
 
     class DummySensor extends env.devices.Sensor
@@ -231,7 +231,7 @@ describe "DeviceAttributePredicateProvider", ->
     frameworkDummy.devices =
       test: sensorDummy
 
-  describe '#_parsePredicate()', ->
+  describe '#parsePredicate()', ->
 
     comparators = 
       'is': '=='
@@ -260,146 +260,61 @@ describe "DeviceAttributePredicateProvider", ->
         testPredicate = "testvalue of test sensor #{comp} 42"
 
         it "should parse \"#{testPredicate}\"", ->
-          info = provider._parsePredicate testPredicate, context
-          cassert info?
-          cassert info.device.id is "test"
-          cassert info.comparator is sign
-          cassert info.event is 'testvalue'
-          cassert info.referenceValue is 42
-          cassert context.match is testPredicate
+          result = provider.parsePredicate testPredicate, context
+          cassert result?
+          cassert result.predicateHandler?
+          predHandler = result.predicateHandler
+          cassert predHandler.device.id is "test"
+          cassert predHandler.comparator is sign
+          cassert predHandler.attribute is 'testvalue'
+          cassert predHandler.referenceValue is 42
+          cassert result.token is testPredicate
+          cassert result.nextInput is ""
+          predHandler.destroy()
 
     it "should parse predicate with unit: testvalue of test sensor is 42 °C", ->
-      info = provider._parsePredicate "testvalue of test sensor is 42 °C", context
-      cassert info?
-      cassert info.device.id is "test"
-      cassert info.comparator is "=="
-      cassert info.event is 'testvalue'
-      cassert info.referenceValue is 42
-      cassert context.match is "testvalue of test sensor is 42 °C"
+      result = provider.parsePredicate "testvalue of test sensor is 42 °C", context
+      cassert result?
+      cassert result.predicateHandler?
+      predHandler = result.predicateHandler
+      cassert predHandler.device.id is "test"
+      cassert predHandler.comparator is "=="
+      cassert predHandler.attribute is 'testvalue'
+      cassert predHandler.referenceValue is 42
+      cassert result.token is "testvalue of test sensor is 42 °C"
+      cassert result.nextInput is ""
+      predHandler.destroy()
 
     it "should parse predicate with unit: testvalue of test sensor is 42 C", ->
-      info = provider._parsePredicate "testvalue of test sensor is 42 C", context
-      cassert info?
-      cassert info.device.id is "test"
-      cassert info.comparator is "=="
-      cassert info.event is 'testvalue'
-      cassert info.referenceValue is 42
-      cassert context.match is "testvalue of test sensor is 42 C"
+      result = provider.parsePredicate "testvalue of test sensor is 42 C", context
+      cassert result?
+      cassert result.predicateHandler?
+      predHandler = result.predicateHandler
+      cassert predHandler.device.id is "test"
+      cassert predHandler.comparator is "=="
+      cassert predHandler.attribute is 'testvalue'
+      cassert predHandler.referenceValue is 42
+      cassert result.token is "testvalue of test sensor is 42 C"
+      cassert result.nextInput is ""
+      predHandler.destroy()
 
+  describe "SwitchPredicateHandler", ->
 
-  describe '#notifyWhen()', ->
+    describe '#on "change"', ->  
+      predicateHandler = null
+      before ->
+        result = provider.parsePredicate "testvalue of test is greater than 20"
+        assert result?
+        predicateHandler = result.predicateHandler
 
-    it "should notify when value is greater than 20 and value is 21", (finish) ->
-      success = provider.notifyWhen "test-id-1", "testvalue of test is greater than 20", (state)->
-        cassert state is true
-        provider.cancelNotify "test-id-1"
-        finish()
+      it "should notify when value is greater than 20 and value is 21", (finish) ->
+        predicateHandler.once 'change', (state) ->
+          cassert state is true
+          finish()
+        sensorDummy.emit 'testvalue', 21
 
-      sensorDummy.emit 'testvalue', 21
-      cassert success
-
-    it "should notify when value is greater than 20 and value is 19", (finish) ->
-
-      success = provider.notifyWhen "test-id-1", "testvalue of test is greater than 20", (state)->
-        cassert state is false
-        provider.cancelNotify "test-id-1"
-        finish()
-
-      sensorDummy.emit 'testvalue', 20
-      cassert success
-
-  describe '#cancelNotify()', ->
-
-    it "should cancel notify test-id-3", ->
-
-      provider.notifyWhen "test-id-3", "testvalue of test is greater than 20", ->
-      provider.notifyWhen "test-id-4", "testvalue of test is less than 20", ->
-
-      provider.cancelNotify "test-id-3"
-      cassert not provider._listener['test-id-3']?
-      cassert provider._listener['test-id-4']?
-
-    it "should cancel notify test-id-4", ->
-
-      provider.cancelNotify "test-id-4"
-      cassert not provider._listener['test-id-3']?
-      cassert not provider._listener['test-id-4']?
-
-# describe "DeviceAttributePredicateAutocompleter", ->
-
-#   ac = new env.predicates.DeviceAttributePredicateAutocompleter()
-
-#   describe '#_partlyMatchPredicate()', ->
-
-#     it "should match ''", ->
-#       matches = ac._partlyMatchPredicate('')
-#       assert.deepEqual matches, {
-#         attribute: ''
-#         of: undefined
-#         device: undefined
-#         comparator: undefined
-#         valueAndUnit: undefined
-#       }
-
-#     it "should match 'attribute'", ->
-#       matches = ac._partlyMatchPredicate('attribute')
-#       assert.deepEqual matches, {
-#         attribute: 'attribute'
-#         of: undefined
-#         device: undefined
-#         comparator: undefined
-#         valueAndUnit: undefined
-#       }
-
-#     it "should match 'attribute '", ->
-#       matches = ac._partlyMatchPredicate('attribute ')
-#       assert.deepEqual matches, {
-#         attribute: 'attribute '
-#         of: undefined
-#         device: undefined
-#         comparator: undefined
-#         valueAndUnit: undefined
-#       }
-
-
-#     it "should match 'attribute of '", ->
-#       matches = ac._partlyMatchPredicate('attribute of ')
-#       assert.deepEqual matches, {
-#         attribute: 'attribute'
-#         of: ' of '
-#         device: ''
-#         comparator: undefined
-#         valueAndUnit: undefined
-#       }
-
-#     it "should match 'attribute of device name'", ->
-#       matches = ac._partlyMatchPredicate('attribute of device name')
-#       assert.deepEqual matches, {
-#         attribute: 'attribute'
-#         of: ' of '
-#         device: 'device name'
-#         comparator: undefined
-#         valueAndUnit: undefined
-#       }
-
-#     for comp in ['is', 'is not', 'equals', 'is less than', 'is greater than']
-#       do (comp) =>
-#         it "should match 'attribute of device name #{comp}'", ->
-#           matches = ac._partlyMatchPredicate("attribute of device name #{comp}")
-#           assert.deepEqual matches, {
-#             attribute: 'attribute'
-#             of: ' of '
-#             device: 'device name'
-#             comparator: comp
-#             valueAndUnit: undefined
-#           }
-
-#         it "should match 'attribute of device name #{comp} val'", ->
-#           matches = ac._partlyMatchPredicate("attribute of device name #{comp} val")
-#           assert.deepEqual matches, {
-#             attribute: 'attribute'
-#             of: ' of '
-#             device: 'device name'
-#             comparator: comp
-#             valueAndUnit: 'val'
-#           }
+      it "should notify when value is greater than 20 and value is 19", (finish) ->
+        predicateHandler.once 'change', (state)->
+          cassert state is false
+          finish()
+        sensorDummy.emit 'testvalue', 19
