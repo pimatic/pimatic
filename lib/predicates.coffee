@@ -284,7 +284,7 @@ class DeviceAttributePredicateProvider extends PredicateProvider
 
       return {
         token: match
-        nextInput: S(predicate).chompLeft(match).s
+        nextInput: S(input).chompLeft(match).s
         predicateHandler: new DeviceAttributePredicateHandler(
           result.device, result.attributeName, result.comparator, result.referenceValue
         )
