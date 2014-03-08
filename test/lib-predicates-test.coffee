@@ -12,15 +12,13 @@ env =
 
 describe "PresencePredicateProvider", ->
 
-
-
   frameworkDummy = 
     devices: {}
 
   provider = null
   sensorDummy = null
 
-  beforeEach ->
+  before ->
     provider = new env.predicates.PresencePredicateProvider(env, frameworkDummy)
 
     class PresenceDummySensor extends env.devices.PresenceSensor
@@ -34,88 +32,78 @@ describe "PresencePredicateProvider", ->
     frameworkDummy.devices =
       test: sensorDummy
 
-  describe '#_parsePredicate()', ->
+  describe '#parsePredicate()', ->
 
-    it 'should parse "test is present"', ->
-      info = provider._parsePredicate "test is present"
-      cassert info?
-      cassert info.device.id is "test"
-      cassert info.negated is no
+    testCases = [
+      {
+        inputs: [
+          "test is present"
+          "test device is present"
+          "test signals present"
+          "test reports present"
+        ]
+        checkOutput: (input, result) ->
+          assert result?
+          assert.equal(result.token, input)
+          assert.equal(result.nextInput, "")
+          assert result.predicateHandler?
+          assert.equal(result.predicateHandler.negated, no)
+          assert.deepEqual(result.predicateHandler.device, sensorDummy)
+          result.predicateHandler.destroy()
+      },
+      {
+        inputs: [
+          "test is absent"
+          "test is not present"
+          "test device is not present"
+          "test signals absent"
+          "test reports absent"
+        ]
+        checkOutput: (input, result) ->
+          assert result?
+          assert.equal(result.token, input)
+          assert.equal(result.nextInput, "")
+          assert result.predicateHandler?
+          assert.equal(result.predicateHandler.negated, yes)
+          assert.deepEqual(result.predicateHandler.device, sensorDummy)
+          result.predicateHandler.destroy()
+      }
+    ]
 
-    it 'should parse "test device is present"', ->
-      info = provider._parsePredicate "test device is present"
-      cassert info?
-      cassert info.device.id is "test"
-      cassert info.negated is no
-
-    it 'should parse "test signals present"', ->
-      info = provider._parsePredicate "test signals present"
-      cassert info?
-      cassert info.device.id is "test"
-      cassert info.negated is no
-
-    it 'should parse "test reports present"', ->
-      info = provider._parsePredicate "test signals present"
-      cassert info?
-      cassert info.device.id is "test"
-      cassert info.negated is no
-
-    it 'should parse "test is absent"', ->
-      info = provider._parsePredicate "test is absent"
-      cassert info?
-      cassert info.device.id is "test"
-      cassert info.negated is yes
-
-
-    it 'should parse "test is not present"', ->
-      info = provider._parsePredicate "test is not present"
-      cassert info?
-      cassert info.device.id is "test"
-      cassert info.negated is yes
+    for testCase in testCases
+      do (testCase) =>
+        for input in testCase.inputs
+          do (input) =>
+            it "should parse \"#{input}\"", =>
+              result = provider.parsePredicate input
+              testCase.checkOutput(input, result)
 
     it 'should return null if id is wrong', ->
-      info = provider._parsePredicate "foo is present"
-      cassert(not info?)
+      result = provider.parsePredicate "foo is present"
+      assert(not info?)
 
-  describe '#notifyWhen()', ->
+  describe "PresencePredicateHandler", ->
+    describe '#on "change"', ->  
+      predicateHandler = null
+      before ->
+        result = provider.parsePredicate "test is present"
+        assert result?
+        predicateHandler = result.predicateHandler
 
-    it "should notify when device is present", (finish) ->
-      sensorDummy._presence = false
-      success = provider.notifyWhen "test-id-1", "test is present", (state)->
-        cassert state is true
-        provider.cancelNotify "test-id-1"
-        finish()
+      it "should notify when device is present", (finish) ->
+        sensorDummy._presence = no
+        predicateHandler.once 'change', changeListener = (state)->
+          console.log "change cevent occured"
+          assert.equal state, true
+          finish()
+        sensorDummy._setPresence yes
 
-      sensorDummy._setPresence true
-      cassert success
-
-    it "should notify when device is absent", (finish) ->
-      sensorDummy._presence = true
-      success = provider.notifyWhen "test-id-2", "test is absent", (state)->
-        cassert state is true
-        provider.cancelNotify "test-id-2"
-        finish()
-
-      sensorDummy._setPresence false
-      cassert success
-
-  describe '#cancelNotify()', ->
-
-    it "should cancel notify test-id-3", ->
-
-      provider.notifyWhen "test-id-3", "test is present", ->
-      provider.notifyWhen "test-id-4", "test is absent", ->
-
-      provider.cancelNotify "test-id-3"
-      cassert not provider._listener['test-id-3']?
-      cassert provider._listener['test-id-4']?
-
-    it "should cancel notify test-id-4", ->
-
-      provider.cancelNotify "test-id-4"
-      cassert not provider._listener['test-id-3']?
-      cassert not provider._listener['test-id-4']?
-
+      it "should notify when device is absent", (finish) ->
+        sensorDummy._presence = yes
+        predicateHandler.once 'change', changeListener = (state)->
+          assert.equal state, false
+          finish()
+        sensorDummy._setPresence no
 
 describe "SwitchPredicateProvider", ->
 

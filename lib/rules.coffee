@@ -239,9 +239,9 @@ class RuleManager extends require('events').EventEmitter
       tokens: tokens
     }
 
-  parsePredicate: (predId, predicateString, context) =>
+  parsePredicate: (predId, nextInput, context) =>
     assert typeof predId is "string" and predId.length isnt 0
-    assert typeof predicateString is "string"
+    assert typeof nextInput is "string"
     assert context?
 
 
@@ -249,39 +249,40 @@ class RuleManager extends require('events').EventEmitter
       id: predId
       token: null
       type: null
-      provider: null
+      handler: null
       forToken: null
       for: null
 
 
     # find a prdicate provider for that can parse and decide the predicate:
-    suitedPredProvider = _(@predicateProviders).map( (provider) => 
-      type = provider.canDecide predicateString, context
-      assert type is 'event' or type is 'state' or type is no
-      [provider, type]
-    ).filter( ([provider, type]) => type isnt no ).value()
+    parseResults = []
+    for predProvider in @predicateProviders
+      parseResult = provider.parsePredicate(nextInput, context)
+      if parseResult?
+        assert parseResult.token? and parseResult.token.length > 0
+        assert parseResult.nextInput? and typeof parseResult.nextInput is "string"
+        assert parseResult.predicateHandler?
+        assert parseResult.predicateHandler instanceof env.predicates.PredicateHandler
+        parseResults.push parseResult
 
-    nextInput = null
     token = null
 
-    switch suitedPredProvider.length
+    switch parseResults.length
       when 0
-        context.addError("""Could not find an provider that decides "#{predicateString}".""")
+        context.addError(
+          """Could not find an provider that decides next predicate of "#{nextInput}"."""
+        )
       when 1
-        # get part of predicateString that is related to the found provider
-        assert context.matches.length is 1
-        token = context.matches[0]
-        context.matches = []
+        # get part of nextInput that is related to the found provider
+        token = parseResult.token
         assert token?
-        assert S(predicateString).startsWith(token)
-        # split into token and nextInput
+        assert S(nextInput).startsWith(token)
         predicate.token = token
-        nextInput = S(predicateString).chompLeft(token).s
-        # and clear matches.
-        
-        [predicate.provider, predicate.type] = suitedPredProvider[0]
+        nextInput = parseResult.nextInput
+        predicateHandler = parseResult.predicateHandler
 
         # Parse the for-Suffix:
+        # TODO: parse singular
         timeUnits = ["ms", "seconds", "s", "minutes", "m", "hours", "h", "days","d", "years", "y"]
         time = 0
         unit = ""
@@ -303,10 +304,17 @@ class RuleManager extends require('events').EventEmitter
           nextInput = S(nextInput).chompLeft(forPart).s
           token += forPart
 
-        if predicate.type is 'event' and predicate.forSuffix?
-          context.addError("\"#{token}\" is an event it can not be true for \"#{forSuffix}\"")
+        if predicateHandler.getType() is 'event' and predicate.forSuffix?
+          context.addError(
+            "\"#{token}\" is an event it can not be true for \"#{forSuffix}\"."
+          )
+
+
+        predicate.handler = predicateHandler
       else
-        context.addError("""Predicate "#{predicateString}" is ambiguous.""")
+        context.addError(
+          """Next predicate of "#{nextInput}" is ambiguous."""
+        )
 
     return { predicate, token, nextInput }
 

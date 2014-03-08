@@ -15,6 +15,7 @@ assert = require 'cassert'
 _ = require 'lodash'
 M = require './matcher'
 
+
 ###
 The Predicate Provider
 ----------------
@@ -22,173 +23,34 @@ This is the base class for all predicate provider.
 ###
 class PredicateProvider
 
-  # ### canDecide()
-  ###
-  This function should return 'event' or 'state' if the sensor can decide the given predicate.
-  If the sensor can decide the predicate and it is a event-predicate like 'its 10pm' then
-  `canDecide` should return the string `'event'`
-  If the provider can decide the predicate and it can be true or false like 'x is present' then 
-  `canDecide` should return the string `'state'`
-  If the sensor can not decide the given predicate then `canDecide` should return the boolean 
-  `false`
-
-  __params__
-
-   * `predicate`: the predicate as string like `"its 10pm"` 
-   * `context`: is used to add optional autocomplete hints or other hints
-  ###
-  canDecide: (predicate, context) ->
-    throw new Error("your predicate provider must implement canDecide")
-
-  # ### isTrue()
-  ###
-  The provider should return boolean `true` if the predicate is true and boolean `false` if it is 
-  false. If the provider can not decide the predicate or the predicate is an event this function 
-  should throw an Error.
-
-  __params__
-
-   * `id`: a string which is unique, can be ignored in most case. It could be used to cache the
-     state of the predicate if it is difficult to decide.
-   * `predicate` the predicate as string like `"x is present"` 
-  ###
-  isTrue: (id, predicate) ->
-    throw new Error("your predicate provider must implement itTrue")
-
-  # ### notifyWhen()
-  ###
-  The provider should call the given callback if the state of the predicate changes 
-  (it becomes true or false). 
-  The callback function takes one paramter which is the new state of the predicate. It should
-  be boolean `true` if the predicate changed to true, it should be boolean `false` if the predicate 
-  changed to false and if it is a event-predicate it should be the string `"event".
-  If the provider can not decide the predicate this function should throw an Error.
-
-  __params__
-
-  * `id`: a string which is unique. It is to identify the requester so that the notify can be
-     canceled by cancelNotify giving the same id later.
-     state of the predicate if it is difficult to decide.
-  * `predicate` the predicate as string like `"x is present"` 
-  * `callback` the callback function to call with one parameter like noted above.
-  ###
-  notifyWhen: (id, predicate, callback) ->
-    throw new Error("your predicate provider must implement notifyWhen")
-
-  # ### cancelNotify()
-  ###
-  Cancels the notification for the predicate with the id given id.
-
-  __params__
-  
-  * `id`: The unique string that was given at `notifyWhen`.
-  ###
-  cancelNotify: (id) ->
-    throw new Error("your predicate provider must implement cancelNotify")
+  parsePredicate: (predicate, context) -> throw new Error("You must implement parsePredicate")
 
 env = null
 
-###
-The Device-Event Predicate Provider
-----------------
-It's often the case that predicates depend on the value of a attribute of a device. If the value of
-an attribute of a device changes an event is emitted that can be used to call the `notifyWhen` 
-callback.
 
-The `DeviceEventPredicateProvider` does handle the `canDecide`, `isTrue` and `cancleDecide`
-function implementation. So there is only one function to be implemented by the sub class. This 
-function is the `_parsePredicate` function witch gets the predicate to decide or notify and should
-return a info object with some special keys. See the function description below for more details.
-####
-class DeviceEventPredicateProvider extends PredicateProvider
-  _listener: {}
+class PredicateHandler extends require('events').EventEmitter
 
-  # ### canDecide()
-  ###
-  Gets the info object from `_parsePredicate` implementation and checks if it returned null.
-  ###
-  canDecide: (predicate, context) ->
-    info = @_parsePredicate predicate, context
-    return if info? then 'state' else no 
-
-  # ### isTrue()
-  ###
-  Gets the info object from `_parsePredicate` implementation and calls `getPredicateValue()` on it.
-  ###
-  isTrue: (id, predicate) ->
-    info = @_parsePredicate predicate
-    if info? then return info.getPredicateValue()
-    else throw new Error "Can not decide \"#{predicate}\"!"
-
-
-  # ### notifyWhen()
-  ###
-  Gets the `info` object from `_parsePredicate` implementation and registers an event listener 
-  for `ìnfo.event` at `info.device`. The event listener is obtained by calling 
-  `event.getEventListener`.
-  ###
-  notifyWhen: (id, predicate, callback) ->
-    info = @_parsePredicate predicate
-    if info?
-      device = info.device
-      event = info.event
-      eventListener = info.getEventListener(callback)
-      device.on event, eventListener
-      @_listener[id] =
-        id: id
-        destroy: => device.removeListener event, eventListener
-    else throw new Error "DeviceEventPredicateProvider can not decide \"#{predicate}\"!"
-
-  # ### cancelNotify()
-  ###
-  Removes the notification for an with `notifyWhen` registered predicate. 
-  ###
-  cancelNotify: (id) ->
-    listener = @_listener[id]
-    if listener?
-      listener.destroy()
-    delete @_listener[id]
-
-  # ### _parsePredicate()
-  ###
-  The `_parsePredicate` must be implemented by the subclass. It should parse the given predicate
-  and return a `info` object at a match. If it does not match a predicate that the provider can
-  handle then `null` sould be returned. The returned info object should have the following 
-  properties:
-
-  * info.event: the event of the device which triggers the `notifyWhen` callback
-  * info.device: the device where the event which triggers the `notifyWhen` callback should be 
-    registed
-  * info.getEventListener: the event handler of the event. `getEventListener` gets the callack to
-    call on change as a parameter.
-  * info.getPredicateValue: the function that handles `isTrue`
-
-  ###
-  _parsePredicate: (predicate) ->
-    throw new Error 'Should be implemented by supper class.'
-
+  getType: -> throw new Error("You must implement getType")
+  getValue: -> throw new Error("You must implement getState")
+  destroy: ->  throw new Error("You must implement destroy")
 
 ###
 The Switch Predicate Provider
 ----------------
-Handles predicates for the state of switch devices like:
+Provides predicates for the state of switch devices like:
 
 * _device_ is on|off
 * _device_ is switched on|off
 * _device_ is turned on|off
 
 ####
-class SwitchPredicateProvider extends DeviceEventPredicateProvider
+class SwitchPredicateProvider extends PredicateProvider
 
   constructor: (_env, @framework) ->
     env = _env
 
-  # ### _parsePredicate()
-  ###
-  Parses the string and setups the info object as explained in the DeviceEventPredicateProvider.
-  Read the description of it to understand the return value.
-  ###
-  _parsePredicate: (predicate, context) ->  
+  # ### parsePredicate()
+  parsePredicate: (predicate, context) ->  
 
     switchDevices = _(@framework.devices).values()
       .filter((device) => device.hasAttribute( 'state')).value()
@@ -217,17 +79,25 @@ class SwitchPredicateProvider extends DeviceEventPredicateProvider
 
       context?.addMatch(match)
 
-      return info =
-        device: device
-        event: 'state'
-        getPredicateValue: => 
-          device.getAttributeValue('state').then (s) => s is state
-        getEventListener: (callback) => 
-          return eventListener = (s) => callback(s is state)
-        state: state # for testing only
+      return {
+        token: match
+        nextInput: m.inputs[0]
+        predicateHandler: new SwitchPredicateHandler(device, state)
+      }
+
     else if matchCount > 1
       context?.addError(""""#{predicate.trim()}" is ambiguous.""")
     return null
+
+class SwitchPredicateHandler extends PredicateHandler
+
+  constructor: (@device, @state) ->
+    @stateListener = (s) => @emit 'change', (s is @state)
+    @device.on 'state', @stateListener
+  getValue: -> @device.getAttributeValue('state').then( (s) => (s is @state) )
+  destroy: -> @device.removeListener "state", @stateListener
+  getType: -> 'state'
+
 
 ###
 The Presence Predicate Provider
@@ -238,17 +108,13 @@ Handles predicates of presence devices like
 * _device_ is not present
 * _device_ is absent
 ####
-class PresencePredicateProvider extends DeviceEventPredicateProvider
+class PresencePredicateProvider extends PredicateProvider
 
   constructor: (_env, @framework) ->
     env = _env
 
-  # ### _parsePredicate()
-  ###
-  Parses the string and setups the info object as explained in the DeviceEventPredicateProvider.
-  Read the description of it to understand the return value.
-  ###
-  _parsePredicate: (predicate, context) ->
+
+  parsePredicate: (predicate, context) ->
 
     presenceDevices = _(@framework.devices).values()
       .filter((device) => device.hasAttribute( 'presence')).value()
@@ -276,20 +142,27 @@ class PresencePredicateProvider extends DeviceEventPredicateProvider
 
       context?.addMatch(match)
 
-      return info =
-        device: device
-        event: 'presence'
-        getPredicateValue: => 
-          device.getAttributeValue('presence').then (presence) =>
-            if negated then not presence else presence
-        getEventListener: (callback) => 
-          return eventListener = (presence) => 
-            callback(if negated then not presence else presence)
-        negated: negated # for testing only
+      return {
+        token: match
+        nextInput: m.inputs[0]
+        predicateHandler: new PresencePredicateHandler(device, negated)
+      }
+      
     else if matchCount > 1
       context?.addError(""""#{predicate.trim()}" is ambiguous.""")
     # If we have no match then return null.
     return null
+
+class PresencePredicateHandler extends PredicateHandler
+
+  constructor: (@device, @negated) ->
+    @presenceListener = (p) => 
+      @emit 'change', (if @negated then not p else p)
+    @device.on 'presence', @presenceListener
+  getValue: -> @device.getAttributeValue('presence').then( (p) => (if @negated then not p else p) )
+  destroy: -> @device.removeListener "presence", @presenceListener
+  getType: -> 'state'
+
 
 ###
 The Device-Attribute Predicate Provider
@@ -304,7 +177,7 @@ Handles predicates for comparing device attributes like sensor value or other st
 * _attribute_ of _device_ is greater than _value_
 * _attribute_ of _device_ is higher than _value_
 ####
-class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
+class DeviceAttributePredicateProvider extends PredicateProvider
 
   constructor: (_env, @framework) ->
     env = _env
@@ -320,26 +193,14 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
         (c) => [c, "is #{c}", "is #{c} than", "is #{c} as", "#{c} than", "#{c} as"]
       ).flatten().value()
 
-  # ### _compareValues()
-  ###
-  Does the comparison.
-  ###
-  _compareValues: (comparator, value, referenceValue) ->
-    unless isNaN value
-      value = parseFloat value
-    return switch comparator
-      when '==' then value is referenceValue
-      when '!=' then value isnt referenceValue
-      when '<' then value < referenceValue
-      when '>' then value > referenceValue
-      else throw new Error "Unknown comparator: #{comparator}"
+
 
   # ### _parsePredicate()
   ###
   Parses the string and setups the info object as explained in the DeviceEventPredicateProvider.
   Read the description of it to understand the return value.
   ###
-  _parsePredicate: (predicate, context) ->
+  parsePredicate: (predicate, context) ->
 
     allAttributes = _(@framework.devices).values().map((device) => _.keys(device.attributes))
       .flatten().uniq().value()
@@ -423,21 +284,52 @@ class DeviceAttributePredicateProvider extends DeviceEventPredicateProvider
       device = result.device
       lastValue = null
       result.event = result.attributeName
-      result.getPredicateValue = => 
-        device.getAttributeValue(result.event).then (value) =>
-          @_compareValues result.comparator, value, result.referenceValue
-      result.getEventListener = (callback) => 
-        return attributeListener = (value) =>
-          state = @_compareValues result.comparator, value, result.referenceValue
-          if state isnt lastValue
-            lastValue = state
-            callback state
-      return result
+
+
+      return {
+        token: match
+        nextInput: m.inputs[1]
+        predicateHandler: new DeviceAttributePredicateHandler(
+          device, result.event, result.comperator, result.referenceValue
+        )
+      }
       
     return null
 
 
+class DeviceAttributePredicateHandler extends PredicateHandler
+
+  constructor: (@device, @attribute, @comparator, @referenceValue) ->
+    lastState = null
+    @attributeListener = (value) =>
+      state = @_compareValues(@comparator, value, @referenceValue)
+      if state isnt lastState
+        lastState = state
+        @emit 'change', state
+    @device.on @attribute, @attribteListener
+  getValue: -> 
+    @device.getAttributeValue(@attribute).then( (value) =>
+      @_compareValues(@comparator, value, @referenceValue)
+    )
+  destroy: -> @device.removeListener @attribute, @attributeListener
+  getType: -> 'state'
+
+  # ### _compareValues()
+  ###
+  Does the comparison.
+  ###
+  _compareValues: (comparator, value, referenceValue) ->
+    unless isNaN value
+      value = parseFloat value
+    return switch comparator
+      when '==' then value is referenceValue
+      when '!=' then value isnt referenceValue
+      when '<' then value < referenceValue
+      when '>' then value > referenceValue
+      else throw new Error "Unknown comparator: #{comparator}"
+
 module.exports.PredicateProvider = PredicateProvider
+module.exports.PredicateHandler = PredicateHandler
 module.exports.PresencePredicateProvider = PresencePredicateProvider
 module.exports.SwitchPredicateProvider = SwitchPredicateProvider
 module.exports.DeviceAttributePredicateProvider = DeviceAttributePredicateProvider
