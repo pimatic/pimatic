@@ -316,10 +316,10 @@ class RuleManager extends require('events').EventEmitter
 
     return { predicate, token, nextInput }
 
-  # ###_registerPredicateProviderNotify()
+  # ###_addPredicateChangeListener()
   # Register for every predicate the callback function that should be called
   # when the predicate becomes true.
-  _registerPredicateProviderNotify: (rule) ->
+  _addPredicateChangeListener: (rule) ->
     assert rule?
     assert rule.predicates?
     
@@ -359,13 +359,16 @@ class RuleManager extends require('events').EventEmitter
   # ###_cancelPredicateproviderNotify()
   # Cancels for every predicate the callback that should be called
   # when the predicate becomes true.
-  _cancelPredicateProviderNotify: (rule) ->
+  _removePredicateChangeListener: (rule) ->
     assert rule?
 
     # Then cancel the notifier for all predicates
     if rule.valid
-      p.handler.removeListener 'change', p.changeListener
-      delete p.changeListener
+      for p in rule.predicates
+        do (p) =>
+          p.handler.removeListener 'change', p.changeListener
+          delete p.changeListener
+          p.handler.destroy()
 
   # ###addRuleByString()
   addRuleByString: (id, ruleString, active=yes, force=false) ->
@@ -386,7 +389,7 @@ class RuleManager extends require('events').EventEmitter
         error.context = context
         throw error
 
-      @_registerPredicateProviderNotify rule
+      @_addPredicateChangeListener rule
       # If the rules was successful parsed add it to the rule array.
       rule.active = active
       rule.valid = yes
@@ -427,7 +430,7 @@ class RuleManager extends require('events').EventEmitter
     # First get the rule from the rule array.
     rule = @rules[id]
     # Then get cancel all notifies
-    @_cancelPredicateProviderNotify rule
+    @_removePredicateChangeListener rule
     # and delete the rule from the array
     delete @rules[id]
     # and emit the event.
@@ -454,9 +457,9 @@ class RuleManager extends require('events').EventEmitter
       # If the rule was successfully parsed then get the old rule
       oldRule = @rules[id]
       # and cancel the notifier for the old predicates.
-      @_cancelPredicateProviderNotify rule
+      @_removePredicateChangeListener rule
       # and register the new ones:
-      @_registerPredicateProviderNotify rule
+      @_addPredicateChangeListener rule
 
       # Then add the rule to the rules array
       @rules[id] = rule

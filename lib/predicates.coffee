@@ -23,7 +23,7 @@ This is the base class for all predicate provider.
 ###
 class PredicateProvider
 
-  parsePredicate: (predicate, context) -> throw new Error("You must implement parsePredicate")
+  parsePredicate: (input, context) -> throw new Error("You must implement parsePredicate")
 
 env = null
 
@@ -50,7 +50,7 @@ class SwitchPredicateProvider extends PredicateProvider
     env = _env
 
   # ### parsePredicate()
-  parsePredicate: (predicate, context) ->  
+  parsePredicate: (input, context) ->  
 
     switchDevices = _(@framework.devices).values()
       .filter((device) => device.hasAttribute( 'state')).value()
@@ -62,7 +62,7 @@ class SwitchPredicateProvider extends PredicateProvider
     setState = (m, s) => state = s
     stateAcFilter = (v) => v.trim() isnt 'is switched' 
 
-    m = M(predicate, context)
+    m = M(input, context)
       .matchDevice(switchDevices, setDevice)
       .match([' is', ' is turned', ' is switched'], acFilter: stateAcFilter)
       .match([' on', ' off'], setState)
@@ -86,7 +86,7 @@ class SwitchPredicateProvider extends PredicateProvider
       }
 
     else if matchCount > 1
-      context?.addError(""""#{predicate.trim()}" is ambiguous.""")
+      context?.addError(""""#{input.trim()}" is ambiguous.""")
     return null
 
 class SwitchPredicateHandler extends PredicateHandler
@@ -114,7 +114,7 @@ class PresencePredicateProvider extends PredicateProvider
     env = _env
 
 
-  parsePredicate: (predicate, context) ->
+  parsePredicate: (input, context) ->
 
     presenceDevices = _(@framework.devices).values()
       .filter((device) => device.hasAttribute( 'presence')).value()
@@ -126,7 +126,7 @@ class PresencePredicateProvider extends PredicateProvider
     setState =  (m, s) => state = s
     stateAcFilter = (v) => v.trim() isnt 'not present'
 
-    m = M(predicate, context)
+    m = M(input, context)
       .matchDevice(presenceDevices, setDevice)
       .match([' is', ' reports', ' signals'])
       .match([' present', ' absent', ' not present'], {acFilter: stateAcFilter}, setState)
@@ -149,7 +149,7 @@ class PresencePredicateProvider extends PredicateProvider
       }
       
     else if matchCount > 1
-      context?.addError(""""#{predicate.trim()}" is ambiguous.""")
+      context?.addError(""""#{input.trim()}" is ambiguous.""")
     # If we have no match then return null.
     return null
 
@@ -200,7 +200,7 @@ class DeviceAttributePredicateProvider extends PredicateProvider
   Parses the string and setups the info object as explained in the DeviceEventPredicateProvider.
   Read the description of it to understand the return value.
   ###
-  parsePredicate: (predicate, context) ->
+  parsePredicate: (input, context) ->
 
     allAttributes = _(@framework.devices).values().map((device) => _.keys(device.attributes))
       .flatten().uniq().value()
@@ -208,7 +208,7 @@ class DeviceAttributePredicateProvider extends PredicateProvider
     result = null
     matches = []
 
-    M(predicate, context)
+    M(input, context)
     .match(allAttributes, (m, attr) =>
       info = {
         device: null
@@ -258,7 +258,7 @@ class DeviceAttributePredicateProvider extends PredicateProvider
           matches = matches.concat m.getFullMatches()
           if result?
             if result.device.id isnt info.device.id or result.attributeName isnt info.attributeName
-              context?.addError(""""#{predicate.trim()}" is ambiguous.""")
+              context?.addError(""""#{input.trim()}" is ambiguous.""")
           result = info
       )
     )
@@ -281,7 +281,7 @@ class DeviceAttributePredicateProvider extends PredicateProvider
           found = true
           break
       assert found
-      
+
       return {
         token: match
         nextInput: S(predicate).chompLeft(match).s

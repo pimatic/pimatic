@@ -22,8 +22,8 @@ describe "RuleManager", ->
 
   class DummyPredicateHandler extends env.predicates.PredicateHandler
 
-    constructor: ->
-    getValue: -> Q(true)
+    constructor: -> 
+    getValue: -> Q(false)
     destroy: -> 
     getType: -> 'state'
 
@@ -43,7 +43,7 @@ describe "RuleManager", ->
   class DummyActionHandler
     executeAction: (actionString, simulate) =>
       cassert actionString is "action 1"
-      return Q.fcall -> "action 1 executed"
+      return Q "action 1 executed"
 
 
   provider = new DummyPredicateProvider
@@ -183,16 +183,24 @@ describe "RuleManager", ->
   # ###Tests for `addRuleByString()`
   describe '#addRuleByString()', ->
 
-    notifyCallback = null
+    changeHandler = null
+
+    before ->
+      provider.parsePredicate = (input, context) -> 
+        cassert S(input).startsWith("predicate 1")
+        predHandler = new DummyPredicateHandler()
+        predHandler.on = (event, handler) -> 
+          cassert event is 'change'
+          changeHandler = handler
+        console.log ("resturning predHandler")
+        return {
+          token: "predicate 1"
+          nextInput: S(input).chompLeft("predicate 1").s
+          predicateHandler: predHandler
+        }
 
     it 'should add the rule', (finish) ->
-      provider.notifyWhen = (id, predicate, callback) -> 
-        cassert id?
-        cassert predicate is 'predicate 1'
-        cassert typeof callback is 'function'
-        notifyCallback = callback
-        notifyId = id
-        return true
+
 
       executeActionCallCount = 0
       actionHandler.executeAction = (actionString, simulate) =>
@@ -202,7 +210,7 @@ describe "RuleManager", ->
         return Q.fcall -> "execute action"
 
       ruleManager.addRuleByString('test5', 'if predicate 1 then action 1').then( ->
-        cassert notifyCallback?
+        cassert changeHandler?
         cassert executeActionCallCount is 1
         cassert ruleManager.rules['test5']?
         finish()
@@ -218,7 +226,7 @@ describe "RuleManager", ->
         return Q.fcall -> "execute action"
 
       setTimeout( ->
-        notifyCallback('event')
+        changeHandler('event')
       , 2001
       )
 
@@ -226,14 +234,24 @@ describe "RuleManager", ->
   # ###Tests for `updateRuleByString()`
   describe '#doesRuleCondtionHold', ->
 
+    predHandler1 = null
+    predHandler2 = null
+
+    beforeEach ->
+      predHandler1 = new DummyPredicateHandler()
+      predHandler1.on = (event, listener) -> 
+        cassert event is 'change'
+      predHandler1.getValue = => Q true
+      predHandler1.getType = => "state"
+
+      predHandler2 = new DummyPredicateHandler()
+      predHandler2.on = (event, listener) -> 
+        cassert event is 'change'
+      predHandler2.getValue = => Q true
+      predHandler2.getType = => "state"
+
+
     it 'should decide predicate 1', (finish)->
-
-      provider.canDecide = (predicate, context) -> 
-        cassert predicate is "predicate 1"
-        return 'state'
-
-      provider.isTrue = (id, predicate) -> Q.fcall -> true
-      provider.notifyWhen = (id, predicate, callback) -> true
 
       rule =
         id: "test1"
@@ -242,7 +260,7 @@ describe "RuleManager", ->
           id: "test1,"
           token: "predicate 1"
           type: "state"
-          provider: provider
+          handler: predHandler1
           for: null
         ]
         tokens: [
@@ -258,20 +276,13 @@ describe "RuleManager", ->
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
         cassert isTrue is true
       ).then( -> 
-        provider.isTrue = (id, predicate) -> Q.fcall -> false 
+        predHandler1.getValue = => Q false 
       ).then( -> ruleManager.doesRuleCondtionHold rule).then( (isTrue) ->
         cassert isTrue is false
         finish()
       ).catch(finish).done()
 
     it 'should decide predicate 1 and predicate 2', (finish)->
-
-      provider.canDecide = (predicate, context) -> 
-        cassert predicate is "predicate 1" or predicate is "predicate 2"
-        return 'state'
-
-      provider.isTrue = (id, predicate) -> Q.fcall -> true
-      provider.notifyWhen = (id, predicate, callback) -> true
 
       rule =
         id: "test1"
@@ -281,14 +292,14 @@ describe "RuleManager", ->
             id: "test1,"
             token: "predicate 1"
             type: "state"
-            provider: provider
+            handler: predHandler1
             for: null
           }
           {
             id: "test2,"
             token: "predicate 2"
             type: "state"
-            provider: provider
+            handler: predHandler2
             for: null
           }
         ]
@@ -310,20 +321,14 @@ describe "RuleManager", ->
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
         cassert isTrue is true
       ).then( -> 
-        provider.isTrue = (id, predicate) -> Q.fcall -> (predicate is 'predicate 1') 
+        predHandler1.getValue = => Q true
+        predHandler2.getValue = => Q false
       ).then( -> ruleManager.doesRuleCondtionHold rule ).then( (isTrue) ->
         cassert isTrue is false
         finish()
       ).catch(finish).done()
 
     it 'should decide predicate 1 or predicate 2', (finish)->
-
-      provider.canDecide = (predicate, context) -> 
-        cassert predicate is "predicate 1" or predicate is "predicate 2"
-        return 'state'
-
-      provider.isTrue = (id, predicate) -> Q.fcall -> true
-      provider.notifyWhen = (id, predicate, callback) -> true
 
       rule =
         id: "test1"
@@ -333,14 +338,14 @@ describe "RuleManager", ->
             id: "test1,"
             token: "predicate 1"
             type: "state"
-            provider: provider
+            handler: predHandler1
             for: null
           }
           {
             id: "test2,"
             token: "predicate 2"
             type: "state"
-            provider: provider
+            handler: predHandler2
             for: null
           }
         ]
@@ -361,8 +366,9 @@ describe "RuleManager", ->
 
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
         cassert isTrue is true
-      ).then( -> 
-        provider.isTrue = (id, predicate) -> Q.fcall -> (predicate is 'predicate 1') 
+      ).then( ->       
+        predHandler1.getValue = => Q true
+        predHandler2.getValue = => Q false
       ).then( -> ruleManager.doesRuleCondtionHold rule ).then( (isTrue) ->
         cassert isTrue is true
         finish()
@@ -373,15 +379,6 @@ describe "RuleManager", ->
       this.timeout 2000
       start = getTime()
 
-      provider.canDecide = (predicate, context) -> 
-        cassert predicate is "predicate 1"
-        return 'state'
-
-      provider.isTrue = (id, predicate) -> Q.fcall -> true
-      provider.notifyWhen = (id, predicate, callback) -> 
-        cassert predicate is "predicate 1"
-        return true
-
       rule =
         id: "test1"
         orgCondition: "predicate 1 for 1 second"
@@ -389,7 +386,7 @@ describe "RuleManager", ->
           id: "test1,"
           token: "predicate 1"
           type: "state"
-          provider: provider
+          handler: predHandler1
           forToken: "1 second"
           for: 1000
         ]
@@ -414,17 +411,11 @@ describe "RuleManager", ->
       this.timeout 2000
       start = getTime()
 
-      provider.canDecide = (predicate, context) -> 
-        cassert predicate is "predicate 1"
-        return 'state'
-
-      provider.isTrue = (id, predicate) -> Q.fcall -> true
-
-      notifyCallback = null
-      provider.notifyWhen = (id, predicate, callback) -> 
-        cassert predicate is "predicate 1"
-        notifyCallback = callback
-        return true
+      predHandler1.on = (event, listener) -> 
+        cassert event is 'change'
+        setTimeout ->
+          listener false
+        , 500
 
       rule =
         id: "test1"
@@ -433,7 +424,7 @@ describe "RuleManager", ->
           id: "test1,"
           token: "predicate 1"
           type: "state"
-          provider: provider
+          handler: predHandler1
           forToken: "1 second"
           for: 1000
         ]
@@ -446,11 +437,6 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 for 1 second then action 1"
 
-      setTimeout ->
-        notifyCallback false
-      , 500
-
-
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
         cassert isTrue is false
@@ -462,15 +448,6 @@ describe "RuleManager", ->
       this.timeout 3000
       start = getTime()
 
-      provider.canDecide = (predicate, context) -> 
-        cassert predicate is "predicate 1" or predicate is "predicate 2"
-        return 'state'
-
-      provider.isTrue = (id, predicate) -> Q.fcall -> true
-      provider.notifyWhen = (id, predicate, callback) -> 
-        cassert predicate is "predicate 1" or predicate is "predicate 2"
-        return true
-
       rule =
         id: "test1"
         orgCondition: "predicate 1 for 1 second and predicate 2 for 2 seconds"
@@ -479,7 +456,7 @@ describe "RuleManager", ->
             id: "test1"
             token: "predicate 1"
             type: "state"
-            provider: provider
+            handler: predHandler1
             forToken: "1 second"
             for: 1000
           }
@@ -487,7 +464,7 @@ describe "RuleManager", ->
             id: "test2"
             token: "predicate 2"
             type: "state"
-            provider: provider
+            handler: predHandler2
             forToken: "2 seconds"
             for: 2000
           }
@@ -518,17 +495,11 @@ describe "RuleManager", ->
       this.timeout 3000
       start = getTime()
 
-      provider.canDecide = (predicate, context) -> 
-        cassert predicate is "predicate 1" or predicate is "predicate 2"
-        return 'state'
-
-      provider.isTrue = (id, predicate) -> Q.fcall -> true
-      provider.notifyWhen = (id, predicate, callback) -> 
-        cassert predicate is "predicate 1" or predicate is "predicate 2"
-        if predicate is "predicate 1"
-          setTimeout ->
-            callback false
-          , 500
+      predHandler2.on = (event, listener) -> 
+        cassert event is 'change'
+        setTimeout ->
+          listener false
+        , 500
 
       rule =
         id: "test1"
@@ -538,7 +509,7 @@ describe "RuleManager", ->
             id: "test1"
             token: "predicate 1"
             type: "state"
-            provider: provider
+            handler: predHandler1
             forToken: "1 second"
             for: 1000
           }
@@ -546,7 +517,7 @@ describe "RuleManager", ->
             id: "test2"
             token: "predicate 2"
             type: "state"
-            provider: provider
+            handler: predHandler2
             forToken: "2 seconds"
             for: 2000
           }
@@ -576,18 +547,11 @@ describe "RuleManager", ->
       this.timeout 3000
       start = getTime()
 
-      provider.canDecide = (predicate, context) -> 
-        cassert predicate is "predicate 1" or predicate is "predicate 2"
-        return 'state'
-
-      provider.isTrue = (id, predicate) -> Q.fcall -> true
-
-      provider.notifyWhen = (id, predicate, callback) -> 
-        cassert predicate is "predicate 1" or predicate is "predicate 2"
-        if predicate is "predicate 1"
-          setTimeout ->
-            callback false
-          , 500
+      predHandler2.on = (event, listener) -> 
+        cassert event is 'change'
+        setTimeout ->
+          listener false
+        , 500
 
       rule =
         id: "test1"
@@ -597,7 +561,7 @@ describe "RuleManager", ->
             id: "test1"
             token: "predicate 1"
             type: "state"
-            provider: provider
+            handler: predHandler1
             forToken: "1 second"
             for: 1000
           }
@@ -605,7 +569,7 @@ describe "RuleManager", ->
             id: "test2"
             token: "predicate 2"
             type: "state"
-            provider: provider
+            handler: predHandler2
             forToken: "2 seconds"
             for: 2000
           }
@@ -627,7 +591,7 @@ describe "RuleManager", ->
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
         cassert isTrue is true
-        cassert elapsed >= 2000
+        cassert elapsed >= 1000
         finish()
       ).done()
 
@@ -636,18 +600,18 @@ describe "RuleManager", ->
       this.timeout 3000
       start = getTime()
 
-      provider.canDecide = (predicate, context) -> 
-        cassert predicate is "predicate 1" or predicate is "predicate 2"
-        context.addMatch(predicate)
-        return 'state'
-
-      provider.isTrue = (id, predicate) -> Q.fcall -> true
-
-      provider.notifyWhen = (id, predicate, callback) -> 
-        cassert predicate is "predicate 1" or predicate is "predicate 2"
+      predHandler1.on = (event, listener) -> 
+        cassert event is 'change'
         setTimeout ->
-          callback false
+          listener false
         , 500
+
+      predHandler2.on = (event, listener) -> 
+        cassert event is 'change'
+        setTimeout ->
+          listener false
+        , 500
+
 
       rule =
         id: "test1"
@@ -657,7 +621,7 @@ describe "RuleManager", ->
             id: "test1"
             token: "predicate 1"
             type: "state"
-            provider: provider
+            handler: predHandler1
             forToken: "1 second"
             for: 1000
           }
@@ -665,7 +629,7 @@ describe "RuleManager", ->
             id: "test2"
             token: "predicate 2"
             type: "state"
-            provider: provider
+            handler: predHandler2
             forToken: "2 seconds"
             for: 2000
           }
@@ -692,49 +656,46 @@ describe "RuleManager", ->
       ).done()
 
 
-
+  predHandler = null
   # ###Tests for `updateRuleByString()`
   describe '#updateRuleByString()', ->
 
-    notifyCallback = null
+    changeListener = null
     i = 1
 
     it 'should update the rule', (finish) ->
 
-      canDecideCalled = false
-      provider.canDecide = (predicate, context) ->
-        cassert predicate is 'predicate 2'
-        context.addMatch('predicate 2')
-        canDecideCalled = i
+      parsePredicateCalled = false
+      removeListenerCalled = false
+      onCalled = false
+      provider.parsePredicate = (input, context) -> 
+        cassert S(input).startsWith("predicate 2")
+        parsePredicateCalled = i
         i++
-        return 'event'
-
-      cancleNotifyCalled = false
-      provider.cancelNotify = (id) ->
-        cassert id?
-        cassert id is notifyId
-        cancleNotifyCalled = i
-        i++
-        return true
-
-      notifyWhenCalled = false
-      provider.notifyWhen = (id, predicate, callback) -> 
-        cassert id?
-        cassert predicate is 'predicate 2'
-        cassert typeof callback is 'function'
-        notifyCallback = callback
-        notifyWhenCalled = i
-        i++
-        return true
-
-      provider.isTrue = -> Q.fcall -> true
+        predHandler = new DummyPredicateHandler()
+        predHandler.on = (event, listener) -> 
+          cassert event is 'change'
+          changeListener = listener
+          onCalled = i
+          i++
+        predHandler.removeListener = (event, listener) =>
+          cassert event is 'change'
+          removeListenerCalled = i
+          i++
+        predHandler.getVale = => Q true
+        predHandler.getType => 'event'
+        return {
+          token: "predicate 2"
+          nextInput: S(input).chompLeft("predicate 2").s
+          predicateHandler: predHandler
+        }
 
       actionHandler.executeAction = (actionString, simulate) => Q.fcall -> "execute action"
 
       ruleManager.updateRuleByString('test5', 'if predicate 2 then action 1').then( ->
-        cassert canDecideCalled is 1
-        cassert cancleNotifyCalled is 2
-        cassert notifyWhenCalled is 3
+        cassert parsePredicateCalled is 1
+        cassert removeListenerCalled is 2
+        cassert onCalled is 3
 
         cassert ruleManager.rules['test5']?
         cassert ruleManager.rules['test5'].string is 'if predicate 2 then action 1'
@@ -752,7 +713,7 @@ describe "RuleManager", ->
         return Q.fcall -> "execute action"
 
       setTimeout( ->
-        notifyCallback('event')
+        changeListener('event')
       , 2001
       )
 
@@ -761,15 +722,15 @@ describe "RuleManager", ->
   describe '#removeRule()', ->
 
     it 'should remove the rule', ->
-      cancleNotifyCalled = false
-      provider.cancelNotify = (id) ->
-        cassert id?
-        cancleNotifyCalled = true
+      removeListenerCalled = false
+      predHandler.removeListener = (event, listener) ->
+        cassert event is "change"
+        removeListenerCalled = true
         return true
 
       ruleManager.removeRule 'test5'
       cassert not ruleManager.rules['test5']?
-      cassert cancleNotifyCalled
+      cassert removeListenerCalled
 
   # ###Tests for `executeAction()`
   describe '#executeAction()', ->
