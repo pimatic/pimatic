@@ -58,7 +58,7 @@ module.exports = (env) ->
       # Turn on long Stack traces if debug mode is on.
       if @config.debug
         Q.longStackSupport = yes
-        require("better-stack-traces").install()
+        # require("better-stack-traces").install()
 
       # * Set the log level
       env.logger.transports.console.level = @config.settings.logLevel
