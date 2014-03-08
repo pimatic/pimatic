@@ -256,12 +256,12 @@ class RuleManager extends require('events').EventEmitter
     # find a prdicate provider for that can parse and decide the predicate:
     parseResults = []
     for predProvider in @predicateProviders
-      parseResult = provider.parsePredicate(nextInput, context)
+      parseResult = predProvider.parsePredicate(nextInput, context)
       if parseResult?
         assert parseResult.token? and parseResult.token.length > 0
         assert parseResult.nextInput? and typeof parseResult.nextInput is "string"
         assert parseResult.predicateHandler?
-        assert parseResult.predicateHandler instanceof env.predicates.PredicateHandler
+        #assert parseResult.predicateHandler instanceof env.predicates.PredicateHandler
         parseResults.push parseResult
 
     token = null
@@ -303,9 +303,9 @@ class RuleManager extends require('events').EventEmitter
           nextInput = S(nextInput).chompLeft(forPart).s
           token += forPart
 
-        if predicateHandler.getType() is 'event' and predicate.forSuffix?
+        if predicateHandler.getType() is 'event' and predicate.forToken?
           context.addError(
-            "\"#{token}\" is an event it can not be true for \"#{forSuffix}\"."
+            "\"#{token}\" is an event it can not be true for \"#{redicate.forToken}\"."
           )
 
         predicate.handler = predicateHandler
@@ -326,8 +326,9 @@ class RuleManager extends require('events').EventEmitter
     # For all predicate providers
     for p in rule.predicates
       do (p) =>
+        assert(not p.changeListener?)
         # let us be notified when the predicate state changes.
-        p.provider.notifyWhen p.id, p.token, (state) =>
+        p.handler.on 'change', p.changeListener = (state) =>
           assert state is 'event' or state is true or state is false
           #If the state is true then call the `whenPredicateIsTrue` function.
           if state is true or state is 'event'
@@ -363,7 +364,8 @@ class RuleManager extends require('events').EventEmitter
 
     # Then cancel the notifier for all predicates
     if rule.valid
-      p.provider.cancelNotify p.id for p in rule.predicates
+      p.handler.removeListener 'change', p.changeListener
+      delete p.changeListener
 
   # ###addRuleByString()
   addRuleByString: (id, ruleString, active=yes, force=false) ->
@@ -484,7 +486,7 @@ class RuleManager extends require('events').EventEmitter
       do (pred) =>
         predNumToId[i] = pred.id
         unless knownPredicates[pred.id]?
-          awaiting.push pred.provider.isTrue(pred.id, pred.token).then (state) =>
+          awaiting.push pred.handler.getValue().then (state) =>
             unless state?
               state = false
               logger.info "Could not decide #{pred.token} yet."
@@ -565,8 +567,6 @@ class RuleManager extends require('events').EventEmitter
             # If it has a for suffix and its an event something gone wrong, because an event can't 
             # hold (its just one time)
             assert pred.type is 'state'
-            # Create a new predicate id so we can register another listener.
-            idNew = pred.id + "-for-" + (new Date().getTime())
             # Mark that we are awaiting the result
             awaiting[pred.id] = {}
             # and as long as we are awaiting the result, the predicate is false.
@@ -581,7 +581,7 @@ class RuleManager extends require('events').EventEmitter
             , pred.for
 
             # Let us be notified when it becomes false.
-            pred.provider.notifyWhen idNew, pred.token, (state) =>
+            pred.handler.on 'change', changeListener = (state) =>
               assert state is true or state is false
               # If it changes to false
               if state is false
@@ -595,7 +595,7 @@ class RuleManager extends require('events').EventEmitter
               delete awaiting[pred.id]
               clearTimeout timeout
               # and we can cancel the notify
-              pred.provider.cancelNotify idNew
+              pred.handler.removeListener 'change', changeListener
 
       # If we have not found awaiting predicates
       if (id for id of awaiting).length is 0

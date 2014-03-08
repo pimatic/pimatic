@@ -20,17 +20,25 @@ describe "RuleManager", ->
 
   getTime = -> new Date().getTime()
 
+  class DummyPredicateHandler extends env.predicates.PredicateHandler
+
+    constructor: ->
+    getValue: -> Q(true)
+    destroy: -> 
+    getType: -> 'state'
+
   class DummyPredicateProvider extends env.predicates.PredicateProvider
     type: 'unknwon'
     name: 'test'
 
-    canDecide: (predicate, context) -> 
+    parsePredicate: (predicate, context) -> 
       cassert S(predicate).startsWith("predicate 1")
-      context.addMatch("predicate 1")
-      return 'event'
-    isTrue: (id, predicate) -> Q.fcall -> false
-    notifyWhen: (id, predicate, callback) -> true
-    cancelNotify: (id) -> true
+      return {
+        token: "predicate 1"
+        nextInput: S(predicate).chompLeft("predicate 1").s
+        predicateHandler: new DummyPredicateHandler()
+      }
+
 
   class DummyActionHandler
     executeAction: (actionString, simulate) =>
@@ -68,11 +76,6 @@ describe "RuleManager", ->
     ruleWithForSuffix = 'if predicate 1 for 10 seconds then action 1'
     it """should parse rule with for "10 seconds" suffix: #{ruleWithForSuffix}'""", (finish) ->
 
-      provider.canDecide = (predicate, context) -> 
-        cassert S(predicate).startsWith("predicate 1")
-        context.addMatch("predicate 1")
-        return 'state'
-
       ruleManager.parseRuleString("test1", ruleWithForSuffix, context)
       .then( (rule) -> 
         cassert rule.id is 'test1'
@@ -90,11 +93,6 @@ describe "RuleManager", ->
     ruleWithHoursSuffix = "if predicate 1 for 2 hours then action 1"
     it """should parse rule with for "2 hours" suffix: #{ruleWithHoursSuffix}""", (finish) ->
 
-      provider.canDecide = (predicate, context) -> 
-        cassert S(predicate).startsWith("predicate 1")
-        context.addMatch("predicate 1")
-        return 'state'
-
       ruleManager.parseRuleString("test1", ruleWithHoursSuffix, context)
       .then( (rule) -> 
         cassert rule.id is 'test1'
@@ -109,11 +107,6 @@ describe "RuleManager", ->
       ).catch(finish).done()
 
     it 'should not detect for "42 foo" as for suffix', (finish) ->
-
-      provider.canDecide = (predicate, context) -> 
-        cassert S(predicate).startsWith("predicate 1")
-        context.addMatch("predicate 1")
-        return 'state'
 
       ruleManager.parseRuleString("test1", "if predicate 1 for 42 foo then action 1", context)
       .then( (rule) -> 
@@ -142,28 +135,32 @@ describe "RuleManager", ->
 
     it 'should reject unknown predicate', (finish) ->
       canDecideCalled = false
-      provider.canDecide = (predicate, context) ->
-        cassert predicate is 'predicate 2'
-        context.addMatch("predicate 1")
+      provider.parsePredicate = (input, context) -> 
+        cassert input is "predicate 2"
         canDecideCalled = true
-        return false
+        return null
 
       ruleManager.parseRuleString('test3', 'if predicate 2 then action 1', context).then( -> 
         cassert context.hasErrors()
         cassert context.errors.length is 1
         errorMsg = context.errors[0]
-        cassert errorMsg is 'Could not find an provider that decides "predicate 2".'
+        cassert(
+          errorMsg is 'Could not find an provider that decides next predicate of "predicate 2".'
+        )
         cassert canDecideCalled
         finish()
       ).catch(finish)
 
     it 'should reject unknown action', (finish) ->
       canDecideCalled = false
-      provider.canDecide = (predicate, context) ->
-        cassert predicate is "predicate 1"
-        context.addMatch("predicate 1")
+      provider.parsePredicate = (input, context) -> 
+        cassert input is "predicate 1"
         canDecideCalled = true
-        return 'event'
+        return {
+          token: "predicate 1"
+          nextInput: S(input).chompLeft("predicate 1").s
+          predicateHandler: new DummyPredicateHandler()
+        }
 
       executeActionCalled = false
       actionHandler.executeAction = (actionString, simulate) =>
