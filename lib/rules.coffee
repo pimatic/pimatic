@@ -220,7 +220,7 @@ class RuleManager extends require('events').EventEmitter
       while openedParentheseMatch
         m = M(nextInput, context).match('(', => 
           tokens.push '('
-          openedParentheseCount++;
+          openedParentheseCount++
           nextInput = nextInput.substring(1)
         )
         openedParentheseMatch = not m.hadNoMatches()
@@ -237,7 +237,7 @@ class RuleManager extends require('events').EventEmitter
         while closeParentheseMatch and openedParentheseCount > 0
           m = M(nextInput, context).match(')', => 
             tokens.push ')'
-            closeParentheseMatch--;
+            closeParentheseMatch--
             nextInput = nextInput.substring(1)
           )
           closeParentheseMatch = not m.hadNoMatches()
@@ -714,7 +714,6 @@ class RuleManager extends require('events').EventEmitter
       autocomplete: []
       errors: []
       warnings: []
-      matches: []
       addHint: ({autocomplete: a}) ->
         if Array.isArray a 
           @autocomplete = @autocomplete.concat a
@@ -723,7 +722,6 @@ class RuleManager extends require('events').EventEmitter
       addWarning: (message) -> @warnings.push message
       hasErrors: -> (@errors.length > 0)
       getErrorsAsString: -> _(@errors).reduce((ms, m) => "#{ms}, #{m}")
-      addMatch: (match) -> @matches.push match
       finalize: () -> 
         @autocomplete = _(@autocomplete).uniq().sortBy((s)=>s.toLowerCase()).value()
     }

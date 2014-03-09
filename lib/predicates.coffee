@@ -87,8 +87,6 @@ class SwitchPredicateProvider extends PredicateProvider
       # and state as boolean.
       state = (state.trim() is "on")
 
-      context?.addMatch(match)
-
       return {
         token: match
         nextInput: input.substring(match.length)
@@ -153,8 +151,6 @@ class PresencePredicateProvider extends PredicateProvider
       assert state?
 
       negated = (state.trim() isnt "present") 
-
-      context?.addMatch(match)
 
       return {
         token: match
@@ -290,8 +286,6 @@ class DeviceAttributePredicateProvider extends PredicateProvider
 
       # take the longest match
       match = _(matches).sortBy( (s) => s.length ).last()
-
-      context?.addMatch(match)
 
       found = false
       for sign, c of @comparators
