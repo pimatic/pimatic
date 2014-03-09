@@ -232,8 +232,8 @@ class RuleManager extends require('events').EventEmitter
             context.addError("""Expected one of: "and", "or", "(", ")".""")
           else
             token = m.getLongestFullMatch()
-            assert S(nextInput).startsWith(token)
-            nextInput = S(nextInput).chompLeft(token).s
+            assert S(nextInput.toLowerCase()).startsWith(token.toLowerCase())
+            nextInput = nextInput.substring(token.length)
     return {
       predicates: predicates
       tokens: tokens
@@ -273,16 +273,23 @@ class RuleManager extends require('events').EventEmitter
         )
       when 1
         # get part of nextInput that is related to the found provider
+        parseResult = parseResults[0]
         token = parseResult.token
         assert token?
-        assert S(nextInput).startsWith(token)
+        assert S(nextInput.toLowerCase()).startsWith(token.toLowerCase())
         predicate.token = token
         nextInput = parseResult.nextInput
         predicateHandler = parseResult.predicateHandler
 
         # Parse the for-Suffix:
-        # TODO: parse singular
-        timeUnits = ["ms", "seconds", "s", "minutes", "m", "hours", "h", "days","d", "years", "y"]
+        timeUnits = [
+          "ms", 
+          "second", "seconds", "s", 
+          "minute", "minutes", "m", 
+          "hour", "hours", "h", 
+          "day", "days","d", 
+          "year", "years", "y"
+        ]
         time = 0
         unit = ""
         onTimeMatch = (m, n) => time = parseFloat(n)
@@ -291,7 +298,10 @@ class RuleManager extends require('events').EventEmitter
         m = M(nextInput, context)
           .match(' for ')
           .matchNumber(onTimeMatch)
-          .match(_.map(timeUnits, (u) => " #{u}"), onMatchUnit)
+          .match(
+            _(timeUnits).map((u) => [" #{u}", u]).flatten().valueOf()
+          , {acFilter: (u) => u[0] is ' '}, onMatchUnit
+          )
 
         unless m.hadNoMatches()
           forPart = m.getLongestFullMatch()
@@ -300,7 +310,7 @@ class RuleManager extends require('events').EventEmitter
           predicate.for = milliseconds.parse "#{time} #{unit}"
           assert predicate.forToken?
           assert predicate.for?
-          nextInput = S(nextInput).chompLeft(forPart).s
+          nextInput = nextInput.substring(forPart.length)
           token += forPart
 
         if predicateHandler.getType() is 'event' and predicate.forToken?
@@ -328,11 +338,12 @@ class RuleManager extends require('events').EventEmitter
       do (p) =>
         assert(not p.changeListener?)
         # let us be notified when the predicate state changes.
-        p.handler.on 'change', p.changeListener = (state) =>
+        p.handler.on 'change', changeListener = (state) =>
           assert state is 'event' or state is true or state is false
           #If the state is true then call the `whenPredicateIsTrue` function.
           if state is true or state is 'event'
             whenPredicateIsTrue rule.id, p.id, state
+        p.changeListener = changeListener
 
     # This function should be called by a provider if a predicate becomes true.
     whenPredicateIsTrue = (ruleId, predicateId, state) =>
@@ -361,11 +372,11 @@ class RuleManager extends require('events').EventEmitter
   # when the predicate becomes true.
   _removePredicateChangeListener: (rule) ->
     assert rule?
-
     # Then cancel the notifier for all predicates
     if rule.valid
       for p in rule.predicates
         do (p) =>
+          assert typeof p.changeListener is "function"
           p.handler.removeListener 'change', p.changeListener
           delete p.changeListener
           p.handler.destroy()
@@ -457,10 +468,9 @@ class RuleManager extends require('events').EventEmitter
       # If the rule was successfully parsed then get the old rule
       oldRule = @rules[id]
       # and cancel the notifier for the old predicates.
-      @_removePredicateChangeListener rule
+      @_removePredicateChangeListener oldRule
       # and register the new ones:
       @_addPredicateChangeListener rule
-
       # Then add the rule to the rules array
       @rules[id] = rule
       # and emit the event.

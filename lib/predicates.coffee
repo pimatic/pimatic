@@ -81,7 +81,7 @@ class SwitchPredicateProvider extends PredicateProvider
 
       return {
         token: match
-        nextInput: m.inputs[0]
+        nextInput: input.substring(match.length)
         predicateHandler: new SwitchPredicateHandler(device, state)
       }
 
@@ -144,7 +144,7 @@ class PresencePredicateProvider extends PredicateProvider
 
       return {
         token: match
-        nextInput: m.inputs[0]
+        nextInput: input.substring(match.length)
         predicateHandler: new PresencePredicateHandler(device, negated)
       }
       
@@ -284,7 +284,7 @@ class DeviceAttributePredicateProvider extends PredicateProvider
 
       return {
         token: match
-        nextInput: S(input).chompLeft(match).s
+        nextInput: input.substring(match.length)
         predicateHandler: new DeviceAttributePredicateHandler(
           result.device, result.attributeName, result.comparator, result.referenceValue
         )
