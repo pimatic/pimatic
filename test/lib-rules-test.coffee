@@ -192,7 +192,6 @@ describe "RuleManager", ->
         predHandler.on = (event, handler) -> 
           cassert event is 'change'
           changeHandler = handler
-        console.log ("resturning predHandler")
         return {
           token: "predicate 1"
           nextInput: S(input).chompLeft("predicate 1").s
@@ -658,7 +657,7 @@ describe "RuleManager", ->
 
   predHandler = null
   # ###Tests for `updateRuleByString()`
-  describe '#updateRuleByString()', ->
+  describe '#updateRuleByString()', ->  
 
     changeListener = null
     i = 1
@@ -678,10 +677,7 @@ describe "RuleManager", ->
           changeListener = listener
           onCalled = i
           i++
-        predHandler.removeListener = (event, listener) =>
-          cassert event is 'change'
-          removeListenerCalled = i
-          i++
+
         predHandler.getVale = => Q true
         predHandler.getType => 'event'
         return {
@@ -694,8 +690,7 @@ describe "RuleManager", ->
 
       ruleManager.updateRuleByString('test5', 'if predicate 2 then action 1').then( ->
         cassert parsePredicateCalled is 1
-        cassert removeListenerCalled is 2
-        cassert onCalled is 3
+        cassert onCalled is 2
 
         cassert ruleManager.rules['test5']?
         cassert ruleManager.rules['test5'].string is 'if predicate 2 then action 1'
