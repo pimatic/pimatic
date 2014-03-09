@@ -49,7 +49,6 @@ describe "PresencePredicateProvider", ->
           assert result.predicateHandler?
           assert.equal(result.predicateHandler.negated, no)
           assert.deepEqual(result.predicateHandler.device, sensorDummy)
-          result.predicateHandler.destroy()
       },
       {
         inputs: [
@@ -66,7 +65,6 @@ describe "PresencePredicateProvider", ->
           assert result.predicateHandler?
           assert.equal(result.predicateHandler.negated, yes)
           assert.deepEqual(result.predicateHandler.device, sensorDummy)
-          result.predicateHandler.destroy()
       }
     ]
 
@@ -89,6 +87,10 @@ describe "PresencePredicateProvider", ->
         result = provider.parsePredicate "test is present"
         assert result?
         predicateHandler = result.predicateHandler
+        predicateHandler.setup()
+
+      after ->
+        predicateHandler.destroy()
 
       it "should notify when device is present", (finish) ->
         sensorDummy._presence = no
@@ -144,7 +146,6 @@ describe "SwitchPredicateProvider", ->
           assert result.predicateHandler?
           assert.equal(result.predicateHandler.state, on)
           assert.deepEqual(result.predicateHandler.device, switchDummy)
-          result.predicateHandler.destroy()
       },
       {
         inputs: [
@@ -160,7 +161,6 @@ describe "SwitchPredicateProvider", ->
           assert result.predicateHandler?
           assert.equal(result.predicateHandler.state, off)
           assert.deepEqual(result.predicateHandler.device, switchDummy)
-          result.predicateHandler.destroy()
       }
     ]
 
@@ -180,6 +180,10 @@ describe "SwitchPredicateProvider", ->
         result = provider.parsePredicate "test is on"
         assert result?
         predicateHandler = result.predicateHandler
+        predicateHandler.setup()
+
+      after ->
+        predicateHandler.destroy()
 
       it "should notify when switch is on", (finish) ->
         switchDummy._state = off
@@ -270,7 +274,6 @@ describe "DeviceAttributePredicateProvider", ->
           cassert predHandler.referenceValue is 42
           cassert result.token is testPredicate
           cassert result.nextInput is ""
-          predHandler.destroy()
 
     it "should parse predicate with unit: testvalue of test sensor is 42 °C", ->
       result = provider.parsePredicate "testvalue of test sensor is 42 °C", context
@@ -283,7 +286,6 @@ describe "DeviceAttributePredicateProvider", ->
       cassert predHandler.referenceValue is 42
       cassert result.token is "testvalue of test sensor is 42 °C"
       cassert result.nextInput is ""
-      predHandler.destroy()
 
     it "should parse predicate with unit: testvalue of test sensor is 42 C", ->
       result = provider.parsePredicate "testvalue of test sensor is 42 C", context
@@ -296,9 +298,8 @@ describe "DeviceAttributePredicateProvider", ->
       cassert predHandler.referenceValue is 42
       cassert result.token is "testvalue of test sensor is 42 C"
       cassert result.nextInput is ""
-      predHandler.destroy()
 
-  describe "SwitchPredicateHandler", ->
+  describe "DeviceAttributePredicateHandler", ->
 
     describe '#on "change"', ->  
       predicateHandler = null
@@ -306,6 +307,10 @@ describe "DeviceAttributePredicateProvider", ->
         result = provider.parsePredicate "testvalue of test is greater than 20"
         assert result?
         predicateHandler = result.predicateHandler
+        predicateHandler.setup()
+
+      after ->
+        predicateHandler.destroy()
 
       it "should notify when value is greater than 20 and value is 21", (finish) ->
         predicateHandler.once 'change', (state) ->

@@ -337,6 +337,7 @@ class RuleManager extends require('events').EventEmitter
     for p in rule.predicates
       do (p) =>
         assert(not p.changeListener?)
+        p.handler.setup()
         # let us be notified when the predicate state changes.
         p.handler.on 'change', changeListener = (state) =>
           assert state is 'event' or state is true or state is false

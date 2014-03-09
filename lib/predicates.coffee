@@ -32,7 +32,17 @@ class PredicateHandler extends require('events').EventEmitter
 
   getType: -> throw new Error("You must implement getType")
   getValue: -> throw new Error("You must implement getState")
-  destroy: ->  throw new Error("You must implement destroy")
+
+  setup: -> 
+    # You must overwrite this method and set up your listener here.
+    # You should call super() after that.
+    if @_setupCalled then throw new Error("setup already called!")
+    @_setupCalled = yes
+  destroy: -> 
+    # You must overwrite this method and remove your listener here.
+    # You should call super() after that.
+    unless @_setupCalled then throw new Error("destroy called but not setup called!")
+    delete @_setupCalled
 
 ###
 The Switch Predicate Provider
@@ -92,10 +102,14 @@ class SwitchPredicateProvider extends PredicateProvider
 class SwitchPredicateHandler extends PredicateHandler
 
   constructor: (@device, @state) ->
+  setup: ->
     @stateListener = (s) => @emit 'change', (s is @state)
     @device.on 'state', @stateListener
+    super()
   getValue: -> @device.getAttributeValue('state').then( (s) => (s is @state) )
-  destroy: -> @device.removeListener "state", @stateListener
+  destroy: -> 
+    @device.removeListener "state", @stateListener
+    super()
   getType: -> 'state'
 
 
@@ -156,11 +170,16 @@ class PresencePredicateProvider extends PredicateProvider
 class PresencePredicateHandler extends PredicateHandler
 
   constructor: (@device, @negated) ->
+
+  setup: ->
     @presenceListener = (p) => 
       @emit 'change', (if @negated then not p else p)
     @device.on 'presence', @presenceListener
+    super()
   getValue: -> @device.getAttributeValue('presence').then( (p) => (if @negated then not p else p) )
-  destroy: -> @device.removeListener "presence", @presenceListener
+  destroy: -> 
+    @device.removeListener "presence", @presenceListener
+    super()
   getType: -> 'state'
 
 
@@ -296,6 +315,8 @@ class DeviceAttributePredicateProvider extends PredicateProvider
 class DeviceAttributePredicateHandler extends PredicateHandler
 
   constructor: (@device, @attribute, @comparator, @referenceValue) ->
+
+  setup: ->
     lastState = null
     @attributeListener = (value) =>
       state = @_compareValues(@comparator, value, @referenceValue)
@@ -303,11 +324,14 @@ class DeviceAttributePredicateHandler extends PredicateHandler
         lastState = state
         @emit 'change', state
     @device.on @attribute, @attributeListener
+    super()
   getValue: -> 
     @device.getAttributeValue(@attribute).then( (value) =>
       @_compareValues(@comparator, value, @referenceValue)
     )
-  destroy: -> @device.removeListener @attribute, @attributeListener
+  destroy: -> 
+    @device.removeListener @attribute, @attributeListener
+    super()
   getType: -> 'state'
 
   # ### _compareValues()
