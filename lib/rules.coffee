@@ -213,8 +213,18 @@ class RuleManager extends require('events').EventEmitter
     parseResultsFailed = []
     parseResultsSuccess = []
     success = yes
+    openedParentheseCount = 0
 
     while (not context.hasErrors()) and nextInput.length isnt 0
+      openedParentheseMatch = yes
+      while openedParentheseMatch
+        m = M(nextInput, context).match('(', => 
+          tokens.push '('
+          openedParentheseCount++;
+          nextInput = nextInput.substring(1)
+        )
+        openedParentheseMatch = not m.hadNoMatches()
+
       i = predicates.length
       predId = id+i
 
@@ -223,13 +233,22 @@ class RuleManager extends require('events').EventEmitter
         predicates.push(predicate)
         tokens = tokens.concat ["predicate", "(", i, ")"]
 
-        unless nextInput.length is 0
-          # Try to match " and ", " or ", ...
-          onMatch = (m, s) => tokens.push s.trim()
-          m = M(nextInput, context).match([' and ', ' or ', '(', ')'], onMatch)
+        closeParentheseMatch = yes
+        while closeParentheseMatch and openedParentheseCount > 0
+          m = M(nextInput, context).match(')', => 
+            tokens.push ')'
+            closeParentheseMatch--;
+            nextInput = nextInput.substring(1)
+          )
+          closeParentheseMatch = not m.hadNoMatches()
 
+        # Try to match " and ", " or ", ...
+        possibleTokens = [' and ', ' or ']
+        onMatch = (m, s) => tokens.push s.trim()
+        m = M(nextInput, context).match(possibleTokens, onMatch)
+        unless nextInput.length is 0
           if m.hadNoMatches()
-            context.addError("""Expected one of: "and", "or", "(", ")".""")
+            context.addError("""Expected one of: "and", "or", ")".""")
           else
             token = m.getLongestFullMatch()
             assert S(nextInput.toLowerCase()).startsWith(token.toLowerCase())
@@ -251,7 +270,6 @@ class RuleManager extends require('events').EventEmitter
       handler: null
       forToken: null
       for: null
-
 
     # find a prdicate provider for that can parse and decide the predicate:
     parseResults = []
