@@ -422,7 +422,7 @@ class RuleManager extends require('events').EventEmitter
       # If the rule was successfully parsed then get the old rule
       oldRule = @rules[id]
       # and cancel the notifier for the old predicates.
-      @_cancelPredicateProviderNotify rule
+      @_cancelPredicateProviderNotify oldRule
       # and register the new ones:
       @_registerPredicateProviderNotify rule
 
