@@ -65,35 +65,38 @@ module.exports = (env) ->
 
       device = null
       state = null
+      match = null
 
-      setDevice = (m, d) => device = d
-      setState = (m, s) => state = s
       stateAcFilter = (v) => v.trim() isnt 'is switched' 
 
-      m = M(input, context)
-        .matchDevice(switchDevices, setDevice)
-        .match([' is', ' is turned', ' is switched'], acFilter: stateAcFilter)
-        .match([' on', ' off'], setState)
+      M(input, context)
+        .matchDevice(switchDevices, (next, d) =>
+          next.match([' is', ' is turned', ' is switched'], acFilter: stateAcFilter)
+            .match([' on', ' off'], (next, s) =>
+              if device?
+                context?.addError(""""#{input.trim()}" is ambiguous.""")
+                return
+              assert d?
+              assert s in [' on', ' off']
 
-      matchCount = m.getMatchCount()
-
+              device = d
+              state = s.trim() is 'on'
+              match = next.getFullMatches()[0]
+          )
+        )
+ 
       # If we have a macht
-      if matchCount is 1
-        match = m.getFullMatches()[0]
+      if match?
         assert device?
         assert state?
         # and state as boolean.
-        state = (state.trim() is "on")
-
         return {
           token: match
           nextInput: input.substring(match.length)
           predicateHandler: new SwitchPredicateHandler(device, state)
         }
-
-      else if matchCount > 1
-        context?.addError(""""#{input.trim()}" is ambiguous.""")
-      return null
+      else
+        return null
 
   class SwitchPredicateHandler extends PredicateHandler
 
