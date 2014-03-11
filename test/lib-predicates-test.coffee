@@ -109,7 +109,7 @@ describe "SwitchPredicateProvider", ->
   switchDummy = null
 
   before ->
-    provider = new env.predicates.SwitchPredicateProvider(env, frameworkDummy)
+    provider = new env.predicates.SwitchPredicateProvider(frameworkDummy)
 
     class SwitchDummyDevice extends env.devices.SwitchActuator
       constructor: () ->
@@ -118,10 +118,11 @@ describe "SwitchPredicateProvider", ->
         @_state = on
         super()
 
-    switchDummy = new SwitchDummyDevice
+    switchDummy = new SwitchDummyDevice()
 
     frameworkDummy.devices =
       test: switchDummy
+
 
   describe '#parsePredicate()', ->
 
@@ -209,7 +210,7 @@ describe "DeviceAttributePredicateProvider", ->
   sensorDummy = null
 
   before ->
-    provider = new env.predicates.DeviceAttributePredicateProvider(env, frameworkDummy)
+    provider = new env.predicates.DeviceAttributePredicateProvider(frameworkDummy)
 
     class DummySensor extends env.devices.Sensor
   

@@ -37,7 +37,9 @@ describe "pimatic", ->
   describe 'startup', ->
 
     it "should startup", ->
-      framework = (require '../startup').framework
+      startup = require('../startup')
+      startup.startup()
+      framework = startup.framework
 
     it "httpServer should run", (done)->
       http = require 'http'

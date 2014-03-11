@@ -28,6 +28,7 @@ startup = =>
   Framework = (require './lib/framework') env 
   framework = new Framework configFile
   promise = framework.init()
+  module.exports.framework = framework
   return promise.done()
 
 module.exports.startup = startup
