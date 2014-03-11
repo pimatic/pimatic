@@ -253,6 +253,10 @@ describe "DeviceAttributePredicateProvider", ->
       'higher': '>'
       'greater than': '>'
       'is greater than': '>'
+      'is greater or equal than': '>='
+      'is equal or greater than': '>='
+      'is less or equal than': '<='
+      'is equal or less than': '<='
 
     for comp, sign of comparators
       do (comp, sign) ->

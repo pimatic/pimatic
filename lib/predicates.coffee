@@ -73,12 +73,12 @@ module.exports = (env) ->
         .matchDevice(switchDevices, (next, d) =>
           next.match([' is', ' is turned', ' is switched'], acFilter: stateAcFilter)
             .match([' on', ' off'], (next, s) =>
-              if device?
+              # Already had a match with another device?
+              if device? and device.id isnt d.id
                 context?.addError(""""#{input.trim()}" is ambiguous.""")
                 return
               assert d?
               assert s in [' on', ' off']
-
               device = d
               state = s.trim() is 'on'
               match = next.getFullMatches()[0]
@@ -131,36 +131,35 @@ module.exports = (env) ->
         .filter((device) => device.hasAttribute( 'presence')).value()
 
       device = null
-      state = null
+      negated = null
+      match = null
 
-      setDevice = (m, d) => device = d
-      setState =  (m, s) => state = s
       stateAcFilter = (v) => v.trim() isnt 'not present'
 
-      m = M(input, context)
-        .matchDevice(presenceDevices, setDevice)
-        .match([' is', ' reports', ' signals'])
-        .match([' present', ' absent', ' not present'], {acFilter: stateAcFilter}, setState)
-
-      matchCount = m.getMatchCount()
-
-      if matchCount is 1
-        match = m.getFullMatches()[0]
+      M(input, context)
+        .matchDevice(presenceDevices, (next, d) =>
+          next.match([' is', ' reports', ' signals'])
+            .match([' present', ' absent', ' not present'], {acFilter: stateAcFilter}, (m, s) =>
+              # Already had a match with another device?
+              if device? and device.id isnt d.id
+                context?.addError(""""#{input.trim()}" is ambiguous.""")
+                return
+              device = d
+              negated = (s.trim() isnt "present") 
+              match = m.getFullMatches()[0]
+            )
+      )
+      
+      if match?
         assert device?
-        assert state?
-
-        negated = (state.trim() isnt "present") 
-
+        assert negated?
         return {
           token: match
           nextInput: input.substring(match.length)
           predicateHandler: new PresencePredicateHandler(device, negated)
         }
-        
-      else if matchCount > 1
-        context?.addError(""""#{input.trim()}" is ambiguous.""")
-      # If we have no match then return null.
-      return null
+      else
+        return null
 
   class PresencePredicateHandler extends PredicateHandler
 
@@ -200,8 +199,12 @@ module.exports = (env) ->
       '!=': [ 'is not' ]
       '<': ['less', 'lower', 'below']
       '>': ['greater', 'higher', 'above']
+      '>=': ['greater or equal', 'higher or equal', 'above or equal',
+            'equal or greater', 'equal or higher', 'equal or above']
+      '<=': ['less or equal', 'lower or equal', 'below or equal',
+            'equal or less', 'equal or lower', 'equal or below']
 
-      for sign in ['<', '>']
+      for sign in ['<', '>', '<=', '>=']
         @comparators[sign] = _(@comparators[sign]).map( 
           (c) => [c, "is #{c}", "is #{c} than", "is #{c} as", "#{c} than", "#{c} as"]
         ).flatten().value()
@@ -247,7 +250,8 @@ module.exports = (env) ->
           else if attribute.type is Number
             possibleComparators = _(@comparators).values().flatten().map((c)=>" #{c} ").value()
             autocompleteFilter = (v) => 
-              v.trim() in ['is', 'is not', 'equals', 'is greater than', 'is less than']
+              v.trim() in ['is', 'is not', 'equals', 'is greater than', 'is less than', 
+                'is greater or equal than', 'is less or equal than']
             m = m.match(possibleComparators, acFilter: autocompleteFilter, setComparator)
               .matchNumber( (m,v) => setRefValue(m, parseFloat(v)) )
             if attribute.unit? and attribute.unit.length > 0 
@@ -294,7 +298,6 @@ module.exports = (env) ->
             found = true
             break
         assert found
-
         return {
           token: match
           nextInput: input.substring(match.length)
@@ -340,6 +343,8 @@ module.exports = (env) ->
         when '!=' then value isnt referenceValue
         when '<' then value < referenceValue
         when '>' then value > referenceValue
+        when '<=' then value <= referenceValue
+        when '>=' then value >= referenceValue
         else throw new Error "Unknown comparator: #{comparator}"
 
   return exports = {
