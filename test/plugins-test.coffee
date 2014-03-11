@@ -1,14 +1,6 @@
 fs = require("fs")
 
-env =
-  logger: require '../lib/logger'
-  devices: require '../lib/devices'
-  rules: require '../lib/rules'
-  plugins: require '../lib/plugins'
-  actions: require '../lib/actions'
-  predicates: require '../lib/predicates'
-  matcher: require '../lib/matcher'
-  require: (args...) -> module.require args...
+env = require('../startup').env
 
 modules = fs.readdirSync ".."
 plugins = (m for m in modules when m.match(/^pimatic-.*/)?)

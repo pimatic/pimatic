@@ -3,12 +3,9 @@ Q = require 'q'
 os = require 'os'
 fs = require 'fs.extra'
 
+env = require('../startup').env
 
 describe "PluginManager", ->
-
-  env = 
-    plugins: require '../lib/plugins'
-    logger: require '../lib/logger'
 
   #env.logger.info = ->
 
@@ -29,7 +26,7 @@ describe "PluginManager", ->
   describe '#construct()', ->
 
     it 'should construct the PluginManager', ->
-      pluginManager = new env.plugins.PluginManager env, frameworkDummy
+      pluginManager = new env.plugins.PluginManager frameworkDummy
 
   describe '#pathToPlugin()', ->
 

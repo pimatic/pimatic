@@ -3,15 +3,9 @@ assert = require "assert"
 Q = require 'q'
 S = require 'string'
 
-describe "RuleManager", ->
+env = require('../startup').env
 
-  # Setup the environment
-  env =
-    logger: require '../lib/logger'
-    devices: require '../lib/devices'
-    rules: require '../lib/rules'
-    plugins: require '../lib/plugins'
-    predicates: require '../lib/predicates'
+describe "RuleManager", ->
 
   before ->
     env.logger.transports.console.level = 'error'

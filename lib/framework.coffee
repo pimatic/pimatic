@@ -30,8 +30,8 @@ module.exports = (env) ->
       @loadConfig()
       @maindir = path.resolve __dirname, '..'
 
-      @ruleManager = new env.rules.RuleManager this, @config.rules
-      @pluginManager = new env.plugins.PluginManager env, this
+      @ruleManager = new env.rules.RuleManager(@config.rules)
+      @pluginManager = new env.plugins.PluginManager(this)
 
       @setupExpressApp()
 
@@ -326,14 +326,14 @@ module.exports = (env) ->
             env.logger.debug err.stack
 
       initActionHandler = =>
-        @ruleManager.addActionHandler new env.actions.SwitchActionHandler env, this
-        @ruleManager.addActionHandler new env.actions.DimmerActionHandler env, this
-        @ruleManager.addActionHandler new env.actions.LogActionHandler env, this
+        @ruleManager.addActionHandler new env.actions.SwitchActionHandler(this)
+        @ruleManager.addActionHandler new env.actions.DimmerActionHandler(this)
+        @ruleManager.addActionHandler new env.actions.LogActionHandler(this)
 
       initPredicateProvider = =>
-        presencePredProvider = new env.predicates.PresencePredicateProvider env, this
-        switchPredProvider = new env.predicates.SwitchPredicateProvider env, this
-        deviceAttributePredProvider = new env.predicates.DeviceAttributePredicateProvider env, this
+        presencePredProvider = new env.predicates.PresencePredicateProvider(this)
+        switchPredProvider = new env.predicates.SwitchPredicateProvider(this)
+        deviceAttributePredProvider = new env.predicates.DeviceAttributePredicateProvider(this)
         @ruleManager.addPredicateProvider presencePredProvider
         @ruleManager.addPredicateProvider switchPredProvider
         @ruleManager.addPredicateProvider deviceAttributePredProvider

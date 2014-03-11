@@ -1,7 +1,5 @@
 assert = require "cassert"
 Q = require 'q'
-actions = require '../lib/actions'
-devices = require '../lib/devices'
 i18n = require 'i18n'
 
 i18n.configure(
@@ -10,17 +8,16 @@ i18n.configure(
   defaultLocale: 'en'
 )
 
-describe "SwitchActionHandler", ->
+env = require('../startup').env
 
-  envDummy =
-    logger: {}
+describe "SwitchActionHandler", ->
 
   frameworkDummy =
     devices: {}
 
-  switchActionHandler = new actions.SwitchActionHandler envDummy, frameworkDummy
+  switchActionHandler = new env.actions.SwitchActionHandler frameworkDummy
 
-  class DummySwitch extends devices.SwitchActuator
+  class DummySwitch extends env.devices.SwitchActuator
     id: 'dummy-switch-id'
     name: 'dummy switch'
 
@@ -93,9 +90,9 @@ describe "DimmerActionHandler", ->
   frameworkDummy =
     devices: {}
 
-  switchActionHandler = new actions.DimmerActionHandler envDummy, frameworkDummy
+  switchActionHandler = new env.actions.DimmerActionHandler frameworkDummy
 
-  class DimmerDevice extends devices.DimmerActuator
+  class DimmerDevice extends env.devices.DimmerActuator
     id: 'dummy-dimmer-id'
     name: 'dummy dimmer'
 
@@ -132,7 +129,7 @@ describe "LogActionHandler", ->
     logger: {}
   frameworkDummy = {}
 
-  logActionHandler = new actions.LogActionHandler envDummy, frameworkDummy
+  logActionHandler = new env.actions.LogActionHandler frameworkDummy
 
   describe "#executeAction()", =>
 

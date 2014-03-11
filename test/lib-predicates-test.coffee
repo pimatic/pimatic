@@ -2,13 +2,7 @@ cassert = require "cassert"
 assert = require "assert"
 
 # Setup the environment
-env =
-  logger: require '../lib/logger'
-  devices: require '../lib/devices'
-  rules: require '../lib/rules'
-  plugins: require '../lib/plugins'
-  predicates: require '../lib/predicates'
-
+env = require('../startup').env
 
 describe "PresencePredicateProvider", ->
 
@@ -19,7 +13,7 @@ describe "PresencePredicateProvider", ->
   sensorDummy = null
 
   before ->
-    provider = new env.predicates.PresencePredicateProvider(env, frameworkDummy)
+    provider = new env.predicates.PresencePredicateProvider(frameworkDummy)
 
     class PresenceDummySensor extends env.devices.PresenceSensor
       constructor: () ->
