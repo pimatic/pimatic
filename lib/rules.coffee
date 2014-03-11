@@ -362,17 +362,16 @@ module.exports = (env) ->
             assert state is 'event' or state is true or state is false
             #If the state is true then call the `whenPredicateIsTrue` function.
             if state is true or state is 'event'
-              whenPredicateIsTrue rule.id, p.id, state
+              whenPredicateIsTrue rule, p.id, state
           p.changeListener = changeListener
 
       # This function should be called by a provider if a predicate becomes true.
-      whenPredicateIsTrue = (ruleId, predicateId, state) =>
-        assert ruleId? and typeof ruleId is "string" and ruleId.length isnt 0
+      whenPredicateIsTrue = (rule, predicateId, state) =>
+        assert rule?
         assert predicateId? and typeof predicateId is "string" and predicateId.length isnt 0
         assert state is 'event' or state is true
 
-        # First get get the corresponding rule
-        rule = @rules[ruleId]
+        # if not active, then nothing to do
         unless rule.active then return
 
         # Then mark the given predicate as true
@@ -519,11 +518,12 @@ module.exports = (env) ->
         do (pred) =>
           predNumToId[i] = pred.id
           unless knownPredicates[pred.id]?
-            awaiting.push pred.handler.getValue().then (state) =>
+            awaiting.push pred.handler.getValue().then( (state) =>
               unless state?
                 state = false
                 env.logger.info "Could not decide #{pred.token} yet."
               knownPredicates[pred.id] = state
+            )
 
       return Q.all(awaiting).then( (predicateValues) =>
         bet = require 'bet'
@@ -575,7 +575,7 @@ module.exports = (env) ->
 
         # Whenever an awaiting predicate gets resolved then we will revalidate the rule condition.
         revalidateCondition = () =>
-          @evaluateConditionOfRule(rule, knownPredicates).then (isTrueNew) =>
+          @evaluateConditionOfRule(rule, knownPredicates).then( (isTrueNew) =>
             # If it is true
             if isTrueNew 
               # then resolve the return value as true
@@ -590,7 +590,7 @@ module.exports = (env) ->
             if (id for id of awaiting).length is 0
               # then we can resolve the return value as false
               deferred.resolve false 
-          .done()
+          ).done()
 
         # Fill the awaiting list:
         # Check for each predicate,
@@ -600,7 +600,7 @@ module.exports = (env) ->
             if pred.for?
               # If it has a for suffix and its an event something gone wrong, because an event 
               # can't hold (its just one time)
-              assert pred.type is 'state'
+              assert pred.handler.getType() is 'state'
               # Mark that we are awaiting the result
               awaiting[pred.id] = {}
               # and as long as we are awaiting the result, the predicate is false.
