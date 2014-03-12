@@ -85,10 +85,11 @@ module.exports = (env) ->
           )
         )
  
-      # If we have a macht
+      # If we have a match
       if match?
         assert device?
         assert state?
+        assert typeof match is "string"
         # and state as boolean.
         return {
           token: match
@@ -153,6 +154,7 @@ module.exports = (env) ->
       if match?
         assert device?
         assert negated?
+        assert typeof match is "string"
         return {
           token: match
           nextInput: input.substring(match.length)
@@ -287,9 +289,9 @@ module.exports = (env) ->
         assert result.attributeName?
         assert result.comparator?
         assert result.referenceValue?
-
         # take the longest match
         match = _(matches).sortBy( (s) => s.length ).last()
+        assert typeof match is "string" 
 
         found = false
         for sign, c of @comparators
