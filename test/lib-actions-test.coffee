@@ -123,19 +123,28 @@ describe "DimmerActionHandler", ->
             finish()
           ).done()
 
-describe "LogActionHandler", ->
+describe "LogActionProvider", ->
 
   envDummy =
     logger: {}
   frameworkDummy = {}
 
-  logActionHandler = new env.actions.LogActionHandler frameworkDummy
+  logActionProvider = new env.actions.LogActionProvider frameworkDummy
+  actionHandler = null
 
-  describe "#executeAction()", =>
+  describe "#parseAction()", =>
+    it 'should parse: log "a test message"', ->
+      result = logActionProvider.parseAction('log "a test message"')
+      assert result?
+      assert result.token is 'log "a test message"'
+      assert result.nextInput is ''
+      assert result.actionHandler?
+      actionHandler = result.actionHandler
 
-    it 'should execute: log "a test message"', (finish)->
-
-      logActionHandler.executeAction('log "a test message"', false).then( (message) ->
-        assert message is "a test message"
-        finish()
-      ).done()
+  describe "LogActionHandler", ->
+    describe "#executeAction()", =>
+      it 'should execute the action', (finish) ->
+        actionHandler.executeAction(false).then( (message) ->
+          assert message is "a test message"
+          finish()
+        ).done()

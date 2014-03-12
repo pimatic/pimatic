@@ -207,6 +207,7 @@ class Matcher
 
     
   hadNoMatches: -> @inputs.length is 0
+  hadMatches: -> @inputs.length isnt 0
   getMatchCount: -> @inputs.length
   getFullMatches: -> @prevInputs 
   getLongestFullMatch: ->
