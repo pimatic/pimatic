@@ -285,37 +285,13 @@ module.exports = (env) ->
           nextInput = parseResult.nextInput
           predicate.handler = parseResult.predicateHandler
 
-          # Parse the for-Suffix:
-          timeUnits = [
-            "ms", 
-            "second", "seconds", "s", 
-            "minute", "minutes", "m", 
-            "hour", "hours", "h", 
-            "day", "days","d", 
-            "year", "years", "y"
-          ]
-          time = 0
-          unit = ""
-          onTimeMatch = (m, n) => time = parseFloat(n)
-          onMatchUnit = (m, u) => unit = u
+          timeParseResult = @parseTimePart(nextInput, "for", context)
 
-          m = M(nextInput, context)
-            .match(' for ')
-            .matchNumber(onTimeMatch)
-            .match(
-              _(timeUnits).map((u) => [" #{u}", u]).flatten().valueOf()
-            , {acFilter: (u) => u[0] is ' '}, onMatchUnit
-            )
-
-          unless m.hadNoMatches()
-            forPart = m.getLongestFullMatch()
-            assert S(nextInput).startsWith(forPart)
-            predicate.forToken = S(forPart).chompLeft(' for ').s
-            predicate.for = milliseconds.parse "#{time} #{unit}"
-            assert predicate.forToken?
-            assert predicate.for?
-            nextInput = nextInput.substring(forPart.length)
-            token += forPart
+          if timeParseResult?
+            token += timeParseResult.token
+            nextInput = timeParseResult.nextInput
+            predicate.forToken = timeParseResult.timeToken
+            predicate.for = timeParseResult.time
 
           if predicate.handler.getType() is 'event' and predicate.forToken?
             context.addError(
@@ -328,6 +304,39 @@ module.exports = (env) ->
           )
 
       return { predicate, token, nextInput }
+
+    parseTimePart: (nextInput, tokenBefore, context) ->
+      # Parse the for-Suffix:
+      timeUnits = [
+        "ms", 
+        "second", "seconds", "s", 
+        "minute", "minutes", "m", 
+        "hour", "hours", "h", 
+        "day", "days","d", 
+        "year", "years", "y"
+      ]
+      time = 0
+      unit = ""
+      onTimeMatch = (m, n) => time = parseFloat(n)
+      onMatchUnit = (m, u) => unit = u
+
+      m = M(nextInput, context)
+        .match(" #{tokenBefore} ")
+        .matchNumber(onTimeMatch)
+        .match(
+          _(timeUnits).map((u) => [" #{u}", u]).flatten().valueOf()
+        , {acFilter: (u) => u[0] is ' '}, onMatchUnit
+        )
+
+      unless m.hadNoMatches()
+        token = m.getLongestFullMatch()
+        assert S(nextInput).startsWith(token)
+        timeToken = S(token).chompLeft(" #{tokenBefore} ").s
+        time = milliseconds.parse "#{time} #{unit}"
+        nextInput = nextInput.substring(token.length)
+        return {token, nextInput, timeToken, time}
+      else
+        return null
 
     parseRuleActions: (id, nextInput, context) ->
       assert typeof id is "string" and id.length isnt 0
