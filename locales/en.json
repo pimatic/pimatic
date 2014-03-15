@@ -91,5 +91,7 @@
 	"dimmed %s to %s\\%": "dimmed %s to %s\\%",
 	"dimmed %s to %s%%": "dimmed %s to %s%%",
 	"would dim %s to %s%%": "would dim %s to %s%%",
-	"Remember me": "Remember me"
+	"Remember me": "Remember me",
+	"Show CA root certificate": "Show CA root certificate",
+	"Restart": "Restart"
 }

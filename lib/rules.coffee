@@ -71,7 +71,7 @@ module.exports = (env) ->
     #  
     #     id: 'some-id'
     #     string: 'if its 10pm and light is on then turn the light off'
-    #     orgCondition: 'its 10pm and light is on'
+    #     conditionToken: 'its 10pm and light is on'
     #     predicates: [
     #       { id: 'some-id0'
     #         provider: the corresponding provider },
@@ -92,13 +92,13 @@ module.exports = (env) ->
     #  
     rules: {}
     # Array of ActionHandlers: see [actions.coffee](actions.html)
-    actionHandlers: []
+    actionProviders: []
     # Array of predicateProviders: see [actions.coffee](actions.html)
     predicateProviders: []
 
     constructor: (@framework) ->
 
-    addActionHandler: (ah) -> @actionHandlers.push ah
+    addActionProvider: (ah) -> @actionProviders.push ah
     addPredicateProvider: (pv) -> @predicateProviders.push pv
 
     # ###parseRuleString()
@@ -108,7 +108,7 @@ module.exports = (env) ->
     #  
     #     id: 'some-id'
     #     string: 'if its 10pm and light is on then turn the light off'
-    #     orgCondition: 'its 10pm and light is on'
+    #     conditionToken: 'its 10pm and light is on'
     #     predicates: [
     #       { id: 'some-id0'
     #         provider: the corresponding provider },
@@ -148,35 +148,23 @@ module.exports = (env) ->
         ###
         Then extraxt the condition and actions from the rule 
          
-            rule.orgCondition = "its 10pm and light is on"
+            rule.conditionToken = "its 10pm and light is on"
             rule.actions = "turn the light off"
          
         ###
-        rule.orgCondition = parts[1].trim()
-        rule.action = parts[2].trim()
+        rule.conditionToken = parts[1].trim()
+        rule.actionsToken = parts[2].trim()
 
-        result = @parseRuleCondition(id, rule.orgCondition, context)
+        result = @parseRuleCondition(id, rule.conditionToken, context)
         rule.predicates = result.predicates
         rule.tokens = result.tokens
 
-        if context.hasErrors()
-          return rule
+        unless context.hasErrors()
+          result = @parseRuleActions(id, rule.actionsToken, context)
+          rule.actions = result.actions
+          rule.actionTokens = result.tokens
 
-        # Simulate the action execution to try if it can be executed-
-        return @executeAction(rule.action, true, context).then( =>
-          # If the execution was sussessful then return the rule object.
-          return rule 
-        ).catch( (error) =>
-          # If there was a Errror simulation the action exeution, return an error.
-          env.logger.error error.message
-          env.logger.debug error.stack
-          throw error
-        )
-      ).catch( (error) =>
-        env.logger.debug "rethrowing error: #{error.message}"
-        env.logger.debug error.stack
-        error.rule = rule
-        throw error
+        return rule
       )
 
     parseRuleCondition: (id, conditionString, context) ->
@@ -210,9 +198,6 @@ module.exports = (env) ->
 
       nextInput = conditionString
 
-
-      parseResultsFailed = []
-      parseResultsSuccess = []
       success = yes
       openedParentheseCount = 0
 
@@ -227,7 +212,7 @@ module.exports = (env) ->
           openedParentheseMatch = not m.hadNoMatches()
 
         i = predicates.length
-        predId = id+i
+        predId = "prd-#{id}-#{i}"
 
         { predicate, token, nextInput } = @parsePredicate(predId, nextInput, context)
         unless context.hasErrors()
@@ -280,7 +265,7 @@ module.exports = (env) ->
           assert parseResult.token? and parseResult.token.length > 0
           assert parseResult.nextInput? and typeof parseResult.nextInput is "string"
           assert parseResult.predicateHandler?
-          #assert parseResult.predicateHandler instanceof env.predicates.PredicateHandler
+          assert parseResult.predicateHandler instanceof env.predicates.PredicateHandler
           parseResults.push parseResult
 
       token = null
@@ -298,7 +283,7 @@ module.exports = (env) ->
           assert S(nextInput.toLowerCase()).startsWith(token.toLowerCase())
           predicate.token = token
           nextInput = parseResult.nextInput
-          predicateHandler = parseResult.predicateHandler
+          predicate.handler = parseResult.predicateHandler
 
           # Parse the for-Suffix:
           timeUnits = [
@@ -332,18 +317,99 @@ module.exports = (env) ->
             nextInput = nextInput.substring(forPart.length)
             token += forPart
 
-          if predicateHandler.getType() is 'event' and predicate.forToken?
+          if predicate.handler.getType() is 'event' and predicate.forToken?
             context.addError(
               "\"#{token}\" is an event it can not be true for \"#{redicate.forToken}\"."
             )
 
-          predicate.handler = predicateHandler
         else
           context.addError(
             """Next predicate of "#{nextInput}" is ambiguous."""
           )
 
       return { predicate, token, nextInput }
+
+    parseRuleActions: (id, nextInput, context) ->
+      assert typeof id is "string" and id.length isnt 0
+      assert typeof nextInput is "string"
+      assert context?
+
+      actions = []
+      tokens = []
+      # For each token
+
+      success = yes
+      openedParentheseCount = 0
+
+      while (not context.hasErrors()) and nextInput.length isnt 0
+        i = actions.length
+        actionId = "act-#{id}-#{i}"
+        { action, token, nextInput } = @parseAction(actionId, nextInput, context)
+        unless context.hasErrors()
+          actions.push action
+          tokens = tokens.concat ['action', '(', i, ')']
+          # actions.push {
+          #   token: token
+          #   handler: 
+          # }
+          onMatch = (m, s) => tokens.push s.trim()
+          m = M(nextInput, context).match([' and '], onMatch)
+          unless nextInput.length is 0
+            if m.hadNoMatches()
+              context.addError("""Expected: "and".""")
+            else
+              token = m.getLongestFullMatch()
+              assert S(nextInput.toLowerCase()).startsWith(token.toLowerCase())
+              nextInput = nextInput.substring(token.length)
+      return {
+        actions: actions
+        tokens: tokens
+      }
+
+    parseAction: (actionId, nextInput, context) =>
+      assert typeof nextInput is "string"
+      assert context?
+
+      action =
+        id: actionId
+        token: null
+        handler: null
+
+      # find a prdicate provider for that can parse and decide the predicate:
+      parseResults = []
+      for actProvider in @actionProviders
+        parseResult = actProvider.parseAction(nextInput, context)
+        if parseResult?
+          assert parseResult.token? and parseResult.token.length > 0
+          assert parseResult.nextInput? and typeof parseResult.nextInput is "string"
+          assert parseResult.actionHandler?
+          assert parseResult.actionHandler instanceof env.actions.ActionHandler
+          parseResults.push parseResult
+
+      token = null
+
+      switch parseResults.length
+        when 0
+          context.addError(
+            """Could not find an provider that provides the next action of "#{nextInput}"."""
+          )
+        when 1
+          # get part of nextInput that is related to the found provider
+          parseResult = parseResults[0]
+          token = parseResult.token
+          assert token?
+          assert S(nextInput.toLowerCase()).startsWith(token.toLowerCase())
+          action.token = token
+          nextInput = parseResult.nextInput
+          actionHandler = parseResult.actionHandler
+
+          action.handler = actionHandler
+        else
+          context.addError(
+            """Next action of "#{nextInput}" is ambiguous."""
+          )
+
+      return { action, token, nextInput }
 
     # ###_addPredicateChangeListener()
     # Register for every predicate the callback function that should be called
@@ -651,10 +717,7 @@ module.exports = (env) ->
           return Q()
       rule.lastExecuteTime = currentTime
 
-      context = @createParseContext()
-      return @executeAction(rule.action, false, context).then( (messages) =>
-        if context.hasErrors()
-          throw new Error(context.errors[0])
+      return @executeAction(rule, false).then( (messages) =>
         assert Array.isArray messages
         # concat the messages: `["a", "b"] => "a and b"`
         message = _.reduce(messages, (ms, m) => if m? then "#{ms} and #{m}" else ms)
@@ -665,51 +728,23 @@ module.exports = (env) ->
 
     # ###executeAction()
     # Executes the actions in the given actionString
-    executeAction: (actionString, simulate, context) ->
-      assert actionString? and typeof actionString is "string" 
+    executeAction: (rule, simulate) ->
+      assert rule?
+      assert rule.actions?
       assert simulate? and typeof simulate is "boolean"
 
-      unless context? then context = @createParseContext()
-
-      # Split the actionString at " and " and search for an Action Handler in each part.
       actionResults = []
-      for token in actionString.split /// 
-        \s+and\s+     # " and " 
-        (?=           # fowolled by
-          (?:
-            [^"]*     # a string not containing an quote
-            "[^"]*"   # a string in quotes
-          )*          # multiples times
-          [^"]*       # a string not containing quotes
-        $) /// 
-        ahFound = false
-        for aH in @actionHandlers
-          unless ahFound
-            try 
-              # Check if the action handler can execute the action. If it can execute it then
-              # it should do it and return a promise that get fulfilled with a description string.
-              # If the action handler can't handle the action it should return null.
-              promise = aH.executeAction token, simulate, context
-              # If the action was handled
-              if Q.isPromise promise
-                # push it to the results and continue with the next token.
-                actionResults.push promise
-                ahFound = true
-                continue
-            catch e 
-              errorMsg = "Error executing a action handler: #{e.message}"
-              context.addError(errorMsg)
-              env.logger.error errorMsg
-              env.logger.debug e.stack
-        unless ahFound
-          context.addError("Could not find an action handler for: #{token}")
-
-      if not simulate and context.hasErrors()
-        return Q.fcall => 
-          error = new Error("Could not execute an action: #{context.getErrorsAsString()}")
-          error.context = context
-          throw error
-
+      for action in rule.actions
+        try 
+          promise = action.handler.executeAction(simulate)
+          # If the action was handled
+          assert Q.isPromise(promise)
+          # push it to the results and continue with the next token.
+          actionResults.push promise
+        catch e 
+          errorMsg = "Error executing a action handler: #{e.message}"
+          env.logger.error errorMsg
+          env.logger.debug e.stack
       return Q.all(actionResults)
 
     createParseContext: ->

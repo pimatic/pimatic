@@ -257,7 +257,7 @@ module.exports = (env) ->
 
   class DimmerActionHandler extends ActionHandler
 
-    constructor: (@device, value) ->
+    constructor: (@device, @value) ->
 
     # ### executeAction()
     ###

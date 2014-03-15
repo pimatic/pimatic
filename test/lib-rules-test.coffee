@@ -25,44 +25,227 @@ describe "RuleManager", ->
     type: 'unknwon'
     name: 'test'
 
-    parsePredicate: (predicate, context) -> 
-      cassert S(predicate).startsWith("predicate 1")
+    parsePredicate: (input, context) -> 
+      cassert S(input).startsWith("predicate 1")
       return {
         token: "predicate 1"
-        nextInput: S(predicate).chompLeft("predicate 1").s
+        nextInput: S(input).chompLeft("predicate 1").s
         predicateHandler: new DummyPredicateHandler()
       }
 
+  class DummyActionHandler extends env.actions.ActionHandler
 
-  class DummyActionHandler
-    executeAction: (actionString, simulate) =>
-      cassert actionString is "action 1"
+    executeAction: (simulate) =>
       return Q "action 1 executed"
 
+  class DummyActionProvider
 
-  provider = new DummyPredicateProvider
+    parseAction: (input, context) -> 
+      cassert S(input).startsWith("action 1")
+      return {
+        token: "action 1"
+        nextInput: S(input).chompLeft("action 1").s
+        actionHandler: new DummyActionHandler()
+      }
+
+  predProvider = new DummyPredicateProvider()
   serverDummy = {}
-  ruleManager = new env.rules.RuleManager serverDummy, []
-  ruleManager.addPredicateProvider provider
-  actionHandler = new DummyActionHandler
-  ruleManager.actionHandlers = [actionHandler]
+  ruleManager = new env.rules.RuleManager(serverDummy, [])
+  ruleManager.addPredicateProvider predProvider
+  actionProvider = new DummyActionProvider()
+  ruleManager.actionProviders = [actionProvider]
 
-  # ###Tests for `parseRuleString()`
-  describe '#parseRuleString()', ->
-
+  describe '#parseRuleCondition', ->
     context = null
 
     beforeEach ->
       context = ruleManager.createParseContext()
 
+    testCases = [
+      {
+        input: "predicate 1"
+        result: { 
+          predicates: [ 
+            { 
+              id: 'prd-test1-0',
+              token: 'predicate 1',
+              handler: {},
+              forToken: null,
+              for: null 
+            }
+          ]
+          tokens: [ 'predicate', '(', 0, ')' ] 
+        }
+      }
+      {
+        input: "predicate 1 for 10 seconds"
+        result: { 
+          predicates: [ 
+            { 
+              id: 'prd-test1-0',
+              token: 'predicate 1',
+              handler: {},
+              forToken: '10 seconds',
+              for: 10000 
+            }
+          ]
+          tokens: [ 'predicate', '(', 0, ')' ] 
+        }
+      }
+      {
+        input: "predicate 1 for 2 hours"
+        result: { 
+          predicates: [ 
+            { 
+              id: 'prd-test1-0',
+              token: 'predicate 1',
+              handler: {},
+              forToken: '2 hours',
+              for: 7200000 
+            }
+          ]
+          tokens: [ 'predicate', '(', 0, ')' ] 
+        }
+      }
+      {
+        input: "predicate 1 and predicate 1"
+        result: { 
+          predicates: [ 
+            { 
+              id: 'prd-test1-0',
+              token: 'predicate 1',
+              handler: {},
+              forToken: null
+              for: null 
+            }
+            { 
+              id: 'prd-test1-1',
+              token: 'predicate 1',
+              handler: {},
+              forToken: null
+              for: null 
+            }
+          ]
+          tokens: [ 'predicate', '(', 0, ')', 'and', 'predicate', '(', 1, ')' ] 
+        }
+      }
+      {
+        input: "predicate 1 or predicate 1"
+        result: { 
+          predicates: [ 
+            { 
+              id: 'prd-test1-0',
+              token: 'predicate 1',
+              handler: {},
+              forToken: null
+              for: null 
+            }
+            { 
+              id: 'prd-test1-1',
+              token: 'predicate 1',
+              handler: {},
+              forToken: null
+              for: null 
+            }
+          ]
+          tokens: [ 'predicate', '(', 0, ')', 'or', 'predicate', '(', 1, ')' ] 
+        }
+      }
+      {
+        input: "predicate 1 for 2 hours or predicate 1"
+        result: { 
+          predicates: [ 
+            { 
+              id: 'prd-test1-0',
+              token: 'predicate 1',
+              handler: {},
+              forToken: '2 hours',
+              for: 7200000 
+            }
+            { 
+              id: 'prd-test1-1',
+              token: 'predicate 1',
+              handler: {},
+              forToken: null
+              for: null 
+            }
+          ]
+          tokens: [ 'predicate', '(', 0, ')', 'or', 'predicate', '(', 1, ')' ] 
+        }
+      }
+    ]
+
+    for tc in testCases
+      do (tc) ->
+        it "it should parse \"#{tc.input}\"", ->
+          result = ruleManager.parseRuleCondition("test1", tc.input, context)
+          assert.deepEqual result, tc.result
+
+  describe '#parseRuleActions', ->
+    context = null
+
+    beforeEach ->
+      context = ruleManager.createParseContext()
+
+    testCases = [
+      {
+        input: "action 1"
+        result: { 
+          actions: [ 
+            { 
+              id: 'act-test1-0', 
+              token: 'action 1', 
+              handler: {} # should be the dummyHandler
+            } 
+          ],
+          tokens: [ 'action', '(', 0, ')' ] 
+        }
+      }
+      {
+        input: "action 1 and action 1"
+        result: { 
+          actions: [ 
+            { 
+              id: 'act-test1-0', 
+              token: 'action 1', 
+              handler: {} # should be the dummyHandler
+            }
+            { 
+              id: 'act-test1-1', 
+              token: 'action 1', 
+              handler: {} # should be the dummyHandler
+            } 
+          ],
+          tokens: [ 'action', '(', 0, ')', 'and', 'action', '(', 1, ')' ] 
+        }
+      }
+    ]
+
+    for tc in testCases
+      do (tc) ->
+        it "it should parse \"#{tc.input}\"", ->
+          result = ruleManager.parseRuleActions("test1", tc.input, context)
+          assert result?
+          for action in result.actions
+            assert action.handler instanceof env.actions.ActionHandler
+            action.handler = {}
+          assert.deepEqual result, tc.result
+
+  describe '#parseRuleString()', ->
+    context = null
+
+    beforeEach ->
+      context = ruleManager.createParseContext()
+
+
     it 'should parse: "if predicate 1 then action 1"', (finish) ->
       ruleManager.parseRuleString("test1", "if predicate 1 then action 1", context)
       .then( (rule) -> 
         cassert rule.id is 'test1'
-        cassert rule.orgCondition is 'predicate 1'
+        cassert rule.conditionToken is 'predicate 1'
         cassert rule.tokens.length > 0
         cassert rule.predicates.length is 1
-        cassert rule.action is 'action 1'
+        cassert rule.actionsToken is 'action 1'
         cassert rule.string is 'if predicate 1 then action 1'
         finish() 
       ).catch(finish).done()
@@ -73,12 +256,12 @@ describe "RuleManager", ->
       ruleManager.parseRuleString("test1", ruleWithForSuffix, context)
       .then( (rule) -> 
         cassert rule.id is 'test1'
-        cassert rule.orgCondition is 'predicate 1 for 10 seconds'
+        cassert rule.conditionToken is 'predicate 1 for 10 seconds'
         cassert rule.tokens.length > 0
         cassert rule.predicates.length is 1
         cassert rule.predicates[0].forToken is '10 seconds'
         cassert rule.predicates[0].for is 10*1000
-        cassert rule.action is 'action 1'
+        cassert rule.actionsToken is 'action 1'
         cassert rule.string is 'if predicate 1 for 10 seconds then action 1'
         finish() 
       ).catch(finish).done()
@@ -90,12 +273,12 @@ describe "RuleManager", ->
       ruleManager.parseRuleString("test1", ruleWithHoursSuffix, context)
       .then( (rule) -> 
         cassert rule.id is 'test1'
-        cassert rule.orgCondition is 'predicate 1 for 2 hours'
+        cassert rule.conditionToken is 'predicate 1 for 2 hours'
         cassert rule.tokens.length > 0
         cassert rule.predicates.length is 1
         cassert rule.predicates[0].forToken is '2 hours'
         cassert rule.predicates[0].for is 2*60*60*1000
-        cassert rule.action is 'action 1'
+        cassert rule.actionsToken is 'action 1'
         cassert rule.string is 'if predicate 1 for 2 hours then action 1'
         finish() 
       ).catch(finish).done()
@@ -105,12 +288,12 @@ describe "RuleManager", ->
       ruleManager.parseRuleString("test1", "if predicate 1 for 42 foo then action 1", context)
       .then( (rule) -> 
         cassert rule.id is 'test1'
-        cassert rule.orgCondition is 'predicate 1 for 42 foo'
+        cassert rule.conditionToken is 'predicate 1 for 42 foo'
         cassert rule.tokens.length > 0
         cassert rule.predicates.length is 1
         cassert rule.predicates[0].forToken is null
         cassert rule.predicates[0].for is null
-        cassert rule.action is 'action 1'
+        cassert rule.actionsToken is 'action 1'
         cassert rule.string is 'if predicate 1 for 42 foo then action 1'
         finish() 
       ).catch(finish).done()
@@ -129,7 +312,7 @@ describe "RuleManager", ->
 
     it 'should reject unknown predicate', (finish) ->
       canDecideCalled = false
-      provider.parsePredicate = (input, context) -> 
+      predProvider.parsePredicate = (input, context) -> 
         cassert input is "predicate 2"
         canDecideCalled = true
         return null
@@ -147,7 +330,7 @@ describe "RuleManager", ->
 
     it 'should reject unknown action', (finish) ->
       canDecideCalled = false
-      provider.parsePredicate = (input, context) -> 
+      predProvider.parsePredicate = (input, context) -> 
         cassert input is "predicate 1"
         canDecideCalled = true
         return {
@@ -156,19 +339,20 @@ describe "RuleManager", ->
           predicateHandler: new DummyPredicateHandler()
         }
 
-      executeActionCalled = false
-      actionHandler.executeAction = (actionString, simulate) =>
-        cassert actionString is "action 2"
-        cassert simulate
-        executeActionCalled = true
-        return
+      parseActionCalled = false
+      actionProvider.parseAction = (input) =>
+        cassert input is "action 2"
+        parseActionCalled = true
+        return null
 
       ruleManager.parseRuleString('test4', 'if predicate 1 then action 2', context).then( -> 
         cassert context.hasErrors()
         cassert context.errors.length is 1
         errorMsg = context.errors[0]
-        cassert errorMsg is 'Could not find an action handler for: action 2'
-        cassert executeActionCalled
+        cassert(
+          errorMsg is 'Could not find an provider that provides the next action of "action 2".'
+        )
+        cassert parseActionCalled
         finish()
       ).catch(finish)
 
@@ -180,7 +364,7 @@ describe "RuleManager", ->
     changeHandler = null
 
     before ->
-      provider.parsePredicate = (input, context) -> 
+      predProvider.parsePredicate = (input, context) -> 
         cassert S(input).startsWith("predicate 1")
         predHandler = new DummyPredicateHandler()
         predHandler.on = (event, handler) -> 
@@ -194,17 +378,19 @@ describe "RuleManager", ->
 
     it 'should add the rule', (finish) ->
 
-
-      executeActionCallCount = 0
-      actionHandler.executeAction = (actionString, simulate) =>
-        cassert actionString is "action 1"
-        cassert simulate
-        executeActionCallCount++
-        return Q.fcall -> "execute action"
+      parseActionCallCount = 0
+      actionProvider.parseAction = (input) =>
+        cassert input is "action 1"
+        parseActionCallCount++
+        return {
+          token: "action 1"
+          nextInput: S(input).chompLeft("action 1").s
+          actionHandler: new DummyActionHandler()
+        }
 
       ruleManager.addRuleByString('test5', 'if predicate 1 then action 1').then( ->
         cassert changeHandler?
-        cassert executeActionCallCount is 1
+        cassert parseActionCallCount is 1
         cassert ruleManager.rules['test5']?
         finish()
       ).catch(finish).done()
@@ -212,16 +398,12 @@ describe "RuleManager", ->
     it 'should react to notifies', (finish) ->
       this.timeout 3000
 
-      actionHandler.executeAction = (actionString, simulate) =>
-        cassert actionString is "action 1"
+      ruleManager.rules['test5'].actions[0].handler.executeAction = (simulate) =>
         cassert not simulate
         finish()
-        return Q.fcall -> "execute action"
+        return Q "execute action"
 
-      setTimeout( ->
-        changeHandler('event')
-      , 2001
-      )
+      setTimeout((-> changeHandler('event')), 2001)
 
 
   # ###Tests for `updateRuleByString()`
@@ -650,6 +832,7 @@ describe "RuleManager", ->
 
 
   predHandler = null
+  actHandler = null
   # ###Tests for `updateRuleByString()`
   describe '#updateRuleByString()', ->  
 
@@ -659,9 +842,8 @@ describe "RuleManager", ->
     it 'should update the rule', (finish) ->
 
       parsePredicateCalled = false
-      removeListenerCalled = false
       onCalled = false
-      provider.parsePredicate = (input, context) -> 
+      predProvider.parsePredicate = (input, context) -> 
         cassert S(input).startsWith("predicate 2")
         parsePredicateCalled = i
         i++
@@ -680,7 +862,15 @@ describe "RuleManager", ->
           predicateHandler: predHandler
         }
 
-      actionHandler.executeAction = (actionString, simulate) => Q.fcall -> "execute action"
+      actionProvider.parseAction = (input, context) -> 
+        cassert S(input).startsWith("action 1")
+        actHandler = new DummyActionHandler()
+        actHandler.executeAction = (simulate) => Q "execute action"
+        return {
+          token: "action 1"
+          nextInput: S(input).chompLeft("action 1").s
+          actionHandler: actHandler
+        }
 
       ruleManager.updateRuleByString('test5', 'if predicate 2 then action 1').then( ->
         cassert parsePredicateCalled is 1
@@ -695,11 +885,10 @@ describe "RuleManager", ->
     it 'should react to notifies', (finish) ->
       this.timeout 3000
 
-      actionHandler.executeAction = (actionString, simulate) =>
-        cassert actionString is "action 1"
+      actHandler.executeAction = (simulate) =>
         cassert not simulate
         finish()
-        return Q.fcall -> "execute action"
+        return Q "execute action"
 
       setTimeout( ->
         changeListener('event')
@@ -720,33 +909,3 @@ describe "RuleManager", ->
       ruleManager.removeRule 'test5'
       cassert not ruleManager.rules['test5']?
       cassert removeListenerCalled
-
-  # ###Tests for `executeAction()`
-  describe '#executeAction()', ->
-
-    it 'should execute action 1', (finish) ->
-
-      executeActionCallCount = 0
-      actionHandler.executeAction = (actionString, simulate) =>
-        cassert actionString is "action 1"
-        cassert simulate
-        executeActionCallCount++
-        return Q.fcall -> "execute action"
-
-      ruleManager.executeAction('action 1', true).then( ->
-        cassert executeActionCallCount is 1
-        finish()
-      ).catch(finish).done()
-
-    it 'should execute action 1 and action 2', (finish) ->
-
-      executedWith = []
-      actionHandler.executeAction = (actionString, simulate) =>
-        executedWith.push actionString
-        cassert simulate
-        return Q.fcall -> "execute action"
-
-      ruleManager.executeAction('action 1 and action 2', true).then( ->
-        assert.deepEqual executedWith, ["action 1", "action 2"]
-        finish()
-      ).catch(finish).done()

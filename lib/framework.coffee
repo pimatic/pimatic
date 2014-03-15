@@ -326,18 +326,24 @@ module.exports = (env) ->
             env.logger.debug err.stack
 
       initActionHandler = =>
-        @ruleManager.addActionHandler new env.actions.SwitchActionHandler(this)
-        @ruleManager.addActionHandler new env.actions.DimmerActionHandler(this)
-        @ruleManager.addActionHandler new env.actions.LogActionHandler(this)
+        defaultActionProvider = [
+          env.actions.SwitchActionProvider
+          env.actions.DimmerActionProvider
+          env.actions.LogActionProvider
+        ]
+        for actProv in defaultActionProvider
+          actProvInst = new actProv(this)
+          @ruleManager.addActionProvider(actProvInst)
 
       initPredicateProvider = =>
-        presencePredProvider = new env.predicates.PresencePredicateProvider(this)
-        switchPredProvider = new env.predicates.SwitchPredicateProvider(this)
-        deviceAttributePredProvider = new env.predicates.DeviceAttributePredicateProvider(this)
-        @ruleManager.addPredicateProvider presencePredProvider
-        @ruleManager.addPredicateProvider switchPredProvider
-        @ruleManager.addPredicateProvider deviceAttributePredProvider
-          
+        defaultPredicateProvider = [
+          env.predicates.PresencePredicateProvider
+          env.predicates.SwitchPredicateProvider
+          env.predicates.DeviceAttributePredicateProvider
+        ]
+        for predProv in defaultPredicateProvider
+          predProvInst = new predProv(this)
+          @ruleManager.addPredicateProvider(predProvInst)
 
       initRules = =>
 

@@ -15,7 +15,7 @@ describe "SwitchActionHandler", ->
   frameworkDummy =
     devices: {}
 
-  switchActionHandler = new env.actions.SwitchActionHandler frameworkDummy
+  switchActionProvider = new env.actions.SwitchActionProvider frameworkDummy
 
   class DummySwitch extends env.devices.SwitchActuator
     id: 'dummy-switch-id'
@@ -24,7 +24,7 @@ describe "SwitchActionHandler", ->
   dummySwitch = new DummySwitch()
   frameworkDummy.devices['dummy-switch-id'] = dummySwitch
 
-  describe "#executeAction()", ->
+  describe "#parseAction()", ->
     turnOnCalled = false
     turnOffCalled = false
 
@@ -50,8 +50,13 @@ describe "SwitchActionHandler", ->
       do (rulePrefix) ->
 
         ruleWithOn = rulePrefix + ' on'
-        it "should execute: #{ruleWithOn}", (finish) ->
-          switchActionHandler.executeAction(ruleWithOn, false).then( (message) ->
+        it "should parse: #{ruleWithOn}", (finish) ->
+          result = switchActionProvider.parseAction(ruleWithOn)
+          assert result?
+          assert result.token is ruleWithOn
+          assert result.nextInput is ""
+          assert result.actionHandler?
+          result.actionHandler.executeAction(false).then( (message) ->
             assert turnOnCalled
             assert message is "turned dummy switch on"
             finish()
@@ -59,26 +64,36 @@ describe "SwitchActionHandler", ->
 
         ruleWithOff = rulePrefix + ' off'
         it "should execute: #{ruleWithOff}", (finish) ->
-          switchActionHandler.executeAction(ruleWithOff, false).then( (message) ->
+          result = switchActionProvider.parseAction(ruleWithOff)
+          assert result?
+          assert result.token is ruleWithOff
+          assert result.nextInput is ""
+          assert result.actionHandler?
+          result.actionHandler.executeAction(false).then( (message) ->
             assert turnOffCalled
             assert message is "turned dummy switch off"
             finish()
           ).done()
 
     it "should execute: turn on the dummy switch", (finish) ->
-      switchActionHandler.executeAction("turn on the dummy switch", false).then( (message) ->
+      result = switchActionProvider.parseAction("turn on the dummy switch")
+      assert result?
+      assert result.token is "turn on the dummy switch"
+      assert result.nextInput is ""
+      assert result.actionHandler?
+      result.actionHandler.executeAction(false).then( (message) ->
         assert turnOnCalled
         assert message is "turned dummy switch on"
         finish()
       ).done()
 
     it 'should not execute: invalid-id on', ->
-      result = switchActionHandler.executeAction("invalid-id on", false)
+      result = switchActionProvider.parseAction("invalid-id on")
       assert not result?
       assert not turnOnCalled
 
     it 'should not execute: another dummy switch on', ->
-      result = switchActionHandler.executeAction("another dummy switch on", false)
+      result = switchActionProvider.parseAction("another dummy switch on", false)
       assert not result?
       assert not turnOnCalled
 
@@ -90,7 +105,7 @@ describe "DimmerActionHandler", ->
   frameworkDummy =
     devices: {}
 
-  switchActionHandler = new env.actions.DimmerActionHandler frameworkDummy
+  dimmerActionProvider = new env.actions.DimmerActionProvider frameworkDummy
 
   class DimmerDevice extends env.devices.DimmerActuator
     id: 'dummy-dimmer-id'
@@ -117,7 +132,9 @@ describe "DimmerActionHandler", ->
       do (rulePrefix) ->
         action = "#{rulePrefix} 10%"
         it "should execute: #{action}", (finish) ->
-          switchActionHandler.executeAction(action, false).then( (message) ->
+          result = dimmerActionProvider.parseAction(action)
+          assert result.actionHandler?
+          result.actionHandler.executeAction(false).then( (message) ->
             assert dimlevel is 10
             assert message is "dimmed dummy dimmer to 10%"
             finish()
