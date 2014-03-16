@@ -388,16 +388,20 @@ module.exports = (env) ->
         afterToken: null
         after: null
 
-      timeParseResult = @parseTimePart(nextInput, "after ", context)
-
-      if timeParseResult?
-        nextInput = timeParseResult.nextInput
-        if nextInput.length > 0 and nextInput[0] is ' '
-          nextInput = nextInput.substring(1)
-        action.afterToken = timeParseResult.timeToken
-        action.after = timeParseResult.time
-      else
+      parseAfter = (type) =>
+        prefixToken =  (if type is "prefix" then "after " else " after ")
+        timeParseResult = @parseTimePart(nextInput, prefixToken, context)
+        if timeParseResult?
+          nextInput = timeParseResult.nextInput
+          if type is 'prefix'
+            if nextInput.length > 0 and nextInput[0] is ' '
+              nextInput = nextInput.substring(1)
+          action.afterToken = timeParseResult.timeToken
+          action.after = timeParseResult.time
         
+      # Try to macth after as prefix: after 10 seconds log "42" 
+      parseAfter('prefix')
+
       token = null
 
       # find a prdicate provider for that can parse and decide the predicate:
@@ -424,9 +428,12 @@ module.exports = (env) ->
           assert S(nextInput.toLowerCase()).startsWith(parseResult.token.toLowerCase())
           action.token = token
           nextInput = parseResult.nextInput
-          actionHandler = parseResult.actionHandler
+          action.handler = parseResult.actionHandler
 
-          action.handler = actionHandler
+          # try to match after as suffix: log "42" after 10 seconds
+          unless action.afterToken?
+            parseAfter('suffix')
+          
         else
           context.addError(
             """Next action of "#{nextInput}" is ambiguous."""

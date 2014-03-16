@@ -241,7 +241,44 @@ describe "RuleManager", ->
         }
       }
       {
+        input: "action 1 after 1 minute"
+        result: { 
+          actions: [ 
+            { 
+              id: 'act-test1-0', 
+              token: 'action 1', 
+              handler: {} # should be the dummyHandler
+              afterToken: '1 minute'
+              after: 1*60*1000
+            } 
+          ],
+          tokens: [ 'action', '(', 0, ')' ] 
+        }
+      }
+      {
         input: "after 2 minutes action 1 and after 1 hour action 1"
+        result: { 
+          actions: [ 
+            { 
+              id: 'act-test1-0', 
+              token: 'action 1', 
+              handler: {} # should be the dummyHandler
+              afterToken: "2 minutes"
+              after: 2*60*1000
+            }
+            { 
+              id: 'act-test1-1', 
+              token: 'action 1', 
+              handler: {} # should be the dummyHandler
+              afterToken: "1 hour"
+              after: 60*60*1000
+            } 
+          ],
+          tokens: [ 'action', '(', 0, ')', 'and', 'action', '(', 1, ')' ] 
+        }
+      }
+      {
+        input: "action 1 after 2 minutes and action 1 after 1 hour"
         result: { 
           actions: [ 
             { 
