@@ -52,6 +52,13 @@ module.exports = (env) ->
     executeAction: (simulate) =>
       throw new Error("should be implemented by a subclass")  
 
+    hasRestoreAction: => no
+
+    executeRestoreAction: (simulate) =>
+      throw new Error(
+        "executeRestoreAction must be implemented when hasRestoreAction returns true"
+      )  
+
   ###
   The Log Action Provider
   -------------
@@ -175,19 +182,27 @@ module.exports = (env) ->
 
     constructor: (@device, @state) ->
 
-    # ### executeAction()
     ###
     Handles the above actions.
     ###
-    executeAction: (simulate) =>
+    _doExectuteAction: (simulate, state) =>
       return (
         if simulate
-          if @state then Q __("would turn %s on", @device.name)
+          if state then Q __("would turn %s on", @device.name)
           else Q __("would turn %s off", @device.name)
         else
-          if @state then @device.turnOn().then( => __("turned %s on", @device.name) )
+          if state then @device.turnOn().then( => __("turned %s on", @device.name) )
           else @device.turnOff().then( => __("turned %s off", @device.name) )
       )
+
+    # ### executeAction()
+    executeAction: (simulate) => @_doExectuteAction(simulate, @state)
+    # ### hasRestoreAction()
+    hasRestoreAction: -> yes
+    # ### executeRestoreAction()
+    executeRestoreAction: (simulate) => @_doExectuteAction(simulate, (not @state))
+
+
 
 
   ###
@@ -258,18 +273,29 @@ module.exports = (env) ->
   class DimmerActionHandler extends ActionHandler
 
     constructor: (@device, @value) ->
+      assert @device?
+      assert @value?
+      @lastValue = @value
 
-    # ### executeAction()
     ###
     Handles the above actions.
     ###
-    executeAction: (simulate) =>
+    _doExecuteAction: (simulate, value) =>
       return (
         if simulate
           Q __("would dim %s to %s%%", @device.name, @value)
         else
           @device.changeDimlevelTo(@value).then( => __("dimmed %s to %s%%", @device.name, @value) )
       )
+
+    # ### executeAction()
+    executeAction: (simulate) => 
+      @lastValue = @value
+      return @_doExecuteAction(simulate, @value)
+    # ### hasRestoreAction()
+    hasRestoreAction: -> yes
+    # ### executeRestoreAction()
+    executeRestoreAction: (simulate) => @_doExecuteAction(simulate, @lastValue)
 
   # Export the classes so that they can be accessed by the framework
   return exports = {

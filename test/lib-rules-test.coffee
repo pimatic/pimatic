@@ -38,6 +38,11 @@ describe "RuleManager", ->
     executeAction: (simulate) =>
       return Q "action 1 executed"
 
+    hasRestoreAction: => yes
+
+    executeRestoreAction: (simulate) =>
+      return Q "restore action 1 executed"
+
   class DummyActionProvider
 
     parseAction: (input, context) -> 
@@ -198,6 +203,8 @@ describe "RuleManager", ->
               handler: {} # should be the dummyHandler
               afterToken: null
               after: null
+              forToken: null
+              for: null
             } 
           ],
           tokens: [ 'action', '(', 0, ')' ] 
@@ -213,6 +220,8 @@ describe "RuleManager", ->
               handler: {} # should be the dummyHandler
               afterToken: null
               after: null
+              forToken: null
+              for: null
             }
             { 
               id: 'act-test1-1', 
@@ -220,6 +229,8 @@ describe "RuleManager", ->
               handler: {} # should be the dummyHandler
               afterToken: null
               after: null
+              forToken: null
+              for: null
             } 
           ],
           tokens: [ 'action', '(', 0, ')', 'and', 'action', '(', 1, ')' ] 
@@ -235,6 +246,8 @@ describe "RuleManager", ->
               handler: {} # should be the dummyHandler
               afterToken: '1 minute'
               after: 1*60*1000
+              forToken: null
+              for: null
             } 
           ],
           tokens: [ 'action', '(', 0, ')' ] 
@@ -250,6 +263,8 @@ describe "RuleManager", ->
               handler: {} # should be the dummyHandler
               afterToken: '1 minute'
               after: 1*60*1000
+              forToken: null
+              for: null
             } 
           ],
           tokens: [ 'action', '(', 0, ')' ] 
@@ -265,6 +280,8 @@ describe "RuleManager", ->
               handler: {} # should be the dummyHandler
               afterToken: "2 minutes"
               after: 2*60*1000
+              forToken: null
+              for: null
             }
             { 
               id: 'act-test1-1', 
@@ -272,6 +289,8 @@ describe "RuleManager", ->
               handler: {} # should be the dummyHandler
               afterToken: "1 hour"
               after: 60*60*1000
+              forToken: null
+              for: null
             } 
           ],
           tokens: [ 'action', '(', 0, ')', 'and', 'action', '(', 1, ')' ] 
@@ -287,6 +306,8 @@ describe "RuleManager", ->
               handler: {} # should be the dummyHandler
               afterToken: "2 minutes"
               after: 2*60*1000
+              forToken: null
+              for: null
             }
             { 
               id: 'act-test1-1', 
@@ -294,9 +315,28 @@ describe "RuleManager", ->
               handler: {} # should be the dummyHandler
               afterToken: "1 hour"
               after: 60*60*1000
+              forToken: null
+              for: null
             } 
           ],
           tokens: [ 'action', '(', 0, ')', 'and', 'action', '(', 1, ')' ] 
+        }
+      }
+      {
+        input: "action 1 for 1 minute"
+        result: { 
+          actions: [ 
+            { 
+              id: 'act-test1-0', 
+              token: 'action 1', 
+              handler: {} # should be the dummyHandler
+              afterToken: null 
+              after: null
+              forToken: '1 minute'
+              for: 1*60*1000
+            } 
+          ],
+          tokens: [ 'action', '(', 0, ')' ] 
         }
       }
     ]
@@ -309,6 +349,8 @@ describe "RuleManager", ->
           for action in result.actions
             assert action.handler instanceof env.actions.ActionHandler
             action.handler = {}
+
+          assert(not context.hasErrors())
           assert.deepEqual result, tc.result
 
   describe '#parseRuleString()', ->

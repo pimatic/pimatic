@@ -387,6 +387,8 @@ module.exports = (env) ->
         handler: null
         afterToken: null
         after: null
+        forToken: null
+        for: null
 
       parseAfter = (type) =>
         prefixToken =  (if type is "prefix" then "after " else " after ")
@@ -433,6 +435,18 @@ module.exports = (env) ->
           # try to match after as suffix: log "42" after 10 seconds
           unless action.afterToken?
             parseAfter('suffix')
+
+          # try to parse "for 10 seconds"
+          timeParseResult = @parseTimePart(nextInput, " for ", context)
+          if timeParseResult?
+            nextInput = timeParseResult.nextInput
+            action.forToken = timeParseResult.timeToken
+            action.for = timeParseResult.time
+
+          if action.forToken? and action.handler.hasRestoreAction() is no
+            context.addError(
+              """Action "#{action.token}" can't have an "for"-Suffix."""
+            )
           
         else
           context.addError(
@@ -760,13 +774,28 @@ module.exports = (env) ->
       rule.lastExecuteTime = currentTime
 
       actionResults = @executeRuleActions(rule, false)
-      for actionResult in actionResults
-        actionResult = actionResult.then( (message) =>
+
+      logMessageForResult = (actionResult) =>
+        return actionResult.then( (result) =>
+          [message, next] = (
+            if typeof result is "string" then [result, null]
+            else 
+              assert Array.isArray result
+              assert result.length is 2
+              result
+          )
           env.logger.info "rule #{rule.id}: #{message}"
-          return message
+          if next?
+            assert Q.isPromise(next)
+            next = logMessageForResult(next)
+          return [message, next]
         ).catch( (error) =>
-          env.logger.error "rule #{rule.id} error executing an action: #{error}"
+          env.logger.error "rule #{rule.id} error executing an action: #{error.message}"
+          env.logger.error error.stack
         )
+
+      for actionResult in actionResults
+        actionResult = logMessageForResult(actionResult)
       return Q.all(actionResults)
 
     # ###executeAction()
@@ -788,28 +817,46 @@ module.exports = (env) ->
                   "reschedule action #{action.token} in #{action.afterToken}"
                 ) 
               # schedule new action
-              promise = @scheduleAction(action)
+              promise = @scheduleAction(action, action.after)
             else
               promise = @executeAction(action, simulate).then( (message) => 
                 "#{message} after #{action.afterToken}"
               )
           else
             promise = @executeAction(action)
+          assert Q.isPromise(promise)
           actionResults.push promise
       return actionResults
 
     executeAction: (action, simulate) =>
       # wrap into an fcall to convert throwen erros to a rejected promise
-      return Q.fcall( => action.handler.executeAction(simulate) )
+      return Q.fcall( => 
+        promise = action.handler.executeAction(simulate) 
+        if action.for?
+          promise = promise.then( (message) =>
+            restoreActionPromise = @scheduleAction(action, action.for, yes)
+            return [message, restoreActionPromise]
+          )
+        return promise
+      )
 
-    scheduleAction: (action) =>
+    executeRestoreAction: (action, simulate) =>
+      # wrap into an fcall to convert throwen erros to a rejected promise
+      return Q.fcall( => action.handler.executeRestoreAction(simulate) )
+
+    scheduleAction: (action, ms, isRestore = no) =>
+      assert action?
+      assert(not action.scheduled?)
+
       deferred = Q.defer()
       timeoutHandle = setTimeout((=> 
-        promise = @executeAction(action, false)
+        promise = (
+          unless isRestore then @executeAction(action, no)
+          else @executeRestoreAction(action, no)
+        )
         deferred.resolve(promise)
         delete action.scheduled
-      ), action.after)
-
+      ), ms)
       action.scheduled = {
         startDate: new Date()
         cancel: (reason) =>
