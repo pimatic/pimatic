@@ -285,7 +285,7 @@ module.exports = (env) ->
           nextInput = parseResult.nextInput
           predicate.handler = parseResult.predicateHandler
 
-          timeParseResult = @parseTimePart(nextInput, "for", context)
+          timeParseResult = @parseTimePart(nextInput, " for ", context)
 
           if timeParseResult?
             token += timeParseResult.token
@@ -305,7 +305,7 @@ module.exports = (env) ->
 
       return { predicate, token, nextInput }
 
-    parseTimePart: (nextInput, tokenBefore, context) ->
+    parseTimePart: (nextInput, prefixToken, context) ->
       # Parse the for-Suffix:
       timeUnits = [
         "ms", 
@@ -321,7 +321,7 @@ module.exports = (env) ->
       onMatchUnit = (m, u) => unit = u
 
       m = M(nextInput, context)
-        .match(" #{tokenBefore} ")
+        .match(prefixToken)
         .matchNumber(onTimeMatch)
         .match(
           _(timeUnits).map((u) => [" #{u}", u]).flatten().valueOf()
@@ -331,7 +331,7 @@ module.exports = (env) ->
       unless m.hadNoMatches()
         token = m.getLongestFullMatch()
         assert S(nextInput).startsWith(token)
-        timeToken = S(token).chompLeft(" #{tokenBefore} ").s
+        timeToken = S(token).chompLeft(prefixToken).s
         time = milliseconds.parse "#{time} #{unit}"
         nextInput = nextInput.substring(token.length)
         return {token, nextInput, timeToken, time}
@@ -379,10 +379,26 @@ module.exports = (env) ->
       assert typeof nextInput is "string"
       assert context?
 
+      token = null
+
       action =
         id: actionId
         token: null
         handler: null
+        afterToken: null
+        after: null
+
+      timeParseResult = @parseTimePart(nextInput, "after ", context)
+
+      if timeParseResult?
+        nextInput = timeParseResult.nextInput
+        if nextInput.length > 0 and nextInput[0] is ' '
+          nextInput = nextInput.substring(1)
+        action.afterToken = timeParseResult.timeToken
+        action.after = timeParseResult.time
+      else
+        
+      token = null
 
       # find a prdicate provider for that can parse and decide the predicate:
       parseResults = []
@@ -395,8 +411,6 @@ module.exports = (env) ->
           assert parseResult.actionHandler instanceof env.actions.ActionHandler
           parseResults.push parseResult
 
-      token = null
-
       switch parseResults.length
         when 0
           context.addError(
@@ -407,7 +421,7 @@ module.exports = (env) ->
           parseResult = parseResults[0]
           token = parseResult.token
           assert token?
-          assert S(nextInput.toLowerCase()).startsWith(token.toLowerCase())
+          assert S(nextInput.toLowerCase()).startsWith(parseResult.token.toLowerCase())
           action.token = token
           nextInput = parseResult.nextInput
           actionHandler = parseResult.actionHandler
@@ -456,7 +470,7 @@ module.exports = (env) ->
         # and check if the rule is now true.
         @doesRuleCondtionHold(rule, knownPredicates).then( (isTrue) =>
           # if the rule is now true, then execute its action
-          if isTrue then @executeActionAndLogResult(rule).done()
+          if isTrue then @executeRuleActionsAndLogResult(rule).done()
           return
         ).done()
         return
@@ -474,6 +488,16 @@ module.exports = (env) ->
             p.handler.removeListener 'change', p.changeListener
             delete p.changeListener
             p.handler.destroy()
+
+    _cancelScheduledActions: (rule) ->
+      assert rule?
+      # Then cancel the notifier for all predicates
+      if rule.valid
+        for action in rule.actions
+          if action.scheduled?
+            action.scheduled.cancel(
+              "canceling schedule of action #{action.token}"
+            )
 
     # ###addRuleByString()
     addRuleByString: (id, ruleString, active=yes, force=false) ->
@@ -505,7 +529,7 @@ module.exports = (env) ->
           @doesRuleCondtionHold(rule).then( (isTrue) =>
             # If the confition is true then execute the action.
             if isTrue 
-              @executeActionAndLogResult(rule).done()
+              @executeRuleActionsAndLogResult(rule).done()
             return
           ).done()
         return context
@@ -535,7 +559,8 @@ module.exports = (env) ->
       # First get the rule from the rule array.
       rule = @rules[id]
       # Then get cancel all notifies
-      @_removePredicateChangeListener rule
+      @_removePredicateChangeListener(rule)
+      @_cancelScheduledActions(rule)
       # and delete the rule from the array
       delete @rules[id]
       # and emit the event.
@@ -562,7 +587,8 @@ module.exports = (env) ->
         # If the rule was successfully parsed then get the old rule
         oldRule = @rules[id]
         # and cancel the notifier for the old predicates.
-        @_removePredicateChangeListener oldRule
+        @_removePredicateChangeListener(oldRule)
+        @_cancelScheduledActions(oldRule)
         # and register the new ones:
         @_addPredicateChangeListener rule
         # Then add the rule to the rules array
@@ -573,7 +599,7 @@ module.exports = (env) ->
         if active
           @doesRuleCondtionHold(rule).then( (isTrue) =>
             # If the condition is true then exectue the action.
-            return if isTrue then @executeActionAndLogResult(rule).done()
+            return if isTrue then @executeRuleActionsAndLogResult(rule).done()
           ).done()
         return
       )
@@ -714,10 +740,10 @@ module.exports = (env) ->
         return deferred.promise
       )
 
-    # ###executeActionAndLogResult()
+    # ###executeRuleActionsAndLogResult()
     # Executes the actions of the string using `executeAction` and logs the result to 
     # the env.logger.    
-    executeActionAndLogResult: (rule) ->
+    executeRuleActionsAndLogResult: (rule) ->
       currentTime = (new Date).getTime()
       if rule.lastExecuteTime?
         delta = currentTime - rule.lastExecuteTime
@@ -726,35 +752,65 @@ module.exports = (env) ->
           return Q()
       rule.lastExecuteTime = currentTime
 
-      return @executeAction(rule, false).then( (messages) =>
-        assert Array.isArray messages
-        # concat the messages: `["a", "b"] => "a and b"`
-        message = _.reduce(messages, (ms, m) => if m? then "#{ms} and #{m}" else ms)
-        env.logger.info "rule #{rule.id}: #{message}"
-      ).catch( (error)=>
-        env.logger.error "rule #{rule.id} error: #{error}"
-      )
+      actionResults = @executeRuleActions(rule, false)
+      for actionResult in actionResults
+        actionResult = actionResult.then( (message) =>
+          env.logger.info "rule #{rule.id}: #{message}"
+          return message
+        ).catch( (error) =>
+          env.logger.error "rule #{rule.id} error executing an action: #{error}"
+        )
+      return Q.all(actionResults)
 
     # ###executeAction()
     # Executes the actions in the given actionString
-    executeAction: (rule, simulate) ->
+    executeRuleActions: (rule, simulate) ->
       assert rule?
       assert rule.actions?
       assert simulate? and typeof simulate is "boolean"
 
       actionResults = []
       for action in rule.actions
-        try 
-          promise = action.handler.executeAction(simulate)
-          # If the action was handled
-          assert Q.isPromise(promise)
-          # push it to the results and continue with the next token.
+        do (action) =>
+          promise = null
+          if action.after?
+            unless simulate 
+              # cancel scheule for pending executes
+              if action.scheduled?
+                action.scheduled.cancel(
+                  "reschedule action #{action.token} in #{action.afterToken}"
+                ) 
+              # schedule new action
+              promise = @scheduleAction(action)
+            else
+              promise = @executeAction(action, simulate).then( (message) => 
+                "#{message} after #{action.afterToken}"
+              )
+          else
+            promise = @executeAction(action)
           actionResults.push promise
-        catch e 
-          errorMsg = "Error executing a action handler: #{e.message}"
-          env.logger.error errorMsg
-          env.logger.debug e.stack
-      return Q.all(actionResults)
+      return actionResults
+
+    executeAction: (action, simulate) =>
+      # wrap into an fcall to convert throwen erros to a rejected promise
+      return Q.fcall( => action.handler.executeAction(simulate) )
+
+    scheduleAction: (action) =>
+      deferred = Q.defer()
+      timeoutHandle = setTimeout((=> 
+        promise = @executeAction(action, false)
+        deferred.resolve(promise)
+        delete action.scheduled
+      ), action.after)
+
+      action.scheduled = {
+        startDate: new Date()
+        cancel: (reason) =>
+          deferred.resolve(reason)
+          clearTimeout(timeoutHandle)
+          delete action.scheduled
+      }
+      return deferred.promise
 
     createParseContext: ->
       return context = {
