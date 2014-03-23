@@ -112,7 +112,10 @@ class Matcher
   ###
   Matches any Number.
   ###
-  matchNumber: (callback) -> @match /^([0-9]+\.?[0-9]*)(.*?)$/, callback
+  matchNumber: (callback) -> @match /^(-?[0-9]+\.?[0-9]*)(.*?)$/, callback
+
+  matchVariable: (callback) -> @match /^(\$[a-zA-z0-9_\-\.]+)(.*?)$/, callback
+
 
   matchString: (callback) -> 
     ret = M([], @context)
@@ -122,6 +125,35 @@ class Matcher
       )
     )
     return ret
+
+
+  matchNumericExpression: (callback) ->
+    tokens = []
+    last = null
+
+    @matchNumber( (m, match) => 
+      tokens.push(match)
+      last = m
+    )
+    unless last?
+      @matchVariable( (m, match) => 
+        tokens.push(match)
+        last = m
+      )
+
+    if last?
+      last.match([' + ',' - ',' * ', ' / '], (m, op) => 
+        m.matchNumericExpression( (m, nextTokens) => 
+          tokens.push(op.trim())
+          tokens = tokens.concat(nextTokens)
+          last = m
+        )
+      )
+
+    if last?
+      callback(last, tokens)
+      return last
+    else return M([])
 
   # ###matchDevice()
   ###
