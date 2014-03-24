@@ -9,6 +9,7 @@ Q = require 'q'
 _ = require 'lodash'
 S = require 'string'
 M = require './matcher'
+bet = require 'bet'
 
 module.exports = (env) ->
 
@@ -59,5 +60,30 @@ module.exports = (env) ->
       else
         return null
 
+    isAVariable: (token) -> token.length > 0 and token[0] is '$'
+
+    extractVariables: (tokens) ->
+      return (vars = t for t in tokens when isAVariable(t))
+
+    evaluateNumericExpression: (tokens) ->
+      Q.fcall( =>
+        tokens = _.clone(tokens)
+        awaiting = []
+        for t, i in tokens
+          do (i, t) =>
+            unless isNaN(t)
+              tokens[i] = parseFloat(t)
+            else if @isAVariable(t)
+              varName = t.substring(1)
+              # Replace variable by its value
+              unless @isVariableDefined(varName)
+                throw new Error("#{t} is not defined")
+              awaiting.push @getVariableValue(varName).then( (value) ->
+                if isNaN(value)
+                  throw new Error("Expected #{t} to have a numeric value (was: #{value}).")
+                tokens[i] = value
+              )
+        return Q.all(awaiting).then( => bet.evaluateSync(tokens) )
+      )
 
   return exports = { VariableManager }
