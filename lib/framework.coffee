@@ -30,6 +30,7 @@ module.exports = (env) ->
       @loadConfig()
       @maindir = path.resolve __dirname, '..'
 
+      @variableManager = new env.variables.VariableManager(this, @config.variables)
       @ruleManager = new env.rules.RuleManager(@config.rules)
       @pluginManager = new env.plugins.PluginManager(this)
 
@@ -340,6 +341,7 @@ module.exports = (env) ->
           env.predicates.PresencePredicateProvider
           env.predicates.SwitchPredicateProvider
           env.predicates.DeviceAttributePredicateProvider
+          env.predicates.VariablePredicateProvider
         ]
         for predProv in defaultPredicateProvider
           predProvInst = new predProv(this)

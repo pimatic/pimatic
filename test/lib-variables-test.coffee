@@ -6,7 +6,7 @@ env = require('../startup').env
 describe "VariableManager", ->
   VariableManager = require('../lib/variables')(env).VariableManager
   frameworkDummy = new events.EventEmitter()
-  varManager = new VariableManager(frameworkDummy)
+  varManager = new VariableManager(frameworkDummy, [])
 
   describe '#setVariable()', (finish) ->
     it "should set the variable", ->

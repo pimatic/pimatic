@@ -7,11 +7,12 @@ path = require 'path'
 # Setup the environment
 env = { logger: require './lib/logger' }
 env.devices = require('./lib/devices') env
+env.matcher = require './lib/matcher'
+env.variables = require('./lib/variables') env
 env.actions = require('./lib/actions') env
 env.predicates = require('./lib/predicates') env
 env.rules = require('./lib/rules') env
 env.plugins = require('./lib/plugins') env
-env.matcher = require './lib/matcher'
 env.require = (args...) -> module.require args...
 
 

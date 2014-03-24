@@ -82,3 +82,7 @@ module.exports =
     doc: "Array of rules"
     format: Array
     default: []
+  variables:
+    doc: "Array of variables"
+    format: Array
+    default: []

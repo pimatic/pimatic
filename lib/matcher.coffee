@@ -11,6 +11,39 @@ _ = require 'lodash'
 
 
 class Matcher
+
+  # Some static helper
+  comparators = {
+    '==': ['equals', 'is equal to', 'is equal', 'is']
+    '!=': [ 'is not', 'isnt' ]
+    '<': ['less', 'lower', 'below']
+    '>': ['greater', 'higher', 'above']
+    '>=': ['greater or equal', 'higher or equal', 'above or equal',
+           'equal or greater', 'equal or higher', 'equal or above']
+    '<=': ['less or equal', 'lower or equal', 'below or equal',
+           'equal or less', 'equal or lower', 'equal or below']
+  }
+
+  for sign in ['<', '>', '<=', '>=']
+    comparators[sign] = _(comparators[sign]).map( 
+      (c) => [c, "is #{c}", "is #{c} than", "is #{c} as", "#{c} than", "#{c} as"]
+    ).flatten().value()
+
+  for sign of comparators
+    comparators[sign].push(sign)
+  comparators['=='].push('=')
+
+  normalizeComparator = (comparator) ->
+    found = false
+    for sign, c of comparators
+      if comparator in c
+        comparator = sign
+        found = true
+        break
+    assert found
+    return comparator
+
+
   # ###constructor()
   # Create a matcher for the input string, with the given parse context
   constructor: (@inputs, @context = null, @prevInputs = null) ->
@@ -116,7 +149,6 @@ class Matcher
 
   matchVariable: (callback) -> @match /^(\$[a-zA-z0-9_\-\.]+)(.*?)$/, callback
 
-
   matchString: (callback) -> 
     ret = M([], @context)
     @match('"').match(/^([^"]+)(.*?)$/, (m, str) =>
@@ -125,7 +157,6 @@ class Matcher
       )
     )
     return ret
-
 
   matchNumericExpression: (callback) ->
     tokens = []
@@ -154,6 +185,25 @@ class Matcher
       callback(last, tokens)
       return last
     else return M([])
+
+  matchComparator: (type, callback) ->
+    assert type in ['number', 'string', 'boolean']
+    assert typeof callback is "function"
+
+    possibleComparators = (
+      switch type
+        when 'number' then _(comparators).values().flatten()
+        when 'string', 'boolean' then _(comparators['=='].concat comparators['!='])
+    ).map((c)=>" #{c} ").value()
+
+    autocompleteFilter = (v) => 
+      v.trim() in ['is', 'is not', 'equals', 'is greater than', 'is less than', 
+        'is greater or equal than', 'is less or equal than']
+    return @match(possibleComparators, acFilter: autocompleteFilter, ( (m, token) => 
+      comparator = normalizeComparator(token.trim())
+      return callback(m, comparator)
+    ))
+
 
   # ###matchDevice()
   ###
@@ -255,6 +305,9 @@ class Matcher
     return @
 
 M = (args...) -> new Matcher(args...)
+
+
+
 
 module.exports = M
 module.exports.Matcher = Matcher

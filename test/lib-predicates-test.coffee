@@ -1,5 +1,7 @@
 cassert = require "cassert"
 assert = require "assert"
+events = require "events"
+Q = require 'q'
 
 # Setup the environment
 env = require('../startup').env
@@ -322,3 +324,133 @@ describe "DeviceAttributePredicateProvider", ->
           cassert state is false
           finish()
         sensorDummy.emit 'testvalue', 19
+
+
+describe "VariablePredicateProvider", ->
+
+  frameworkDummy = new events.EventEmitter()
+  frameworkDummy.variableManager = new env.variables.VariableManager(frameworkDummy, [
+    {
+      name: 'a'
+      value: '1'
+    },
+    {
+      name: 'b'
+      value: '2'
+    },
+    {
+      name: 'c',
+      value: '3'
+    }
+  ])
+
+  provider = null
+  sensorDummy = null
+
+  before ->
+    provider = new env.predicates.VariablePredicateProvider(frameworkDummy)
+
+    class DummySensor extends env.devices.Sensor
+  
+      attributes:
+        testvalue:
+          description: "a testvalue"
+          type: Number
+          unit: '°C'
+
+      constructor: () ->
+        @id = 'test'
+        @name = 'test sensor'
+        super()
+
+      getTestvalue: -> Q(42)
+
+    sensorDummy = new DummySensor()
+    frameworkDummy.emit 'device', sensorDummy
+
+  describe '#parsePredicate()', ->
+
+    testCases = [
+      {
+        input: "1 + 2 < 4"
+        result:
+          value: true
+      }
+      {
+        input: "1 + 3 <= 4"
+        result:
+          value: true
+      }
+      {
+        input: "1 + 3 > 4"
+        result:
+          value: false
+      }
+      {
+        input: "$a + 2 == 3"
+        result:
+          value: true
+      }
+      {
+        input: "$a + 2 == 1 + $b"
+        result:
+          value: true
+      }
+      {
+        input: "$a == $b - 1"
+        result:
+          value: true
+      }
+      {
+        input: "$test.testvalue == 42"
+        result:
+          value: true
+      }
+      {
+        input: "$test.testvalue == 21"
+        result:
+          value: false
+      }
+    ]
+
+    for tc in testCases
+      do (tc) =>
+        it "should parse \"#{tc.input}\"", (finish) =>
+          result = provider.parsePredicate(tc.input)
+          assert result?
+          result.predicateHandler.getValue().then( (val) =>
+            assert.equal val, tc.result.value
+            finish()
+          ).catch(finish)
+
+
+  describe "VariablePredicateHandler", ->
+
+    describe '#on "change"', ->  
+      predicateHandler = null
+      after -> predicateHandler.destroy()
+
+      it "should notify when $a is greater than 20", (finish) ->
+        result = provider.parsePredicate "$a > 20"
+        assert result?
+        predicateHandler = result.predicateHandler
+        predicateHandler.setup()
+        predicateHandler.once 'change', (state) ->
+          cassert state is true
+          finish()
+        frameworkDummy.variableManager.setVariable('a', '21')
+
+    describe '#on "change"', ->  
+      predicateHandler = null
+      after -> predicateHandler.destroy()
+
+      it "should notify when $test.testvalue is greater than 42", (finish) ->
+        result = provider.parsePredicate "$test.testvalue > 42"
+        assert result?
+        predicateHandler = result.predicateHandler
+        predicateHandler.setup()
+        predicateHandler.once 'change', (state) ->
+          cassert state is true
+          finish()
+        sensorDummy.getTestvalue = => Q(50)
+        sensorDummy.emit 'testvalue', 50

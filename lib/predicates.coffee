@@ -196,23 +196,6 @@ module.exports = (env) ->
 
     constructor: (@framework) ->
 
-      @comparators =
-      '==': ['equals', 'is equal to', 'is equal', 'is']
-      '!=': [ 'is not' ]
-      '<': ['less', 'lower', 'below']
-      '>': ['greater', 'higher', 'above']
-      '>=': ['greater or equal', 'higher or equal', 'above or equal',
-            'equal or greater', 'equal or higher', 'equal or above']
-      '<=': ['less or equal', 'lower or equal', 'below or equal',
-            'equal or less', 'equal or lower', 'equal or below']
-
-      for sign in ['<', '>', '<=', '>=']
-        @comparators[sign] = _(@comparators[sign]).map( 
-          (c) => [c, "is #{c}", "is #{c} than", "is #{c} as", "#{c} than", "#{c} as"]
-        ).flatten().value()
-
-
-
     # ### _parsePredicate()
     ###
     Parses the string and setups the info object as explained in the DeviceEventPredicateProvider.
@@ -243,18 +226,14 @@ module.exports = (env) ->
           unless device.hasAttribute(attr) then return
           attribute = device.attributes[attr]
 
-          setComparator =  (m, c) => info.comparator = c.trim()
+          setComparator =  (m, c) => info.comparator = c
           setRefValue = (m, v) => info.referenceValue = v
           end =  => matchCount++
 
           if attribute.type is Boolean
-            m = m.match(' is ', setComparator).match(attribute.labels, setRefValue)
+            m = m.matchComparator('boolean', setComparator).match(attribute.labels, setRefValue)
           else if attribute.type is Number
-            possibleComparators = _(@comparators).values().flatten().map((c)=>" #{c} ").value()
-            autocompleteFilter = (v) => 
-              v.trim() in ['is', 'is not', 'equals', 'is greater than', 'is less than', 
-                'is greater or equal than', 'is less or equal than']
-            m = m.match(possibleComparators, acFilter: autocompleteFilter, setComparator)
+            m = m.matchComparator('number', setComparator)
               .matchNumber( (m,v) => setRefValue(m, parseFloat(v)) )
             if attribute.unit? and attribute.unit.length > 0 
               possibleUnits = _.uniq([
@@ -270,9 +249,9 @@ module.exports = (env) ->
               autocompleteFilter = (v) => v is " #{attribute.unit}"
               m = m.match(possibleUnits, {optional: yes, acFilter: autocompleteFilter})
           else if attribute.type is String
-            m = m.match([' equals to ', ' is ', ' is not '], setComparator).matchString(setRefValue)
+            m = m.matchComparator('string', setComparator).matchString(setRefValue)
           else if Array.isArray attribute.type
-            m = m.match([' equals to ', ' is ', ' is not '], setComparator)
+            m = m.matchComparator('string', setComparator)
               .match(attribute.type, setRefValue) 
           if m.getMatchCount() > 0 
             matches = matches.concat m.getFullMatches()
@@ -293,13 +272,6 @@ module.exports = (env) ->
         match = _(matches).sortBy( (s) => s.length ).last()
         assert typeof match is "string" 
 
-        found = false
-        for sign, c of @comparators
-          if result.comparator in c
-            result.comparator = sign
-            found = true
-            break
-        assert found
         return {
           token: match
           nextInput: input.substring(match.length)
@@ -349,10 +321,116 @@ module.exports = (env) ->
         when '>=' then value >= referenceValue
         else throw new Error "Unknown comparator: #{comparator}"
 
+
+  ###
+  The Variable Predicate Provider
+  ----------------
+  Handles comparision of variables
+
+  * _device_ is present
+  * _device_ is not present
+  * _device_ is absent
+  ####
+  class VariablePredicateProvider extends PredicateProvider
+
+    constructor: (@framework) ->
+
+    parsePredicate: (input, context) ->
+      result = null
+      M(input, context)
+        .matchNumericExpression( (next, leftTokens) =>
+          next.matchComparator('number', (next, comparator) =>
+            next.matchNumericExpression( (next, rightTokens) =>
+              result = {
+                leftTokens
+                rightTokens
+                comparator
+                match: next.getLongestFullMatch()
+              }
+            )
+          )
+        )
+      
+      if result?
+        assert Array.isArray result.leftTokens
+        assert Array.isArray result.rightTokens
+        assert result.comparator in ['==', '!=', '<', '>', '<=', '>=']
+        assert typeof result.match is "string"
+
+        variables = @framework.variableManager.extractVariables(
+          result.leftTokens.concat result.rightTokens
+        )
+        for v in variables?
+          unless @framework.variableManager.isVariableDefined(v)
+            context.addError("Variable $#{v} is not defined.")
+            return null
+
+        return {
+          token: result.match
+          nextInput: input.substring(result.match.length)
+          predicateHandler: new VariablePredicateHandler(
+            @framework, result.leftTokens, result.rightTokens, result.comparator
+          )
+        }
+      else
+        return null
+
+  class VariablePredicateHandler extends PredicateHandler
+
+    constructor: (@framework, @leftTokens, @rightTokens, @comparator) ->
+
+    setup: ->
+      @lastState = null
+      @variables = @framework.variableManager.extractVariables(
+        @leftTokens.concat @rightTokens
+      )
+      @changeListener = (value) =>
+        @_evaluate().then( (state) =>
+          if state isnt @lastState
+            @lastState = state
+            @emit 'change', state
+        ).done()
+      for v in @variables
+        @framework.variableManager.on("change #{v}", @changeListener)
+      super()
+    getValue: -> 
+      if @lastState? then return Q(@lastState)
+      else return @_evaluate()
+
+    destroy: -> 
+      for v in @variables
+        @framework.variableManager.removeListener('change #{v}', @changeListener)
+      super()
+    getType: -> 'state'
+
+    _evaluate: ->
+      leftPromise = @framework.variableManager.evaluateNumericExpression(@leftTokens)
+      rightPromise = @framework.variableManager.evaluateNumericExpression(@rightTokens)
+      return Q.all([leftPromise, rightPromise]).then( ([leftValue, rightValue]) =>
+        return state = @_compareValues(leftValue, rightValue)
+      )
+
+
+    # ### _compareValues()
+    ###
+    Does the comparison.
+    ###
+    _compareValues: (left, right) ->
+      return switch @comparator
+        when '==' then left is right
+        when '!=' then left isnt right
+        when '<' then left < right
+        when '>' then left > right
+        when '<=' then left <= right
+        when '>=' then left >= right
+        else throw new Error "Unknown comparator: #{@comparator}"
+
+
   return exports = {
     PredicateProvider
     PredicateHandler
     PresencePredicateProvider
     SwitchPredicateProvider
     DeviceAttributePredicateProvider
+    VariablePredicateProvider
   }

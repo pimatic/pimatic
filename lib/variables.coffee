@@ -21,7 +21,15 @@ module.exports = (env) ->
 
     variables: {}
 
-    constructor: (@framework) ->
+    constructor: (@framework, variables) ->
+      # Import variables
+      for variable in variables
+        assert variable.name? and variable.name.length > 0
+        assert variable.value? and variable.name.length > 0
+        variable.name = variable.name.substring(1) if variable.name[0] is '$'
+        @setVariable(variable.name, variable.value)
+
+      # For each new device add a variable for every attribute
       @framework.on 'device', (device) =>
         for attrName, attr of device.attributes
           do (attrName, attr) =>
@@ -30,6 +38,9 @@ module.exports = (env) ->
               readonly: yes
               getValue: => device.getAttributeValue(attrName)
             }
+            device.on(attrName, (value) =>
+              @emit "change #{varName}", value
+            )
 
     setVariable: (name, value) ->
       assert name? and typeof name is "string"
@@ -46,7 +57,7 @@ module.exports = (env) ->
           getValue: => Q(value) 
         }
       @emit 'change', name, value
-      @emit 'change #{name}', value
+      @emit "change #{name}", value
       return
 
     isVariableDefined: (name) ->
@@ -63,10 +74,10 @@ module.exports = (env) ->
     isAVariable: (token) -> token.length > 0 and token[0] is '$'
 
     extractVariables: (tokens) ->
-      return (vars = t for t in tokens when isAVariable(t))
+      return (vars = t.substring(1) for t in tokens when @isAVariable(t))
 
     evaluateNumericExpression: (tokens) ->
-      Q.fcall( =>
+      return Q.fcall( =>
         tokens = _.clone(tokens)
         awaiting = []
         for t, i in tokens
@@ -81,7 +92,7 @@ module.exports = (env) ->
               awaiting.push @getVariableValue(varName).then( (value) ->
                 if isNaN(value)
                   throw new Error("Expected #{t} to have a numeric value (was: #{value}).")
-                tokens[i] = value
+                tokens[i] = parseFloat(value)
               )
         return Q.all(awaiting).then( => bet.evaluateSync(tokens) )
       )
