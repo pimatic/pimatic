@@ -326,11 +326,25 @@ module.exports = (env) ->
               err.message
             env.logger.debug err.stack
 
-      initActionHandler = =>
+      initVariables = =>
+        @variableManager.on("change", (name, value) =>
+          for variable in @config.variables
+            if variable.name is name
+              variable.value = value
+              break
+          @emit "config"
+        )
+        @variableManager.on("add", (name, value) =>
+          @config.variables.push({name, value})
+          @emit "config"
+        )
+
+      initActionProvider = =>
         defaultActionProvider = [
           env.actions.SwitchActionProvider
           env.actions.DimmerActionProvider
           env.actions.LogActionProvider
+          env.actions.SetVariableActionProvider
         ]
         for actProv in defaultActionProvider
           actProvInst = new actProv(this)
@@ -397,7 +411,8 @@ module.exports = (env) ->
       return @loadPlugins()
         .then(initPlugins)
         .then( => @loadDevices())
-        .then(initActionHandler)
+        .then(initVariables)
+        .then(initActionProvider)
         .then(initPredicateProvider)
         .then(initRules)
         .then( =>         

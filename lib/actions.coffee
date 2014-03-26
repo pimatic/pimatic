@@ -105,6 +105,69 @@ module.exports = (env) ->
         return Q(@stringToLog)
 
   ###
+  The SetVariable ActionProvider
+  -------------
+  Provides log action, so that rules can use `log "some string"` in the actions part. It just prints
+  the given string to the logger.
+  ###
+  class SetVariableActionProvider extends ActionProvider
+
+    constructor: (@framework) ->
+
+    parseAction: (input, context) ->
+      result = null
+
+      M(input, context)
+        .match("set ", optional: yes)
+        .matchVariable( (next, variableName) =>
+          next.match([" to ", " := ", " = "], (next) =>
+            next.matchNumericExpression( (next, rightTokens) => 
+              match = next.getLongestFullMatch()
+              variableName = variableName.substring(1)
+              result = { variableName, rightTokens, match }
+            )
+          )
+        )
+
+      if result?
+        variables = @framework.variableManager.extractVariables(result.rightTokens)
+        unless @framework.variableManager.isVariableDefined(result.variableName)
+          context.addError("Variable $#{result.variableName} is not defined.")
+          return null
+        for v in variables?
+          unless @framework.variableManager.isVariableDefined(v)
+            context.addError("Variable $#{v} is not defined.")
+            return null
+        return {
+          token: result.match
+          nextInput: input.substring(result.match.length)
+          actionHandler: new SetVariableActionHandler(
+            @framework, result.variableName, result.rightTokens
+          )
+        }
+      else
+        return null
+
+  class SetVariableActionHandler extends ActionHandler 
+
+    constructor: (@framework, @variableName, @rightTokens) ->
+
+    executeAction: (simulate, context) ->
+      if simulate
+        # just return a promise fulfilled with a description about what we would do.
+        return Q __("would set $%s to value of %s", @variableName, _(@rightTokens).reduce(
+            (left, right) => "#{left} #{right}"
+          )
+        )
+      else
+        return @framework.variableManager.evaluateNumericExpression(@rightTokens).then( (value) => 
+          @framework.variableManager.setVariable(@variableName, value)
+          return Q("set $#{@variableName} to #{value}")
+        )
+
+
+
+  ###
   The Switch Action Provider
   -------------
   Provides the ability to switch devices on or off. Currently it handles the following actions:
@@ -301,6 +364,7 @@ module.exports = (env) ->
   return exports = {
     ActionHandler
     ActionProvider
+    SetVariableActionProvider
     SwitchActionProvider
     DimmerActionProvider
     LogActionProvider

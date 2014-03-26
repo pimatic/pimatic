@@ -791,7 +791,7 @@ module.exports = (env) ->
           return [message, next]
         ).catch( (error) =>
           env.logger.error "rule #{rule.id} error executing an action: #{error.message}"
-          env.logger.error error.stack
+          env.logger.debug error.stack
         )
 
       for actionResult in actionResults
@@ -846,7 +846,8 @@ module.exports = (env) ->
 
     scheduleAction: (action, ms, isRestore = no) =>
       assert action?
-      assert(not action.scheduled?)
+      if action.scheduled?
+        action.scheduled.cancel("clearing scheduled action")
 
       deferred = Q.defer()
       timeoutHandle = setTimeout((=> 
@@ -860,9 +861,9 @@ module.exports = (env) ->
       action.scheduled = {
         startDate: new Date()
         cancel: (reason) =>
-          deferred.resolve(reason)
           clearTimeout(timeoutHandle)
           delete action.scheduled
+          deferred.resolve(reason)
       }
       return deferred.promise
 

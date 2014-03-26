@@ -39,6 +39,7 @@ module.exports = (env) ->
               getValue: => device.getAttributeValue(attrName)
             }
             device.on(attrName, (value) =>
+              @emit 'change', varName, value
               @emit "change #{varName}", value
             )
 
@@ -56,6 +57,7 @@ module.exports = (env) ->
           readonly: no
           getValue: => Q(value) 
         }
+        @emit 'add', name, value
       @emit 'change', name, value
       @emit "change #{name}", value
       return
@@ -70,6 +72,9 @@ module.exports = (env) ->
         return @variables[name].getValue()
       else
         return null
+
+    getAllVariables: () ->
+      return ({name, readonly: v.readonly} for name, v of @variables)
 
     isAVariable: (token) -> token.length > 0 and token[0] is '$'
 
