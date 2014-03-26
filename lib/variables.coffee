@@ -73,6 +73,12 @@ module.exports = (env) ->
       else
         return null
 
+    removeVariable: (name) ->
+      assert name? and typeof name is "string"
+      if @variables[name]?
+        delete @variables[name]
+        @emit "remove", name
+
     getAllVariables: () ->
       return ({name, readonly: v.readonly} for name, v of @variables)
 

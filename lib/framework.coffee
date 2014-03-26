@@ -338,6 +338,13 @@ module.exports = (env) ->
           @config.variables.push({name, value})
           @emit "config"
         )
+        @variableManager.on("remove", (name) =>
+          for variable, i in @config.variables
+            if variable.name is name
+              @config.variables.splice(i, 1)
+              break
+          @emit "config"
+        )
 
       initActionProvider = =>
         defaultActionProvider = [
