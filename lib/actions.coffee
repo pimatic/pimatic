@@ -155,9 +155,8 @@ module.exports = (env) ->
     executeAction: (simulate, context) ->
       if simulate
         # just return a promise fulfilled with a description about what we would do.
-        return Q __("would set $%s to value of %s", @variableName, _(@rightTokens).reduce(
-            (left, right) => "#{left} #{right}"
-          )
+        return Q __("would set $%s to value of %s", @variableName, 
+          _(@rightTokens).reduce( (left, right) => "#{left} #{right}" )
         )
       else
         return @framework.variableManager.evaluateNumericExpression(@rightTokens).then( (value) => 
