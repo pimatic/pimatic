@@ -12,8 +12,9 @@ _ = require 'lodash'
 
 module.exports = (env) ->
 
-  ##A Device
   ###
+  Device
+  -----
   The Device class is the common superclass for all devices like actuators or sensors. 
   ###
   class Device extends require('events').EventEmitter
@@ -70,14 +71,21 @@ module.exports = (env) ->
     # Returns a template name to use in frontends.
     getTemplateName: -> "device"
 
-
-  # An Actuator is an physical or logical element you can control by triggering an action on it.
-  # For example a power outlet, a light or door opener.
+  ###
+  Actuator
+  -----
+  An Actuator is an physical or logical element you can control by triggering an action on it.
+  For example a power outlet, a light or door opener.
+  ###
   class Actuator extends Device
 
     getTemplateName: -> "actuator"
 
-  # A class for all you can switch on and off.
+  ###
+  SwitchActuator
+  -----
+  A class for all devices you can switch on and off.
+  ###
   class SwitchActuator extends Actuator
     _state: null
 
@@ -123,7 +131,18 @@ module.exports = (env) ->
 
     getTemplateName: -> "switch"
 
+  ###
+  PowerSwitch
+  ----------
+  Just an alias for a SwitchActuator at the moment
+  ###
+  class PowerSwitch extends SwitchActuator
 
+  ###
+  DimmerActuator
+  -------------
+  Switch with additional dim functionality.
+  ###
   class DimmerActuator extends SwitchActuator
     _dimlevel: null
 
@@ -178,14 +197,45 @@ module.exports = (env) ->
 
     getTemplateName: -> "dimmer"
 
-  class PowerSwitch extends SwitchActuator
 
-  # #Sensor
+  ###
+  ShutterController
+  -----
+  A class for all devices you can switch on and off.
+  ###
+  class ShutterController extends Actuator
+    _state: null
+
+    actions: 
+      liftUp:
+        description: "lifts up the shutter"
+      lowerDown:
+        description: "lower down the shutter"
+        
+    attributes: {}
+    # Returns a promise
+    liftUp: ->
+      throw new Error "Function \"liftUp\" is not implemented!"
+
+    # Retuns a promise
+    lowerDown: -> 
+      throw new Error "Function \"lowerDown\" is not implemented!"
+
+    getTemplateName: -> "shutter"
+
+
+  ###
+  Sensor
+  ------
+  ###
   class Sensor extends Device
 
     getTemplateName: -> "device"
 
-
+  ###
+  TemperatureSensor
+  ------
+  ###
   class TemperatureSensor extends Sensor
 
     attributes:
@@ -196,6 +246,10 @@ module.exports = (env) ->
 
     getTemplateName: -> "temperature"
 
+  ###
+  PresenceSensor
+  ------
+  ###
   class PresenceSensor extends Sensor
     _presence: undefined
 
@@ -216,6 +270,28 @@ module.exports = (env) ->
 
     getTemplateName: -> "presence"
 
+  ###
+  ContactSensor
+  ------
+  ###
+  class ContactSensor extends Sensor
+    _contact: undefined
+
+    attributes:
+      contact:
+        description: "state of the contact"
+        type: Boolean
+        labels: ['closed', 'open']
+
+    _setContact: (value) ->
+      if @_contact is value then return
+      @_contact = value
+      @emit 'contact', value
+
+    getContact: -> Q(@_contact)
+
+    getTemplateName: -> "contact"
+
   upperCaseFirst = (string) -> 
     unless string.length is 0
       string[0].toUpperCase() + string.slice(1)
@@ -227,7 +303,9 @@ module.exports = (env) ->
     SwitchActuator
     PowerSwitch
     DimmerActuator
+    ShutterController
     Sensor
     TemperatureSensor
     PresenceSensor
+    ContactSensor
   }
