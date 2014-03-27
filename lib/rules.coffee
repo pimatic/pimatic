@@ -559,19 +559,18 @@ module.exports = (env) ->
         @rules[id] = rule
         @emit "add", rule
         # Check if the condition of the rule is allready true.
-        return Q(
-          if active
-            @doesRuleCondtionHold(rule).then( (isTrue) =>
-              # If the confition is true then execute the action.
-              if isTrue 
-                return @executeRuleActionsAndLogResult(rule)
-            ).catch( (error) =>
-              env.logger.error """
-                Error on evaluation of rule condition of rule #{rule.id}: #{error.message}
-              """ 
-              env.logger.debug error
-            )
-        ).then( => context )
+        if active
+          @doesRuleCondtionHold(rule).then( (isTrue) =>
+            # If the confition is true then execute the action.
+            if isTrue 
+              return @executeRuleActionsAndLogResult(rule)
+          ).catch( (error) =>
+            env.logger.error """
+              Error on evaluation of rule condition of rule #{rule.id}: #{error.message}
+            """ 
+            env.logger.debug error
+          )
+        return context
       ).catch( (error) =>
         # If there was an error pasring the rule, but the rule is forced to be added, then add
         # the rule with an error.
@@ -635,13 +634,17 @@ module.exports = (env) ->
         # and emit the event.
         @emit "update", rule
         # Then check if the condition of the rule is now true.
-        return Q(
-          if active
-            @doesRuleCondtionHold(rule).then( (isTrue) =>
-              # If the condition is true then exectue the action.
-              return if isTrue then @executeRuleActionsAndLogResult(rule)
-            )
-        )
+        if active
+          @doesRuleCondtionHold(rule).then( (isTrue) =>
+            # If the condition is true then exectue the action.
+            return if isTrue then @executeRuleActionsAndLogResult(rule)
+          ).catch( (error) =>
+            env.logger.error """
+              Error on evaluation of rule condition of rule #{rule.id}: #{error.message}
+            """ 
+            env.logger.debug error
+          )
+        return context
       )
 
     # ###evaluateConditionOfRule()
