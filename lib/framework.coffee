@@ -396,10 +396,11 @@ module.exports = (env) ->
             # ...add it to the rules Array in the config.json file
             for r in @config.rules 
               if r.id is rule.id then return
-            @config.rules.push 
+            @config.rules.push {
               id: rule.id
               rule: rule.string
               active: rule.active
+            }
             @emit "config"
           # * If a rule was changed then...
           @ruleManager.on "update", (rule) =>

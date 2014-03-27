@@ -155,6 +155,11 @@ module.exports = (env) ->
         rule.conditionToken = parts[1].trim()
         rule.actionsToken = parts[2].trim()
 
+        if rule.conditionToken.length is 0
+          throw new Error("Condition part of rule #{id} is empty.")
+        if rule.actionsToken.length is 0
+          throw new Error("Actions part of rule #{id} is empty.")
+
         result = @parseRuleCondition(id, rule.conditionToken, context)
         rule.predicates = result.predicates
         rule.tokens = result.tokens
@@ -305,7 +310,7 @@ module.exports = (env) ->
 
       return { predicate, token, nextInput }
 
-    parseTimePart: (nextInput, prefixToken, context) ->
+    parseTimePart: (nextInput, prefixToken, context, options = null) ->
       # Parse the for-Suffix:
       timeUnits = [
         "ms", 
@@ -321,7 +326,7 @@ module.exports = (env) ->
       onMatchUnit = (m, u) => unit = u
 
       m = M(nextInput, context)
-        .match(prefixToken)
+        .match(prefixToken, options)
         .matchNumber(onTimeMatch)
         .match(
           _(timeUnits).map((u) => [" #{u}", u]).flatten().valueOf()
@@ -437,13 +442,16 @@ module.exports = (env) ->
             parseAfter('suffix')
 
           # try to parse "for 10 seconds"
-          timeParseResult = @parseTimePart(nextInput, " for ", context)
+          forSuffixAlloed = action.handler.hasRestoreAction()
+          timeParseResult = @parseTimePart(nextInput, " for ", context, {
+            acFilter: () => forSuffixAlloed
+          })
           if timeParseResult?
             nextInput = timeParseResult.nextInput
             action.forToken = timeParseResult.timeToken
             action.for = timeParseResult.time
 
-          if action.forToken? and action.handler.hasRestoreAction() is no
+          if action.forToken? and forSuffixAlloed is no
             context.addError(
               """Action "#{action.token}" can't have an "for"-Suffix."""
             )
@@ -668,7 +676,7 @@ module.exports = (env) ->
           assert knownPredicates[predId]?
           if knownPredicates[predId] then 1 else 0
 
-        isTrue = (bet.evaluateSync(rule.tokens) is 1)
+        isTrue = (console.log(rule.tokens); bet.evaluateSync(rule.tokens) is 1)
         return isTrue
       )
 
