@@ -337,10 +337,13 @@ module.exports = (env) ->
 
     parsePredicate: (input, context) ->
       result = null
+
+      varsiables = _(@framework.variableManager.getAllVariables()).map( (v) => v.name ).valueOf()
+
       M(input, context)
-        .matchNumericExpression( (next, leftTokens) =>
+        .matchNumericExpression(varsiables, (next, leftTokens) =>
           next.matchComparator('number', (next, comparator) =>
-            next.matchNumericExpression( (next, rightTokens) =>
+            next.matchNumericExpression(varsiables, (next, rightTokens) =>
               result = {
                 leftTokens
                 rightTokens
@@ -385,11 +388,15 @@ module.exports = (env) ->
         @leftTokens.concat @rightTokens
       )
       @changeListener = (value) =>
-        @_evaluate().then( (state) =>
+        evalPromise = @_evaluate()
+        evalPromise.then( (state) =>
           if state isnt @lastState
             @lastState = state
             @emit 'change', state
-        ).done()
+        ).catch( (error) =>
+          env.logger.error "Error in VariablePredicateHandler:", error.message
+          env.logger.debug error
+        )
       for v in @variables
         @framework.variableManager.on("change #{v}", @changeListener)
       super()

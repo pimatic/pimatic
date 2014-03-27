@@ -147,7 +147,21 @@ class Matcher
   ###
   matchNumber: (callback) -> @match /^(-?[0-9]+\.?[0-9]*)(.*?)$/, callback
 
-  matchVariable: (callback) -> @match /^(\$[a-zA-z0-9_\-\.]+)(.*?)$/, callback
+  matchVariable: (variables, callback) -> 
+    if typeof variables is "function"
+      callback = variables
+      variables = null
+
+    assert typeof callback is "function"
+
+    # If a variable array is given match one of them
+    if variables?
+      assert Array.isArray variables
+      varsWithDollar = _(variables).map((v) => "$#{v}").valueOf()
+      return @match(varsWithDollar, callback)
+    else
+      # match with generic expression
+      return @match /^(\$[a-zA-z0-9_\-\.]+)(.*?)$/, callback
 
   matchString: (callback) -> 
     ret = M([], @context)
@@ -158,7 +172,14 @@ class Matcher
     )
     return ret
 
-  matchNumericExpression: (callback) ->
+  matchNumericExpression: (variables, callback) ->
+    if typeof variables is "function"
+      callback = variables
+      variables = null
+
+    assert typeof callback is "function"
+    assert Array.isArray variables if variables?
+
     tokens = []
     last = null
 
@@ -167,14 +188,16 @@ class Matcher
       last = m
     )
     unless last?
-      @matchVariable( (m, match) => 
+      @matchVariable(variables, (m, match) => 
         tokens.push(match)
         last = m
       )
 
     if last?
-      last.match([' + ',' - ',' * ', ' / '], (m, op) => 
-        m.matchNumericExpression( (m, nextTokens) => 
+      binarOps = ['+','-','*', '/']
+      binarOpsFull = _(binarOps).map((op)=>[op, " #{op} ", " #{op}", "#{op} "]).flatten().valueOf()
+      last.match(binarOpsFull, {acFilter: (op) => op in binarOps}, (m, op) => 
+        m.matchNumericExpression(variables, (m, nextTokens) => 
           tokens.push(op.trim())
           tokens = tokens.concat(nextTokens)
           last = m
@@ -198,7 +221,8 @@ class Matcher
 
     autocompleteFilter = (v) => 
       v.trim() in ['is', 'is not', 'equals', 'is greater than', 'is less than', 
-        'is greater or equal than', 'is less or equal than']
+        'is greater or equal than', 'is less or equal than', '<', '=', '>', '<=', '>=' 
+      ]
     return @match(possibleComparators, acFilter: autocompleteFilter, ( (m, token) => 
       comparator = normalizeComparator(token.trim())
       return callback(m, comparator)

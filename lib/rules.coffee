@@ -499,9 +499,14 @@ module.exports = (env) ->
         # and check if the rule is now true.
         @doesRuleCondtionHold(rule, knownPredicates).then( (isTrue) =>
           # if the rule is now true, then execute its action
-          if isTrue then @executeRuleActionsAndLogResult(rule).done()
-          return
-        ).done()
+          if isTrue 
+            return @executeRuleActionsAndLogResult(rule)
+        ).catch( (error) => 
+          env.logger.error """
+            Error on evaluation of rule condition of rule #{rule.id}: #{error.message}
+          """ 
+          env.logger.debug error
+        )
         return
             
     # ###_cancelPredicateproviderNotify()
@@ -554,14 +559,19 @@ module.exports = (env) ->
         @rules[id] = rule
         @emit "add", rule
         # Check if the condition of the rule is allready true.
-        if active
-          @doesRuleCondtionHold(rule).then( (isTrue) =>
-            # If the confition is true then execute the action.
-            if isTrue 
-              @executeRuleActionsAndLogResult(rule).done()
-            return
-          ).done()
-        return context
+        return Q(
+          if active
+            @doesRuleCondtionHold(rule).then( (isTrue) =>
+              # If the confition is true then execute the action.
+              if isTrue 
+                return @executeRuleActionsAndLogResult(rule)
+            ).catch( (error) =>
+              env.logger.error """
+                Error on evaluation of rule condition of rule #{rule.id}: #{error.message}
+              """ 
+              env.logger.debug error
+            )
+        ).then( => context )
       ).catch( (error) =>
         # If there was an error pasring the rule, but the rule is forced to be added, then add
         # the rule with an error.
@@ -625,12 +635,13 @@ module.exports = (env) ->
         # and emit the event.
         @emit "update", rule
         # Then check if the condition of the rule is now true.
-        if active
-          @doesRuleCondtionHold(rule).then( (isTrue) =>
-            # If the condition is true then exectue the action.
-            return if isTrue then @executeRuleActionsAndLogResult(rule).done()
-          ).done()
-        return
+        return Q(
+          if active
+            @doesRuleCondtionHold(rule).then( (isTrue) =>
+              # If the condition is true then exectue the action.
+              return if isTrue then @executeRuleActionsAndLogResult(rule)
+            )
+        )
       )
 
     # ###evaluateConditionOfRule()
@@ -676,7 +687,7 @@ module.exports = (env) ->
           assert knownPredicates[predId]?
           if knownPredicates[predId] then 1 else 0
 
-        isTrue = (console.log(rule.tokens); bet.evaluateSync(rule.tokens) is 1)
+        isTrue = (bet.evaluateSync(rule.tokens) is 1)
         return isTrue
       )
 
@@ -704,8 +715,8 @@ module.exports = (env) ->
         awaiting = {}
 
         # Whenever an awaiting predicate gets resolved then we will revalidate the rule condition.
-        revalidateCondition = () =>
-          @evaluateConditionOfRule(rule, knownPredicates).then( (isTrueNew) =>
+        reevaluateCondition = () =>
+          return @evaluateConditionOfRule(rule, knownPredicates).then( (isTrueNew) =>
             # If it is true
             if isTrueNew 
               # then resolve the return value as true
@@ -720,7 +731,13 @@ module.exports = (env) ->
             if (id for id of awaiting).length is 0
               # then we can resolve the return value as false
               deferred.resolve false 
-          ).done()
+          ).catch( (error) => 
+            env.logger.error """
+              Error on evaluation of rule condition of rule #{rule.id}: #{error.message}
+            """ 
+            env.logger.debug error
+            deferred.reject error.message
+          )
 
         # Fill the awaiting list:
         # Check for each predicate,
@@ -741,7 +758,7 @@ module.exports = (env) ->
                 knownPredicates[pred.id] = true
                 # the predicate remains true and no value is awaited anymore.
                 awaiting[pred.id].cancel()
-                revalidateCondition()
+                reevaluateCondition()
               , pred.for
 
               # Let us be notified when it becomes false.
@@ -753,7 +770,7 @@ module.exports = (env) ->
                   knownPredicates[pred.id] = false
                   # and clear the timeout.
                   awaiting[pred.id].cancel()
-                  revalidateCondition()
+                  reevaluateCondition()
 
               awaiting[pred.id].cancel = =>
                 delete awaiting[pred.id]
@@ -766,7 +783,12 @@ module.exports = (env) ->
           # then resolve the return value to true.
           deferred.resolve true 
         # At then end return the deferred promise. 
-        return deferred.promise
+        return deferred.promise.catch( (error) =>
+          # Cancel all awatting changeHandler
+          for id, a of awaiting
+            a.cancel()
+          throw error
+        )
       )
 
     # ###executeRuleActionsAndLogResult()
