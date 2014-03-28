@@ -51,6 +51,14 @@ require "date-format-lite"
 
 milliseconds = require './milliseconds'
 
+(requireNoCache = ->
+  # Require bet without caching it, because we change some operations, that 
+  # should be local to this file
+  betPath = require.resolve 'bet'
+  global.bet = require betPath
+  delete require.cache[betPath]
+)()
+
 module.exports = (env) ->
 
   ###
@@ -207,14 +215,11 @@ module.exports = (env) ->
       openedParentheseCount = 0
 
       while (not context.hasErrors()) and nextInput.length isnt 0
-        openedParentheseMatch = yes
-        while openedParentheseMatch
-          m = M(nextInput, context).match('(', => 
-            tokens.push '('
-            openedParentheseCount++
-            nextInput = nextInput.substring(1)
-          )
-          openedParentheseMatch = not m.hadNoMatches()
+        M(nextInput, context).matchOpenParenthese('[', (next, ptokens) =>
+          tokens = tokens.concat ptokens
+          openedParentheseCount += ptokens.length
+          nextInput = next.inputs[0]
+        )
 
         i = predicates.length
         predId = "prd-#{id}-#{i}"
@@ -224,14 +229,11 @@ module.exports = (env) ->
           predicates.push(predicate)
           tokens = tokens.concat ["predicate", "(", i, ")"]
 
-          closeParentheseMatch = yes
-          while closeParentheseMatch and openedParentheseCount > 0
-            m = M(nextInput, context).match(')', => 
-              tokens.push ')'
-              closeParentheseMatch--
-              nextInput = nextInput.substring(1)
-            )
-            closeParentheseMatch = not m.hadNoMatches()
+          M(nextInput, context).matchCloseParenthese(']', openedParentheseCount, (next, ptokens) =>
+            tokens = tokens.concat ptokens
+            openedParentheseCount -= ptokens.length
+            nextInput = next.inputs[0]
+          )
 
           # Try to match " and ", " or ", ...
           possibleTokens = [' and ', ' or ']
@@ -670,7 +672,6 @@ module.exports = (env) ->
             )
 
       return Q.all(awaiting).then( (predicateValues) =>
-        bet = require 'bet'
         bet.operators['and'] =
           assoc: 'left'
           prec: 0
@@ -684,13 +685,21 @@ module.exports = (env) ->
           fix: 'in'
           exec: (args) => if args[0] isnt 0 or args[1] isnt 0 then 1 else 0
         bet.functions['predicate'] =
-        argc: 1
-        exec: (args) => 
-          predId = predNumToId[args[0]]
-          assert knownPredicates[predId]?
-          if knownPredicates[predId] then 1 else 0
+          argc: 1
+          exec: (args) => 
+            predId = predNumToId[args[0]]
+            assert knownPredicates[predId]?
+            if knownPredicates[predId] then 1 else 0
 
-        isTrue = (bet.evaluateSync(rule.tokens) is 1)
+        # bet uses '(', ')' as parentheses, so replace ']' and '[' in the tokens
+        tokens = _(rule.tokens).map( (token) =>
+          switch token
+            when '[' then '('
+            when ']' then ')'
+            else token
+        ).valueOf()
+
+        isTrue = (bet.evaluateSync(tokens) is 1)
         return isTrue
       )
 

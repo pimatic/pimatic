@@ -78,3 +78,80 @@ describe "Matcher", ->
         assert.deepEqual(tokens, ['1','+','$abc', '*', '3'])
         finish()
       )
+
+    it "should match 1+2", (finish) ->
+      M("1+2").matchNumericExpression( (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['1','+','2'])
+        finish()
+      )
+
+    it "should match 1+2*3", (finish) ->
+      M("1+2*3").matchNumericExpression( (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['1','+','2', '*', '3'])
+        finish()
+      )
+
+    it "should match $abc with given var list", (finish) ->
+      M("$abc").matchNumericExpression(['abc'], (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['$abc'])
+        finish()
+      )
+
+    it "should match $abc+2*3", (finish) ->
+      M("$abc+2*3").matchNumericExpression( (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['$abc','+','2', '*', '3'])
+        finish()
+      )
+
+    it "should match 1+$abc*3", (finish) ->
+      M("1+$abc*3").matchNumericExpression( (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['1','+','$abc', '*', '3'])
+        finish()
+      )
+
+    it "should match (1+2*3)", (finish) ->
+      M("(1+2*3)").matchNumericExpression( (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['(', '1','+','2', '*', '3', ')'])
+        finish()
+      )
+
+    it "should match ( 1 + 2 * 3 )", (finish) ->
+      M("( 1 + 2 * 3 )").matchNumericExpression( (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['(', '1','+','2', '*', '3', ')'])
+        finish()
+      )
+
+    it "should match (1 + 2) * 3", (finish) ->
+      M("(1 + 2) * 3").matchNumericExpression( (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['(', '1','+','2', ')', '*', '3'])
+        finish()
+      )
+
+    it "should match (1+2)*3", (finish) ->
+      M("(1+2)*3").matchNumericExpression( (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['(', '1','+','2', ')', '*', '3'])
+        finish()
+      )
+
+    it "should match 1+(2*3)", (finish) ->
+      M("1+(2*3)").matchNumericExpression( (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['1','+','(', '2', '*', '3', ')'])
+        finish()
+      )
+
+    it "should match (1)", (finish) ->
+      M("(1)").matchNumericExpression( (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['(', '1', ')'])
+        finish()
+      )

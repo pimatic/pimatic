@@ -172,37 +172,73 @@ class Matcher
     )
     return ret
 
-  matchNumericExpression: (variables, callback) ->
+
+  matchOpenParenthese: (token, callback) ->
+    tokens = []
+    openedParentheseMatch = yes
+    next = this
+    while openedParentheseMatch
+      m = next.match(token, (m) => 
+        tokens.push token
+        next = m.match(' ', optional: yes)
+      )
+      if m.hadNoMatches() then openedParentheseMatch = no
+    if tokens.length > 0
+      callback(next, tokens)
+    return next
+
+  matchCloseParenthese: (token, openedParentheseCount, callback) ->
+    assert typeof openedParentheseCount is "number"
+    tokens = []
+    closeParentheseMatch = yes
+    next = this
+    while closeParentheseMatch and openedParentheseCount > 0
+      m = next.match(' ', optional: yes).match(token, (m) => 
+        tokens.push token
+        openedParentheseCount--
+        next = m
+      )
+      if m.hadNoMatches() then closeParentheseMatch = no
+    if tokens.length > 0
+      callback(next, tokens)
+    return next
+
+  matchNumericExpression: (variables, openParanteses = 0, callback) ->
     if typeof variables is "function"
       callback = variables
       variables = null
 
+    if typeof openParanteses is "function"
+      callback = openParanteses
+      openParanteses = 0
+
     assert typeof callback is "function"
+    assert typeof openParanteses is "number"
     assert Array.isArray variables if variables?
 
-    tokens = []
-    last = null
+    binarOps = ['+','-','*', '/']
+    binarOpsFull = _(binarOps).map((op)=>[op, " #{op} ", " #{op}", "#{op} "]).flatten().valueOf()
 
-    @matchNumber( (m, match) => 
-      tokens.push(match)
+    last = null
+    tokens = []
+
+    @matchOpenParenthese('(', (m, ptokens) =>
+      tokens = tokens.concat ptokens
+      openParanteses += ptokens.length
+    ).or([
+      ( (m) => m.matchNumber( (m, match) => tokens.push(match); last = m ) ),
+      ( (m) => m.matchVariable(variables, (m, match) => tokens.push(match); last = m ) )
+    ]).matchCloseParenthese(')', openParanteses, (m, ptokens) =>
+      tokens = tokens.concat ptokens
+      openParanteses -= ptokens.length
       last = m
-    )
-    unless last?
-      @matchVariable(variables, (m, match) => 
-        tokens.push(match)
+    ).match(binarOpsFull, {acFilter: (op) => op in binarOps}, (m, op) => 
+      m.matchNumericExpression(variables, openParanteses, (m, nextTokens) => 
+        tokens.push(op.trim())
+        tokens = tokens.concat(nextTokens)
         last = m
       )
-
-    if last?
-      binarOps = ['+','-','*', '/']
-      binarOpsFull = _(binarOps).map((op)=>[op, " #{op} ", " #{op}", "#{op} "]).flatten().valueOf()
-      last.match(binarOpsFull, {acFilter: (op) => op in binarOps}, (m, op) => 
-        m.matchNumericExpression(variables, (m, nextTokens) => 
-          tokens.push(op.trim())
-          tokens = tokens.concat(nextTokens)
-          last = m
-        )
-      )
+    )
 
     if last?
       callback(last, tokens)

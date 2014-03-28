@@ -135,6 +135,50 @@ describe "RuleManager", ->
         }
       }
       {
+        input: "[predicate 1 and predicate 1]"
+        result: { 
+          predicates: [ 
+            { 
+              id: 'prd-test1-0',
+              token: 'predicate 1',
+              handler: {},
+              forToken: null
+              for: null 
+            }
+            { 
+              id: 'prd-test1-1',
+              token: 'predicate 1',
+              handler: {},
+              forToken: null
+              for: null 
+            }
+          ]
+          tokens: [ '[', 'predicate', '(', 0, ')', 'and', 'predicate', '(', 1, ')', ']' ] 
+        }
+      }
+      {
+        input: "predicate 1 and [predicate 1]"
+        result: { 
+          predicates: [ 
+            { 
+              id: 'prd-test1-0',
+              token: 'predicate 1',
+              handler: {},
+              forToken: null
+              for: null 
+            }
+            { 
+              id: 'prd-test1-1',
+              token: 'predicate 1',
+              handler: {},
+              forToken: null
+              for: null 
+            }
+          ]
+          tokens: [ 'predicate', '(', 0, ')', 'and', '[', 'predicate', '(', 1, ')', ']' ] 
+        }
+      }
+      {
         input: "predicate 1 or predicate 1"
         result: { 
           predicates: [ 
@@ -176,6 +220,36 @@ describe "RuleManager", ->
             }
           ]
           tokens: [ 'predicate', '(', 0, ')', 'or', 'predicate', '(', 1, ')' ] 
+        }
+      }
+      {
+        input: "predicate 1 and [predicate 1 or predicate 1]"
+        result: { 
+          predicates: [ 
+            { 
+              id: 'prd-test1-0',
+              token: 'predicate 1',
+              handler: {},
+              forToken: null
+              for: null 
+            }
+            { 
+              id: 'prd-test1-1',
+              token: 'predicate 1',
+              handler: {},
+              forToken: null
+              for: null 
+            }
+            { 
+              id: 'prd-test1-2',
+              token: 'predicate 1',
+              handler: {},
+              forToken: null
+              for: null 
+            }
+          ]
+          tokens: [ 'predicate', '(', 0, ')', 'and', '[', 'predicate', '(', 1, ')', 
+            'or', 'predicate', '(', 2, ')', ']' ] 
         }
       }
     ]
