@@ -13,15 +13,15 @@ __Examples:__
 
   * if its 10pm then turn the tv off
   * if its friday and its 8am then turn the light on
-  * if (music is playing or the light is on) and somebody is present then turn the speaker on
+  * if [music is playing or the light is on] and somebody is present then turn the speaker on
   * if temperatue of living room is below 15°C for 5 minutes then log "its getting cold" 
 
 __The condition and predicates__
 
 The condition of a rule consists of one or more predicates. The predicates can be combined with
-"and", "or" and can be grouped by parentheses. A predicate is either true or false at a given time. 
-There are special predicates, called event-predicates, that represent events. These predicate are 
-just true in the moment a special event happen.
+"and", "or" and can be grouped by parentheses ('[' and ']'). A predicate is either true or false at 
+a given time. There are special predicates, called event-predicates, that represent events. 
+These predicate are  just true in the moment a special event happen.
 
 Each predicate is handled by an Predicate Provider. Take a look at the 
 [predicates file](predicates.html) for more details.
