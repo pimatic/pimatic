@@ -172,7 +172,9 @@ module.exports = (env) ->
         deferred = Q.defer()
         httpsServerConfig = @config.settings.httpsServer
         @app.httpsServer.on 'error', genErrFunc(@config.settings.httpsServer)
-        @app.httpsServer.listen httpsServerConfig.port, httpsServerConfig.hostname, deferred.makeNodeResolver()
+        @app.httpsServer.listen(
+          httpsServerConfig.port, httpsServerConfig.hostname, deferred.makeNodeResolver()
+        )
         listenPromises.push deferred.promise.then( =>
           env.logger.info "listening for https-request on port #{httpsServerConfig.port}..."
         )
@@ -181,7 +183,9 @@ module.exports = (env) ->
         deferred = Q.defer()
         httpServerConfig = @config.settings.httpServer
         @app.httpServer.on 'error', genErrFunc(@config.settings.httpServer)
-        @app.httpServer.listen httpServerConfig.port, httpServerConfig.hostname, deferred.makeNodeResolver()
+        @app.httpServer.listen(
+          httpServerConfig.port, httpServerConfig.hostname, deferred.makeNodeResolver()
+        )
         listenPromises.push deferred.promise.then( =>
           env.logger.info "listening for http-request on port #{httpServerConfig.port}..."
         )
