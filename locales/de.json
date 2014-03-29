@@ -1,5 +1,4 @@
 {
-	"^(?:turn)?(?:\\s+the)?(.+?)(on|off)$": "^(?:schalte)?(?:\\s+den|\\s+die|\\s+das)?(.+?)(an|aus)$",
 	"on": "an",
 	"off": "aus",
 	"turned %s on": "%s angeschaltet",
@@ -40,5 +39,9 @@
 	"The rule must start with \"if\" and contain a \"then\" part!": "Die Regel muss mit \"if\" beginnen und ein \"then\" enthalten!",
 	"No id given": "Keine ID eingegeben",
 	"Add an item": "Einen Eintrag hinzufügen",
-	"Add a new rule": "Eine Regel hinzufügen"
+	"Add a new rule": "Eine Regel hinzufügen",
+	"Add new rule": "Eine Regel hinzufügen",
+	"unknown": "Unbekannt",
+	"connecting": "Verbindung wird hergestellt",
+	"Edit rule": "Regel bearbeiten"
 }
