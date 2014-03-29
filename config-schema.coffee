@@ -45,6 +45,10 @@ module.exports =
         doc: "The port of the http-server"
         format: "port"
         default: 80
+      hostname:
+        doc: "The hostname of the http-server"
+        format: "hostname"
+        default: ""
     httpsServer:
       enabled: 
         doc: "Should the https-server be started"
@@ -54,6 +58,10 @@ module.exports =
         doc: "The port of the https-server"
         format: "port"
         default: 443
+      hostname:
+        doc: "The hostname of the https-server"
+        format: "hostname"
+        default: ""
       # Run ./node_modules/pimatic/install/ssl-setup in you pimatic-app dir to generate
       # the necessary key and certificate files
       keyFile:
