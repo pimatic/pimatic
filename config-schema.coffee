@@ -7,7 +7,7 @@ module.exports =
   settings:
     locale:
       doc: "The default language"
-      format: ['en', 'de', "es"]
+      format: ['en', 'de', "es", "nl"]
       default: "en"
     debug:
       doc: "Turn on debug checks. Set the logLevel to debug to additional outputs"
