@@ -1,5 +1,4 @@
 #!/bin/sh
-BRANCH=$1
 pwd -P
 cd ../..
 mv pimatic node_modules
