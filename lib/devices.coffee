@@ -204,25 +204,44 @@ module.exports = (env) ->
   A class for all devices you can switch on and off.
   ###
   class ShutterController extends Actuator
-    _state: null
+    _position: null
+
+    attributes:
+      position:
+        label: "Position"
+        description: "state of the shutter"
+        type: ['up', 'down']
 
     actions: 
       liftUp:
         description: "lifts up the shutter"
       lowerDown:
         description: "lower down the shutter"
+      moveToPosition:
+        description: "changes the shutter state"
+        params:
+          state:
+            type: Boolean
         
-    attributes: {}
     # Returns a promise
-    liftUp: ->
-      throw new Error "Function \"liftUp\" is not implemented!"
-
+    liftUp: -> @moveToPosition('up')
     # Retuns a promise
-    lowerDown: -> 
-      throw new Error "Function \"lowerDown\" is not implemented!"
+    lowerDown: ->  @moveToPosition('down')
+
+    # Retuns a promise that is fulfilled when done.
+    moveToPosition: (position) ->
+      throw new Error "Function \"moveToPosition\" is not implemented!"
 
     getTemplateName: -> "shutter"
 
+    # Returns a promise that will be fulfilled with the position
+    getPosition: -> Q(@_position)
+
+    _setPosition: (position) ->
+      assert position in ['up', 'down']
+      if @position is position then return
+      @_position = position
+      @emit "position", position
 
   ###
   Sensor
