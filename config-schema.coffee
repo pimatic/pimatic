@@ -47,8 +47,8 @@ module.exports =
         default: 80
       hostname:
         doc: "The hostname of the http-server"
-        format: "hostname"
-        default: ""
+        format: String
+        default: "" # If is empty then listen to all ip4Adresses
     httpsServer:
       enabled: 
         doc: "Should the https-server be started"
@@ -60,10 +60,17 @@ module.exports =
         default: 443
       hostname:
         doc: "The hostname of the https-server"
-        format: "hostname"
-        default: ""
-      # Run ./node_modules/pimatic/install/ssl-setup in you pimatic-app dir to generate
-      # the necessary key and certificate files
+        format: String
+        default: "" # If is empty then listen to all ip4Adresses
+      ###
+      Download and run https://raw.githubusercontent.com/pimatic/pimatic/master/install/ssl-setup
+      and un ssl-setup in you pimatic-app dir to generate the necessary key and certificate files:
+      
+          wget https://raw.githubusercontent.com/pimatic/pimatic/master/install/ssl-setup
+          chmod +x ssl-setup
+          ./ssl-setup
+
+      ###
       keyFile:
         doc: "Privatekey file"
         format: String
