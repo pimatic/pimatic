@@ -70,39 +70,42 @@ module.exports = (env) ->
     constructor: (@framework) ->
 
     parseAction: (input, context) ->
-      stringToLog = null
+      stringToLogTokens = null
       fullMatch = no
 
-      setLogString = (m, str) => stringToLog = str
+      setLogString = (m, tokens) => stringToLogTokens = tokens
 
       m = M(input, context)
         .match("log ")
-        .matchString(setLogString)
+        .matchStringWithVars(setLogString)
 
       if m.hadMatches()
         match = m.getFullMatches()[0]
         return {
           token: match
           nextInput: input.substring(match.length)
-          actionHandler: new LogActionHandler(stringToLog)
+          actionHandler: new LogActionHandler(@framework, stringToLogTokens)
         }
       else
         return null
 
   class LogActionHandler extends ActionHandler 
 
-    constructor: (@stringToLog) ->
+    constructor: (@framework, @stringToLogTokens) ->
 
     executeAction: (simulate, context) ->
-      if simulate
-        # just return a promise fulfilled with a description about what we would do.
-        return Q __("would log \"%s\"", @stringToLog)
-      else
-        # else we should log the string.
-        # But we don't do this because the framework logs the description anyway. So we would 
-        # doubly log it.
-        #env.logger.info stringToLog
-        return Q(@stringToLog)
+      @framework.variableManager.evaluateStringExpression(@stringToLogTokens).then( (strToLog) =>
+        if simulate
+          # just return a promise fulfilled with a description about what we would do.
+          return __("would log \"%s\"", strToLog)
+        else
+          # else we should log the string.
+          # But we don't do this because the framework logs the description anyway. So we would 
+          # doubly log it.
+          #env.logger.info stringToLog
+          return strToLog
+      )
+
 
   ###
   The SetVariable ActionProvider
@@ -300,7 +303,7 @@ module.exports = (env) ->
       if dimmers.length is 0 then return
 
       device = null
-      value = null
+      valueTokens = null
       match = null
 
       # Try to match the input string with:
@@ -308,40 +311,49 @@ module.exports = (env) ->
         .match('dim ')
         .matchDevice(dimmers, (next, d) =>
           next.match(' to ')
-            .matchNumber( (next, v) =>
+            .matchNumericExpression( (next, ts) =>
               m = next.match('%', optional: yes)
               if device? and device.id isnt d.id
                 context?.addError(""""#{input.trim()}" is ambiguous.""")
                 return
               device = d
-              value = v
+              valueTokens = ts
               match = m.getLongestFullMatch()
             )
         )
 
       if match?
-        assert(not isNaN(value))
-        value = parseFloat(value)
-        if value < 0.0
-          context?.addError("Can't dim to a negativ dimlevel.")
-          return
-        if value > 100.0
-          context?.addError("Can't dim to greaer than 100%.")
-          return
+        if valueTokens.length is 1 and not isNaN(valueTokens[0])
+          value = valueTokens[0] 
+          assert(not isNaN(value))
+          value = parseFloat(value)
+          if value < 0.0
+            context?.addError("Can't dim to a negativ dimlevel.")
+            return
+          if value > 100.0
+            context?.addError("Can't dim to greaer than 100%.")
+            return
         return {
           token: match
           nextInput: input.substring(match.length)
-          actionHandler: new DimmerActionHandler(device, value)
+          actionHandler: new DimmerActionHandler(@framework, device, valueTokens)
         }
       else 
         return null
 
   class DimmerActionHandler extends ActionHandler
 
-    constructor: (@device, @value) ->
+    constructor: (@framework, @device, @valueTokens) ->
       assert @device?
-      assert @value?
-      @lastValue = @value
+      assert @valueTokens?
+
+    _clampVal: (value) ->
+      assert(not isNaN(value))
+      return (switch
+        when value > 100 then 100
+        when value < 0 then 0
+        else value
+      )
 
     ###
     Handles the above actions.
@@ -349,19 +361,23 @@ module.exports = (env) ->
     _doExecuteAction: (simulate, value) =>
       return (
         if simulate
-          Q __("would dim %s to %s%%", @device.name, @value)
+          __("would dim %s to %s%%", @device.name, value)
         else
-          @device.changeDimlevelTo(@value).then( => __("dimmed %s to %s%%", @device.name, @value) )
+          @device.changeDimlevelTo(value).then( => __("dimmed %s to %s%%", @device.name, value) )
       )
 
     # ### executeAction()
     executeAction: (simulate) => 
-      @lastValue = @value
-      return @_doExecuteAction(simulate, @value)
+      @framework.variableManager.evaluateNumericExpression(@valueTokens).then( (value) =>
+        value = @_clampVal value
+        @lastValue = value
+        return @_doExecuteAction(simulate, value)
+      )
+
     # ### hasRestoreAction()
     hasRestoreAction: -> yes
     # ### executeRestoreAction()
-    executeRestoreAction: (simulate) => @_doExecuteAction(simulate, @lastValue)
+    executeRestoreAction: (simulate) => Q(@_doExecuteAction(simulate, @lastValue))
 
   # Export the classes so that they can be accessed by the framework
   return exports = {

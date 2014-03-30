@@ -329,6 +329,7 @@ module.exports = (env) ->
       initVariables = =>
         @variableManager.on("change", (name, value) =>
           for variable in @config.variables
+            if variable.expression? then return # TODO update expression
             if variable.name is name
               variable.value = value
               break

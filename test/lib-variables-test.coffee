@@ -42,6 +42,20 @@ describe "VariableManager", ->
       ).catch(finish)
 
 
+  describe '#evaluateStringExpression()', ->
+    it 'should interpolate "abc"', (finish) ->
+      varManager.evaluateStringExpression(['"abc"']).then( (result) =>
+        assert result, "abc"
+        finish()
+      ).catch(finish)
+
+    it 'should interpolate "abc $a"', (finish) ->
+      varManager.evaluateStringExpression(['"abc"', '$a']).then( (result) =>
+        assert result, "abc 1"
+        finish()
+      ).catch(finish)
+
+
 
 
 

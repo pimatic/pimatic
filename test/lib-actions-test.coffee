@@ -1,6 +1,7 @@
 assert = require "cassert"
 Q = require 'q'
 i18n = require 'i18n'
+events = require 'events'
 
 i18n.configure(
   locales:['en', 'de']
@@ -102,8 +103,9 @@ describe "DimmerActionHandler", ->
   envDummy =
     logger: {}
 
-  frameworkDummy =
-    devices: {}
+  frameworkDummy = new events.EventEmitter()
+  frameworkDummy.devices = {}
+  frameworkDummy.variableManager = new env.variables.VariableManager(frameworkDummy, [])
 
   dimmerActionProvider = new env.actions.DimmerActionProvider frameworkDummy
 
@@ -120,6 +122,7 @@ describe "DimmerActionHandler", ->
     beforeEach ->
       dimlevel = null
       dummyDimmer.changeDimlevelTo = (dl) ->
+        console.log dl
         dimlevel = dl
         return Q()
 
@@ -144,7 +147,8 @@ describe "LogActionProvider", ->
 
   envDummy =
     logger: {}
-  frameworkDummy = {}
+  frameworkDummy = new events.EventEmitter()
+  frameworkDummy.variableManager = new env.variables.VariableManager(frameworkDummy, [])
 
   logActionProvider = new env.actions.LogActionProvider frameworkDummy
   actionHandler = null

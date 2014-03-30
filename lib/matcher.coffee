@@ -158,20 +158,24 @@ class Matcher
     if variables?
       assert Array.isArray variables
       varsWithDollar = _(variables).map((v) => "$#{v}").valueOf()
-      return @match(varsWithDollar, callback)
+      matches = []
+      next = @match(varsWithDollar, (m, match) => matches.push([m, match]) )
+      if matches.length > 0
+        [next, match] = _(matches).sortBy( ([m, s]) => s.length ).last()
+        callback(next, match)
+      return next
     else
       # match with generic expression
       return @match /^(\$[a-zA-z0-9_\-\.]+)(.*?)$/, callback
 
   matchString: (callback) -> 
     ret = M([], @context)
-    @match('"').match(/^([^"]+)(.*?)$/, (m, str) =>
+    @match('"').match(/^([^"]*)(.*?)$/, (m, str) =>
       ret = m.match('"', (m) => 
         callback(m, str)
       )
     )
     return ret
-
 
   matchOpenParenthese: (token, callback) ->
     tokens = []
@@ -232,7 +236,7 @@ class Matcher
       tokens = tokens.concat ptokens
       openParanteses -= ptokens.length
       last = m
-    ).match(binarOpsFull, {acFilter: (op) => op in binarOps}, (m, op) => 
+    ).match(binarOpsFull, {acFilter: (op) => op[0]=' ' and op[op.length-1]=' '}, (m, op) => 
       m.matchNumericExpression(variables, openParanteses, (m, nextTokens) => 
         tokens.push(op.trim())
         tokens = tokens.concat(nextTokens)
@@ -240,6 +244,39 @@ class Matcher
       )
     )
 
+    if last?
+      callback(last, tokens)
+      return last
+    else return M([])
+
+  matchStringWithVars: (variables, callback) ->
+    if typeof variables is "function"
+      callback = variables
+      variables = null
+
+    assert typeof callback is "function"
+    assert Array.isArray variables if variables?
+
+    last = null
+    tokens = []
+
+    next = @match('"')
+    while next.hadMatches() and (not last?)
+      next.match(/^([^"\$]*)(.*?)$/, (m, strPart) =>
+        # strPart is string till first var or ending quote
+        # Check for end:
+        tokens.push('"' + strPart + '"')
+
+        end = m.match('"')
+        if end.hadMatches()  
+          last = end
+        # else test if it is a var
+        else
+          next = m.matchVariable(variables, (m, match) => 
+            tokens.push(match)
+          )
+      )
+      
     if last?
       callback(last, tokens)
       return last

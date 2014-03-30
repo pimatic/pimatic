@@ -25,9 +25,15 @@ module.exports = (env) ->
       # Import variables
       for variable in variables
         assert variable.name? and variable.name.length > 0
-        assert variable.value? and variable.name.length > 0
+        assert(variable.value.length > 0) if variable.value?
         variable.name = variable.name.substring(1) if variable.name[0] is '$'
-        @setVariable(variable.name, variable.value)
+        if variable.expression?
+          expr = variable.expression
+          assert expr.length > 0
+          @setVariableExpr(variable.name, exp)
+        else
+          assert variable.value?
+          @setVariable(variable.name, variable.value)
 
       # For each new device add a variable for every attribute
       @framework.on 'device', (device) =>
@@ -42,6 +48,37 @@ module.exports = (env) ->
               @emit 'change', varName, value
               @emit "change #{varName}", value
             )
+
+
+    setVariableExpr: (name, tokens) ->
+      assert name? and typeof name is "string"
+      assert tokens.length > 0
+      type = (if tokens[0][0] is '"' then "string" else "numeric")
+
+      getValue = (
+        switch type
+          when "numeric" then (varsInEvaluation) => 
+            @evaluateNumericExpression(tokens, varsInEvaluation)
+          when "string" then  (varsInEvaluation) => 
+            @evaluateStringExpression(tokens, varsInEvaluation)
+      )
+
+      assert typeof getValue is "function"
+
+      isNew = (@variables[name]?)
+
+      # TODO: Add change listener on dependent variables
+      @variables[name] = {
+        expression: tokens
+        readonly: yes
+        getValue: getValue
+      }
+
+      @variables[name].getValue( (value) =>
+        @emit('add', name, value) if isNew
+        @emit 'change', name, value
+        @emit "change #{name}", value
+      )
 
     setVariable: (name, value) ->
       assert name? and typeof name is "string"
@@ -66,10 +103,18 @@ module.exports = (env) ->
       assert name? and typeof name is "string"
       return @variables[name]?
 
-    getVariableValue: (name) ->
+    getVariableValue: (name, varsInEvaluation = {}) ->
       assert name? and typeof name is "string"
       if @variables[name]?
-        return @variables[name].getValue()
+        if varsInEvaluation[name]?
+          if varsInEvaluation[name].value? then return Q(varsInEvaluation[name].value)
+          else return Q.fcall => throw new Error("Dependency cycle detected for variable #{name}")
+        else
+          varsInEvaluation[name] = {}
+          return @variables[name].getValue(varsInEvaluation).then( (value) =>
+            varsInEvaluation[name].value = value
+            return value
+          )
       else
         return null
 
@@ -87,7 +132,7 @@ module.exports = (env) ->
     extractVariables: (tokens) ->
       return (vars = t.substring(1) for t in tokens when @isAVariable(t))
 
-    evaluateNumericExpression: (tokens) ->
+    evaluateNumericExpression: (tokens, varsInEvaluation = {}) ->
       return Q.fcall( =>
         tokens = _.clone(tokens)
         awaiting = []
@@ -100,12 +145,34 @@ module.exports = (env) ->
               # Replace variable by its value
               unless @isVariableDefined(varName)
                 throw new Error("#{t} is not defined")
-              awaiting.push @getVariableValue(varName).then( (value) ->
+              awaiting.push @getVariableValue(varName, varsInEvaluation).then( (value) ->
                 if isNaN(value)
                   throw new Error("Expected #{t} to have a numeric value (was: #{value}).")
                 tokens[i] = parseFloat(value)
               )
         return Q.all(awaiting).then( => bet.evaluateSync(tokens) )
       )
+
+    evaluateStringExpression: (tokens) ->
+      return Q.fcall( =>
+        tokens = _.clone(tokens)
+        awaiting = []
+        for t, i in tokens
+          do (i, t) =>
+            if @isAVariable(t)
+              varName = t.substring(1)
+              # Replace variable by its value
+              unless @isVariableDefined(varName)
+                throw new Error("#{t} is not defined")
+              awaiting.push @getVariableValue(varName).then( (value) ->
+                tokens[i] = value
+              )
+            else 
+              assert t.length >= 2
+              assert t[0] is '"' and t[t.length-1] is '"' 
+              tokens[i] = t[1...t.length-1]
+        return Q.all(awaiting).then( => _(tokens).reduce( (l, r) => "#{l}#{r}") )
+      )
+
 
   return exports = { VariableManager }

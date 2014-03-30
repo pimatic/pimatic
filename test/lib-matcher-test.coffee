@@ -155,3 +155,56 @@ describe "Matcher", ->
         assert.deepEqual(tokens, ['(', '1', ')'])
         finish()
       )
+
+  describe '#matchStringWithVars()', ->
+
+    it "should match \"foo\"", (finish) ->
+      M('"foo"').matchStringWithVars( (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['"foo"'])
+        finish()
+      )
+
+    it "should match the empty string", (finish) ->
+      M('""').matchStringWithVars( (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['""'])
+        finish()
+      )
+
+    it "should match \"foo $bar\"", (finish) ->
+      M('"foo $bar"').matchStringWithVars( (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['"foo "', '$bar', '""'])
+        finish()
+      )
+
+    it "should match \"foo $bar test\"", (finish) ->
+      M('"foo $bar test"').matchStringWithVars( (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['"foo "', '$bar', '" test"'])
+        finish()
+      )
+
+    it "should match \"$bar foo test\"", (finish) ->
+      M('"$bar foo test"').matchStringWithVars( (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['""', '$bar', '" foo test"'])
+        finish()
+      )
+
+  describe '#matchString()', ->
+
+    it "should match \"foo\"", (finish) ->
+      M('"foo"').matchString( (m, str) =>
+        assert m?
+        assert.deepEqual(str, 'foo')
+        finish()
+      )
+
+    it "should match the empty string", (finish) ->
+      M('""').matchString( (m, str) =>
+        assert m?
+        assert.deepEqual(str, '')
+        finish()
+      )
