@@ -30,73 +30,100 @@ module.exports = (env) ->
         if variable.expression?
           expr = variable.expression
           assert expr.length > 0
-          @setVariableExpr(variable.name, exp)
+          @setVariableToExpr(variable.name, exp)
         else
           assert variable.value?
-          @setVariable(variable.name, variable.value)
+          @setVariableToValue(variable.name, variable.value)
 
       # For each new device add a variable for every attribute
       @framework.on 'device', (device) =>
         for attrName, attr of device.attributes
           do (attrName, attr) =>
             varName = "#{device.id}.#{attrName}"
-            @variables[varName] = {
-              readonly: yes
-              getValue: => device.getAttributeValue(attrName)
-            }
-            device.on(attrName, (value) =>
-              @emit 'change', varName, value
-              @emit "change #{varName}", value
+            lastValue = null
+            device.on(attrName, attrListener = (value) =>
+              lastValue = value
+              @emit('change', varName, value, 'attribute')
+              @emit("change #{varName}", value, 'attribute')
             )
+            @variables[varName] = {
+              type: 'attribute'
+              readonly: yes
+              getValue: => 
+                if lastValue? then Q(lastValue) else device.getAttributeValue(attrName)
+              destroy: => device.emitter.removeListener(attrName, attrListener)
+            }
 
-
-    setVariableExpr: (name, tokens) ->
+    setVariableToExpr: (name, tokens) ->
       assert name? and typeof name is "string"
       assert tokens.length > 0
       type = (if tokens[0][0] is '"' then "string" else "numeric")
 
+      lastValue = null
       getValue = (
         switch type
           when "numeric" then (varsInEvaluation) => 
-            @evaluateNumericExpression(tokens, varsInEvaluation)
+            if lastValue? then Q(lastValue) 
+            else @evaluateNumericExpression(tokens, varsInEvaluation)
           when "string" then  (varsInEvaluation) => 
-            @evaluateStringExpression(tokens, varsInEvaluation)
+            if lastValue? then Q(lastValue)
+            else @evaluateStringExpression(tokens, varsInEvaluation)
       )
 
       assert typeof getValue is "function"
 
-      isNew = (@variables[name]?)
+      isNew = (not @variables[name]?)
+      unless isNew
+        oldVariable = @variables[name]
+        unless oldVariable.type in ["expression", "value"]
+          throw new Error("Can not set a non expression or value var to an expression")
+        oldVariable.destroy()
 
-      # TODO: Add change listener on dependent variables
+      variables = (t.substring(1) for t in tokens when @isAVariable(t)) 
+      @on('change', changeListener = (vName, value) =>
+        if vName in variables
+          getValue().then( (value) => 
+            lastValue = value
+            @emit('change', name, value, 'expression', tokens)
+            @emit("change #{name}", value, 'expression', tokens)
+          )
+      )
       @variables[name] = {
+        type: "expression"
         expression: tokens
-        readonly: yes
+        readonly: no
         getValue: getValue
+        destroy: => @removeListener('change', changeListener)
       }
 
-      @variables[name].getValue( (value) =>
+      getValue( (value) =>
+        lastValue = value
         @emit('add', name, value) if isNew
-        @emit 'change', name, value
-        @emit "change #{name}", value
+        @emit('change', name, value, 'expression', tokens)
+        @emit("change #{name}", value, 'expression', tokens)
       )
 
-    setVariable: (name, value) ->
+    setVariableToValue: (name, value) ->
       assert name? and typeof name is "string"
-      if @variables[name]?
-        if @variables[name].readonly
+
+      isNew = (not @variables[name]?)
+      unless isNew
+        oldVariable = @variables[name]
+        if oldVariable.readonly
           throw new Error("Can not set $#{name}, the variable in readonly.")
-        oldValue = @variables[name].value
-        if oldValue is value
-          return
-        @variables[name].getValue = => Q(value)
-      else
-        @variables[name] = { 
-          readonly: no
-          getValue: => Q(value) 
-        }
-        @emit 'add', name, value
-      @emit 'change', name, value
-      @emit "change #{name}", value
+        unless oldVariable.type in ["expression", "value"]
+          throw new Error("Can not set a non expression or value var to an value")
+        oldVariable.destroy()
+      
+      @variables[name] = { 
+        type: "value"
+        readonly: no
+        getValue: => Q(value)
+        destroy: => #nop
+      }
+      @emit('add', name, value, 'value') if isNew
+      @emit('change', name, value, 'value')
+      @emit("change #{name}", value, 'value')
       return
 
     isVariableDefined: (name) ->
@@ -125,7 +152,7 @@ module.exports = (env) ->
         @emit "remove", name
 
     getAllVariables: () ->
-      return ({name, readonly: v.readonly} for name, v of @variables)
+      return ({name, readonly: v.readonly, type: v.type} for name, v of @variables)
 
     isAVariable: (token) -> token.length > 0 and token[0] is '$'
 

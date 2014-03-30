@@ -167,7 +167,7 @@ module.exports = (env) ->
         )
       else
         return @framework.variableManager.evaluateNumericExpression(@rightTokens).then( (value) => 
-          @framework.variableManager.setVariable(@variableName, value)
+          @framework.variableManager.setVariableToValue(@variableName, value)
           return Q("set $#{@variableName} to #{value}")
         )
 

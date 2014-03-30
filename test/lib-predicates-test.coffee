@@ -438,7 +438,7 @@ describe "VariablePredicateProvider", ->
         predicateHandler.once 'change', (state) ->
           cassert state is true
           finish()
-        frameworkDummy.variableManager.setVariable('a', '21')
+        frameworkDummy.variableManager.setVariableToValue('a', '21')
 
     describe '#on "change"', ->  
       predicateHandler = null

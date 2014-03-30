@@ -327,16 +327,21 @@ module.exports = (env) ->
             env.logger.debug err.stack
 
       initVariables = =>
-        @variableManager.on("change", (name, value) =>
+        @variableManager.on("change", (name, value, type, tokens) =>
           for variable in @config.variables
-            if variable.expression? then return # TODO update expression
             if variable.name is name
-              variable.value = value
+              delete variable.value
+              delete variable.expression
+              switch type
+                when 'value' then variable.value = value
+                when 'expression' then variable.expression = tokens
               break
           @emit "config"
         )
-        @variableManager.on("add", (name, value) =>
-          @config.variables.push({name, value})
+        @variableManager.on("add", (name, value, type, tokens) =>
+          switch type
+            when 'value' then @config.variables.push({name, value})
+            when 'expression' then @config.variables.push({name, expression: tokens})
           @emit "config"
         )
         @variableManager.on("remove", (name) =>

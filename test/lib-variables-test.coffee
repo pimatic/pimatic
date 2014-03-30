@@ -8,25 +8,63 @@ describe "VariableManager", ->
   frameworkDummy = new events.EventEmitter()
   varManager = new VariableManager(frameworkDummy, [])
 
-  describe '#setVariable()', (finish) ->
-    it "should set the variable", ->
-      varManager.setVariable('a', 1)
+  describe '#setVariableToValue()', ->
+    it "should set the variable", (finish) ->
+      varManager.setVariableToValue('a', 1)
       varManager.variables['a'].getValue().then( (value) =>
         assert.equal value, 1
         finish()
-      )
+      ).catch(finish)
+
+  describe '#setVariableToExpr()', ->
+    it "should set the to a numeric expression", (finish) ->
+      varManager.setVariableToExpr('b', ['2'])
+      varManager.variables['b'].getValue().then( (value) =>
+        assert.equal value, 2
+        finish()
+      ).catch(finish)
+
+    it "should set the to a numeric expression with vars", (finish) ->
+      varManager.setVariableToExpr('c', ['1', '*', '$a', '+', '10', '*', '$b'])
+      varManager.variables['c'].getValue().then( (value) =>
+        assert.equal value, 21
+        finish()
+      ).catch(finish)
+
+    it "should set the to a string expression", (finish) ->
+      varManager.setVariableToExpr('d', ['"foo"'])
+      varManager.variables['d'].getValue().then( (value) =>
+        assert.equal value, "foo"
+        finish()
+      ).catch(finish)
+
+    it "should set the to a string expression with vars", (finish) ->
+      varManager.setVariableToExpr('e', ['""', '$a', '" bars"'])
+      varManager.variables['e'].getValue().then( (value) =>
+        assert.equal value, "1 bars"
+        finish()
+      ).catch(finish)
+
+    it "should detect cycles", (finish) ->
+      varManager.setVariableToExpr('f', ['$f'])
+      varManager.variables['f'].getValue().then( (value) =>
+        assert false
+      ).catch( (error) =>
+        assert error.message is "Dependency cycle detected for variable f"
+        finish()
+      ).done()
 
   describe '#isVariableDefined()', ->
     it "should return true", ->
       isDefined = varManager.isVariableDefined('a')
       assert isDefined
 
-  describe '#getVariableValue()', (finish) ->
-    it "get the var value", ->
+  describe '#getVariableValue()', ->
+    it "get the var value", (finish) ->
       varManager.getVariableValue('a').then( (value) =>
         assert.equal value, 1
         finish()
-      )
+      ).catch(finish)
 
   describe '#evaluateNumericExpression()', ->
     it 'should calculate 1 + 2 * 3', (finish) ->
