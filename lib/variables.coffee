@@ -28,9 +28,20 @@ module.exports = (env) ->
         assert(variable.value.length > 0) if variable.value?
         variable.name = variable.name.substring(1) if variable.name[0] is '$'
         if variable.expression?
-          expr = variable.expression
-          assert expr.length > 0
-          @setVariableToExpr(variable.name, exp)
+          expr = variable.expression.trim()
+          try
+            if expr.length is 0
+              throw new Error("No expression given")
+            tokens = null
+            m = M(expr).matchAnyExpression((m, ts) => tokens = ts)
+            unless m.hadMatches() and m.getFullMatches()[0] is expr
+              throw new Error("no match")
+            @setVariableToExpr(variable.name, tokens, expr)
+          catch e
+            env.logger.error(
+              "Error parsing and adding expression variable #{variable.name}:", e.message
+            )
+            env.logger.debug e
         else
           assert variable.value?
           @setVariableToValue(variable.name, variable.value)
@@ -43,8 +54,9 @@ module.exports = (env) ->
             lastValue = null
             device.on(attrName, attrListener = (value) =>
               lastValue = value
-              @emit('change', varName, value, 'attribute')
-              @emit("change #{varName}", value, 'attribute')
+              eventObj = {name: varName, value, type: 'attribute'}
+              @emit('change', eventObj)
+              @emit("change #{varName}", eventObj)
             )
             @variables[varName] = {
               type: 'attribute'
@@ -54,9 +66,11 @@ module.exports = (env) ->
               destroy: => device.emitter.removeListener(attrName, attrListener)
             }
 
-    setVariableToExpr: (name, tokens) ->
+    setVariableToExpr: (name, tokens, inputStr) ->
       assert name? and typeof name is "string"
       assert tokens.length > 0
+      assert typeof inputStr is "string" and inputStr.length > 0
+
       type = (if tokens[0][0] is '"' then "string" else "numeric")
 
       lastValue = null
@@ -83,24 +97,34 @@ module.exports = (env) ->
       @on('change', changeListener = (vName, value) =>
         if vName in variables
           getValue().then( (value) => 
+            if lastValue is value then return 
             lastValue = value
-            @emit('change', name, value, 'expression', tokens)
-            @emit("change #{name}", value, 'expression', tokens)
+            eventObj = {name, value, type: "expression", exprInputStr: inputStr, exprTokens: tokens}
+            @emit('change', eventObj)
+            @emit("change #{name}", eventObj)
+          ).catch((error) =>
+            env.logger.error("Error updating expression value:", error.message)
+            env.logger.debug error
           )
       )
       @variables[name] = {
         type: "expression"
-        expression: tokens
+        exprInputStr: inputStr 
+        exprTokens: tokens
         readonly: no
         getValue: getValue
         destroy: => @removeListener('change', changeListener)
       }
 
-      getValue( (value) =>
+      getValue().then( (value) =>
         lastValue = value
-        @emit('add', name, value) if isNew
-        @emit('change', name, value, 'expression', tokens)
-        @emit("change #{name}", value, 'expression', tokens)
+        eventObj = {name, value, type: "expression", exprInputStr: inputStr, exprTokens: tokens}
+        @emit('add', eventObj) if isNew
+        @emit('change', eventObj)
+        @emit("change #{name}", eventObj)
+      ).catch((error) =>
+        env.logger.error("Error getting value for expression:", error.message)
+        env.logger.debug error
       )
 
     setVariableToValue: (name, value) ->
@@ -120,10 +144,11 @@ module.exports = (env) ->
         readonly: no
         getValue: => Q(value)
         destroy: => #nop
-      }
-      @emit('add', name, value, 'value') if isNew
-      @emit('change', name, value, 'value')
-      @emit("change #{name}", value, 'value')
+      } 
+      eventObj = {name, value, type: 'value'}
+      @emit('add', eventObj) if isNew
+      @emit('change', eventObj)
+      @emit("change #{name}", eventObj)
       return
 
     isVariableDefined: (name) ->
@@ -148,6 +173,7 @@ module.exports = (env) ->
     removeVariable: (name) ->
       assert name? and typeof name is "string"
       if @variables[name]?
+        @variables[name].destroy()
         delete @variables[name]
         @emit "remove", name
 

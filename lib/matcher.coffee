@@ -282,6 +282,16 @@ class Matcher
       return last
     else return M([])
 
+  matchAnyExpression: (callback) ->
+    tokens = null
+    next = @or([
+      ( (m) => m.matchStringWithVars((m, ts) => tokens = ts; return m) ),
+      ( (m) => m.matchNumericExpression((m, ts) => tokens = ts; return m) )
+    ])
+    if tokens?
+      callback(next, tokens)
+    return next
+
   matchComparator: (type, callback) ->
     assert type in ['number', 'string', 'boolean']
     assert typeof callback is "function"
