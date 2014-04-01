@@ -178,7 +178,13 @@ module.exports = (env) ->
         @emit "remove", name
 
     getAllVariables: () ->
-      return ({name, readonly: v.readonly, type: v.type} for name, v of @variables)
+      return (for name, v of @variables
+        varInfo = {name, readonly: v.readonly, type: v.type}
+        if v.type is "expression"
+          varInfo.exprInputStr = v.exprInputStr 
+          varInfo.exprTokens = v.exprTokens
+        varInfo
+      )
 
     isAVariable: (token) -> token.length > 0 and token[0] is '$'
 

@@ -387,7 +387,7 @@ module.exports = (env) ->
       @variables = @framework.variableManager.extractVariables(
         @leftTokens.concat @rightTokens
       )
-      @changeListener = (value) =>
+      @changeListener = () =>
         evalPromise = @_evaluate()
         evalPromise.then( (state) =>
           if state isnt @lastState
