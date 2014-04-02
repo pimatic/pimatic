@@ -18,35 +18,35 @@ describe "VariableManager", ->
 
   describe '#setVariableToExpr()', ->
     it "should set the to a numeric expression", (finish) ->
-      varManager.setVariableToExpr('b', ['2'])
+      varManager.setVariableToExpr('b', ['2'], '2')
       varManager.variables['b'].getValue().then( (value) =>
         assert.equal value, 2
         finish()
       ).catch(finish)
 
     it "should set the to a numeric expression with vars", (finish) ->
-      varManager.setVariableToExpr('c', ['1', '*', '$a', '+', '10', '*', '$b'])
+      varManager.setVariableToExpr('c', ['1', '*', '$a', '+', '10', '*', '$b'], '1*$a+10*$b')
       varManager.variables['c'].getValue().then( (value) =>
         assert.equal value, 21
         finish()
       ).catch(finish)
 
     it "should set the to a string expression", (finish) ->
-      varManager.setVariableToExpr('d', ['"foo"'])
+      varManager.setVariableToExpr('d', ['"foo"'], '"foo"')
       varManager.variables['d'].getValue().then( (value) =>
         assert.equal value, "foo"
         finish()
       ).catch(finish)
 
     it "should set the to a string expression with vars", (finish) ->
-      varManager.setVariableToExpr('e', ['""', '$a', '" bars"'])
+      varManager.setVariableToExpr('e', ['""', '$a', '" bars"'], '"$a bars"')
       varManager.variables['e'].getValue().then( (value) =>
         assert.equal value, "1 bars"
         finish()
       ).catch(finish)
 
     it "should detect cycles", (finish) ->
-      varManager.setVariableToExpr('f', ['$f'])
+      varManager.setVariableToExpr('f', ['$f'], "$f")
       varManager.variables['f'].getValue().then( (value) =>
         assert false
       ).catch( (error) =>

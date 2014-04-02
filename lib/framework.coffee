@@ -394,10 +394,13 @@ module.exports = (env) ->
               """
               rule.id = newId
 
-            @ruleManager.addRuleByString(rule.id, rule.rule, rule.active, true).catch( (err) =>
-              env.logger.error "Could not parse rule \"#{rule.rule}\": " + err.message 
-              env.logger.debug err.stack
-            )        
+            unless rule.name? then rule.name = S(rule.id).humanize().s
+
+            @ruleManager.addRuleByString(rule.id, rule.name, rule.rule, rule.active, true)
+              .catch( (err) =>
+                env.logger.error "Could not parse rule \"#{rule.rule}\": " + err.message 
+                env.logger.debug err.stack
+              )        
         )
 
         return Q.all(addRulePromises).then(=>
@@ -410,6 +413,7 @@ module.exports = (env) ->
               if r.id is rule.id then return
             @config.rules.push {
               id: rule.id
+              name: rule.name
               rule: rule.string
               active: rule.active
             }
@@ -418,7 +422,8 @@ module.exports = (env) ->
           @ruleManager.on "update", (rule) =>
             # ...change the rule with the right id in the config.json file
             @config.rules = for r in @config.rules 
-              if r.id is rule.id then {id: rule.id, rule: rule.string, active: rule.active}
+              if r.id is rule.id
+                {id: rule.id, name: rule.name, rule: rule.string, active: rule.active}
               else r
             @emit "config"
           # * If a rule was removed then

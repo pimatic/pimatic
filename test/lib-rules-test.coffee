@@ -435,7 +435,7 @@ describe "RuleManager", ->
 
 
     it 'should parse: "if predicate 1 then action 1"', (finish) ->
-      ruleManager.parseRuleString("test1", "if predicate 1 then action 1", context)
+      ruleManager.parseRuleString("test1", "test1", "if predicate 1 then action 1", context)
       .then( (rule) -> 
         cassert rule.id is 'test1'
         cassert rule.conditionToken is 'predicate 1'
@@ -449,7 +449,7 @@ describe "RuleManager", ->
     ruleWithForSuffix = 'if predicate 1 for 10 seconds then action 1'
     it """should parse rule with for "10 seconds" suffix: #{ruleWithForSuffix}'""", (finish) ->
 
-      ruleManager.parseRuleString("test1", ruleWithForSuffix, context)
+      ruleManager.parseRuleString("test1", "test1", ruleWithForSuffix, context)
       .then( (rule) -> 
         cassert rule.id is 'test1'
         cassert rule.conditionToken is 'predicate 1 for 10 seconds'
@@ -466,7 +466,7 @@ describe "RuleManager", ->
     ruleWithHoursSuffix = "if predicate 1 for 2 hours then action 1"
     it """should parse rule with for "2 hours" suffix: #{ruleWithHoursSuffix}""", (finish) ->
 
-      ruleManager.parseRuleString("test1", ruleWithHoursSuffix, context)
+      ruleManager.parseRuleString("test1", "test1", ruleWithHoursSuffix, context)
       .then( (rule) -> 
         cassert rule.id is 'test1'
         cassert rule.conditionToken is 'predicate 1 for 2 hours'
@@ -481,8 +481,9 @@ describe "RuleManager", ->
 
     it 'should not detect for "42 foo" as for suffix', (finish) ->
 
-      ruleManager.parseRuleString("test1", "if predicate 1 for 42 foo then action 1", context)
-      .then( (rule) -> 
+      ruleManager.parseRuleString(
+        "test1", "test1", "if predicate 1 for 42 foo then action 1", context
+      ).then( (rule) -> 
         cassert rule.id is 'test1'
         cassert rule.conditionToken is 'predicate 1 for 42 foo'
         cassert rule.tokens.length > 0
@@ -497,7 +498,7 @@ describe "RuleManager", ->
 
     it 'should reject wrong rule format', (finish) ->
       # Missing `then`:
-      ruleManager.parseRuleString("test2", "if predicate 1 and action 1", context)
+      ruleManager.parseRuleString("test2", "test1", "if predicate 1 and action 1", context)
       .then( -> 
         finish new Error 'Accepted invalid rule'
       ).catch( (error) -> 
@@ -513,16 +514,17 @@ describe "RuleManager", ->
         canDecideCalled = true
         return null
 
-      ruleManager.parseRuleString('test3', 'if predicate 2 then action 1', context).then( -> 
-        cassert context.hasErrors()
-        cassert context.errors.length is 1
-        errorMsg = context.errors[0]
-        cassert(
-          errorMsg is 'Could not find an provider that decides next predicate of "predicate 2".'
-        )
-        cassert canDecideCalled
-        finish()
-      ).catch(finish)
+      ruleManager.parseRuleString('test3', "test1", 'if predicate 2 then action 1', context)
+        .then( -> 
+          cassert context.hasErrors()
+          cassert context.errors.length is 1
+          errorMsg = context.errors[0]
+          cassert(
+            errorMsg is 'Could not find an provider that decides next predicate of "predicate 2".'
+          )
+          cassert canDecideCalled
+          finish()
+        ).catch(finish)
 
     it 'should reject unknown action', (finish) ->
       canDecideCalled = false
@@ -541,16 +543,17 @@ describe "RuleManager", ->
         parseActionCalled = true
         return null
 
-      ruleManager.parseRuleString('test4', 'if predicate 1 then action 2', context).then( -> 
-        cassert context.hasErrors()
-        cassert context.errors.length is 1
-        errorMsg = context.errors[0]
-        cassert(
-          errorMsg is 'Could not find an provider that provides the next action of "action 2".'
-        )
-        cassert parseActionCalled
-        finish()
-      ).catch(finish)
+      ruleManager.parseRuleString('test4', "test1", 'if predicate 1 then action 2', context)
+        .then( -> 
+          cassert context.hasErrors()
+          cassert context.errors.length is 1
+          errorMsg = context.errors[0]
+          cassert(
+            errorMsg is 'Could not find an provider that provides the next action of "action 2".'
+          )
+          cassert parseActionCalled
+          finish()
+        ).catch(finish)
 
   notifyId = null
 
@@ -584,7 +587,7 @@ describe "RuleManager", ->
           actionHandler: new DummyActionHandler()
         }
 
-      ruleManager.addRuleByString('test5', 'if predicate 1 then action 1').then( ->
+      ruleManager.addRuleByString('test5', "test5", 'if predicate 1 then action 1').then( ->
         cassert changeHandler?
         cassert parseActionCallCount is 1
         cassert ruleManager.rules['test5']?
@@ -1068,7 +1071,7 @@ describe "RuleManager", ->
           actionHandler: actHandler
         }
 
-      ruleManager.updateRuleByString('test5', 'if predicate 2 then action 1').then( ->
+      ruleManager.updateRuleByString('test5', 'test5', 'if predicate 2 then action 1').then( ->
         cassert parsePredicateCalled is 1
         cassert onCalled is 2
 

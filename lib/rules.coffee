@@ -78,6 +78,7 @@ module.exports = (env) ->
     # If a rule was successfully added, the rule has the form:
     #  
     #     id: 'some-id'
+    #     name: 'some name'
     #     string: 'if its 10pm and light is on then turn the light off'
     #     conditionToken: 'its 10pm and light is on'
     #     predicates: [
@@ -129,12 +130,14 @@ module.exports = (env) ->
     #     active: false or true
     #  
     # The function returns a promise!
-    parseRuleString: (id, ruleString, context) ->
+    parseRuleString: (id, name, ruleString, context) ->
       assert id? and typeof id is "string" and id.length isnt 0
+      assert name? and typeof name is "string"
       assert ruleString? and typeof ruleString is "string"
 
       rule = 
         id: id
+        name: name
         string: ruleString
 
       # Allways return a promise
@@ -536,8 +539,9 @@ module.exports = (env) ->
             )
 
     # ###addRuleByString()
-    addRuleByString: (id, ruleString, active=yes, force=false) ->
+    addRuleByString: (id, name, ruleString, active=yes, force=false) ->
       assert id? and typeof id is "string" and id.length isnt 0
+      assert name? and typeof name is "string"
       assert ruleString? and typeof ruleString is "string"
 
       unless id.match /^[a-z0-9\-_]+$/i then throw new Error "rule id must only contain " +
@@ -546,7 +550,7 @@ module.exports = (env) ->
 
       context = @createParseContext()
       # First parse the rule.
-      return @parseRuleString(id, ruleString, context).then( (rule)=>
+      return @parseRuleString(id, name, ruleString, context).then( (rule)=>
         # If we have parse error we don't need to continue here
         if context.hasErrors()
           error = new Error context.getErrorsAsString()
@@ -608,14 +612,15 @@ module.exports = (env) ->
       return
 
     # ###updateRuleByString()
-    updateRuleByString: (id, ruleString, active=yes) ->
+    updateRuleByString: (id, name, ruleString, active=yes) ->
       assert id? and typeof id is "string" and id.length isnt 0
+      assert name? and typeof name is "string"
       assert ruleString? and typeof ruleString is "string"
       throw new Error("Invalid ruleId: \"#{id}\"") unless @rules[id]?
 
       context = @createParseContext()
       # First try to parse the updated ruleString.
-      return @parseRuleString(id, ruleString, context).then( (rule)=>
+      return @parseRuleString(id, name, ruleString, context).then( (rule)=>
         if context.hasErrors()
           error = new Error context.getErrorsAsString()
           error.rule = rule
