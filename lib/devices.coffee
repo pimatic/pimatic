@@ -300,7 +300,7 @@ module.exports = (env) ->
       contact:
         description: "state of the contact"
         type: Boolean
-        labels: ['closed', 'open']
+        labels: ['closed', 'opened']
 
     _setContact: (value) ->
       if @_contact is value then return
