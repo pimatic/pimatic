@@ -231,7 +231,11 @@ module.exports = (env) ->
           end =  => matchCount++
 
           if attribute.type is Boolean
-            m = m.matchComparator('boolean', setComparator).match(attribute.labels, setRefValue)
+            m = m.matchComparator('boolean', setComparator).match(attribute.labels, (m, v) =>
+              if v is attribute.labels[0] then setRefValue(m, true)
+              else if v is attribute.labels[1] then setRefValue(m, false)
+              else assert(false)
+            )
           else if attribute.type is Number
             m = m.matchComparator('number', setComparator)
               .matchNumber( (m,v) => setRefValue(m, parseFloat(v)) )
@@ -310,9 +314,9 @@ module.exports = (env) ->
     Does the comparison.
     ###
     _compareValues: (comparator, value, referenceValue) ->
-      unless isNaN value
-        value = parseFloat value
-      return switch comparator
+      if typeof referenceValue is "number"
+        value = parseFloat(value)
+      result = switch comparator
         when '==' then value is referenceValue
         when '!=' then value isnt referenceValue
         when '<' then value < referenceValue
@@ -320,6 +324,7 @@ module.exports = (env) ->
         when '<=' then value <= referenceValue
         when '>=' then value >= referenceValue
         else throw new Error "Unknown comparator: #{comparator}"
+      return result
 
 
   ###

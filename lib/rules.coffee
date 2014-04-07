@@ -375,7 +375,7 @@ module.exports = (env) ->
           m = M(nextInput, context).match([' and '], onMatch)
           unless nextInput.length is 0
             if m.hadNoMatches()
-              context.addError("""Expected: "and".""")
+              context.addError("Expected: \"and\", got \"#{nextInput}\"")
             else
               token = m.getLongestFullMatch()
               assert S(nextInput.toLowerCase()).startsWith(token.toLowerCase())
@@ -447,16 +447,16 @@ module.exports = (env) ->
             parseAfter('suffix')
 
           # try to parse "for 10 seconds"
-          forSuffixAlloed = action.handler.hasRestoreAction()
+          forSuffixAllowed = action.handler.hasRestoreAction()
           timeParseResult = @parseTimePart(nextInput, " for ", context, {
-            acFilter: () => forSuffixAlloed
+            acFilter: () => forSuffixAllowed
           })
           if timeParseResult?
             nextInput = timeParseResult.nextInput
             action.forToken = timeParseResult.timeToken
             action.for = timeParseResult.time
 
-          if action.forToken? and forSuffixAlloed is no
+          if action.forToken? and forSuffixAllowed is no
             context.addError(
               """Action "#{action.token}" can't have an "for"-Suffix."""
             )

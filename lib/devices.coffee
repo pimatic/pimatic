@@ -183,8 +183,8 @@ module.exports = (env) ->
       throw new Error "Function \"changeDimlevelTo\" is not implemented!"
 
     _setDimlevel: (level) =>
-      assert not isNaN(level) 
       level = parseFloat(level)
+      assert(not isNaN(level))
       cassert level >= 0
       cassert level <= 100
       if @_dimlevel is level then return

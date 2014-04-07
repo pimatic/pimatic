@@ -173,6 +173,8 @@ module.exports = (env) ->
     removeVariable: (name) ->
       assert name? and typeof name is "string"
       if @variables[name]?
+        if @variables[name].type is 'attribute'
+          throw new Error("Can not delete a variable for a device attribute.")
         @variables[name].destroy()
         delete @variables[name]
         @emit "remove", name
@@ -197,7 +199,7 @@ module.exports = (env) ->
         awaiting = []
         for t, i in tokens
           do (i, t) =>
-            unless isNaN(t)
+            unless isNaN(parseFloat(t))
               tokens[i] = parseFloat(t)
             else if @isAVariable(t)
               varName = t.substring(1)
@@ -205,7 +207,7 @@ module.exports = (env) ->
               unless @isVariableDefined(varName)
                 throw new Error("#{t} is not defined")
               awaiting.push @getVariableValue(varName, varsInEvaluation).then( (value) ->
-                if isNaN(value)
+                if isNaN(parseFloat(value))
                   throw new Error("Expected #{t} to have a numeric value (was: #{value}).")
                 tokens[i] = parseFloat(value)
               )
