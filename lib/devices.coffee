@@ -210,13 +210,15 @@ module.exports = (env) ->
       position:
         label: "Position"
         description: "state of the shutter"
-        type: ['up', 'down']
+        type: ['up', 'down', 'stopped']
 
     actions: 
       liftUp:
         description: "lifts up the shutter"
       lowerDown:
         description: "lower down the shutter"
+      stop:
+        description: "stops the shutter move"
       moveToPosition:
         description: "changes the shutter state"
         params:
@@ -226,7 +228,10 @@ module.exports = (env) ->
     # Returns a promise
     liftUp: -> @moveToPosition('up')
     # Retuns a promise
-    lowerDown: ->  @moveToPosition('down')
+    lowerDown: -> @moveToPosition('down')
+
+    stop: ->
+      throw new Error "Function \"stop\" is not implemented!"
 
     # Retuns a promise that is fulfilled when done.
     moveToPosition: (position) ->
@@ -236,9 +241,10 @@ module.exports = (env) ->
 
     # Returns a promise that will be fulfilled with the position
     getPosition: -> Q(@_position)
+    getTime: -> Q(@_time)
 
     _setPosition: (position) ->
-      assert position in ['up', 'down']
+      assert position in ['up', 'down', 'stopped']
       if @position is position then return
       @_position = position
       @emit "position", position
