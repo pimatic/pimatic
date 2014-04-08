@@ -15,6 +15,7 @@ class MemoryTransport extends winston.Transport
   name: "memory"
   bufferLength: 1000
   errorCount: 0
+  nextId: 0
 
   constructor: (options) ->
     @buffer = new CBuffer(@bufferLength)
@@ -35,11 +36,13 @@ class MemoryTransport extends winston.Transport
 
   log: (level, msg, meta, callback) ->
     if level is 'error' then @errorCount++
+    now = new Date()
     msg =   
+      id: "#{now.getTime()}-#{@nextId++}"
       level: level
       msg: msg
       meta: meta
-      time: new Date().format 'YYYY-MM-DD hh:mm:ss'
+      time: now.format 'YYYY-MM-DD hh:mm:ss'
     @buffer.push msg
     @emit "logged"
     @emit "log", msg
