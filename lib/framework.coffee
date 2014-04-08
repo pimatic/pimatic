@@ -26,14 +26,13 @@ module.exports = (env) ->
 
     constructor: (@configFile) ->
       assert configFile?
-
-      @loadConfig()
       @maindir = path.resolve __dirname, '..'
-
+      @pluginManager = new env.plugins.PluginManager(this)
+      @packageJson = @pluginManager.getInstalledPackageInfo('pimatic')
+      env.logger.info "Starting pimatic version #{@packageJson.version}"
+      @loadConfig()
       @variableManager = new env.variables.VariableManager(this, @config.variables)
       @ruleManager = new env.rules.RuleManager(@config.rules)
-      @pluginManager = new env.plugins.PluginManager(this)
-
       @setupExpressApp()
 
     loadConfig: () ->
@@ -221,8 +220,17 @@ module.exports = (env) ->
             return
           
           chain = chain.then( () =>
-            env.logger.info "loading plugin: \"#{pConf.plugin}\"..."
-            return @pluginManager.loadPlugin("pimatic-#{pConf.plugin}").then( (plugin) =>
+            fullPluginName = "pimatic-#{pConf.plugin}"
+            packageInfo = null
+            try
+              packageInfo = @pluginManager.getInstalledPackageInfo(fullPluginName)
+            catch e
+              env.logger.debug "Error getting packageinfo of #{fullPluginName}: ", e.message
+            env.logger.info("""
+              loading plugin: "#{pConf.plugin}" #{
+                if packageInfo? then "(" + packageInfo.version  + ")" else ""
+              }""")
+            return @pluginManager.loadPlugin(fullPluginName).then( (plugin) =>
               checkPluginDependencies pConf, plugin
               @registerPlugin(plugin, pConf)
             ).catch( (error) ->
