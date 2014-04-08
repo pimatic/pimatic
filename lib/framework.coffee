@@ -364,6 +364,7 @@ module.exports = (env) ->
           env.actions.DimmerActionProvider
           env.actions.LogActionProvider
           env.actions.SetVariableActionProvider
+          env.actions.ShutterActionProvider
         ]
         for actProv in defaultActionProvider
           actProvInst = new actProv(this)
@@ -375,6 +376,7 @@ module.exports = (env) ->
           env.predicates.SwitchPredicateProvider
           env.predicates.DeviceAttributePredicateProvider
           env.predicates.VariablePredicateProvider
+          env.predicates.ContactPredicateProvider
         ]
         for predProv in defaultPredicateProvider
           predProvInst = new predProv(this)

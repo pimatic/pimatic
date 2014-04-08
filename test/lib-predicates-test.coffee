@@ -102,6 +102,101 @@ describe "PresencePredicateProvider", ->
           finish()
         sensorDummy._setPresence no
 
+describe "ContactPredicateProvider", ->
+
+  frameworkDummy = 
+    devices: {}
+
+  provider = null
+  sensorDummy = null
+
+  before ->
+    provider = new env.predicates.ContactPredicateProvider(frameworkDummy)
+
+    class ContactDummySensor extends env.devices.ContactSensor
+      constructor: () ->
+        @id = 'test'
+        @name = 'test device'
+        super()
+
+    sensorDummy = new ContactDummySensor
+
+    frameworkDummy.devices =
+      test: sensorDummy
+
+  describe '#parsePredicate()', ->
+
+    testCases = [
+      {
+        inputs: [
+          "test is closed"
+          "test device is closed"
+          "test is close"
+          "test device is close"
+        ]
+        checkOutput: (input, result) ->
+          assert result?
+          assert.equal(result.token, input)
+          assert.equal(result.nextInput, "")
+          assert result.predicateHandler?
+          assert.equal(result.predicateHandler.negated, no)
+          assert.deepEqual(result.predicateHandler.device, sensorDummy)
+      },
+      {
+        inputs: [
+          "test is opened"
+          "test device is opened"
+          "test is open"
+          "test device is open"
+        ]
+        checkOutput: (input, result) ->
+          assert result?
+          assert.equal(result.token, input)
+          assert.equal(result.nextInput, "")
+          assert result.predicateHandler?
+          assert.equal(result.predicateHandler.negated, yes)
+          assert.deepEqual(result.predicateHandler.device, sensorDummy)
+      }
+    ]
+
+    for testCase in testCases
+      do (testCase) =>
+        for input in testCase.inputs
+          do (input) =>
+            it "should parse \"#{input}\"", =>
+              result = provider.parsePredicate input
+              testCase.checkOutput(input, result)
+
+    it 'should return null if id is wrong', ->
+      result = provider.parsePredicate "foo is closed"
+      assert(not info?)
+
+  describe "PresencePredicateHandler", ->
+    describe '#on "change"', ->  
+      predicateHandler = null
+      before ->
+        result = provider.parsePredicate "test is closed"
+        assert result?
+        predicateHandler = result.predicateHandler
+        predicateHandler.setup()
+
+      after ->
+        predicateHandler.destroy()
+
+      it "should notify when device is opened", (finish) ->
+        sensorDummy._contact = no
+        predicateHandler.once 'change', changeListener = (state)->
+          assert.equal state, true
+          finish()
+        sensorDummy._setContact yes
+
+      it "should notify when device is closed", (finish) ->
+        sensorDummy._contact = yes
+        predicateHandler.once 'change', changeListener = (state)->
+          assert.equal state, false
+          finish()
+        sensorDummy._setContact no
+
 describe "SwitchPredicateProvider", ->
 
   frameworkDummy = 

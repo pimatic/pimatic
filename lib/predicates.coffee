@@ -178,6 +178,70 @@ module.exports = (env) ->
       super()
     getType: -> 'state'
 
+  ###
+  The Contact Predicate Provider
+  ----------------
+  Handles predicates of contact devices like
+
+  * _device_ is opened
+  * _device_ is closed
+  ####
+  class ContactPredicateProvider extends PredicateProvider
+
+    constructor: (@framework) ->
+
+    parsePredicate: (input, context) ->
+
+      contactDevices = _(@framework.devices).values()
+        .filter((device) => device.hasAttribute( 'contact')).value()
+
+      device = null
+      negated = null
+      match = null
+
+      contactAcFilter = (v) => v.trim() in ['opened', 'closed']
+
+      M(input, context)
+        .matchDevice(contactDevices, (next, d) =>
+          next.match(' is')
+            .match([' open', ' close', ' opened', ' closed'], {acFilter: contactAcFilter}, (m, s) =>
+              # Already had a match with another device?
+              if device? and device.id isnt d.id
+                context?.addError(""""#{input.trim()}" is ambiguous.""")
+                return
+              device = d
+              negated = (s.trim() in ["opened", 'open']) 
+              match = m.getFullMatches()[0]
+            )
+      )
+      
+      if match?
+        assert device?
+        assert negated?
+        assert typeof match is "string"
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          predicateHandler: new ContactPredicateHandler(device, negated)
+        }
+      else
+        return null
+
+  class ContactPredicateHandler extends PredicateHandler
+
+    constructor: (@device, @negated) ->
+
+    setup: ->
+      @contactListener = (p) => 
+        @emit 'change', (if @negated then not p else p)
+      @device.on 'contact', @contactListener
+      super()
+    getValue: -> @device.getAttributeValue('contact').then((p) => (if @negated then not p else p))
+    destroy: -> 
+      @device.removeListener "contact", @contactListener
+      super()
+    getType: -> 'state'
+
 
   ###
   The Device-Attribute Predicate Provider
@@ -445,4 +509,5 @@ module.exports = (env) ->
     SwitchPredicateProvider
     DeviceAttributePredicateProvider
     VariablePredicateProvider
+    ContactPredicateProvider
   }

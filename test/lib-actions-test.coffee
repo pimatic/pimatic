@@ -98,6 +98,64 @@ describe "SwitchActionHandler", ->
       assert not result?
       assert not turnOnCalled
 
+describe "ShutteActionHandler", ->
+
+  frameworkDummy =
+    devices: {}
+
+  shutterActionProvider = new env.actions.ShutterActionProvider frameworkDummy
+
+  class Shutter extends env.devices.ShutterController
+    id: 'shutter-id'
+    name: 'shutter'
+
+    moveToPosition: () -> Q()
+
+  shutterDevice = new Shutter()
+  frameworkDummy.devices['dummy-switch-id'] = shutterDevice
+
+  describe "#parseAction()", ->
+    liftUpCalled = false
+    lowerDownCalled = false
+
+    beforeEach ->
+      liftUpCalled = false
+      shutterDevice.liftUp = ->
+        liftUpCalled = true
+        return Q.fcall -> true
+
+      lowerDownCalled = false
+      shutterDevice.lowerDown = ->
+        lowerDownCalled = true
+        return Q.fcall -> true
+
+
+    it "should parse: lift shutter up", (finish) ->
+      result = shutterActionProvider.parseAction('lift shutter up')
+      assert result?
+      assert result.token is 'lift shutter up'
+      assert result.nextInput is ""
+      assert result.actionHandler?
+      result.actionHandler.executeAction(false).then( (message) ->
+        assert liftUpCalled
+        assert message is "lifted shutter up"
+        finish()
+      ).done()
+
+
+    it "should parse: lower shutter down", (finish) ->
+      result = shutterActionProvider.parseAction('lower shutter down')
+      assert result?
+      assert result.token is 'lower shutter down'
+      assert result.nextInput is ""
+      assert result.actionHandler?
+      result.actionHandler.executeAction(false).then( (message) ->
+        assert lowerDownCalled
+        assert message is "lowered shutter down"
+        finish()
+      ).done()
+
+
 describe "DimmerActionHandler", ->
 
   envDummy =

@@ -107,5 +107,13 @@
 	"Down": "Down",
 	"Up": "Up",
 	"Expression": "Expression",
-	"Type": "Type"
+	"Type": "Type",
+	"pusover message sent successfully": "pusover message sent successfully",
+	"Drop here to remove rule": "Drop here to remove rule",
+	"Drop here to remove variable": "Drop here to remove variable",
+	"Description of the rule": "Description of the rule",
+	"Short Description": "Short Description",
+	"Short description": "Short description",
+	"lowered %s down": "lowered %s down",
+	"lifted %s up": "lifted %s up"
 }

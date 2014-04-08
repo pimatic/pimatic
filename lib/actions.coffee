@@ -273,6 +273,87 @@ module.exports = (env) ->
 
 
 
+  ###
+  The Shutter Action Provider
+  -------------
+  Provides the ability to move lift up or lower down shutter
+
+  * lower [the] _device_ down
+  * lift [the] _device_ up
+
+  where _device_ is the name or id of a device and "the" is optional.
+  ###
+  class ShutterActionProvider extends ActionProvider
+
+    constructor: (@framework) ->
+
+    # ### parseAction()
+    ###
+    Parses the above actions.
+    ###
+    parseAction: (input, context) =>
+      # The result the function will return:
+      retVar = null
+
+      shutterDevices = _(@framework.devices).values().filter( 
+        (device) => device.hasAction("liftUp") and device.hasAction("lowerDown") 
+      ).value()
+
+      device = null
+      position = null
+      match = null
+
+      # Try to match the input string with: lift|up ->
+      m = M(input, context).match(['lift ', 'lower '], (m, a) =>
+        # device name -> up|down
+        m.matchDevice(shutterDevices, (m, d) ->
+          nextToken = (if a.trim() is 'lift' then ' up' else ' down')
+          m.match(nextToken, (m, p) ->
+            # Already had a match with another device?
+            if device? and device.id isnt d.id
+              context?.addError(""""#{input.trim()}" is ambiguous.""")
+              return
+            device = d
+            position = p.trim()
+            match = m.getFullMatches()[0]
+          )
+        )
+      )
+
+      if match?
+        assert device?
+        assert position in ['down', 'up']
+        assert typeof match is "string"
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new ShutterActionHandler(device, position)
+        }
+      else
+        return null
+
+  class ShutterActionHandler extends ActionHandler
+
+    constructor: (@device, @position) ->
+
+    # ### executeAction()
+    executeAction: (simulate) => 
+      return (
+        if simulate
+          if @position is 'up' then Q __("would lift %s up", @device.name)
+          else Q __("would lower %s down", @device.name)
+        else
+          if @position is 'up' then @device.liftUp().then( => __("lifted %s up", @device.name) )
+          else @device.lowerDown().then( => __("lowered %s down", @device.name) )
+      )
+    # ### hasRestoreAction()
+    hasRestoreAction: -> @device.hasAction('stop')
+    # ### executeRestoreAction()
+    executeRestoreAction: (simulate) => 
+      if simulate then Q __("would stop %s", @device.name)
+      else @device.stop()
+
+
 
   ###
   The Dimmer Action Provider
@@ -387,4 +468,5 @@ module.exports = (env) ->
     SwitchActionProvider
     DimmerActionProvider
     LogActionProvider
+    ShutterActionProvider
   }
