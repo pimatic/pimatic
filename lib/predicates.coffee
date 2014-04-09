@@ -475,7 +475,7 @@ module.exports = (env) ->
 
     destroy: -> 
       for v in @variables
-        @framework.variableManager.removeListener('change #{v}', @changeListener)
+        @framework.variableManager.removeListener("change #{v}", @changeListener)
       super()
     getType: -> 'state'
 

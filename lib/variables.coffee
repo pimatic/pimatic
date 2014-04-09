@@ -206,7 +206,7 @@ module.exports = (env) ->
               # Replace variable by its value
               unless @isVariableDefined(varName)
                 throw new Error("#{t} is not defined")
-              awaiting.push @getVariableValue(varName, varsInEvaluation).then( (value) ->
+              awaiting.push @getVariableValue(varName, _.clone(varsInEvaluation)).then( (value) ->
                 if isNaN(parseFloat(value))
                   throw new Error("Expected #{t} to have a numeric value (was: #{value}).")
                 tokens[i] = parseFloat(value)
@@ -214,7 +214,7 @@ module.exports = (env) ->
         return Q.all(awaiting).then( => bet.evaluateSync(tokens) )
       )
 
-    evaluateStringExpression: (tokens) ->
+    evaluateStringExpression: (tokens, varsInEvaluation = {}) ->
       return Q.fcall( =>
         tokens = _.clone(tokens)
         awaiting = []
@@ -225,7 +225,7 @@ module.exports = (env) ->
               # Replace variable by its value
               unless @isVariableDefined(varName)
                 throw new Error("#{t} is not defined")
-              awaiting.push @getVariableValue(varName).then( (value) ->
+              awaiting.push @getVariableValue(varName, _.clone(varsInEvaluation)).then( (value) ->
                 tokens[i] = value
               )
             else 

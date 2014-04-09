@@ -79,6 +79,12 @@ describe "VariableManager", ->
         finish()
       ).catch(finish)
 
+    it 'should calculate $a + $a', (finish) ->
+      varManager.evaluateNumericExpression(['$a', '+', '$a']).then( (result) =>
+        assert result, 2
+        finish()
+      ).catch(finish)
+
 
   describe '#evaluateStringExpression()', ->
     it 'should interpolate "abc"', (finish) ->
