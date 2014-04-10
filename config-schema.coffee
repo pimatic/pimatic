@@ -7,7 +7,7 @@ module.exports =
   settings:
     locale:
       doc: "The default language"
-      format: ['en', 'de', "es"]
+      format: ['en', 'de', "es", "nl"]
       default: "en"
     debug:
       doc: "Turn on debug checks. Set the logLevel to debug to additional outputs"
@@ -45,6 +45,10 @@ module.exports =
         doc: "The port of the http-server"
         format: "port"
         default: 80
+      hostname:
+        doc: "The hostname of the http-server"
+        format: String
+        default: "" # If is empty then listen to all ip4Adresses
     httpsServer:
       enabled: 
         doc: "Should the https-server be started"
@@ -54,8 +58,19 @@ module.exports =
         doc: "The port of the https-server"
         format: "port"
         default: 443
-      # Run ./node_modules/pimatic/install/ssl-setup in you pimatic-app dir to generate
-      # the necessary key and certificate files
+      hostname:
+        doc: "The hostname of the https-server"
+        format: String
+        default: "" # If is empty then listen to all ip4Adresses
+      ###
+      Download and run https://raw.githubusercontent.com/pimatic/pimatic/master/install/ssl-setup
+      and un ssl-setup in you pimatic-app dir to generate the necessary key and certificate files:
+      
+          wget https://raw.githubusercontent.com/pimatic/pimatic/master/install/ssl-setup
+          chmod +x ssl-setup
+          ./ssl-setup
+
+      ###
       keyFile:
         doc: "Privatekey file"
         format: String
