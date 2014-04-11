@@ -30,7 +30,7 @@ module.exports = (env) ->
   class PredicateHandler extends require('events').EventEmitter
 
     getType: -> throw new Error("You must implement getType")
-    getValue: -> throw new Error("You must implement getState")
+    getValue: -> throw new Error("You must implement getValue")
 
     setup: -> 
       # You must overwrite this method and set up your listener here.
