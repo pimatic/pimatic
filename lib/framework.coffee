@@ -91,8 +91,18 @@ module.exports = (env) ->
       
       if auth.enabled
         #Check authentication.
-        assert auth.username and typeof auth.username is "string" and auth.username.length isnt 0 
-        assert auth.password and typeof auth.password is "string" and auth.password.length isnt 0 
+        unless auth.username? and typeof auth.username is "string" and auth.username.length isnt 0
+          throw new Error(
+            "Authentication is enabled, but no username is defined. Please define a " +
+            "username in the proper section of the config.json file."
+          )
+
+        unless auth.password? and typeof auth.password is "string" and auth.password.length isnt 0
+          throw new Error(
+            "Authentication is enabled, but no password is defined. Please define a " +
+            "password in the proper section of the config.json file or disable authentication."
+          )
+
         
       #req.path
       @app.use (req, res, next) =>

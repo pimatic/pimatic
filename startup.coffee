@@ -27,10 +27,16 @@ startup = =>
 
   # Setup the framework
   Framework = (require './lib/framework') env 
-  framework = new Framework configFile
-  promise = framework.init()
-  module.exports.framework = framework
-  return promise.done()
+  framework = null
+  try
+    framework = new Framework configFile
+    promise = framework.init()
+    module.exports.framework = framework
+    return promise.done()
+  catch e
+    env.logger.error e.message
+    env.logger.debug e.stack
+  return Q()
 
 module.exports.startup = startup
 module.exports.env = env
