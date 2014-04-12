@@ -75,7 +75,8 @@ module.exports = (env) ->
         'pimatic-shell-execute',
         'pimatic-sispmctl',
         "pimatic-pushover",
-        "pimatic-sunrise"
+        "pimatic-sunrise",
+        "pimatic-voice-recognition"
       ]
       waiting = []
       found = {}

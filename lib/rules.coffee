@@ -878,7 +878,7 @@ module.exports = (env) ->
     executeAction: (action, simulate) =>
       # wrap into an fcall to convert throwen erros to a rejected promise
       return Q.fcall( => 
-        promise = action.handler.executeAction(simulate) 
+        promise = action.handler.executeAction(simulate)
         if action.for?
           promise = promise.then( (message) =>
             restoreActionPromise = @scheduleAction(action, action.for, yes)
