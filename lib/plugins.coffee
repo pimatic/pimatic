@@ -73,7 +73,9 @@ module.exports = (env) ->
         'pimatic-redirect',
         'pimatic-rest-api',
         'pimatic-shell-execute',
-        'pimatic-sispmctl'
+        'pimatic-sispmctl',
+        "pimatic-pushover",
+        "pimatic-sunrise"
       ]
       waiting = []
       found = {}
