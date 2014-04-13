@@ -213,22 +213,22 @@ module.exports = (env) ->
         type: ['up', 'down', 'stopped']
 
     actions: 
-      liftUp:
-        description: "lifts up the shutter"
-      lowerDown:
-        description: "lower down the shutter"
+      moveUp:
+        description: "raise the shutter"
+      moveDown:
+        description: "lower the shutter"
       stop:
         description: "stops the shutter move"
       moveToPosition:
         description: "changes the shutter state"
         params:
           state:
-            type: Boolean
+            type: String
         
     # Returns a promise
-    liftUp: -> @moveToPosition('up')
+    moveUp: -> @moveToPosition('up')
     # Retuns a promise
-    lowerDown: -> @moveToPosition('down')
+    moveDown: -> @moveToPosition('down')
 
     stop: ->
       throw new Error "Function \"stop\" is not implemented!"

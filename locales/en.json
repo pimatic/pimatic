@@ -115,5 +115,10 @@
 	"Short Description": "Short Description",
 	"Short description": "Short description",
 	"lowered %s down": "lowered %s down",
-	"lifted %s up": "lifted %s up"
+	"lifted %s up": "lifted %s up",
+	"mail sent with statuscode: %s": "mail sent with statuscode: %s",
+	"mail sent with status: %s": "mail sent with status: %s",
+	"raised %s": "raised %s",
+	"lowered %s": "lowered %s",
+	"stopped %s": "stopped %s"
 }

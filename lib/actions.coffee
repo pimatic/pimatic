@@ -276,10 +276,11 @@ module.exports = (env) ->
   ###
   The Shutter Action Provider
   -------------
-  Provides the ability to move lift up or lower down shutter
+  Provides the ability to raise or lower a shutter
 
-  * lower [the] _device_ down
-  * lift [the] _device_ up
+  * lower [the] _device_ [down]
+  * raise [the] _device_ [up]
+  * move [the] _device_ up|down
 
   where _device_ is the name or id of a device and "the" is optional.
   ###
@@ -292,31 +293,36 @@ module.exports = (env) ->
     Parses the above actions.
     ###
     parseAction: (input, context) =>
-      # The result the function will return:
-      retVar = null
 
       shutterDevices = _(@framework.devices).values().filter( 
-        (device) => device.hasAction("liftUp") and device.hasAction("lowerDown") 
+        (device) => device.hasAction("moveUp") and device.hasAction("moveDown") 
       ).value()
 
       device = null
       position = null
       match = null
 
-      # Try to match the input string with: lift|up ->
-      m = M(input, context).match(['lift ', 'lower '], (m, a) =>
+      # Try to match the input string with: raise|up ->
+      m = M(input, context).match(['raise ', 'lower ', 'move '], (m, a) =>
         # device name -> up|down
         m.matchDevice(shutterDevices, (m, d) ->
-          nextToken = (if a.trim() is 'lift' then ' up' else ' down')
-          m.match(nextToken, (m, p) ->
-            # Already had a match with another device?
+          [p, nt] = (
+            switch a.trim() 
+              when 'raise' then ['up', ' up']
+              when 'lower' then ['down', ' down']
+              else [null, [" up", " down"] ]
+          )
+          last = m.match(nt, {optional: a.trim() isnt 'move'}, (m, po) ->
+            p = po.trim()
+          )
+          if last.hadMatches()
+             # Already had a match with another device?
             if device? and device.id isnt d.id
               context?.addError(""""#{input.trim()}" is ambiguous.""")
               return
             device = d
-            position = p.trim()
-            match = m.getFullMatches()[0]
-          )
+            position = p
+            match = last.getLongestFullMatch()
         )
       )
 
@@ -340,20 +346,83 @@ module.exports = (env) ->
     executeAction: (simulate) => 
       return (
         if simulate
-          if @position is 'up' then Q __("would lift %s up", @device.name)
-          else Q __("would lower %s down", @device.name)
+          if @position is 'up' then Q __("would raise %s", @device.name)
+          else Q __("would lower %s", @device.name)
         else
-          if @position is 'up' then @device.liftUp().then( => __("lifted %s up", @device.name) )
-          else @device.lowerDown().then( => __("lowered %s down", @device.name) )
+          if @position is 'up' then @device.moveUp().then( => __("raised %s", @device.name) )
+          else @device.moveDown().then( => __("lowered %s", @device.name) )
       )
     # ### hasRestoreAction()
     hasRestoreAction: -> @device.hasAction('stop')
     # ### executeRestoreAction()
     executeRestoreAction: (simulate) => 
       if simulate then Q __("would stop %s", @device.name)
-      else @device.stop()
+      else @device.stop().then( =>  __("stopped %s", @device.name) )
 
+  ###
+  The Shutter Stop Action Provider
+  -------------
+  Provides the ability to stop a shutter
 
+  * stop [the] _device_
+
+  where _device_ is the name or id of a device and "the" is optional.
+  ###
+  class StopShutterActionProvider extends ActionProvider
+
+    constructor: (@framework) ->
+
+    # ### parseAction()
+    ###
+    Parses the above actions.
+    ###
+    parseAction: (input, context) =>
+
+      shutterDevices = _(@framework.devices).values().filter( 
+        (device) => device.hasAction("stop") 
+      ).value()
+
+      device = null
+      match = null
+
+      # Try to match the input string with: stop ->
+      m = M(input, context).match("stop ", (m, a) =>
+        # device name -> up|down
+        m.matchDevice(shutterDevices, (m, d) ->
+          # Already had a match with another device?
+          if device? and device.id isnt d.id
+            context?.addError(""""#{input.trim()}" is ambiguous.""")
+            return
+          device = d
+          match = m.getLongestFullMatch()
+        )
+      )
+
+      if match?
+        assert device?
+        assert typeof match is "string"
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new StopShutterActionHandler(device)
+        }
+      else
+        return null
+
+  class StopShutterActionHandler extends ActionHandler
+
+    constructor: (@device) ->
+
+    # ### executeAction()
+    executeAction: (simulate) => 
+      return (
+        if simulate
+          Q __("would stop %s", @device.name)
+        else
+          @device.stop().then( => __("stopped %s", @device.name) )
+      )
+    # ### hasRestoreAction()
+    hasRestoreAction: -> false
 
   ###
   The Dimmer Action Provider
@@ -469,4 +538,5 @@ module.exports = (env) ->
     DimmerActionProvider
     LogActionProvider
     ShutterActionProvider
+    StopShutterActionProvider
   }

@@ -104,6 +104,7 @@ describe "ShutteActionHandler", ->
     devices: {}
 
   shutterActionProvider = new env.actions.ShutterActionProvider frameworkDummy
+  stopShutterActionProvider = new env.actions.StopShutterActionProvider frameworkDummy
 
   class Shutter extends env.devices.ShutterController
     id: 'shutter-id'
@@ -115,33 +116,61 @@ describe "ShutteActionHandler", ->
   frameworkDummy.devices['dummy-switch-id'] = shutterDevice
 
   describe "#parseAction()", ->
-    liftUpCalled = false
-    lowerDownCalled = false
+    moveUpCalled = false
+    moveDownCalled = false
+    stopCalled = false
 
     beforeEach ->
-      liftUpCalled = false
-      shutterDevice.liftUp = ->
-        liftUpCalled = true
+      moveUpCalled = false
+      shutterDevice.moveUp = ->
+        moveUpCalled = true
         return Q.fcall -> true
 
-      lowerDownCalled = false
-      shutterDevice.lowerDown = ->
-        lowerDownCalled = true
+      moveDownCalled = false
+      shutterDevice.moveDown = ->
+        moveDownCalled = true
+        return Q.fcall -> true
+      stopCalled = false
+      shutterDevice.stop = ->
+        stopCalled = true
         return Q.fcall -> true
 
-
-    it "should parse: lift shutter up", (finish) ->
-      result = shutterActionProvider.parseAction('lift shutter up')
+    it "should parse: raise shutter up", (finish) ->
+      result = shutterActionProvider.parseAction('raise shutter up')
       assert result?
-      assert result.token is 'lift shutter up'
+      assert result.token is 'raise shutter up'
       assert result.nextInput is ""
       assert result.actionHandler?
       result.actionHandler.executeAction(false).then( (message) ->
-        assert liftUpCalled
-        assert message is "lifted shutter up"
+        assert moveUpCalled
+        assert message is "raised shutter"
         finish()
       ).done()
 
+    it "should parse: raise shutter", (finish) ->
+      result = shutterActionProvider.parseAction('raise shutter')
+      assert result?
+      assert result.token is 'raise shutter'
+      assert result.nextInput is ""
+      assert result.actionHandler?
+      result.actionHandler.executeAction(false).then( (message) ->
+        assert moveUpCalled
+        assert message is "raised shutter"
+        finish()
+      ).done()
+
+
+    it "should parse: move shutter up", (finish) ->
+      result = shutterActionProvider.parseAction('move shutter up')
+      assert result?
+      assert result.token is 'move shutter up'
+      assert result.nextInput is ""
+      assert result.actionHandler?
+      result.actionHandler.executeAction(false).then( (message) ->
+        assert moveUpCalled
+        assert message is "raised shutter"
+        finish()
+      ).done()
 
     it "should parse: lower shutter down", (finish) ->
       result = shutterActionProvider.parseAction('lower shutter down')
@@ -150,11 +179,46 @@ describe "ShutteActionHandler", ->
       assert result.nextInput is ""
       assert result.actionHandler?
       result.actionHandler.executeAction(false).then( (message) ->
-        assert lowerDownCalled
-        assert message is "lowered shutter down"
+        assert moveDownCalled
+        assert message is "lowered shutter"
         finish()
       ).done()
 
+    it "should parse: lower shutter", (finish) ->
+      result = shutterActionProvider.parseAction('lower shutter')
+      assert result?
+      assert result.token is 'lower shutter'
+      assert result.nextInput is ""
+      assert result.actionHandler?
+      result.actionHandler.executeAction(false).then( (message) ->
+        assert moveDownCalled
+        assert message is "lowered shutter"
+        finish()
+      ).done()
+
+    it "should parse: move shutter down", (finish) ->
+      result = shutterActionProvider.parseAction('move shutter down')
+      assert result?
+      assert result.token is 'move shutter down'
+      assert result.nextInput is ""
+      assert result.actionHandler?
+      result.actionHandler.executeAction(false).then( (message) ->
+        assert moveDownCalled
+        assert message is "lowered shutter"
+        finish()
+      ).done()
+
+    it "should parse: stop shutter", (finish) ->
+      result = stopShutterActionProvider.parseAction('stop shutter')
+      assert result?
+      assert result.token is 'stop shutter'
+      assert result.nextInput is ""
+      assert result.actionHandler?
+      result.actionHandler.executeAction(false).then( (message) ->
+        assert stopCalled
+        assert message is "stopped shutter"
+        finish()
+      ).done()
 
 describe "DimmerActionHandler", ->
 
@@ -180,7 +244,6 @@ describe "DimmerActionHandler", ->
     beforeEach ->
       dimlevel = null
       dummyDimmer.changeDimlevelTo = (dl) ->
-        console.log dl
         dimlevel = dl
         return Q()
 
