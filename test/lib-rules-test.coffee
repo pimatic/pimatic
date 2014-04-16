@@ -763,6 +763,7 @@ describe "RuleManager", ->
           handler: predHandler1
           forToken: "1 second"
           for: 1000
+          lastChange: start
         ]
         tokens: [
           "predicate"
@@ -801,6 +802,7 @@ describe "RuleManager", ->
           handler: predHandler1
           forToken: "1 second"
           for: 1000
+          lastChange: start
         ]
         tokens: [
           "predicate"
@@ -833,6 +835,7 @@ describe "RuleManager", ->
             handler: predHandler1
             forToken: "1 second"
             for: 1000
+            lastChange: start
           }
           {
             id: "test2"
@@ -841,6 +844,7 @@ describe "RuleManager", ->
             handler: predHandler2
             forToken: "2 seconds"
             for: 2000
+            lastChange: start
           }
         ]
         tokens: [
@@ -886,6 +890,7 @@ describe "RuleManager", ->
             handler: predHandler1
             forToken: "1 second"
             for: 1000
+            lastChange: start
           }
           {
             id: "test2"
@@ -894,6 +899,7 @@ describe "RuleManager", ->
             handler: predHandler2
             forToken: "2 seconds"
             for: 2000
+            lastChange: start
           }
         ]
         tokens: [
@@ -938,6 +944,7 @@ describe "RuleManager", ->
             handler: predHandler1
             forToken: "1 second"
             for: 1000
+            lastChange: start
           }
           {
             id: "test2"
@@ -946,6 +953,7 @@ describe "RuleManager", ->
             handler: predHandler2
             forToken: "2 seconds"
             for: 2000
+            lastChange: start
           }
         ]
         tokens: [
@@ -998,6 +1006,7 @@ describe "RuleManager", ->
             handler: predHandler1
             forToken: "1 second"
             for: 1000
+            lastChange: start
           }
           {
             id: "test2"
@@ -1006,6 +1015,7 @@ describe "RuleManager", ->
             handler: predHandler2
             forToken: "2 seconds"
             for: 2000
+            lastChange: start
           }
         ]
         tokens: [

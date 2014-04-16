@@ -475,14 +475,17 @@ module.exports = (env) ->
       assert rule?
       assert rule.predicates?
       
+      setupTime = (new Date()).getTime()
       # For all predicate providers
       for p in rule.predicates
         do (p) =>
           assert(not p.changeListener?)
+          p.lastChange = setupTime
           p.handler.setup()
           # let us be notified when the predicate state changes.
           p.handler.on 'change', changeListener = (state) =>
             assert state is 'event' or state is true or state is false
+            p.lastChange = (new Date()).getTime()
             #If the state is true then call the `whenPredicateIsTrue` function.
             if state is true or state is 'event'
               whenPredicateIsTrue rule, p.id, state
@@ -756,6 +759,7 @@ module.exports = (env) ->
             deferred.reject error.message
           )
 
+        nowTime = (new Date()).getTime()
         # Fill the awaiting list:
         # Check for each predicate,
         for pred in rule.predicates
@@ -765,35 +769,43 @@ module.exports = (env) ->
               # If it has a for suffix and its an event something gone wrong, because an event 
               # can't hold (its just one time)
               assert pred.handler.getType() is 'state'
-              # Mark that we are awaiting the result
-              awaiting[pred.id] = {}
-              # and as long as we are awaiting the result, the predicate is false.
-              knownPredicates[pred.id] = false
+              assert pred.lastChange?
 
-              # When the time passes
-              timeout = setTimeout =>
-                knownPredicates[pred.id] = true
-                # the predicate remains true and no value is awaited anymore.
-                awaiting[pred.id].cancel()
-                reevaluateCondition()
-              , pred.for
+              # The time since last change
+              lastChangeTimeDiff = nowTime - pred.lastChange 
+              # Time to wait till condition becomes true, if not change occures
+              timeToWait = pred.for - lastChangeTimeDiff
 
-              # Let us be notified when it becomes false.
-              pred.handler.on 'change', changeListener = (state) =>
-                assert state is true or state is false
-                # If it changes to false
-                if state is false
-                  # then the predicate is false
-                  knownPredicates[pred.id] = false
-                  # and clear the timeout.
+              if timeToWait > 0              
+                # Mark that we are awaiting the result
+                awaiting[pred.id] = {}
+                # and as long as we are awaiting the result, the predicate is false.
+                knownPredicates[pred.id] = false
+
+                # When the time passes
+                timeout = setTimeout( ( =>
+                  knownPredicates[pred.id] = true
+                  # the predicate remains true and no value is awaited anymore.
                   awaiting[pred.id].cancel()
                   reevaluateCondition()
+                ), timeToWait)
 
-              awaiting[pred.id].cancel = =>
-                delete awaiting[pred.id]
-                clearTimeout timeout
-                # and we can cancel the notify
-                pred.handler.removeListener 'change', changeListener
+                # Let us be notified when it becomes false.
+                pred.handler.on 'change', changeListener = (state) =>
+                  assert state is true or state is false
+                  # If it changes to false
+                  if state is false
+                    # then the predicate is false
+                    knownPredicates[pred.id] = false
+                    # and clear the timeout.
+                    awaiting[pred.id].cancel()
+                    reevaluateCondition()
+
+                awaiting[pred.id].cancel = =>
+                  delete awaiting[pred.id]
+                  clearTimeout timeout
+                  # and we can cancel the notify
+                  pred.handler.removeListener 'change', changeListener
 
         # If we have not found awaiting predicates
         if (id for id of awaiting).length is 0
