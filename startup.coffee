@@ -3,6 +3,7 @@
 assert = require 'cassert'
 fs = require 'fs'
 path = require 'path'
+Q = require 'q'
 
 # Setup the environment
 env = { logger: require './lib/logger' }
