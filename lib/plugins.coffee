@@ -13,10 +13,11 @@ _ = require 'lodash'
 spawn = require("child_process").spawn
 https = require "https"
 semver = require "semver"
+events = require 'events'
 
 module.exports = (env) ->
 
-  class PluginManager
+  class PluginManager extends events.EventEmitter
 
     constructor: (@framework) ->
       @modulesParentDir = path.resolve @framework.maindir, '../../'
@@ -53,7 +54,16 @@ module.exports = (env) ->
       return @spawnNpm(['install', name])
 
     update: (modules) -> 
-      return @spawnNpm(['update'].concat modules)
+      @emit 'update-start', {modules}
+      return @spawnNpm(['update'].concat modules).then( onDone = ( =>
+        @emit 'update-done', {modules}
+        return modules
+      ), onError = ( (error) =>
+        @emit 'update-error', {modules, error}
+        throw error
+      ), onProgress = ( (message) =>
+        @emit 'update-info', {modules, message}
+      ))
 
     pathToPlugin: (name) ->
       assert name?
@@ -144,12 +154,14 @@ module.exports = (env) ->
         line = line.toString()
         output += "#{line}\n"
         if line.indexOf('npm http 304') is 0 then return
+        deferred.notify(line)
         env.logger.info line
       stderr = byline(npm.stderr)
       stderr.on "data", (line) => 
         line = line.toString()
         output += "#{line}\n"
-        env.logger.info line.toString()
+        deferred.notify(line)
+        env.logger.info line
 
       npm.on "close", (code) =>
         @npmRunning = no
