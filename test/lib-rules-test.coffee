@@ -76,7 +76,8 @@ describe "RuleManager", ->
               token: 'predicate 1',
               handler: {},
               forToken: null,
-              for: null 
+              for: null
+              justTrigger: false
             }
           ]
           tokens: [ 'predicate', '(', 0, ')' ] 
@@ -91,7 +92,8 @@ describe "RuleManager", ->
               token: 'predicate 1',
               handler: {},
               forToken: '10 seconds',
-              for: 10000 
+              for: 10000
+              justTrigger: false
             }
           ]
           tokens: [ 'predicate', '(', 0, ')' ] 
@@ -107,6 +109,7 @@ describe "RuleManager", ->
               handler: {},
               forToken: '2 hours',
               for: 7200000 
+              justTrigger: false
             }
           ]
           tokens: [ 'predicate', '(', 0, ')' ] 
@@ -122,6 +125,7 @@ describe "RuleManager", ->
               handler: {},
               forToken: null
               for: null 
+              justTrigger: false
             }
             { 
               id: 'prd-test1-1',
@@ -129,6 +133,7 @@ describe "RuleManager", ->
               handler: {},
               forToken: null
               for: null 
+              justTrigger: false
             }
           ]
           tokens: [ 'predicate', '(', 0, ')', 'and', 'predicate', '(', 1, ')' ] 
@@ -144,6 +149,7 @@ describe "RuleManager", ->
               handler: {},
               forToken: null
               for: null 
+              justTrigger: false
             }
             { 
               id: 'prd-test1-1',
@@ -151,6 +157,7 @@ describe "RuleManager", ->
               handler: {},
               forToken: null
               for: null 
+              justTrigger: false
             }
           ]
           tokens: [ '[', 'predicate', '(', 0, ')', 'and', 'predicate', '(', 1, ')', ']' ] 
@@ -166,6 +173,7 @@ describe "RuleManager", ->
               handler: {},
               forToken: null
               for: null 
+              justTrigger: false
             }
             { 
               id: 'prd-test1-1',
@@ -173,6 +181,7 @@ describe "RuleManager", ->
               handler: {},
               forToken: null
               for: null 
+              justTrigger: false
             }
           ]
           tokens: [ 'predicate', '(', 0, ')', 'and', '[', 'predicate', '(', 1, ')', ']' ] 
@@ -188,6 +197,7 @@ describe "RuleManager", ->
               handler: {},
               forToken: null
               for: null 
+              justTrigger: false
             }
             { 
               id: 'prd-test1-1',
@@ -195,6 +205,7 @@ describe "RuleManager", ->
               handler: {},
               forToken: null
               for: null 
+              justTrigger: false
             }
           ]
           tokens: [ 'predicate', '(', 0, ')', 'or', 'predicate', '(', 1, ')' ] 
@@ -210,6 +221,7 @@ describe "RuleManager", ->
               handler: {},
               forToken: '2 hours',
               for: 7200000 
+              justTrigger: false
             }
             { 
               id: 'prd-test1-1',
@@ -217,6 +229,7 @@ describe "RuleManager", ->
               handler: {},
               forToken: null
               for: null 
+              justTrigger: false
             }
           ]
           tokens: [ 'predicate', '(', 0, ')', 'or', 'predicate', '(', 1, ')' ] 
@@ -232,6 +245,7 @@ describe "RuleManager", ->
               handler: {},
               forToken: null
               for: null 
+              justTrigger: false
             }
             { 
               id: 'prd-test1-1',
@@ -239,6 +253,7 @@ describe "RuleManager", ->
               handler: {},
               forToken: null
               for: null 
+              justTrigger: false
             }
             { 
               id: 'prd-test1-2',
@@ -246,6 +261,7 @@ describe "RuleManager", ->
               handler: {},
               forToken: null
               for: null 
+              justTrigger: false
             }
           ]
           tokens: [ 'predicate', '(', 0, ')', 'and', '[', 'predicate', '(', 1, ')', 

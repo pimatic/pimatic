@@ -120,5 +120,7 @@
 	"mail sent with status: %s": "mail sent with status: %s",
 	"raised %s": "raised %s",
 	"lowered %s": "lowered %s",
-	"stopped %s": "stopped %s"
+	"stopped %s": "stopped %s",
+	"There was an error installing the updates.": "There was an error installing the updates.",
+	"Updates were successful. Please restart pimatic.": "Updates were successful. Please restart pimatic."
 }

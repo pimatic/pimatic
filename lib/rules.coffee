@@ -259,13 +259,25 @@ module.exports = (env) ->
       assert typeof nextInput is "string"
       assert context?
 
-
       predicate =
         id: predId
         token: null
         handler: null
         forToken: null
         for: null
+        justTrigger: null
+
+      token = ''
+
+      # trigger keyword?
+      m = M(nextInput, context).match(["trigger: "])
+      if m.hadMatches()
+        match = m.getFullMatches()[0]
+        token += match
+        nextInput = nextInput.substring(match.length)
+        predicate.justTrigger = yes
+      else
+        predicate.justTrigger = no
 
       # find a prdicate provider for that can parse and decide the predicate:
       parseResults = []
@@ -278,8 +290,6 @@ module.exports = (env) ->
           assert parseResult.predicateHandler instanceof env.predicates.PredicateHandler
           parseResults.push parseResult
 
-      token = null
-
       switch parseResults.length
         when 0
           context.addError(
@@ -288,10 +298,10 @@ module.exports = (env) ->
         when 1
           # get part of nextInput that is related to the found provider
           parseResult = parseResults[0]
-          token = parseResult.token
-          assert token?
-          assert S(nextInput.toLowerCase()).startsWith(token.toLowerCase())
-          predicate.token = token
+          token += parseResult.token
+          assert parseResult.token?
+          assert S(nextInput.toLowerCase()).startsWith(parseResult.token.toLowerCase())
+          predicate.token = parseResult.token
           nextInput = parseResult.nextInput
           predicate.handler = parseResult.predicateHandler
 
@@ -303,16 +313,20 @@ module.exports = (env) ->
             predicate.forToken = timeParseResult.timeToken
             predicate.for = timeParseResult.time
 
+          if predicate.justTrigger and predicate.forToken?
+            context.addError(
+              "\"#{token}\" is markes as trigger, it can't be true for \"#{redicate.forToken}\"."
+            )
+
           if predicate.handler.getType() is 'event' and predicate.forToken?
             context.addError(
-              "\"#{token}\" is an event it can not be true for \"#{redicate.forToken}\"."
+              "\"#{token}\" is an event it can't be true for \"#{redicate.forToken}\"."
             )
 
         else
           context.addError(
             """Next predicate of "#{nextInput}" is ambiguous."""
           )
-
       return { predicate, token, nextInput }
 
     parseTimePart: (nextInput, prefixToken, context, options = null) ->
@@ -413,8 +427,6 @@ module.exports = (env) ->
         
       # Try to macth after as prefix: after 10 seconds log "42" 
       parseAfter('prefix')
-
-      token = null
 
       # find a prdicate provider for that can parse and decide the predicate:
       parseResults = []
@@ -672,12 +684,15 @@ module.exports = (env) ->
         do (pred) =>
           predNumToId[i] = pred.id
           unless knownPredicates[pred.id]?
-            awaiting.push pred.handler.getValue().then( (state) =>
-              unless state?
-                state = false
-                env.logger.info "Could not decide #{pred.token} yet."
-              knownPredicates[pred.id] = state
-            )
+            if pred.justTrigger is yes
+              knownPredicates[pred.id] = false
+            else
+              awaiting.push pred.handler.getValue().then( (state) =>
+                unless state?
+                  state = false
+                  env.logger.info "Could not decide #{pred.token} yet."
+                knownPredicates[pred.id] = state
+              )
 
       return Q.all(awaiting).then( (predicateValues) =>
         bet.operators['and'] =
