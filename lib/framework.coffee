@@ -76,8 +76,8 @@ module.exports = (env) ->
       @app = express()
       #@app.use express.logger()
       @app.use express.cookieParser()
-      @app.use express.urlencoded()
-      @app.use express.json()
+      @app.use express.urlencoded(limit: '10mb')
+      @app.use express.json(limit: '10mb')
       auth = @config.settings.authentication
       @app.cookieSessionOptions = {
         secret: "pimatic-#{auth.username}-#{auth.password}"
