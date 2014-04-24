@@ -49,8 +49,6 @@ S = require 'string'
 M = require './matcher'
 require "date-format-lite"
 
-milliseconds = require './milliseconds'
-
 (requireNoCache = ->
   # Require bet without caching it, because we change some operations, that 
   # should be local to this file
@@ -331,32 +329,18 @@ module.exports = (env) ->
 
     parseTimePart: (nextInput, prefixToken, context, options = null) ->
       # Parse the for-Suffix:
-      timeUnits = [
-        "ms", 
-        "second", "seconds", "s", 
-        "minute", "minutes", "m", 
-        "hour", "hours", "h", 
-        "day", "days","d", 
-        "year", "years", "y"
-      ]
-      time = 0
-      unit = ""
-      onTimeMatch = (m, n) => time = parseFloat(n)
-      onMatchUnit = (m, u) => unit = u
+      time = null
+
+      onTimeduration = (m, tp) => time = tp.timeMs
 
       m = M(nextInput, context)
         .match(prefixToken, options)
-        .matchNumber(onTimeMatch)
-        .match(
-          _(timeUnits).map((u) => [" #{u}", u]).flatten().valueOf()
-        , {acFilter: (u) => u[0] is ' '}, onMatchUnit
-        )
+        .matchTimeDuration(onTimeduration)
 
       unless m.hadNoMatches()
         token = m.getLongestFullMatch()
         assert S(nextInput).startsWith(token)
         timeToken = S(token).chompLeft(prefixToken).s
-        time = milliseconds.parse "#{time} #{unit}"
         nextInput = nextInput.substring(token.length)
         return {token, nextInput, timeToken, time}
       else

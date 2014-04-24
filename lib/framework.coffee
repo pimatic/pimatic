@@ -89,7 +89,9 @@ module.exports = (env) ->
       # ----------------------
       # Use http-basicAuth if authentication is not disabled.
       
-      if auth.enabled
+      assert auth.enabled in [yes, no]
+
+      if auth.enabled is yes
         #Check authentication.
         unless auth.username? and typeof auth.username is "string" and auth.username.length isnt 0
           throw new Error(
@@ -118,7 +120,7 @@ module.exports = (env) ->
         req.session.maxAge = auth.loginTime
 
         # auth is deactivated so we allways continue
-        unless auth.enabled
+        if auth.enabled is no
           req.session.username = ''
           return next()
 

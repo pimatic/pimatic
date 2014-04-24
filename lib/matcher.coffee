@@ -8,6 +8,7 @@ Q = require 'q'
 S = require 'string'
 assert = require 'cassert'
 _ = require 'lodash'
+milliseconds = require './milliseconds'
 
 
 class Matcher
@@ -70,7 +71,7 @@ class Matcher
       callback = options
       options = {}
 
-    matches = {}
+    matches = []
     matchesOpt = {}
     rightPartsPrevInputs = []
     rightParts = []
@@ -121,19 +122,32 @@ class Matcher
               nextToken = regexpMatch[2]
           else throw new Error("Illegal object in patterns")
 
-        if doesMatch and not matches[match]?
+        if doesMatch
           assert match?
           assert nextToken?
-          matches[match] = yes
-
           assert @prevInputs[i]?
           matchPrevInput = @prevInputs[i] + match
           # If no matchId was provided then use the matching string itself
           unless matchId? then matchId = match
-          if callback? then callback(M(nextToken, @context, matchPrevInput), matchId)
-          rightParts.push nextToken
-          rightPartsPrevInputs.push matchPrevInput
-        else if options.optional and not matchesOpt[input]?
+          matches.push {
+            matchId
+            match
+            nextToken
+            matchPrevInput
+          }
+          
+    if matches.length > 0
+      longestMatch = _(matches).sortBy( (m) => m.match.length ).last()
+      rightParts.push longestMatch.nextToken
+      rightPartsPrevInputs.push longestMatch.matchPrevInput
+      if callback?
+        callback(
+          M(longestMatch.nextToken, @context, longestMatch.matchPrevInput), 
+          longestMatch.matchId
+        )
+    else if options.optional
+      for input, i in @inputs
+        if not matchesOpt[input]?
           matchesOpt[input] = yes
           rightParts.push input
           assert @prevInputs[i]?
@@ -341,6 +355,43 @@ class Matcher
       (m) => m.match(devicesWithNames, ignoreCase: yes, onNameMatch)
     ])
     
+
+  matchTimeDuration: (options = null, callback) ->
+    if typeof options is 'function'
+      callback = options
+      options = null
+
+    # Parse the for-Suffix:
+    timeUnits = [
+      "ms", 
+      "second", "seconds", "s", 
+      "minute", "minutes", "m", 
+      "hour", "hours", "h", 
+      "day", "days","d", 
+      "year", "years", "y"
+    ]
+    time = 0
+    unit = ""
+    onTimeMatch = (m, n) => time = parseFloat(n)
+    onMatchUnit = (m, u) => unit = u
+
+    m = @matchNumber(onTimeMatch).match(
+      _(timeUnits).map((u) => [" #{u}", u]).flatten().valueOf()
+    , {acFilter: (u) => u[0] is ' '}, onMatchUnit
+    )
+
+    if m.hadMatches()
+      timeMs = milliseconds.parse "#{time} #{unit}"
+      callback(m, {time, unit, timeMs})
+    return m
+
+  optional: (callback) ->
+    next = callback(this)
+    if next.hadMatches()
+      return next
+    else
+      return this
+
 
   # ###onEnd()
   ###
