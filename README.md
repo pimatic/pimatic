@@ -48,7 +48,7 @@ source code side by side.
 Architecture Overview
 ---------------------
 
-    ---------------------------------------------
+    +-------------------------------------------+
     | mobile-  | rest- | cron | pilight   | ... |  Plugins (Views, Device-/Preidcates-
     | frontend | api   |      | (adapter) |     |  Action-Provider, Services)
     |-------------------------------------------|
@@ -56,10 +56,10 @@ Architecture Overview
     |-------------------------------------------|
     | rule   | device    | (core)     | (core)  |  Model
     | system | schemata  | predicates | actions |
-    |--------------------------------------------
+    |-------------------------------------------|
     | node.js (non-blocking, async IO,          |  Low-Level Infrastructure
     | event-loop, v8)                           |
-    ---------------------------------------------
+    +-------------------------------------------+
 
 
 Extensions and Hacking
