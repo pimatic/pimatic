@@ -48,7 +48,7 @@ source code side by side.
 Architecture Overview
 ---------------------
 
-    --------------------------------------------|
+    ---------------------------------------------
     | mobile-  | rest- | cron | pilight   | ... |  Plugins (Views, Device-/Preidcates-
     | frontend | api   |      | (adapter) |     |  Action-Provider, Services)
     |-------------------------------------------|
