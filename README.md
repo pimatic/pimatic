@@ -45,6 +45,23 @@ pimatics source files are annotated with
 You can [browse the self generated documentation](http://www.pimatic.org/docs/) with the 
 source code side by side.
 
+Architecture Overview
+---------------------
+
+    --------------------------------------------|
+    | mobile-  | rest- | cron | pilight   | ... |  Plugins (Views, Device-/Preidcates-
+    | frontend | api   |      | (adapter) |     |  Action-Provider, Services)
+    |-------------------------------------------|
+    | pimatic (framework)                       |  Framework
+    |-------------------------------------------|
+    | rule   | device    | (core)     | (core)  |  Model
+    | system | schemata  | predicates | actions |
+    |--------------------------------------------
+    | node.js (non-blocking, async IO,          |  Low-Level Infrastructure
+    | event-loop, v8)                           |
+    ---------------------------------------------
+
+
 Extensions and Hacking
 ----------------------
 The framework is built to be extendable by plugins. If you have devices that are currently not 
