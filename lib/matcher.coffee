@@ -47,15 +47,8 @@ class Matcher
 
   # ###constructor()
   # Create a matcher for the input string, with the given parse context
-  constructor: (@inputs, @context = null, @prevInputs = null) ->
-    unless Array.isArray inputs then @inputs = [inputs]
-    unless prevInputs?
-      @prevInputs = []
-      @prevInputs[i] = "" for input, i in @inputs 
-    else unless Array.isArray prevInputs then @prevInputs = [prevInputs]
-    assert @inputs.length is @prevInputs.length
-    assert(prevInput?) for prevInput in @prevInputs
-    assert(input?) for input in @inputs
+  constructor: (@input, @context = null, @prevInput = null) ->
+    unless @prevInput? then @prevInput = ""
   
   # ###match()
   ###
@@ -72,94 +65,87 @@ class Matcher
       options = {}
 
     matches = []
-    matchesOpt = {}
-    rightPartsPrevInputs = []
-    rightParts = []
 
-    for input, i in @inputs
-      for p, j in patterns
-        # If pattern is a array then assume that first element is an id that should be returned
-        # on match
-        matchId = null
-        if Array.isArray p
-          assert p.length is 2
-          [matchId, p] = p
+    for p, j in patterns
+      # If pattern is a array then assume that first element is an id that should be returned
+      # on match
+      matchId = null
+      if Array.isArray p
+        assert p.length is 2
+        [matchId, p] = p
 
-        # handle ignore case for string
-        [pT, inputT] = (
-          if options.ignoreCase and typeof p is "string"
-            [p.toLowerCase(), input.toLowerCase()]
-          else
-            [p, input]
-        )
+      # handle ignore case for string
+      [pT, inputT] = (
+        if options.ignoreCase and typeof p is "string"
+          [p.toLowerCase(), @input.toLowerCase()]
+        else
+          [p, @input]
+      )
 
-        # if pattern is an string, then we cann add an autocomplete for it
-        if typeof p is "string" and @context
-          showAc = (if options.acFilter? then options.acFilter(p, j) else true) 
-          if showAc
-            if S(pT).startsWith(inputT) and input.length < p.length
-              @context.addHint(autocomplete: p)
+      # if pattern is an string, then we cann add an autocomplete for it
+      if typeof p is "string" and @context
+        showAc = (if options.acFilter? then options.acFilter(p, j) else true) 
+        if showAc
+          if S(pT).startsWith(inputT) and @input.length < p.length
+            @context.addHint(autocomplete: p)
 
-        # Now try to match the pattern against the input string
-        doesMatch = false
-        match = null
-        nextToken = null
-        switch 
-          # do a normal string match
-          when typeof p is "string" 
-            doesMatch = S(inputT).startsWith(pT)
-            if doesMatch 
-              match = p
-              nextToken = input.substring(p.length)
-          # do a regax match
-          when p instanceof RegExp
-            if options.ignoreCase?
-              throw new new Error("ignoreCase option can't be used with regexp")
-            regexpMatch = input.match(p)
-            if regexpMatch?
-              doesMatch = yes
-              match = regexpMatch[1]
-              nextToken = regexpMatch[2]
-          else throw new Error("Illegal object in patterns")
+      # Now try to match the pattern against the input string
+      doesMatch = false
+      match = null
+      nextToken = null
+      switch 
+        # do a normal string match
+        when typeof p is "string" 
+          doesMatch = S(inputT).startsWith(pT)
+          if doesMatch 
+            match = p
+            nextToken = @input.substring(p.length)
+        # do a regax match
+        when p instanceof RegExp
+          if options.ignoreCase?
+            throw new new Error("ignoreCase option can't be used with regexp")
+          regexpMatch = @input.match(p)
+          if regexpMatch?
+            doesMatch = yes
+            match = regexpMatch[1]
+            nextToken = regexpMatch[2]
+        else throw new Error("Illegal object in patterns")
 
-        if doesMatch
-          assert match?
-          assert nextToken?
-          assert @prevInputs[i]?
-          matchPrevInput = @prevInputs[i] + match
-          # If no matchId was provided then use the matching string itself
-          unless matchId? then matchId = match
-          matches.push {
-            matchId
-            match
-            nextToken
-            matchPrevInput
-          }
-          
+      if doesMatch
+        assert match?
+        assert nextToken?
+        # If no matchId was provided then use the matching string itself
+        unless matchId? then matchId = match
+        matches.push {
+          matchId
+          match
+          nextToken
+        }
+      
+    nextInput = null
+    match = null
     if matches.length > 0
       longestMatch = _(matches).sortBy( (m) => m.match.length ).last()
-      rightParts.push longestMatch.nextToken
-      rightPartsPrevInputs.push longestMatch.matchPrevInput
+      nextInput = longestMatch.nextToken
+      match = longestMatch.match
       if callback?
         callback(
-          M(longestMatch.nextToken, @context, longestMatch.matchPrevInput), 
+          M(nextInput, @context, @prevInput), 
           longestMatch.matchId
         )
     else if options.optional
-      for input, i in @inputs
-        if not matchesOpt[input]?
-          matchesOpt[input] = yes
-          rightParts.push input
-          assert @prevInputs[i]?
-          rightPartsPrevInputs.push @prevInputs[i]
+      nextInput = @input
 
-    return M(rightParts, @context, rightPartsPrevInputs)
+    return M(nextInput, @context, @prevInput)
 
   # ###matchNumber()
   ###
   Matches any Number.
   ###
-  matchNumber: (callback) -> @match /^(-?[0-9]+\.?[0-9]*)(.*?)$/, callback
+  matchNumber: (callback) -> 
+    result = @match /^(-?[0-9]+\.?[0-9]*)(.*?)$/, callback
+    if result.hadNoMatches()
+      @context.addHint(format: 'Number')
 
   matchVariable: (variables, callback) -> 
     if typeof variables is "function"
@@ -398,16 +384,14 @@ class Matcher
   The given callback will be called for every empty string in the inputs of ther current matcher
   ###
   onEnd: (callback) ->
-    for input in @inputs
-      if input.length is 0 then callback()
+    if @input?.length is 0 then callback()
 
   # ###onHadMatches()
   ###
   The given callback will be called for every string in the inputs of ther current matcher
   ###
   ifhadMatches: (callback) ->
-    for input in @inputs
-      callback(input)
+    if @input? then callback(@input)
 
   ###
     m.inAnyOrder([
@@ -434,32 +418,27 @@ class Matcher
 
   or: (callbacks) ->
     assert Array.isArray callbacks
-    ms = (
-      for next in callbacks
-        m = next(this)
-        assert m instanceof Matcher
-        m
-    )
-    # join all inputs together
-    newInputs = _(ms).map((m)=>m.inputs).flatten().value()
-    newPrevInputs = _(ms).map((m)=>m.prevInputs).flatten().value()
-    return M(newInputs, @context, newPrevInputs)
+    matches = []
+    for next in callbacks
+      m = next(this)
+      assert m instanceof Matcher
+      if m.input?
+        matches.push(@input.substring(0, @input.lenght - m.input.length))
+    match = _(matches).sortBy( (s) => s.length ).last()
+    if match?
+      return M(@input.substring(match.length), @context, @prevInput + match)
+    else
+      return M(null, @context, @prevInput)
 
-    
-  hadNoMatches: -> @inputs.length is 0
-  hadMatches: -> @inputs.length isnt 0
-  getMatchCount: -> @inputs.length
-  getFullMatches: -> @prevInputs 
-  getLongestFullMatch: ->
-    if @prevInputs.length > 0
-      match = _(@prevInputs).sortBy( (s) => s.length ).last()
-    else 
-      null
-
+  hadNoMatches: -> not @input?
+  hadMatches: -> @input?
+  getMatchCount: -> 1
+  getFullMatches: -> [@prevInput] 
+  getLongestFullMatch: -> @getFullMatches()[0]
 
   dump: -> 
-    console.log "prevInputs", @prevInputs
-    console.log "inputs: ", @inputs
+    console.log "prevInput", @prevInput
+    console.log "input: ", @input
     return @
 
 M = (args...) -> new Matcher(args...)
