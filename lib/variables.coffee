@@ -34,7 +34,7 @@ module.exports = (env) ->
               throw new Error("No expression given")
             tokens = null
             m = M(expr).matchAnyExpression((m, ts) => tokens = ts)
-            unless m.hadMatches() and m.getFullMatches()[0] is expr
+            unless m.hadMatch() and m.getFullMatch() is expr
               throw new Error("no match")
             @setVariableToExpr(variable.name, tokens, expr)
           catch e

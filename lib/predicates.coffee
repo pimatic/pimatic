@@ -81,7 +81,7 @@ module.exports = (env) ->
               assert s in [' on', ' off']
               device = d
               state = s.trim() is 'on'
-              match = next.getFullMatches()[0]
+              match = next.getFullMatch()
           )
         )
  
@@ -147,7 +147,7 @@ module.exports = (env) ->
                 return
               device = d
               negated = (s.trim() isnt "present") 
-              match = m.getFullMatches()[0]
+              match = m.getFullMatch()
             )
       )
       
@@ -211,7 +211,7 @@ module.exports = (env) ->
                 return
               device = d
               negated = (s.trim() in ["opened", 'open']) 
-              match = m.getFullMatches()[0]
+              match = m.getFullMatch()
             )
       )
       
@@ -321,8 +321,8 @@ module.exports = (env) ->
           else if Array.isArray attribute.type
             m = m.matchComparator('string', setComparator)
               .match(attribute.type, setRefValue) 
-          if m.getMatchCount() > 0 
-            matches = matches.concat m.getFullMatches()
+          if m.hadMatch()
+            matches.push m.getFullMatch()
             if result?
               if result.device.id isnt info.device.id or 
               result.attributeName isnt info.attributeName
@@ -407,17 +407,17 @@ module.exports = (env) ->
     parsePredicate: (input, context) ->
       result = null
 
-      varsiables = _(@framework.variableManager.getAllVariables()).map( (v) => v.name ).valueOf()
+      allVariables = _(@framework.variableManager.getAllVariables()).map( (v) => v.name ).valueOf()
 
       M(input, context)
-        .matchNumericExpression(varsiables, (next, leftTokens) =>
+        .matchNumericExpression(allVariables, (next, leftTokens) =>
           next.matchComparator('number', (next, comparator) =>
-            next.matchNumericExpression(varsiables, (next, rightTokens) =>
+            next.matchNumericExpression(allVariables, (next, rightTokens) =>
               result = {
                 leftTokens
                 rightTokens
                 comparator
-                match: next.getLongestFullMatch()
+                match: next.getFullMatch()
               }
             )
           )

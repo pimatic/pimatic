@@ -219,7 +219,7 @@ module.exports = (env) ->
         M(nextInput, context).matchOpenParenthese('[', (next, ptokens) =>
           tokens = tokens.concat ptokens
           openedParentheseCount += ptokens.length
-          nextInput = next.inputs[0]
+          nextInput = next.input
         )
 
         i = predicates.length
@@ -233,7 +233,7 @@ module.exports = (env) ->
           M(nextInput, context).matchCloseParenthese(']', openedParentheseCount, (next, ptokens) =>
             tokens = tokens.concat ptokens
             openedParentheseCount -= ptokens.length
-            nextInput = next.inputs[0]
+            nextInput = next.input
           )
 
           # Try to match " and ", " or ", ...
@@ -241,10 +241,10 @@ module.exports = (env) ->
           onMatch = (m, s) => tokens.push s.trim()
           m = M(nextInput, context).match(possibleTokens, onMatch)
           unless nextInput.length is 0
-            if m.hadNoMatches()
+            if m.hadNoMatch()
               context.addError("""Expected one of: "and", "or", ")".""")
             else
-              token = m.getLongestFullMatch()
+              token = m.getFullMatch()
               assert S(nextInput.toLowerCase()).startsWith(token.toLowerCase())
               nextInput = nextInput.substring(token.length)
       return {
@@ -269,8 +269,8 @@ module.exports = (env) ->
 
       # trigger keyword?
       m = M(nextInput, context).match(["trigger: "])
-      if m.hadMatches()
-        match = m.getFullMatches()[0]
+      if m.hadMatch()
+        match = m.getFullMatch()
         token += match
         nextInput = nextInput.substring(match.length)
         predicate.justTrigger = yes
@@ -337,8 +337,8 @@ module.exports = (env) ->
         .match(prefixToken, options)
         .matchTimeDuration(onTimeduration)
 
-      unless m.hadNoMatches()
-        token = m.getLongestFullMatch()
+      unless m.hadNoMatch()
+        token = m.getFullMatch()
         assert S(nextInput).startsWith(token)
         timeToken = S(token).chompLeft(prefixToken).s
         nextInput = nextInput.substring(token.length)
@@ -372,10 +372,10 @@ module.exports = (env) ->
           onMatch = (m, s) => tokens.push s.trim()
           m = M(nextInput, context).match([' and '], onMatch)
           unless nextInput.length is 0
-            if m.hadNoMatches()
+            if m.hadNoMatch()
               context.addError("Expected: \"and\", got \"#{nextInput}\"")
             else
-              token = m.getLongestFullMatch()
+              token = m.getFullMatch()
               assert S(nextInput.toLowerCase()).startsWith(token.toLowerCase())
               nextInput = nextInput.substring(token.length)
       return {

@@ -79,8 +79,8 @@ module.exports = (env) ->
         .match("log ")
         .matchStringWithVars(setLogString)
 
-      if m.hadMatches()
-        match = m.getFullMatches()[0]
+      if m.hadMatch()
+        match = m.getFullMatch()
         return {
           token: match
           nextInput: input.substring(match.length)
@@ -129,7 +129,7 @@ module.exports = (env) ->
         .matchVariable(varsLeft, (next, variableName) =>
           next.match([" to ", " := ", " = "], (next) =>
             next.matchNumericExpression(varsRight, (next, rightTokens) => 
-              match = next.getLongestFullMatch()
+              match = next.getFullMatch()
               variableName = variableName.substring(1)
               result = { variableName, rightTokens, match }
             )
@@ -217,7 +217,7 @@ module.exports = (env) ->
             return
           device = d
           state = s.trim()
-          match = m.getFullMatches()[0]
+          match = m.getFullMatch()
         )
       )
 
@@ -230,7 +230,7 @@ module.exports = (env) ->
             return
           device = d
           state = s.trim()
-          match = m.getFullMatches()[0]
+          match = m.getFullMatch()
         )
       )
 
@@ -315,14 +315,14 @@ module.exports = (env) ->
           last = m.match(nt, {optional: a.trim() isnt 'move'}, (m, po) ->
             p = po.trim()
           )
-          if last.hadMatches()
+          if last.hadMatch()
              # Already had a match with another device?
             if device? and device.id isnt d.id
               context?.addError(""""#{input.trim()}" is ambiguous.""")
               return
             device = d
             position = p
-            match = last.getLongestFullMatch()
+            match = last.getFullMatch()
         )
       )
 
@@ -394,7 +394,7 @@ module.exports = (env) ->
             context?.addError(""""#{input.trim()}" is ambiguous.""")
             return
           device = d
-          match = m.getLongestFullMatch()
+          match = m.getFullMatch()
         )
       )
 
@@ -468,7 +468,7 @@ module.exports = (env) ->
                 return
               device = d
               valueTokens = ts
-              match = m.getLongestFullMatch()
+              match = m.getFullMatch()
             )
         )
 

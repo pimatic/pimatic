@@ -14,16 +14,16 @@ describe "Matcher", ->
           token: "some test string"
           pattern: 'some'
         result: 
-          match: ["some"]
-          nextTokens: [' test string']
+          match: "some"
+          nextInput: ' test string'
       }
       {
         input: 
           token: "some test string"
           pattern: ["foo", "some"]
         result: 
-          match: ["some"]
-          nextTokens: [' test string']
+          match: "some"
+          nextInput: ' test string'
       }
 
     ]
@@ -32,8 +32,8 @@ describe "Matcher", ->
       do (tc) =>
         it "should have matches in #{tc.input.token}", ->
           m = M(tc.input.token).match(tc.input.pattern)
-          assert.deepEqual(m.getFullMatches(), tc.result.match)
-          assert.deepEqual(m.inputs, tc.result.nextTokens)
+          assert.deepEqual(m.getFullMatch(), tc.result.match)
+          assert.deepEqual(m.input, tc.result.nextInput)
 
   describe '#matchNumericExpression()', ->
 

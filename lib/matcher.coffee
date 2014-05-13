@@ -47,8 +47,7 @@ class Matcher
 
   # ###constructor()
   # Create a matcher for the input string, with the given parse context
-  constructor: (@input, @context = null, @prevInput = null) ->
-    unless @prevInput? then @prevInput = ""
+  constructor: (@input, @context = null, @prevInput = "") ->
   
   # ###match()
   ###
@@ -59,6 +58,7 @@ class Matcher
   In addition a matcher is returned that hast the remaining parts as input.
   ###
   match: (patterns, options = {}, callback = null) ->
+    unless @input? then return @
     unless Array.isArray patterns then patterns = [patterns]
     if typeof options is "function"
       callback = options
@@ -82,12 +82,12 @@ class Matcher
           [p, @input]
       )
 
-      # if pattern is an string, then we cann add an autocomplete for it
+      # if pattern is an string, then we can add an autocomplete for it
       if typeof p is "string" and @context
         showAc = (if options.acFilter? then options.acFilter(p, j) else true) 
         if showAc
           if S(pT).startsWith(inputT) and @input.length < p.length
-            @context.addHint(autocomplete: p)
+            @context?.addHint(autocomplete: p)
 
       # Now try to match the pattern against the input string
       doesMatch = false
@@ -124,30 +124,36 @@ class Matcher
       
     nextInput = null
     match = null
+    prevInputAndMatch = ""
     if matches.length > 0
       longestMatch = _(matches).sortBy( (m) => m.match.length ).last()
       nextInput = longestMatch.nextToken
       match = longestMatch.match
+      prevInputAndMatch = @prevInput + match
       if callback?
         callback(
-          M(nextInput, @context, @prevInput), 
+          M(nextInput, @context, prevInputAndMatch), 
           longestMatch.matchId
         )
     else if options.optional
       nextInput = @input
+      prevInputAndMatch = @prevInput
 
-    return M(nextInput, @context, @prevInput)
+    return M(nextInput, @context, prevInputAndMatch)
 
   # ###matchNumber()
   ###
   Matches any Number.
   ###
   matchNumber: (callback) -> 
-    result = @match /^(-?[0-9]+\.?[0-9]*)(.*?)$/, callback
-    if result.hadNoMatches()
-      @context.addHint(format: 'Number')
+    unless @input? then return @
+    next = @match /^(-?[0-9]+\.?[0-9]*)(.*?)$/, callback
+    if next.hadNoMatch()
+      @context?.addHint(format: 'Number')
+    return next
 
   matchVariable: (variables, callback) -> 
+    unless @input? then return @
     if typeof variables is "function"
       callback = variables
       variables = null
@@ -169,7 +175,8 @@ class Matcher
       return @match /^(\$[a-zA-z0-9_\-\.]+)(.*?)$/, callback
 
   matchString: (callback) -> 
-    ret = M([], @context)
+    unless @input? then return @
+    ret = M(null, @context)
     @match('"').match(/^([^"]*)(.*?)$/, (m, str) =>
       ret = m.match('"', (m) => 
         callback(m, str)
@@ -178,6 +185,7 @@ class Matcher
     return ret
 
   matchOpenParenthese: (token, callback) ->
+    unless @input? then return @
     tokens = []
     openedParentheseMatch = yes
     next = this
@@ -186,12 +194,13 @@ class Matcher
         tokens.push token
         next = m.match(' ', optional: yes)
       )
-      if m.hadNoMatches() then openedParentheseMatch = no
+      if m.hadNoMatch() then openedParentheseMatch = no
     if tokens.length > 0
       callback(next, tokens)
     return next
 
   matchCloseParenthese: (token, openedParentheseCount, callback) ->
+    unless @input? then return @
     assert typeof openedParentheseCount is "number"
     tokens = []
     closeParentheseMatch = yes
@@ -202,12 +211,13 @@ class Matcher
         openedParentheseCount--
         next = m
       )
-      if m.hadNoMatches() then closeParentheseMatch = no
+      if m.hadNoMatch() then closeParentheseMatch = no
     if tokens.length > 0
       callback(next, tokens)
     return next
 
   matchNumericExpression: (variables, openParanteses = 0, callback) ->
+    unless @input? then return @
     if typeof variables is "function"
       callback = variables
       variables = null
@@ -236,7 +246,7 @@ class Matcher
       tokens = tokens.concat ptokens
       openParanteses -= ptokens.length
       last = m
-    ).match(binarOpsFull, {acFilter: (op) => op[0]=' ' and op[op.length-1]=' '}, (m, op) => 
+    ).match(binarOpsFull, {acFilter: (op) => op[0] is ' ' and op[op.length-1] is ' '}, (m, op) => 
       m.matchNumericExpression(variables, openParanteses, (m, nextTokens) => 
         tokens.push(op.trim())
         tokens = tokens.concat(nextTokens)
@@ -247,9 +257,10 @@ class Matcher
     if last?
       callback(last, tokens)
       return last
-    else return M([])
+    else return M(null, @context)
 
   matchStringWithVars: (variables, callback) ->
+    unless @input? then return @
     if typeof variables is "function"
       callback = variables
       variables = null
@@ -261,14 +272,14 @@ class Matcher
     tokens = []
 
     next = @match('"')
-    while next.hadMatches() and (not last?)
+    while next.hadMatch() and (not last?)
       next.match(/^([^"\$]*)(.*?)$/, (m, strPart) =>
         # strPart is string till first var or ending quote
         # Check for end:
         tokens.push('"' + strPart + '"')
 
         end = m.match('"')
-        if end.hadMatches()  
+        if end.hadMatch()  
           last = end
         # else test if it is a var
         else
@@ -280,9 +291,10 @@ class Matcher
     if last?
       callback(last, tokens)
       return last
-    else return M([])
+    else return M(null, @context)
 
   matchAnyExpression: (callback) ->
+    unless @input? then return @
     tokens = null
     next = @or([
       ( (m) => m.matchStringWithVars((m, ts) => tokens = ts; return m) ),
@@ -293,6 +305,7 @@ class Matcher
     return next
 
   matchComparator: (type, callback) ->
+    unless @input? then return @
     assert type in ['number', 'string', 'boolean']
     assert typeof callback is "function"
 
@@ -317,32 +330,28 @@ class Matcher
   Matches any of the given devices.
   ###
   matchDevice: (devices, callback = null) ->
+    unless @input? then return @
     devicesWithId = _(devices).map( (d) => [d, d.id] ).value()
     devicesWithNames = _(devices).map( (d) => [d, d.name] ).value() 
 
-    matches = []
-    onIdMatch = (m, d) => 
-      matches.push(nextToken: m.inputs[0], device: d)
-      callback(m, d)
-    onNameMatch = (m, d) => 
-      # only call callback if not yet called with his device and nextToken
-      # This could ne if device name equals id of the same device
-      alreadyCalled = no
-      for match in matches
-        if match.nextToken is m.inputs[0] and match.device is d
-          alreadyCalled = yes
-          break
-      unless alreadyCalled then callback(m, d)
+    matchingDevices = {}
 
-    @match('the ', optional: true).or([
+    onIdMatch = (m, d) => matchingDevices[d.id] = {m, d}
+    onNameMatch = (m, d) => matchingDevices[d.id] = {m, d}
+
+    next = @match('the ', optional: true).or([
        # first try to match by id
       (m) => m.match(devicesWithId, onIdMatch)
       # then to try match names
       (m) => m.match(devicesWithNames, ignoreCase: yes, onNameMatch)
     ])
+    for id, {m, d} of matchingDevices
+      callback(m, d)
+    return next
     
 
   matchTimeDuration: (options = null, callback) ->
+    unless @input? then return @
     if typeof options is 'function'
       callback = options
       options = null
@@ -366,14 +375,15 @@ class Matcher
     , {acFilter: (u) => u[0] is ' '}, onMatchUnit
     )
 
-    if m.hadMatches()
+    if m.hadMatch()
       timeMs = milliseconds.parse "#{time} #{unit}"
       callback(m, {time, unit, timeMs})
     return m
 
   optional: (callback) ->
+    unless @input? then return @
     next = callback(this)
-    if next.hadMatches()
+    if next.hadMatch()
       return next
     else
       return this
@@ -411,7 +421,7 @@ class Matcher
         # try to match with this matcher
         m = next(current)
         assert m instanceof Matcher
-        unless m.hadNoMatches()
+        unless m.hadNoMatch()
           hadMatch = yes
           current = m
     return current
@@ -419,22 +429,19 @@ class Matcher
   or: (callbacks) ->
     assert Array.isArray callbacks
     matches = []
-    for next in callbacks
-      m = next(this)
+    for cb in callbacks
+      m = cb(this)
       assert m instanceof Matcher
-      if m.input?
-        matches.push(@input.substring(0, @input.lenght - m.input.length))
-    match = _(matches).sortBy( (s) => s.length ).last()
-    if match?
-      return M(@input.substring(match.length), @context, @prevInput + match)
-    else
-      return M(null, @context, @prevInput)
+      matches.push m
+    # Get the longest match
+    next = _(matches).sortBy( (m) => 
+      if m.input? then m.input.length else Number.MAX_VALUE
+    ).first()
+    return next
 
-  hadNoMatches: -> not @input?
-  hadMatches: -> @input?
-  getMatchCount: -> 1
-  getFullMatches: -> [@prevInput] 
-  getLongestFullMatch: -> @getFullMatches()[0]
+  hadNoMatch: -> not @input?
+  hadMatch: -> @input?
+  getFullMatch: -> @prevInput
 
   dump: -> 
     console.log "prevInput", @prevInput
