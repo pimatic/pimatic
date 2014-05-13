@@ -946,6 +946,7 @@ module.exports = (env) ->
         getErrorsAsString: -> _(@errors).reduce((ms, m) => "#{ms}, #{m}")
         finalize: () -> 
           @autocomplete = _(@autocomplete).uniq().sortBy((s)=>s.toLowerCase()).value()
+          @format = _(@format).uniq().sortBy((s)=>s.toLowerCase()).value()
       }
 
   return exports = { RuleManager }

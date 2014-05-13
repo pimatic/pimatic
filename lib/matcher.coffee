@@ -148,7 +148,7 @@ class Matcher
   matchNumber: (callback) -> 
     unless @input? then return @
     next = @match /^(-?[0-9]+\.?[0-9]*)(.*?)$/, callback
-    if next.hadNoMatch()
+    if next.hadNoMatch() or next.input.length is 0
       @context?.addHint(format: 'Number')
     return next
 
