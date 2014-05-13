@@ -219,7 +219,7 @@ module.exports = (env) ->
         M(nextInput, context).matchOpenParenthese('[', (next, ptokens) =>
           tokens = tokens.concat ptokens
           openedParentheseCount += ptokens.length
-          nextInput = next.input
+          nextInput = next.getRemainingInput()
         )
 
         i = predicates.length
@@ -233,7 +233,7 @@ module.exports = (env) ->
           M(nextInput, context).matchCloseParenthese(']', openedParentheseCount, (next, ptokens) =>
             tokens = tokens.concat ptokens
             openedParentheseCount -= ptokens.length
-            nextInput = next.input
+            nextInput = next.getRemainingInput()
           )
 
           # Try to match " and ", " or ", ...

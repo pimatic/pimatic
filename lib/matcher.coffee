@@ -442,6 +442,7 @@ class Matcher
   hadNoMatch: -> not @input?
   hadMatch: -> @input?
   getFullMatch: -> @prevInput
+  getRemainingInput: -> @input
 
   dump: -> 
     console.log "prevInput", @prevInput
