@@ -443,6 +443,7 @@ module.exports = (env) ->
               name: rule.name
               rule: rule.string
               active: rule.active
+              logging: rule.logging
             }
             @emit "config"
           # * If a rule was changed then...
@@ -450,7 +451,13 @@ module.exports = (env) ->
             # ...change the rule with the right id in the config.json file
             @config.rules = for r in @config.rules 
               if r.id is rule.id
-                {id: rule.id, name: rule.name, rule: rule.string, active: rule.active}
+                {
+                  id: rule.id, 
+                  name: rule.name,
+                  rule: rule.string,
+                  active: rule.active,
+                  logging: rule.logging
+                }
               else r
             @emit "config"
           # * If a rule was removed then

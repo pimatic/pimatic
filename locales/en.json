@@ -122,5 +122,8 @@
 	"lowered %s": "lowered %s",
 	"stopped %s": "stopped %s",
 	"There was an error installing the updates.": "There was an error installing the updates.",
-	"Updates were successful. Please restart pimatic.": "Updates were successful. Please restart pimatic."
+	"Updates were successful. Please restart pimatic.": "Updates were successful. Please restart pimatic.",
+	"Log ": "Log ",
+	"Log action execution ": "Log action execution ",
+	"Log Action Execution ": "Log Action Execution "
 }

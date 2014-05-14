@@ -538,7 +538,7 @@ module.exports = (env) ->
             )
 
     # ###addRuleByString()
-    addRuleByString: (id, name, ruleString, active=yes, force=false) ->
+    addRuleByString: (id, name, ruleString, active=yes, force=false, logging=yes) ->
       assert id? and typeof id is "string" and id.length isnt 0
       assert name? and typeof name is "string"
       assert ruleString? and typeof ruleString is "string"
@@ -561,6 +561,7 @@ module.exports = (env) ->
         # If the rules was successful parsed add it to the rule array.
         rule.active = active
         rule.valid = yes
+        rule.logging = logging
         @rules[id] = rule
         @emit "add", rule
         # Check if the condition of the rule is allready true.
@@ -611,7 +612,7 @@ module.exports = (env) ->
       return
 
     # ###updateRuleByString()
-    updateRuleByString: (id, name, ruleString, active=yes) ->
+    updateRuleByString: (id, name, ruleString, active=yes, logging=yes) ->
       assert id? and typeof id is "string" and id.length isnt 0
       assert name? and typeof name is "string"
       assert ruleString? and typeof ruleString is "string"
@@ -628,6 +629,7 @@ module.exports = (env) ->
 
         rule.active = active
         rule.valid = yes
+        rule.logging = logging
         # If the rule was successfully parsed then get the old rule
         oldRule = @rules[id]
         # and cancel the notifier for the old predicates.
@@ -842,7 +844,8 @@ module.exports = (env) ->
               assert result.length is 2
               result
           )
-          env.logger.info "rule #{rule.id}: #{message}"
+          if rule.logging
+            env.logger.info "rule #{rule.id}: #{message}"
           if next?
             assert Q.isPromise(next)
             next = logMessageForResult(next)
