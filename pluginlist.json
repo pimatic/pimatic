@@ -13,5 +13,6 @@
 "pimatic-sispmctl",
 "pimatic-pushover",
 "pimatic-sunrise",
-"pimatic-voice-recognition"
+"pimatic-voice-recognition",
+"pimatic-athome"
 ]
