@@ -148,7 +148,11 @@ class Matcher
   matchNumber: (callback) -> 
     unless @input? then return @
     next = @match /^(-?[0-9]+\.?[0-9]*)(.*?)$/, callback
-    if next.hadNoMatch() or next.input.length is 0
+
+
+    showFormatHint = (@input is "" or next.input is "")
+
+    if showFormatHint
       @context?.addHint(format: 'Number')
     return next
 
@@ -444,15 +448,13 @@ class Matcher
   getFullMatch: -> @prevInput
   getRemainingInput: -> @input
 
-  dump: -> 
-    console.log "prevInput", @prevInput
-    console.log "input: ", @input
+  dump: (info) ->
+    console.log(info + ":") if info? 
+    console.log "prevInput: \"#{@prevInput}\" "
+    console.log "input: \"#{@input}\""
     return @
 
 M = (args...) -> new Matcher(args...)
-
-
-
 
 module.exports = M
 module.exports.Matcher = Matcher
