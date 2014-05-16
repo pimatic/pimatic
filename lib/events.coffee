@@ -81,6 +81,21 @@ module.exports = (env) ->
         )
 
       Q.all(pending).then( =>
+
+        time = (new Date()).getTime()
+        Q.all(
+          Q(@saveMessageEvent(new Date(), 'info', 'test')).done() for i in [0..100]
+        ).then( =>
+          console.log "insert:", (new Date()).getTime() - time
+        ).then( =>
+          time = (new Date()).getTime()
+          @queryMessages().then( (result) =>
+            console.log "query:", (new Date()).getTime() - time
+            console.log result
+          )
+        ).done()
+
+
         # console.log "ready"
         # time = (new Date()).getTime()
         # Q(@saveMessageEvent(new Date(), 'info', 'test')).done()
