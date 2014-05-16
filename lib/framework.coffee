@@ -22,6 +22,7 @@ module.exports = (env) ->
     app: null
     ruleManager: null
     pluginManager: null
+    eventlog: null
     config: null
 
     constructor: (@configFile) ->
@@ -33,6 +34,7 @@ module.exports = (env) ->
       @loadConfig()
       @variableManager = new env.variables.VariableManager(this, @config.variables)
       @ruleManager = new env.rules.RuleManager(@config.rules)
+      @eventLog = new env.events.Eventlog(this)
       @setupExpressApp()
 
     loadConfig: () ->

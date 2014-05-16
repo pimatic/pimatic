@@ -45,7 +45,11 @@
     "daemon": "1.1.0",
     "date-format-lite": "0.5.0",
     "string": "~1.8.0",
-    "byline": "~4.1.1"
+    "byline": "~4.1.1",
+    "sqlite3": "~2.2.3",
+    "knex": "~0.5.14",
+    "install": "~0.1.7",
+    "npm": "~1.4.10"
   },
   "bundledDependencies": [
     "coffee-script",
@@ -63,7 +67,8 @@
     "daemon",
     "date-format-lite",
     "string",
-    "byline"
+    "byline",
+    "knex"
   ],
   "devDependencies": {
     "grunt-cli": "0.1.11",
