@@ -82,26 +82,38 @@ module.exports = (env) ->
 
       Q.all(pending).then( =>
 
-        time = (new Date()).getTime()
-        Q.all(
-          Q(@saveMessageEvent(new Date(), 'info', 'test')).done() for i in [0..100]
-        ).then( =>
-          console.log "insert:", (new Date()).getTime() - time
-        ).then( =>
-          time = (new Date()).getTime()
-          @queryMessages().then( (result) =>
-            console.log "query:", (new Date()).getTime() - time
-            console.log result
-          )
-        ).done()
+        # t = =>
+        #   time = (new Date()).getTime()
+        #   Q.all(
+        #     (@saveMessageEvent(new Date(), 'info', 'test')) for i in [0..100]
+        #   ).then( =>
+        #     console.log "insert:", (new Date()).getTime() - time
+        #   ).then( =>
+        #     time = (new Date()).getTime()
+        #     @queryMessages().then( (result) =>
+        #       console.log "query:", (new Date()).getTime() - time
+        #       console.log result
+        #     )
+        #   ).then( =>
+        #     time = (new Date()).getTime()
+        #     Q.all((@saveDeviceAttributeEvent('my-phone', 'presence', new Date(), true)) for i in [0..100])
+        #   ).then( =>
+        #     console.log "insert:", (new Date()).getTime() - time
+        #   ).then( =>
+        #     time = (new Date()).getTime()
+        #     @queryDeviceAttributeValues().then( (result) =>
+        #       console.log "query:", (new Date()).getTime() - time
+        #       console.log result
+        #     )
+        #   ).done()
+
+        # setTimeout(t, 5000)
 
 
         # console.log "ready"
         # time = (new Date()).getTime()
         # Q(@saveMessageEvent(new Date(), 'info', 'test')).done()
-        # @saveDeviceAttributeEvent('my-phone', 'presence', time, true).then( =>
-        #   console.log dbMapping.deviceAttributeCache
-        # )
+        # 
         # @queryMessages().then( (result) =>
         #   console.log result
         # )
@@ -198,6 +210,7 @@ module.exports = (env) ->
       assert typeof deviceId is 'string' and deviceId.length > 0
       assert typeof attributeName is 'string' and attributeName.length > 0
 
+      console.log "insert d a"
       device = @framework.getDeviceById(deviceId)
       unless device? then throw new Error("#{deviceId} not found.")
       attribute = device.attributes[attributeName]
