@@ -9,6 +9,7 @@ Q = require 'q'
 _ = require 'lodash'
 S = require 'string'
 Knex = require 'knex'
+path = require 'path'
 
 module.exports = (env) ->
 
@@ -34,15 +35,17 @@ module.exports = (env) ->
   ###
   class Eventlog extends require('events').EventEmitter
 
-    constructor: (@framework) ->
-      @_setup()
+    constructor: (@framework, dbSettings) ->
+      @_setup(dbSettings)
 
-    _setup: ->
+    _setup: (dbSettings) ->
+      connection = _.clone(dbSettings.connection)
+      if dbSettings.client is 'sqlite3' and connection.filename isnt ':memory:'
+        connection.filename = path.resolve(@framework.maindir, '../..', connection.filename)
+
       @knex = Knex.initialize(
-        client: 'sqlite3'
-        connection: {
-          filename: "./mydb.sqlite"
-        }
+        client: dbSettings.client
+        connection: connection
       )
 
       createTableIfNotExists = (tableName, cb) =>
@@ -61,6 +64,7 @@ module.exports = (env) ->
         table.increments('id').primary()
         table.timestamp('time')
         table.integer('level')
+        table.text('tags')
         table.text('text')
       )
       pending.push createTableIfNotExists('deviceAttribute', (table) =>
@@ -80,7 +84,7 @@ module.exports = (env) ->
           table[columnType]('value')
         )
 
-      Q.all(pending).then( =>
+      Q.all(pending).then( => @emit('ready') ).done()
 
         # t = =>
         #   time = (new Date()).getTime()
@@ -96,7 +100,8 @@ module.exports = (env) ->
         #     )
         #   ).then( =>
         #     time = (new Date()).getTime()
-        #     Q.all((@saveDeviceAttributeEvent('my-phone', 'presence', new Date(), true)) for i in [0..100])
+        #     Q.all((@saveDeviceAttributeEvent('my-phone', 'presence', new Date(), true)) 
+        #  for i in [0..100])
         #   ).then( =>
         #     console.log "insert:", (new Date()).getTime() - time
         #   ).then( =>
@@ -118,29 +123,32 @@ module.exports = (env) ->
         #   console.log result
         # )
 
-        # @queryDeviceAttributeValues({deviceId: 'my-phone', attributeName: 'presence'}).then( (result) =>
+        # @queryDeviceAttributeValues({deviceId: 'my-phone', attributeName: 'presence'}).
+        #then( (result) =>
         #   console.log result
         # )
 
         # @knex('message').select().then( (result) =>
         #   console.log result
         # )
-      ).done()
+  
 
 
-    saveMessageEvent: (time, level, text) ->
+    saveMessageEvent: (time, level, tags, text) ->
+      @emit 'log', {time, level, tags, text}
       #assert typeof time is 'number'
+      assert Array.isArray(tags)
       assert typeof level is 'string'
-      assert level in _.keys(dbMapping.logLevelToInt)
-
+      assert level in _.keys(dbMapping.logLevelToInt) 
       return @knex('message').insert(
         time: time
         level: dbMapping.logLevelToInt[level]
+        tags: JSON.stringify(tags)
         text: text
       )
 
     queryMessages: ({level, levelOp, after, before} = {}) ->
-      query = @knex('message').select('time', 'level', 'text')
+      query = @knex('message').select('time', 'level', 'tags', 'text')
       if level?
         unless levelOp then levelOp = '='
         query.where('level', levelOp, dbMapping.logLevelToInt['level'])
@@ -151,6 +159,7 @@ module.exports = (env) ->
       return Q(query).then( (msgs) =>
         for m in msgs
           m.level = dbMapping.logIntToLevel[m.level]
+          m.tags = JSON.parse(m.tags)
         return msgs 
       )
 
@@ -171,8 +180,7 @@ module.exports = (env) ->
           if attributeName?
             query.where('attributeName', attributeName)
 
-
-      query = null;
+      query = null
       for type in _.keys(dbMapping.typeMap)
         tableName = "attributeValue#{type}"
         unless query?
@@ -180,7 +188,7 @@ module.exports = (env) ->
           buildQueryForType(tableName, query)
         else
           query.unionAll( -> buildQueryForType(tableName, this) )
-      #console.log query.toString()
+      #console.log query.toString() 
       return Q(query)
 
 
@@ -199,7 +207,7 @@ module.exports = (env) ->
 
     _getDeviceAttributeInfo: (deviceId, attributeName) ->
       fullQualifier = "#{deviceId}.#{attributeName}"
-      info = dbMapping.deviceAttributeCache[fullQualifier];
+      info = dbMapping.deviceAttributeCache[fullQualifier]
       return (
         if info? then Q(info)
         else @_insertDeviceAttribue(deviceId, attributeName)

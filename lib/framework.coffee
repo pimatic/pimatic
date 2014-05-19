@@ -34,7 +34,7 @@ module.exports = (env) ->
       @loadConfig()
       @variableManager = new env.variables.VariableManager(this, @config.variables)
       @ruleManager = new env.rules.RuleManager(@config.rules)
-      @eventLog = new env.events.Eventlog(this)
+      @eventLog = new env.events.Eventlog(this, @config.settings.database)
       @setupExpressApp()
 
     loadConfig: () ->
@@ -63,7 +63,7 @@ module.exports = (env) ->
         # require("better-stack-traces").install()
 
       # * Set the log level
-      env.logger.transports.console.level = @config.settings.logLevel
+      env.logger.winston.transports.taggedConsoleLogger.level = @config.settings.logLevel
 
       i18n.configure({
         locales:['en', 'de'],
