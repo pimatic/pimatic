@@ -43,8 +43,14 @@ module.exports = (env) ->
           # create a sublogger:
           pluginEnv = Object.create(env)
           pluginEnv.logger = env.logger.base.createSublogger(name)
-          require('coffee-cache').setCacheDir('./.coffee/a')
-          return plugin = (require name) pluginEnv, module
+          moduleFilename = require.resolve(name)
+          # reload coffee-cache so that cachedir is in the plugin
+          delete require.cache[require.resolve('coffee-cache')]
+          require('coffee-cache').setCacheDir(
+            path.resolve(path.dirname(moduleFilename), './.js/'),
+            path.dirname(moduleFilename)
+          )
+          return plugin = (require moduleFilename) pluginEnv, module
         )
     # Checks if the plugin folder exists under node_modules
     isInstalled: (name) ->

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-require('coffee-cache');
+process.umask(0);
 var path = require('path');
 var fs = require('fs');
+require('coffee-cache').setCacheDir(path.resolve(__dirname, './.js'), __dirname);
 var init = require('./lib/daemon');
 var semver = require('semver');
 
