@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-require('coffee-script');
+require('coffee-cache');
 var path = require('path');
 var fs = require('fs');
 var init = require('./lib/daemon');
