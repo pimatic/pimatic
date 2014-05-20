@@ -16,7 +16,7 @@ module.exports = (env) ->
   dbMapping = {
     logLevelToInt:
       'error': 0
-      'warning': 1
+      'warn': 1
       'info': 2
       'debug': 3
     typeMap:
@@ -84,55 +84,21 @@ module.exports = (env) ->
           table[columnType]('value')
         )
 
+      # wiring up the logger
+      env.logger.winston.on "logged", (level, msg, meta) =>
+        @saveMessageEvent(meta.timestamp, level, meta.tags, msg).done()
+
+      # wiring up device attributes
+      @framework.on('device', (device) =>
+        for name, attr of device.attributes
+          do (name, attr) =>
+            device.on(name, onChange = (value) =>
+              now = new Date()
+              @saveDeviceAttributeEvent(device.id, name, now, value).done()
+            )
+      )
+
       Q.all(pending).then( => @emit('ready') ).done()
-
-        # t = =>
-        #   time = (new Date()).getTime()
-        #   Q.all(
-        #     (@saveMessageEvent(new Date(), 'info', 'test')) for i in [0..100]
-        #   ).then( =>
-        #     console.log "insert:", (new Date()).getTime() - time
-        #   ).then( =>
-        #     time = (new Date()).getTime()
-        #     @queryMessages().then( (result) =>
-        #       console.log "query:", (new Date()).getTime() - time
-        #       console.log result
-        #     )
-        #   ).then( =>
-        #     time = (new Date()).getTime()
-        #     Q.all((@saveDeviceAttributeEvent('my-phone', 'presence', new Date(), true)) 
-        #  for i in [0..100])
-        #   ).then( =>
-        #     console.log "insert:", (new Date()).getTime() - time
-        #   ).then( =>
-        #     time = (new Date()).getTime()
-        #     @queryDeviceAttributeValues().then( (result) =>
-        #       console.log "query:", (new Date()).getTime() - time
-        #       console.log result
-        #     )
-        #   ).done()
-
-        # setTimeout(t, 5000)
-
-
-        # console.log "ready"
-        # time = (new Date()).getTime()
-        # Q(@saveMessageEvent(new Date(), 'info', 'test')).done()
-        # 
-        # @queryMessages().then( (result) =>
-        #   console.log result
-        # )
-
-        # @queryDeviceAttributeValues({deviceId: 'my-phone', attributeName: 'presence'}).
-        #then( (result) =>
-        #   console.log result
-        # )
-
-        # @knex('message').select().then( (result) =>
-        #   console.log result
-        # )
-  
-
 
     saveMessageEvent: (time, level, tags, text) ->
       @emit 'log', {time, level, tags, text}
@@ -140,12 +106,12 @@ module.exports = (env) ->
       assert Array.isArray(tags)
       assert typeof level is 'string'
       assert level in _.keys(dbMapping.logLevelToInt) 
-      return @knex('message').insert(
+      return Q(@knex('message').insert(
         time: time
         level: dbMapping.logLevelToInt[level]
         tags: JSON.stringify(tags)
         text: text
-      )
+      ))
 
     queryMessages: ({level, levelOp, after, before} = {}) ->
       query = @knex('message').select('time', 'level', 'tags', 'text')
@@ -162,6 +128,11 @@ module.exports = (env) ->
           m.tags = JSON.parse(m.tags)
         return msgs 
       )
+
+    deleteMessagesOlderThan: (time) ->
+      assert typeof before is "number" or before instanceof Date
+      Q(@knex('message').where('time', '<=', time).del()) 
+
 
     queryDeviceAttributeValues: ({deviceId, attributeName, after, before} = {}) ->
       
@@ -195,6 +166,8 @@ module.exports = (env) ->
     saveDeviceAttributeEvent: (deviceId, attributeName, time, value) ->
       assert typeof deviceId is 'string' and deviceId.length > 0
       assert typeof attributeName is 'string' and attributeName.length > 0
+
+      @emit 'device-attribute', {deviceId, attributeName, time, value}
 
       return @_getDeviceAttributeInfo(deviceId, attributeName).then( (info) =>
         tableName = "attributeValue#{info.type}"

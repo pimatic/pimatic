@@ -5,7 +5,6 @@ Logger
 
 ###
 winston = require 'winston'
-TaggedLogger = require("tagged-logger")
 
 events = require("events")
 util = require("util")
@@ -93,8 +92,22 @@ class MemoryTransport extends winston.Transport
     @emit "log", msg
     callback null, true
 
+TaggedLogger = (target, tags) ->
+  @target = target
+  @tags = tags or []
+  return @
 
-TaggedLogger::debug = (msg) -> @log "debug", msg
+TaggedLogger::log = (level, args...) ->
+  msg = util.format.apply(null, args);
+  @target.log(level, msg, {timestamp: new Date(), tags: @tags})
+
+TaggedLogger::debug = (args...) -> @log "debug", args...
+TaggedLogger::info = (args...) -> @log "info", args...
+TaggedLogger::warn = (args...) -> @log "warn", args...
+TaggedLogger::error = (args...) -> @log "error", args...
+
+TaggedLogger::createSublogger = (tag) -> new TaggedLogger(@target, @tags.concat([tag]))
+
 
 winstonLogger = new (winston.Logger)(
   transports: [
@@ -108,7 +121,6 @@ winstonLogger = new (winston.Logger)(
 )
 
 TaggedLogger::base = base = new TaggedLogger(winstonLogger)
-
 logger = base.createSublogger("pimatic")
 logger.winston = winstonLogger
 module.exports = logger

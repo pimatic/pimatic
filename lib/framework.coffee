@@ -34,7 +34,7 @@ module.exports = (env) ->
       @loadConfig()
       @variableManager = new env.variables.VariableManager(this, @config.variables)
       @ruleManager = new env.rules.RuleManager(@config.rules)
-      @eventLog = new env.events.Eventlog(this, @config.settings.database)
+      @eventlog = new env.events.Eventlog(this, @config.settings.database)
       @setupExpressApp()
 
     loadConfig: () ->
