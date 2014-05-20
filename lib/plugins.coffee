@@ -167,13 +167,13 @@ module.exports = (env) ->
         output += "#{line}\n"
         if line.indexOf('npm http 304') is 0 then return
         deferred.notify(line)
-        npmLogger.info S(line).chompLeft('npm').s
+        npmLogger.info S(line).chompLeft('npm ').s
       stderr = byline(npm.stderr)
       stderr.on "data", (line) => 
         line = line.toString()
         output += "#{line}\n"
         deferred.notify(line)
-        npmLogger.info S(line).chompLeft('npm').s
+        npmLogger.info S(line).chompLeft('npm ').s
 
       npm.on "close", (code) =>
         @npmRunning = no
