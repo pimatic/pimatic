@@ -39,7 +39,6 @@
     "cassert": "0.1.*",
     "lodash": "2.4.1",
     "q": "1.0.0",
-    "CBuffer": "~0.1.4",
     "semver": "2.2.1",
     "fs.extra": "1.2.1",
     "daemon": "1.1.0",
@@ -62,14 +61,16 @@
     "cassert",
     "lodash",
     "q",
-    "CBuffer",
     "semver",
     "fs.extra",
     "daemon",
     "date-format-lite",
     "string",
     "byline",
-    "knex"
+    "knex",
+    "moment",
+    "colors",
+    "coffee-cache"
   ],
   "devDependencies": {
     "grunt-cli": "0.1.11",

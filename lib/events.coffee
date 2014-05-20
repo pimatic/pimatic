@@ -35,10 +35,9 @@ module.exports = (env) ->
   ###
   class Eventlog extends require('events').EventEmitter
 
-    constructor: (@framework, dbSettings) ->
-      @_setup(dbSettings)
+    constructor: (@framework) ->
 
-    _setup: (dbSettings) ->
+    init: (dbSettings) ->
       connection = _.clone(dbSettings.connection)
       if dbSettings.client is 'sqlite3' and connection.filename isnt ':memory:'
         connection.filename = path.resolve(@framework.maindir, '../..', connection.filename)
@@ -98,7 +97,7 @@ module.exports = (env) ->
             )
       )
 
-      Q.all(pending).then( => @emit('ready') ).done()
+      return Q.all(pending)
 
     saveMessageEvent: (time, level, tags, text) ->
       @emit 'log', {time, level, tags, text}
