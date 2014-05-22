@@ -35,15 +35,15 @@ module.exports = (env) ->
   ###
   class Eventlog extends require('events').EventEmitter
 
-    constructor: (@framework) ->
+    constructor: (@framework, @dbSettings) ->
 
-    init: (dbSettings) ->
-      connection = _.clone(dbSettings.connection)
-      if dbSettings.client is 'sqlite3' and connection.filename isnt ':memory:'
+    init: () ->
+      connection = _.clone(@dbSettings.connection)
+      if @dbSettings.client is 'sqlite3' and connection.filename isnt ':memory:'
         connection.filename = path.resolve(@framework.maindir, '../..', connection.filename)
 
       @knex = Knex.initialize(
-        client: dbSettings.client
+        client: @dbSettings.client
         connection: connection
       )
 
@@ -92,12 +92,28 @@ module.exports = (env) ->
         for name, attr of device.attributes
           do (name, attr) =>
             device.on(name, onChange = (value) =>
-              now = new Date()
-              @saveDeviceAttributeEvent(device.id, name, now, value).done()
+              fullQualifier = "#{device.id}.#{name}"
+              if fullQualifier in @dbSettings.deviceAttributeLogging
+                now = new Date()
+                @saveDeviceAttributeEvent(device.id, name, now, value).done()
             )
       )
 
       return Q.all(pending)
+
+    setDeviceAttributeLogging: (deviceId, attributeName, enable) ->
+      fullQualifier = "#{deviceId}.#{attributeName}"
+      if enable
+        if fullQualifier in @dbSettings.deviceAttributeLogging then return
+        @dbSettings.deviceAttributeLogging.push fullQualifier
+      else
+        @dbSettings.deviceAttributeLogging = _.filter(
+          @dbSettings.deviceAttributeLogging, 
+          (fq) => fq isnt fullQualifier
+        )
+      @framework.saveConfig()
+      return
+
 
     saveMessageEvent: (time, level, tags, text) ->
       @emit 'log', {time, level, tags, text}
@@ -129,7 +145,7 @@ module.exports = (env) ->
       )
 
     deleteMessagesOlderThan: (time) ->
-      assert typeof before is "number" or before instanceof Date
+      assert typeof time is "number" or time instanceof Date
       Q(@knex('message').where('time', '<=', time).del()) 
 
 

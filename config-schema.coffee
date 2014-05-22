@@ -113,6 +113,10 @@ module.exports =
         default: {
           filename: "pimatic-database.sqlite"
         }
+      deviceAttributeLogging:
+        doc: "device attribute to log"
+        format: Array
+        default: []
 
   plugins:
     doc: "Array of plugins to load"
