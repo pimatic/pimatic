@@ -13,6 +13,57 @@ path = require 'path'
 
 module.exports = (env) ->
 
+  messageCriteria = {
+    criteria:
+      type: Object
+      optional: yes
+      properties:
+        level:
+          type: 'any'
+          optional: yes
+        levelOp:
+          type: String
+          optional: yes
+        after:
+          type: Date
+          optional: yes
+        before:
+          type: Date
+          optional: yes
+  }
+
+  api = {
+    actions:
+      queryMessages:
+        desciption: "list log messages"
+        params: messageCriteria
+        result:
+          messages:
+            type: Array
+      deleteMessages:
+        description: "delets messages older than the given date"
+        params: messageCriteria
+      setDeviceAttributeLogging:
+        description: "enable or disable logging for an device attribute"
+        params:
+          deviceId:
+            type: String
+          attributeName:
+            type: String
+          enable:
+            type: Boolean
+      queryMessagesTags:
+        description: "lists all tags from the matching messages"
+        params: messageCriteria
+      queryMessagesCount:
+        description: "count of all matches matching the criteria"
+        params: messageCriteria
+  }
+
+
+
+
+
   dbMapping = {
     logLevelToInt:
       'error': 0
@@ -128,15 +179,40 @@ module.exports = (env) ->
         text: text
       ))
 
-    queryMessages: ({level, levelOp, after, before} = {}) ->
-      query = @knex('message').select('time', 'level', 'tags', 'text')
+    _buildMessageWhere: (query, {level, levelOp, after, before, tags}) ->
       if level?
         unless levelOp then levelOp = '='
-        query.where('level', levelOp, dbMapping.logLevelToInt['level'])
+        if Array.isArray(level)
+          level = _.map(level, (l) => dbMapping.logLevelToInt[l])
+          query.whereIn('level', level)
+        else
+          query.where('level', levelOp, dbMapping.logLevelToInt[level])
       if after?
         query.where('time', '>=', after)
       if before?
         query.where('time', '<=', before)
+      if tags?
+        for tag in tags
+          query.where('tags', 'like', "%\"#{tag}\"%")
+
+    queryMessagesCount: (criteria = {})->
+      query = @knex('message').count('*')
+      @_buildMessageWhere(query, criteria)
+      return Q(query).then( (result) => {count: result[0]["count(*)"]} )
+
+    queryMessagesTags: (criteria = {})->
+      query = @knex('message').distinct('tags').select()
+      @_buildMessageWhere(query, criteria)
+      console.log query.toString()
+      return Q(query).then( (tags) =>
+        _(tags).map((r)=>JSON.parse(r.tags)).flatten().uniq().valueOf()
+      )
+
+
+    queryMessages: (criteria = {}) ->
+      query = @knex('message').select('time', 'level', 'tags', 'text')
+      @_buildMessageWhere(query, criteria)
+      console.log query.toString() 
       return Q(query).then( (msgs) =>
         for m in msgs
           m.level = dbMapping.logIntToLevel[m.level]
@@ -144,9 +220,10 @@ module.exports = (env) ->
         return msgs 
       )
 
-    deleteMessagesOlderThan: (time) ->
-      assert typeof time is "number" or time instanceof Date
-      Q(@knex('message').where('time', '<=', time).del()) 
+    deleteMessages: (time, criteria = {}) ->
+      query = @knex('message')
+      @_buildMessageWhere(query)
+      return Q((query).del()) 
 
 
     queryDeviceAttributeValues: ({deviceId, attributeName, after, before} = {}) ->
@@ -245,4 +322,4 @@ module.exports = (env) ->
       )
 
 
-  return exports = { Eventlog  }
+  return exports = { Eventlog, api }
