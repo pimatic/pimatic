@@ -952,4 +952,11 @@ module.exports = (env) ->
           @format = _(@format).uniq().sortBy((s)=>s.toLowerCase()).value()
       }
 
+  
+    # ###getAllRules()
+    getAllRules: () ->
+      return (for name, r of @rules
+        ruleInfo = {name, active: r.active, valid: r.valid, string: r.string }
+      )
+
   return exports = { RuleManager }
