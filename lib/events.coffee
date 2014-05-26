@@ -55,9 +55,15 @@ module.exports = (env) ->
       queryMessagesTags:
         description: "lists all tags from the matching messages"
         params: messageCriteria
+        result:
+          tags:
+            type: Array
       queryMessagesCount:
         description: "count of all matches matching the criteria"
         params: messageCriteria
+        result:
+          count:
+            type: Number
   }
 
 
@@ -179,7 +185,7 @@ module.exports = (env) ->
         text: text
       ))
 
-    _buildMessageWhere: (query, {level, levelOp, after, before, tags}) ->
+    _buildMessageWhere: (query, {level, levelOp, after, before, tags, offset, limit}) ->
       if level?
         unless levelOp then levelOp = '='
         if Array.isArray(level)
@@ -192,18 +198,23 @@ module.exports = (env) ->
       if before?
         query.where('time', '<=', before)
       if tags?
+        unless Array.isArray tags then tags = [tags]
         for tag in tags
           query.where('tags', 'like', "%\"#{tag}\"%")
+      query.orderBy('time', 'desc')
+      if offset?
+        query.offset(offset)
+      if limit?
+        query.limit(limit)
 
     queryMessagesCount: (criteria = {})->
       query = @knex('message').count('*')
       @_buildMessageWhere(query, criteria)
-      return Q(query).then( (result) => {count: result[0]["count(*)"]} )
+      return Q(query).then( (result) => result[0]["count(*)"] )
 
     queryMessagesTags: (criteria = {})->
       query = @knex('message').distinct('tags').select()
       @_buildMessageWhere(query, criteria)
-      console.log query.toString()
       return Q(query).then( (tags) =>
         _(tags).map((r)=>JSON.parse(r.tags)).flatten().uniq().valueOf()
       )
@@ -212,7 +223,6 @@ module.exports = (env) ->
     queryMessages: (criteria = {}) ->
       query = @knex('message').select('time', 'level', 'tags', 'text')
       @_buildMessageWhere(query, criteria)
-      console.log query.toString() 
       return Q(query).then( (msgs) =>
         for m in msgs
           m.level = dbMapping.logIntToLevel[m.level]
@@ -220,9 +230,9 @@ module.exports = (env) ->
         return msgs 
       )
 
-    deleteMessages: (time, criteria = {}) ->
+    deleteMessages: (criteria = {}) ->
       query = @knex('message')
-      @_buildMessageWhere(query)
+      @_buildMessageWhere(query, criteria)
       return Q((query).del()) 
 
 
