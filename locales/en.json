@@ -126,5 +126,7 @@
 	"Log ": "Log ",
 	"Log action execution ": "Log action execution ",
 	"Log Action Execution ": "Log Action Execution ",
-	"Copy as new": "Copy as new"
+	"Copy as new": "Copy as new",
+	"Delete All": "Delete All",
+	"Events": "Events"
 }

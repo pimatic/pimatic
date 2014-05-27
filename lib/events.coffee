@@ -10,6 +10,7 @@ _ = require 'lodash'
 S = require 'string'
 Knex = require 'knex'
 path = require 'path'
+M = require './matcher'
 
 module.exports = (env) ->
 
@@ -30,6 +31,24 @@ module.exports = (env) ->
         before:
           type: Date
           optional: yes
+        limit:
+          type: Number
+          optional: yes
+  }
+    
+  dataCriteria = {
+    criteria:
+      type: Object
+      optional: yes
+      properties:
+        deviceId:
+          type: "any"
+        attributeName:
+          type: "any"
+        after:
+          type: Date
+        before:
+          type: Date
   }
 
   api = {
@@ -43,15 +62,15 @@ module.exports = (env) ->
       deleteMessages:
         description: "delets messages older than the given date"
         params: messageCriteria
-      setDeviceAttributeLogging:
+      addDeviceAttributeLogging:
         description: "enable or disable logging for an device attribute"
         params:
           deviceId:
             type: String
           attributeName:
             type: String
-          enable:
-            type: Boolean
+          time:
+            type: "any"
       queryMessagesTags:
         description: "lists all tags from the matching messages"
         params: messageCriteria
@@ -64,10 +83,34 @@ module.exports = (env) ->
         result:
           count:
             type: Number
+      queryDeviceAttributeEvents:
+        description: "get logged values of device attributes"
+        params: dataCriteria
+        result:
+          events:
+            type: Array
+      getDeviceAttributeLogging:
+        description: "get device attribute logging times table"
+        params: {}
+        result:
+          attributeLogging:
+            type: Array
+      setDeviceAttributeLogging:
+        description: "set device attribute logging times table"
+        params:
+          attributeLogging:
+            type: Array
+      getDeviceAttributeLoggingTime:
+        description: "get device attribute logging times table"
+        params:
+          deviceId:
+            type: String
+          attributeName:
+            type: String
+        result:
+          timeInfo:
+            type: Object
   }
-
-
-
 
 
   dbMapping = {
@@ -103,6 +146,8 @@ module.exports = (env) ->
         client: @dbSettings.client
         connection: connection
       )
+
+      @knex.subquery = (query) -> this.raw("(#{query.toString()})")
 
       createTableIfNotExists = (tableName, cb) =>
         @knex.schema.hasTable(tableName).then( (exists) =>
@@ -149,28 +194,35 @@ module.exports = (env) ->
         for name, attr of device.attributes
           do (name, attr) =>
             device.on(name, onChange = (value) =>
-              fullQualifier = "#{device.id}.#{name}"
-              if fullQualifier in @dbSettings.deviceAttributeLogging
-                now = new Date()
-                @saveDeviceAttributeEvent(device.id, name, now, value).done()
+              now = new Date()
+              @saveDeviceAttributeEvent(device.id, name, now, value).done()
             )
       )
 
       return Q.all(pending)
 
-    setDeviceAttributeLogging: (deviceId, attributeName, enable) ->
-      fullQualifier = "#{deviceId}.#{attributeName}"
-      if enable
-        if fullQualifier in @dbSettings.deviceAttributeLogging then return
-        @dbSettings.deviceAttributeLogging.push fullQualifier
-      else
-        @dbSettings.deviceAttributeLogging = _.filter(
-          @dbSettings.deviceAttributeLogging, 
-          (fq) => fq isnt fullQualifier
-        )
+    getDeviceAttributeLogging: () ->
+      return _.clone(@dbSettings.deviceAttributeLogging)
+
+    setDeviceAttributeLogging: (deviceAttributeLogging) ->
+      dbSettings.deviceAttributeLogging = deviceAttributeLogging
       @framework.saveConfig()
       return
 
+    getDeviceAttributeLoggingTime: (deviceId, attributeName) ->
+      time = "0ms"
+      for entry in @dbSettings.deviceAttributeLogging
+        if (
+          (entry.deviceId is "*" or entry.deviceId is deviceId) and 
+          (entry.attributeName is "*" or entry.attributeName is attributeName)
+        )
+          time = entry.time
+      timeMs = null
+      M(time).matchTimeDuration((m, info) => timeMs = info.timeMs)
+      unless timeMs? then throw new Error("Can not parse time duration #{time}")
+      return {
+        time, timeMs
+      }
 
     saveMessageEvent: (time, level, tags, text) ->
       @emit 'log', {time, level, tags, text}
@@ -236,22 +288,28 @@ module.exports = (env) ->
       return Q((query).del()) 
 
 
-    queryDeviceAttributeValues: ({deviceId, attributeName, after, before} = {}) ->
-      
+    queryDeviceAttributeEvents: ({deviceId, attributeName, after, before, order, orderDirection, offset, limit} = {}) ->
+      unless order? then order = "time" and orderDirection = "desc"
+
       buildQueryForType = (tableName, query) =>
-        query.select("#{tableName}.id", 'time', 'value').from(tableName)
+        query.select(
+          "#{tableName}.id AS id", 
+          'deviceAttribute.deviceId', 
+          'deviceAttribute.attributeName', 
+          'time', 
+          'value'
+        ).from(tableName)
         if after?
           query.where('time', '>=', after)
         if before?
           query.where('time', '<=', before)
-        if deviceId? or attributeName?
-          query.join('deviceAttribute', 
-            "#{tableName}.deviceAttributeId", '=', 'deviceAttribute.id',
-          )
-          if deviceId?
-            query.where('deviceId', deviceId)
-          if attributeName?
-            query.where('attributeName', attributeName)
+        query.join('deviceAttribute', 
+          "#{tableName}.deviceAttributeId", '=', 'deviceAttribute.id',
+        )
+        if deviceId?
+          query.where('deviceId', deviceId)
+        if attributeName?
+          query.where('attributeName', attributeName)
 
       query = null
       for type in _.keys(dbMapping.typeMap)
@@ -261,8 +319,17 @@ module.exports = (env) ->
           buildQueryForType(tableName, query)
         else
           query.unionAll( -> buildQueryForType(tableName, this) )
-      #console.log query.toString() 
-      return Q(query)
+      query = @knex()
+        .from(@knex.subquery(query))
+        .select('*')
+        .orderBy(order, orderDirection)
+      if offset? then query.offset(offset)
+      if limit? then query.limit(limit)
+      return Q(query).then( (result) =>
+        return result
+      )
+
+
 
 
     saveDeviceAttributeEvent: (deviceId, attributeName, time, value) ->
@@ -293,7 +360,6 @@ module.exports = (env) ->
       assert typeof deviceId is 'string' and deviceId.length > 0
       assert typeof attributeName is 'string' and attributeName.length > 0
 
-      console.log "insert d a"
       device = @framework.getDeviceById(deviceId)
       unless device? then throw new Error("#{deviceId} not found.")
       attribute = device.attributes[attributeName]
