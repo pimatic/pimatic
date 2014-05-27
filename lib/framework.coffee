@@ -22,7 +22,7 @@ module.exports = (env) ->
     app: null
     ruleManager: null
     pluginManager: null
-    eventlog: null
+    database: null
     config: null
 
     constructor: (@configFile) ->
@@ -34,7 +34,7 @@ module.exports = (env) ->
       @loadConfig()
       @variableManager = new env.variables.VariableManager(this, @config.variables)
       @ruleManager = new env.rules.RuleManager(@config.rules)
-      @eventlog = new env.events.Eventlog(this, @config.settings.database)
+      @database = new env.database.Database(this, @config.settings.database)
       @setupExpressApp()
 
     loadConfig: () ->
@@ -469,7 +469,7 @@ module.exports = (env) ->
             @emit "config"
         )
 
-      return @eventlog.init()
+      return @database.init()
         .then( => @loadPlugins())
         .then(initPlugins)
         .then( => @loadDevices())

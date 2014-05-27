@@ -14,7 +14,7 @@ env.actions = require('./lib/actions') env
 env.predicates = require('./lib/predicates') env
 env.rules = require('./lib/rules') env
 env.plugins = require('./lib/plugins') env
-env.events = require('./lib/events') env
+env.database = require('./lib/database') env
 env.require = (args...) -> module.require args...
 
 

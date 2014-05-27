@@ -1,5 +1,5 @@
 ###
-Eventlog
+Database
 ===========
 ###
 
@@ -130,10 +130,10 @@ module.exports = (env) ->
 
 
   ###
-  The Eventlog
+  The Database
   ----------------
   ###
-  class Eventlog extends require('events').EventEmitter
+  class Database extends require('events').EventEmitter
 
     constructor: (@framework, @dbSettings) ->
 
@@ -398,4 +398,4 @@ module.exports = (env) ->
       )
 
 
-  return exports = { Eventlog, api }
+  return exports = { Database, api }

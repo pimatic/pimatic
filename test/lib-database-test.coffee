@@ -6,10 +6,10 @@ fs = require 'fs.extra'
 
 env = require('../startup').env
 
-describe "Eventlog", ->
+describe "Database", ->
 
   frameworkDummy = {}
-  eventlog = null
+  database = null
 
   describe "#constructor()", ->
 
@@ -20,8 +20,8 @@ describe "Eventlog", ->
           filename: ':memory:'
         }
       }
-      eventlog = new env.events.Eventlog(frameworkDummy, dbSettings)
-      eventlog.once('ready', finish)
+      database = new env.database.Database(frameworkDummy, dbSettings)
+      database.once('ready', finish)
 
   describe '#saveMessageEvent()', ->
 
@@ -37,10 +37,10 @@ describe "Eventlog", ->
           tags: ["pimatic", "test"]
         }
         msgs.push msg
-        pending.push eventlog.saveMessageEvent(msg.time, msg.level, msg.tags, msg.text)
+        pending.push database.saveMessageEvent(msg.time, msg.level, msg.tags, msg.text)
 
       Q.all(pending).then( ->
-        eventlog.queryMessages().then( (msgsResult) ->
+        database.queryMessages().then( (msgsResult) ->
           assert.deepEqual msgsResult, msgs
           finish()
         )
