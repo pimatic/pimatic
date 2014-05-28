@@ -18,7 +18,7 @@ module.exports = (env) ->
   class Framework extends require('events').EventEmitter
     configFile: null
     plugins: []
-    devices: []
+    devices: {}
     app: null
     ruleManager: null
     pluginManager: null
@@ -28,6 +28,9 @@ module.exports = (env) ->
     constructor: (@configFile) ->
       assert configFile?
       @maindir = path.resolve __dirname, '..'
+      env.logger.winston.on("logged", (level, msg, meta) => 
+        @_emitLogMessageEvent(level, msg, meta)
+      )
       @pluginManager = new env.plugins.PluginManager(this)
       @packageJson = @pluginManager.getInstalledPackageInfo('pimatic')
       env.logger.info "Starting pimatic version #{@packageJson.version}"
@@ -286,6 +289,15 @@ module.exports = (env) ->
         if p.config.plugin is name then return p.plugin
       return null
 
+    _emitDeviceAttributeEvent: (device, attributeName, attribute, time, value) ->
+      @emit 'device-attribute', {device, attributeName, attribute, time, value}
+
+    _emitNewDeviceEvent: (device) ->
+      @emit 'device', device
+
+    _emitLogMessageEvent: (level, msg, meta) ->
+      @emit 'log-message', {level, msg, meta}
+
     registerDevice: (device) ->
       assert device?
       assert device instanceof env.devices.Device
@@ -303,10 +315,16 @@ module.exports = (env) ->
             Name of device "#{device.id}" contains an "#{reservedWord}". 
             This could lead to errors in rules.
           """
-
       env.logger.info "new device \"#{device.name}\"..."
       @devices[device.id]=device
-      @emit "device", device
+
+      for attrName, attr of device.attributes
+        do (attrName, attr) =>
+          device.on(attrName, onChange = (value) => 
+            @_emitDeviceAttributeEvent(device, attrName, attr,  new Date(), value)
+          )
+
+      @_emitNewDeviceEvent(device)
 
 
     loadDevices: ->

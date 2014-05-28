@@ -142,64 +142,71 @@ module.exports = (env) ->
       if @dbSettings.client is 'sqlite3' and connection.filename isnt ':memory:'
         connection.filename = path.resolve(@framework.maindir, '../..', connection.filename)
 
-      @knex = Knex.initialize(
-        client: @dbSettings.client
-        connection: connection
-      )
+      pending = Q()
 
-      @knex.subquery = (query) -> this.raw("(#{query.toString()})")
+      dbPackageToInstall = @dbSettings.client
+      try
+        require.resolve(dbPackageToInstall)
+      catch e
+        unless e.code is 'MODULE_NOT_FOUND' then throw e
+        env.logger.info("Installing database package #{dbPackageToInstall}")
+        pending = @framework.pluginManager.spawnNpm(['install', dbPackageToInstall])
 
-      createTableIfNotExists = (tableName, cb) =>
-        @knex.schema.hasTable(tableName).then( (exists) =>
-          if not exists        
-            return @knex.schema.createTable(tableName, cb).then(( =>
-              env.logger.info("#{tableName} table created!")
-            ), (error) =>
-              env.logger.error(error) 
-            )
+      pending.then( =>
+        @knex = Knex.initialize(
+          client: @dbSettings.client
+          connection: connection
         )
+        @knex.subquery = (query) -> this.raw("(#{query.toString()})")
+        createTableIfNotExists = (tableName, cb) =>
+          @knex.schema.hasTable(tableName).then( (exists) =>
+            if not exists        
+              return @knex.schema.createTable(tableName, cb).then(( =>
+                env.logger.info("#{tableName} table created!")
+              ), (error) =>
+                env.logger.error(error) 
+              )
+          )
 
-      pending = []
+        pending = []
 
-      pending.push createTableIfNotExists('message', (table) =>
-        table.increments('id').primary()
-        table.timestamp('time')
-        table.integer('level')
-        table.text('tags')
-        table.text('text')
-      )
-      pending.push createTableIfNotExists('deviceAttribute', (table) =>
-        table.increments('id').primary()
-        table.string('deviceId')
-        table.string('attributeName')
-        table.string('type')
-      )
-
-      for typeName, columnType of dbMapping.typeMap
-        pending.push createTableIfNotExists("attributeValue#{typeName}", (table) =>
+        pending.push createTableIfNotExists('message', (table) =>
           table.increments('id').primary()
-          table.timestamp('time').index() 
-          table.integer('deviceAttributeId')
-            .references('id')
-            .inTable('deviceAttribute')
-          table[columnType]('value')
+          table.timestamp('time')
+          table.integer('level')
+          table.text('tags')
+          table.text('text')
+        )
+        pending.push createTableIfNotExists('deviceAttribute', (table) =>
+          table.increments('id').primary()
+          table.string('deviceId')
+          table.string('attributeName')
+          table.string('type')
         )
 
-      # wiring up the logger
-      env.logger.winston.on "logged", (level, msg, meta) =>
-        @saveMessageEvent(meta.timestamp, level, meta.tags, msg).done()
+        for typeName, columnType of dbMapping.typeMap
+          pending.push createTableIfNotExists("attributeValue#{typeName}", (table) =>
+            table.increments('id').primary()
+            table.timestamp('time').index() 
+            table.integer('deviceAttributeId')
+              .references('id')
+              .inTable('deviceAttribute')
+            table[columnType]('value')
+          )
 
-      # wiring up device attributes
-      @framework.on('device', (device) =>
-        for name, attr of device.attributes
-          do (name, attr) =>
-            device.on(name, onChange = (value) =>
-              now = new Date()
-              @saveDeviceAttributeEvent(device.id, name, now, value).done()
-            )
+        # Save log-messages
+        @framework.on("log-message", ({level, msg, meta}) =>
+          @saveMessageEvent(meta.timestamp, level, meta.tags, msg).done()
+        )
+
+        # Save device attribute changes
+        @framework.on('device-attribute', ({device, attributeName, time, value}) =>
+          @saveDeviceAttributeEvent(device.id, attributeName, time, value).done()
+        )
+
+        return Q.all(pending)
       )
-
-      return Q.all(pending)
+      return pending
 
     getDeviceAttributeLogging: () ->
       return _.clone(@dbSettings.deviceAttributeLogging)
@@ -336,7 +343,7 @@ module.exports = (env) ->
       assert typeof deviceId is 'string' and deviceId.length > 0
       assert typeof attributeName is 'string' and attributeName.length > 0
 
-      @emit 'device-attribute', {deviceId, attributeName, time, value}
+      @emit 'device-attribute-save', {deviceId, attributeName, time, value}
 
       return @_getDeviceAttributeInfo(deviceId, attributeName).then( (info) =>
         tableName = "attributeValue#{info.type}"
