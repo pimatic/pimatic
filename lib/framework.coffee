@@ -18,21 +18,26 @@ module.exports = (env) ->
   class Framework extends require('events').EventEmitter
     configFile: null
     plugins: []
-    devices: []
+    devices: {}
     app: null
     ruleManager: null
     pluginManager: null
+    database: null
     config: null
 
     constructor: (@configFile) ->
       assert configFile?
       @maindir = path.resolve __dirname, '..'
+      env.logger.winston.on("logged", (level, msg, meta) => 
+        @_emitLogMessageEvent(level, msg, meta)
+      )
       @pluginManager = new env.plugins.PluginManager(this)
       @packageJson = @pluginManager.getInstalledPackageInfo('pimatic')
       env.logger.info "Starting pimatic version #{@packageJson.version}"
       @loadConfig()
       @variableManager = new env.variables.VariableManager(this, @config.variables)
       @ruleManager = new env.rules.RuleManager(@config.rules)
+      @database = new env.database.Database(this, @config.settings.database)
       @setupExpressApp()
 
     loadConfig: () ->
@@ -61,7 +66,7 @@ module.exports = (env) ->
         # require("better-stack-traces").install()
 
       # * Set the log level
-      env.logger.transports.console.level = @config.settings.logLevel
+      env.logger.winston.transports.taggedConsoleLogger.level = @config.settings.logLevel
 
       i18n.configure({
         locales:['en', 'de'],
@@ -284,6 +289,15 @@ module.exports = (env) ->
         if p.config.plugin is name then return p.plugin
       return null
 
+    _emitDeviceAttributeEvent: (device, attributeName, attribute, time, value) ->
+      @emit 'device-attribute', {device, attributeName, attribute, time, value}
+
+    _emitNewDeviceEvent: (device) ->
+      @emit 'device', device
+
+    _emitLogMessageEvent: (level, msg, meta) ->
+      @emit 'log-message', {level, msg, meta}
+
     registerDevice: (device) ->
       assert device?
       assert device instanceof env.devices.Device
@@ -301,10 +315,16 @@ module.exports = (env) ->
             Name of device "#{device.id}" contains an "#{reservedWord}". 
             This could lead to errors in rules.
           """
-
       env.logger.info "new device \"#{device.name}\"..."
       @devices[device.id]=device
-      @emit "device", device
+
+      for attrName, attr of device.attributes
+        do (attrName, attr) =>
+          device.on(attrName, onChange = (value) => 
+            @_emitDeviceAttributeEvent(device, attrName, attr,  new Date(), value)
+          )
+
+      @_emitNewDeviceEvent(device)
 
 
     loadDevices: ->
@@ -467,7 +487,8 @@ module.exports = (env) ->
             @emit "config"
         )
 
-      return @loadPlugins()
+      return @database.init()
+        .then( => @loadPlugins())
         .then(initPlugins)
         .then( => @loadDevices())
         .then(initVariables)

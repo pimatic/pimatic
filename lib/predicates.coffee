@@ -317,10 +317,14 @@ module.exports = (env) ->
               autocompleteFilter = (v) => v is " #{attribute.unit}"
               m = m.match(possibleUnits, {optional: yes, acFilter: autocompleteFilter})
           else if attribute.type is String
-            m = m.matchComparator('string', setComparator).matchString(setRefValue)
-          else if Array.isArray attribute.type
             m = m.matchComparator('string', setComparator)
-              .match(attribute.type, setRefValue) 
+              .or([
+                ( (m) => m.matchString(setRefValue) ),
+                ( (m) => 
+                  if attribute.range? then m.match(attribute.range, setRefValue) 
+                  else M(null) 
+                )
+              ])
           if m.hadMatch()
             matches.push m.getFullMatch()
             if result?

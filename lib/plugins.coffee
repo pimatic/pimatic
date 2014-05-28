@@ -14,6 +14,7 @@ spawn = require("child_process").spawn
 https = require "https"
 semver = require "semver"
 events = require 'events'
+S = require 'string'
 
 module.exports = (env) ->
 
@@ -39,7 +40,17 @@ module.exports = (env) ->
         # After installing
         return promise.then( =>
           # require the plugin and return it
-          return plugin = (require name) env, module
+          # create a sublogger:
+          pluginEnv = Object.create(env)
+          pluginEnv.logger = env.logger.base.createSublogger(name)
+          moduleFilename = require.resolve(name)
+          # reload coffee-cache so that cachedir is in the plugin
+          delete require.cache[require.resolve('coffee-cache')]
+          require('coffee-cache').setCacheDir(
+            path.resolve(path.dirname(moduleFilename), './.js/'),
+            path.dirname(moduleFilename)
+          )
+          return plugin = (require moduleFilename) pluginEnv, module
         )
     # Checks if the plugin folder exists under node_modules
     isInstalled: (name) ->
@@ -150,18 +161,19 @@ module.exports = (env) ->
       output = ''
       npm = spawn('npm', args, cwd: @modulesParentDir)
       stdout = byline(npm.stdout)
+      npmLogger = env.logger.createSublogger("npm")
       stdout.on "data", (line) => 
         line = line.toString()
         output += "#{line}\n"
         if line.indexOf('npm http 304') is 0 then return
         deferred.notify(line)
-        env.logger.info line
+        npmLogger.info S(line).chompLeft('npm ').s
       stderr = byline(npm.stderr)
       stderr.on "data", (line) => 
         line = line.toString()
         output += "#{line}\n"
         deferred.notify(line)
-        env.logger.info line
+        npmLogger.info S(line).chompLeft('npm ').s
 
       npm.on "close", (code) =>
         @npmRunning = no

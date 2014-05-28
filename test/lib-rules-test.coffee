@@ -8,7 +8,7 @@ env = require('../startup').env
 describe "RuleManager", ->
 
   before ->
-    env.logger.transports.console.level = 'error'
+    env.logger.winston.transports.taggedConsoleLogger.level = 'error'
 
   ruleManager = null
 

@@ -8,6 +8,8 @@
     "httpServer": {
       "enabled": true,
       "port": 80      
+    },
+    "database": {
     }
   },
   "plugins": [

@@ -36,10 +36,15 @@ module.exports = (env) ->
       attr = @attributes[attrName]
       assert attr.description?, "no description for #{attrName} of #{@name} given"
       assert attr.type?, "no type for #{attrName} of #{@name} given"
+
+      if Array.isArray(attr.type)
+        attr.range = attr.type
+        attr.type = String
+
       validTypes = [Boolean, String, Number, Date]
-      isValidType = (t) => _.any(validTypes, (t) -> attr.type is t) or Array.isArray attr.type
+      isValidType = (t) => t in validTypes
       assert isValidType(attr.type), "#{attrName} of #{@name} has no valid type."
-      
+
       # If it is a Number it must have a unit
       if attr.type is Number and not attr.unit? then attr.unit = ''
       # If it is a Boolean it must have labels

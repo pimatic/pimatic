@@ -85,6 +85,42 @@ module.exports =
         link to the the root certificate for easy importing in mobile devices."""
         format: String
         default: "ca/certs/cacert.crt"
+    database:
+      client: 
+        doc: "the databse client to use"
+        format: ["sqlite3", "mysql", "pg"]
+        default: "sqlite3"
+      ###
+      The connection setting is database client dependent. Some examples:
+      __sqlite3:__
+
+          {
+            filename: "pimatic-database.sqlite"
+          }
+
+      __mysql:__
+
+          {
+            host     : '127.0.0.1',
+            user     : 'your_database_user',
+            password : 'your_database_password',
+            database : 'myapp_test'
+          }
+      ###
+      connection:
+        doc: "the connection settings for the database client"
+        format: Object
+        default: {
+          filename: "pimatic-database.sqlite"
+        }
+      deviceAttributeLogging:
+        doc: "time to keep logged device attributes values in database"
+        format: Array
+        default: []
+      messageLogging:
+        doc: "time to keep logged messages in database"
+        format: Array
+        default: []
   plugins:
     doc: "Array of plugins to load"
     format: Array
