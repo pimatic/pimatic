@@ -13,51 +13,6 @@ bet = require 'bet'
 
 module.exports = (env) ->
 
-  variableParams = {
-    name:
-      type: String
-    type:
-      type: ["expression", "value"]
-    valueOrExpression:
-      type: "any"
-  }
-
-  api = {
-    actions:
-      getAllVariables:
-        description: "Lists all variables"
-        rest:
-          type: "GET"
-          url: "/api/variables"
-        params: {}
-        result:
-          variables:
-            type: Array
-      updateVariable:
-        description: "Updates a variable value or expression"
-        rest:
-          type: "PATCH"
-          url: "/api/variables/:name"
-        params: variableParams
-      addVariable:
-        description: "Adds a value or expression variable"
-        rest:
-          type: "POST"
-          url: "/api/variables/:name"
-        params: variableParams
-      getVariableByName:
-        description: "Get infos about a variable"
-        rest:
-          type: "GET"
-          url: "/api/variables/:name"
-        params:
-          name:
-            type: String
-        result:
-          variable:
-            type: Object
-  }
-
   ###
   The Variable Manager
   ----------------
@@ -172,8 +127,15 @@ module.exports = (env) ->
         env.logger.debug error
       )
 
+    _checkVariableName: (name) ->
+      unless name.match /^[a-z0-9\-_]+$/i
+        throw new Error(
+          "variable name must only contain alpha numerical symbols, \"-\" and  \"_\""
+        )
+
     setVariableToValue: (name, value) ->
       assert name? and typeof name is "string"
+      @_checkVariableName(name)
 
       isNew = (not @variables[name]?)
       unless isNew
@@ -198,6 +160,10 @@ module.exports = (env) ->
 
     updateVariable: (name, type, valueOrExpr) ->
       assert type in ["value", "expression"]
+
+      unless @isVariableDefined(name)
+        throw new Error("No variable with the name \"#{variableName}\" found.")
+
       return (
         switch type
           when "value" then @setVariableToValue(name, valueOrExpr)
@@ -308,4 +274,4 @@ module.exports = (env) ->
       )
 
 
-  return exports = { VariableManager, api }
+  return exports = { VariableManager }

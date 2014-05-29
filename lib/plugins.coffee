@@ -111,6 +111,28 @@ module.exports = (env) ->
         return found
       ).catch( (e) => env.logger.error e )
 
+    searchForPluginsWithInfo: ->
+      return @searchForPlugins().then( (plugins) =>
+        return pluginList = (
+          for k, p of plugins 
+            name = p.name.replace 'pimatic-', ''
+            loadedPlugin = @framework.getPlugin name
+            installed = @isInstalled p.name
+            packageJson = (
+              if installed then @getInstalledPackageInfo p.name
+              else null
+            )
+            listEntry = {
+              name: name
+              description: p.description
+              version: p.version
+              installed: installed
+              active: loadedPlugin?
+              isNewer: (if installed then semver.gt(p.version, packageJson.version) else false)
+            }
+        )
+      )
+
     isPimaticOutdated: ->
       installed = @getInstalledPackageInfo("pimatic")
       return @getNpmInfo("pimatic").then( (latest) =>
@@ -123,6 +145,15 @@ module.exports = (env) ->
       )
 
     getOutdatedPlugins: ->
+      return @getInstalledPluginUpdateVersions().then( (result) =>
+        outdated = []
+        for i, p of result
+          if semver.gt(p.latest, p.current)
+            outdated.push p
+        return outdated
+      )
+
+    getInstalledPluginUpdateVersions: ->
       return @getInstalledPlugins().then( (plugins) =>
         waiting = []
         infos = []
@@ -188,7 +219,33 @@ module.exports = (env) ->
     getInstalledPlugins: ->
       return Q.nfcall(fs.readdir, "#{@framework.maindir}/..").then( (files) =>
         return plugins = (f for f in files when f.match(/^pimatic-.*/)?)
-      ) 
+      )
+
+    getInstalledPluginsWithInfo: ->
+      return @getInstalledPlugins().then( (plugins) =>
+        return pluginList = (
+          for name in plugins
+            packageJson = @getInstalledPackageInfo name
+            name = name.replace 'pimatic-', ''
+            loadedPlugin = @framework.getPlugin name
+            listEntry = {
+              name: name
+              active: loadedPlugin?
+              description: packageJson.description
+              version: packageJson.version
+              homepage: packageJson.homepage
+            }
+        )
+      )
+
+    installUpdatesAsync: (modules) ->
+      deferred = Q.defer()
+      # resolve when complete
+      @update(modules).then(deferred.resolve)
+      # or after 10 seconds to prevent a timeout
+      Q.delay('still running', 10000).then(deferred.resolve)
+      # If the promise gets fullfilled:
+      return deferred.promise
 
     getInstalledPackageInfo: (name) ->
       assert name?

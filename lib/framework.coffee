@@ -1,9 +1,8 @@
 ###
 Framework
 =========
-
-
 ###
+
 assert = require 'cassert'
 fs = require "fs"
 convict = require 'convict'
@@ -14,33 +13,6 @@ path = require 'path'
 S = require 'string'
 
 module.exports = (env) ->
-
-  api = {
-    actions:
-      getAllDevices:
-        rest:
-          type: "GET"
-          url: "/api/devices"
-        description: "Lists all devices"
-        params: {}
-        result:
-          devices:
-            type: Array
-            toJson: yes 
-      getDeviceById:
-        rest:
-          type: "GET"
-          url: "/api/devices/:deviceId"
-        description: "Lists all devices"
-        params:
-          deviceId:
-            type: String
-        result:
-          device:
-            type: Object
-            toJson: yes 
-
-  }
 
   class Framework extends require('events').EventEmitter
     configFile: null
@@ -316,6 +288,28 @@ module.exports = (env) ->
         if p.config.plugin is name then return p.plugin
       return null
 
+    addPluginsToConfig: (plugins) ->
+      Array.isArray pluginNames
+      pluginNames = (p.plugin for p in framework.config.plugins)
+      added = []
+      for p in plugins
+        unless p in pluginNames
+          framework.config.plugins.push {plugin: p}
+          added.push p
+      @saveConfig()
+      return added
+
+    removePluginsFromConfig: (plugins) ->
+      removed = []
+      for pToRemove in plugins
+        for p, i in framework.config.plugins
+          if p.plugin is pToRemove
+            framework.config.plugins.splice(i, 1)
+            removed.push p.plugin
+            break
+      framework.saveConfig()
+      return removed
+
     _emitDeviceAttributeEvent: (device, attributeName, attribute, time, value) ->
       @emit 'device-attribute', {device, attributeName, attribute, time, value}
 
@@ -550,4 +544,4 @@ module.exports = (env) ->
         env.logger.debug err
         env.logger.info "config.json updated"
 
-  return { Framework, api}
+  return { Framework }

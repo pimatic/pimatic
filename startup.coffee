@@ -7,6 +7,7 @@ Q = require 'q'
 
 # Setup the environment
 env = { logger: require './lib/logger' }
+env.api = require('./lib/api')
 env.devices = require('./lib/devices') env
 env.matcher = require './lib/matcher'
 env.variables = require('./lib/variables') env
@@ -16,6 +17,7 @@ env.rules = require('./lib/rules') env
 env.plugins = require('./lib/plugins') env
 env.database = require('./lib/database') env
 env.require = (args...) -> module.require args...
+
 
 
 startup = =>

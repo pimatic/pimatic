@@ -59,68 +59,6 @@ require "date-format-lite"
 
 module.exports = (env) ->
 
-  ruleParams =  {
-    ruleId:
-      type: String
-    rule:
-      type: Object
-      properties:
-        id:
-          type: String
-        name:
-          type: String
-        ruleString:
-          type: String
-        active:
-          type: Boolean
-        force: 
-          type: Boolean
-        logging:
-          type: Boolean
-  }
-
-  api = {
-    actions:
-      addRuleByString:
-        description: "Adds a rule by a string"
-        rest:
-          type: "POST"
-          url: "/api/rules/:ruleId"
-        params: 
-          ruleId: ruleParams.ruleId
-          rule: ruleParams.rule
-          force: 
-            type: Boolean
-      updateRuleByString:
-        rest:
-          type: "PATCH"
-          url: "/api/rules/:ruleId"
-        description: "Updates a rule by a string"
-        params: ruleParams
-      removeRule:
-        rest:
-          type: "DELETE"
-          url: "/api/rules/:ruleId"
-        description: "Remove the rule with the given id"
-        params:
-          ruleId:
-            type: String
-      getAllRules:
-        rest:
-          type: "GET"
-          url: "/api/rules"
-        description: "Lists all rules"
-        params: {}
-      getRuleById:
-        rest:
-          type: "GET"
-          url: "/api/rules/:ruleId"
-        description: "Lists all rules"
-        params: 
-          ruleId:
-            type: String
-  }
-
   ###
   The Rule Manager
   ----------------
@@ -1034,4 +972,4 @@ module.exports = (env) ->
         else  ruleInfo = {id: r.id, name: r.name, active: r.active, valid: r.valid, string: r.string }
       )
 
-  return exports = { RuleManager, api }
+  return exports = { RuleManager }
