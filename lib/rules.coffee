@@ -955,8 +955,8 @@ module.exports = (env) ->
   
     # ###getAllRules()
     getAllRules: () ->
-      return (for name, r of @rules
-        ruleInfo = {name, active: r.active, valid: r.valid, string: r.string }
+      return (for id, r of @rules
+        ruleInfo = {id, name: r.name, active: r.active, valid: r.valid, string: r.string }
       )
 
   return exports = { RuleManager }
