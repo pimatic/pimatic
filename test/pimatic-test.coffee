@@ -16,6 +16,11 @@ describe "pimatic", ->
         port: 8080
       httpsServer:
         enabled: false
+      database:
+        client: "sqlite3"
+        connection: {
+          filename: ':memory:'
+        }
       plugins: []
       devices: []
       rules: []
@@ -36,10 +41,12 @@ describe "pimatic", ->
 
   describe 'startup', ->
 
-    it "should startup", ->
+    it "should startup", (finish) ->
       startup = require('../startup')
-      startup.startup()
-      framework = startup.framework
+      startup.startup().then( (fm)->
+        framework = fm
+        finish()
+      ).catch(finish)
 
     it "httpServer should run", (done)->
       http = require 'http'

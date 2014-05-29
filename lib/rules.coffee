@@ -59,6 +59,68 @@ require "date-format-lite"
 
 module.exports = (env) ->
 
+  ruleParams =  {
+    ruleId:
+      type: String
+    rule:
+      type: Object
+      properties:
+        id:
+          type: String
+        name:
+          type: String
+        ruleString:
+          type: String
+        active:
+          type: Boolean
+        force: 
+          type: Boolean
+        logging:
+          type: Boolean
+  }
+
+  api = {
+    actions:
+      addRuleByString:
+        description: "Adds a rule by a string"
+        rest:
+          type: "POST"
+          url: "/api/rules/:ruleId"
+        params: 
+          ruleId: ruleParams.ruleId
+          rule: ruleParams.rule
+          force: 
+            type: Boolean
+      updateRuleByString:
+        rest:
+          type: "PATCH"
+          url: "/api/rules/:ruleId"
+        description: "Updates a rule by a string"
+        params: ruleParams
+      removeRule:
+        rest:
+          type: "DELETE"
+          url: "/api/rules/:ruleId"
+        description: "Remove the rule with the given id"
+        params:
+          ruleId:
+            type: String
+      getAllRules:
+        rest:
+          type: "GET"
+          url: "/api/rules"
+        description: "Lists all rules"
+        params: {}
+      getRuleById:
+        rest:
+          type: "GET"
+          url: "/api/rules/:ruleId"
+        description: "Lists all rules"
+        params: 
+          ruleId:
+            type: String
+  }
+
   ###
   The Rule Manager
   ----------------
@@ -538,10 +600,13 @@ module.exports = (env) ->
             )
 
     # ###addRuleByString()
-    addRuleByString: (id, name, ruleString, active=yes, force=false, logging=yes) ->
+    addRuleByString: (id, {name, ruleString, active, logging}, force = true) ->
       assert id? and typeof id is "string" and id.length isnt 0
       assert name? and typeof name is "string"
       assert ruleString? and typeof ruleString is "string"
+      unless active? then active = yes
+      unless logging? then logging = yes
+
 
       unless id.match /^[a-z0-9\-_]+$/i then throw new Error "rule id must only contain " +
         "alpha numerical symbols, \"-\" and  \"_\""
@@ -612,26 +677,29 @@ module.exports = (env) ->
       return
 
     # ###updateRuleByString()
-    updateRuleByString: (id, name, ruleString, active=yes, logging=yes) ->
+    updateRuleByString: (id, {name, ruleString, active, logging}) ->
       assert id? and typeof id is "string" and id.length isnt 0
-      assert name? and typeof name is "string"
-      assert ruleString? and typeof ruleString is "string"
+
+      assert(typeof name is "string") if name?
+      assert(typeof ruleString is "string") if uleString?
       throw new Error("Invalid ruleId: \"#{id}\"") unless @rules[id]?
 
       context = @createParseContext()
       # First try to parse the updated ruleString.
-      return @parseRuleString(id, name, ruleString, context).then( (rule)=>
+      return @parseRuleString(id, name, ruleString, context).then( (rule) =>
         if context.hasErrors()
           error = new Error context.getErrorsAsString()
           error.rule = rule
           error.context = context
           throw error
 
-        rule.active = active
-        rule.valid = yes
-        rule.logging = logging
         # If the rule was successfully parsed then get the old rule
         oldRule = @rules[id]
+        
+        rule.valid = yes
+        rule.active = if active? then active else oldRule.active
+        rule.logging = if logging? then logging else oldRule.logging
+
         # and cancel the notifier for the old predicates.
         @_removePredicateChangeListener(oldRule)
         @_cancelScheduledActions(oldRule)
@@ -955,8 +1023,15 @@ module.exports = (env) ->
   
     # ###getAllRules()
     getAllRules: () ->
-      return (for name, r of @rules
-        ruleInfo = {name, active: r.active, valid: r.valid, string: r.string }
+      return (for id, r of @rules
+        ruleInfo = {id, name: r.name, active: r.active, valid: r.valid, string: r.string }
       )
 
-  return exports = { RuleManager }
+    getRuleById: (ruleId) ->
+      r = @rules[ruleId]
+      return (
+        unless r? then null
+        else  ruleInfo = {id: r.id, name: r.name, active: r.active, valid: r.valid, string: r.string }
+      )
+
+  return exports = { RuleManager, api }

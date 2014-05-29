@@ -60,7 +60,7 @@ TaggedLogger = (target, tags) ->
   return @
 
 TaggedLogger::log = (level, args...) ->
-  msg = util.format.apply(null, args);
+  msg = util.format.apply(null, args)
   @target.log(level, msg, {timestamp: new Date(), tags: @tags})
 
 TaggedLogger::debug = (args...) -> @log "debug", args...

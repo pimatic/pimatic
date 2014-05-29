@@ -603,7 +603,10 @@ describe "RuleManager", ->
           actionHandler: new DummyActionHandler()
         }
 
-      ruleManager.addRuleByString('test5', "test5", 'if predicate 1 then action 1').then( ->
+      ruleManager.addRuleByString('test5', {
+        name: "test5", 
+        ruleString: 'if predicate 1 then action 1'
+      }).then( ->
         cassert changeHandler?
         cassert parseActionCallCount is 1
         cassert ruleManager.rules['test5']?
@@ -1097,7 +1100,10 @@ describe "RuleManager", ->
           actionHandler: actHandler
         }
 
-      ruleManager.updateRuleByString('test5', 'test5', 'if predicate 2 then action 1').then( ->
+      ruleManager.updateRuleByString('test5', {
+        name: 'test5'
+        ruleString: 'if predicate 2 then action 1'
+      }).then( ->
         cassert parsePredicateCalled is 1
         cassert onCalled is 2
 

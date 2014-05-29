@@ -15,6 +15,33 @@ S = require 'string'
 
 module.exports = (env) ->
 
+  api = {
+    actions:
+      getAllDevices:
+        rest:
+          type: "GET"
+          url: "/api/devices"
+        description: "Lists all devices"
+        params: {}
+        result:
+          devices:
+            type: Array
+            toJson: yes 
+      getDeviceById:
+        rest:
+          type: "GET"
+          url: "/api/devices/:deviceId"
+        description: "Lists all devices"
+        params:
+          deviceId:
+            type: String
+        result:
+          device:
+            type: Object
+            toJson: yes 
+
+  }
+
   class Framework extends require('events').EventEmitter
     configFile: null
     plugins: []
@@ -160,7 +187,7 @@ module.exports = (env) ->
         assert typeof httpsConfig.certFile is 'string' and httpsConfig.certFile.length isnt 0 
 
         httpsOptions = {}
-        httpsOptions[name]=value for name, value of httpsConfig
+        httpsOptions[name] = value for name, value of httpsConfig
         httpsOptions.key = fs.readFileSync path.resolve(@maindir, '../..', httpsConfig.keyFile)
         httpsOptions.cert = fs.readFileSync path.resolve(@maindir, '../..', httpsConfig.certFile)
         https = require "https"
@@ -341,6 +368,8 @@ module.exports = (env) ->
     getDeviceById: (id) ->
       @devices[id]
 
+    getAllDevices: -> (device for id, device of @devices)
+
     addDeviceToConfig: (deviceConfig) ->
       assert deviceConfig.id?
       assert deviceConfig.class?
@@ -443,11 +472,14 @@ module.exports = (env) ->
 
             unless rule.name? then rule.name = S(rule.id).humanize().s
 
-            @ruleManager.addRuleByString(rule.id, rule.name, rule.rule, rule.active, true)
-              .catch( (err) =>
-                env.logger.error "Could not parse rule \"#{rule.rule}\": " + err.message 
-                env.logger.debug err.stack
-              )        
+            @ruleManager.addRuleByString(rule.id, {
+              name: rule.name, 
+              ruleString: rule.rule, 
+              active: rule.active
+            }, force: true).catch( (err) =>
+              env.logger.error "Could not parse rule \"#{rule.rule}\": " + err.message 
+              env.logger.debug err.stack
+            )        
         )
 
         return Q.all(addRulePromises).then(=>
@@ -517,3 +549,5 @@ module.exports = (env) ->
         env.logger.error "Could not write config file: ", err.message
         env.logger.debug err
         env.logger.info "config.json updated"
+
+  return { Framework, api}

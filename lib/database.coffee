@@ -55,12 +55,18 @@ module.exports = (env) ->
     actions:
       queryMessages:
         desciption: "list log messages"
+        rest:
+          type: 'GET'
+          url: '/api/database/messages'
         params: messageCriteria
         result:
           messages:
             type: Array
       deleteMessages:
         description: "delets messages older than the given date"
+        rest:
+          type: 'DELETE'
+          url: '/api/database/messages'
         params: messageCriteria
       addDeviceAttributeLogging:
         description: "enable or disable logging for an device attribute"
@@ -73,17 +79,26 @@ module.exports = (env) ->
             type: "any"
       queryMessagesTags:
         description: "lists all tags from the matching messages"
+        rest:
+          type: 'GET'
+          url: '/api/database/messages/tags'
         params: messageCriteria
         result:
           tags:
             type: Array
       queryMessagesCount:
         description: "count of all matches matching the criteria"
+        rest:
+          type: 'GET'
+          url: '/api/database/messages/count'
         params: messageCriteria
         result:
           count:
             type: Number
       queryDeviceAttributeEvents:
+        rest:
+          type: 'GET'
+          url: '/api/database/device-attributes/'
         description: "get logged values of device attributes"
         params: dataCriteria
         result:
@@ -152,7 +167,7 @@ module.exports = (env) ->
         env.logger.info("Installing database package #{dbPackageToInstall}")
         pending = @framework.pluginManager.spawnNpm(['install', dbPackageToInstall])
 
-      pending.then( =>
+      pending = pending.then( =>
         @knex = Knex.initialize(
           client: @dbSettings.client
           connection: connection
@@ -284,8 +299,8 @@ module.exports = (env) ->
       @_buildMessageWhere(query, criteria)
       return Q(query).then( (msgs) =>
         for m in msgs
-          m.level = dbMapping.logIntToLevel[m.level]
           m.tags = JSON.parse(m.tags)
+          m.level = dbMapping.logIntToLevel[m.level]
         return msgs 
       )
 
@@ -295,7 +310,8 @@ module.exports = (env) ->
       return Q((query).del()) 
 
 
-    queryDeviceAttributeEvents: ({deviceId, attributeName, after, before, order, orderDirection, offset, limit} = {}) ->
+    queryDeviceAttributeEvents: ({deviceId, attributeName, after, before, order, orderDirection, 
+      offset, limit} = {}) ->
       unless order? then order = "time" and orderDirection = "desc"
 
       buildQueryForType = (tableName, query) =>

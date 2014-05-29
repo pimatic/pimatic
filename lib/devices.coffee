@@ -76,6 +76,37 @@ module.exports = (env) ->
     # Returns a template name to use in frontends.
     getTemplateName: -> "device"
 
+    toJson: ->
+      typeToString = (type) => 
+        if typeof type is "function" then type.name.toLowerCase()
+        else if Array.isArray type then 'string'
+        else "unknown"
+
+      json = {
+        id: @id
+        name: @name
+        template: @getTemplateName()
+        attributes: []
+        actions: []
+      }
+
+      for name, attr of @attributes
+        attrJson = _.cloneDeep(attr)
+        attrJson.name = name
+        attrJson.type = typeToString(attr.type)
+        json.attributes.push attrJson
+      
+      for name, action of @actions
+        actionJson = _.cloneDeep(action)
+        actionJson.name = name
+        if action.params
+          for paramName, param of action.params
+            if param.type?
+              param.type = typeToString(param.type)
+        json.actions.push actionJson
+
+      return json
+
   ###
   Actuator
   -----

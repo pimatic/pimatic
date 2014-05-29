@@ -28,17 +28,16 @@ startup = =>
   )
 
   # Setup the framework
-  Framework = (require './lib/framework') env 
-  framework = null
-  try
-    framework = new Framework configFile
+  env.framework = (require './lib/framework') env 
+  Q.fcall( =>
+    framework = new env.framework.Framework configFile
     promise = framework.init()
-    module.exports.framework = framework
-    return promise.done()
-  catch e
+    return promise.then( => framework )
+  ).catch( (e) =>
     env.logger.error e.message
     env.logger.debug e.stack
-  return Q()
+    throw e
+  )
 
 module.exports.startup = startup
 module.exports.env = env

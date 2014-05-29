@@ -13,6 +13,51 @@ bet = require 'bet'
 
 module.exports = (env) ->
 
+  variableParams = {
+    name:
+      type: String
+    type:
+      type: ["expression", "value"]
+    valueOrExpression:
+      type: "any"
+  }
+
+  api = {
+    actions:
+      getAllVariables:
+        description: "Lists all variables"
+        rest:
+          type: "GET"
+          url: "/api/variables"
+        params: {}
+        result:
+          variables:
+            type: Array
+      updateVariable:
+        description: "Updates a variable value or expression"
+        rest:
+          type: "PATCH"
+          url: "/api/variables/:name"
+        params: variableParams
+      addVariable:
+        description: "Adds a value or expression variable"
+        rest:
+          type: "POST"
+          url: "/api/variables/:name"
+        params: variableParams
+      getVariableByName:
+        description: "Get infos about a variable"
+        rest:
+          type: "GET"
+          url: "/api/variables/:name"
+        params:
+          name:
+            type: String
+        result:
+          variable:
+            type: Object
+  }
+
   ###
   The Variable Manager
   ----------------
@@ -151,6 +196,24 @@ module.exports = (env) ->
       @emit("change #{name}", eventObj)
       return
 
+    updateVariable: (name, type, valueOrExpr) ->
+      assert type in ["value", "expression"]
+      return (
+        switch type
+          when "value" then @setVariableToValue(name, valueOrExpr)
+          when "expression"
+            tokens = null
+            m = M(valueOrExpr).matchAnyExpression((m, ts) => tokens = ts)
+            unless m.hadMatch() and m.getFullMatch() is valueOrExpr
+              throw new Error("Could not parse expression")
+            @setVariableToExpr(name, tokens, variableExpression)
+      )
+
+    addVariable: (name, type, valueOrExpr) ->
+      if @isVariableDefined(name)
+        throw new Error("There is already a variable with the name \"#{variableName}\"")
+      return @updateVariable(name, type, valueOrExpr)
+
     isVariableDefined: (name) ->
       assert name? and typeof name is "string"
       return @variables[name]?
@@ -187,6 +250,15 @@ module.exports = (env) ->
           varInfo.exprTokens = v.exprTokens
         varInfo
       )
+
+    getVariableByName: (name) ->
+      v = @variables[name]
+      unless v? then return null
+      varInfo = {name: name, readonly: v.readonly, type: v.type}
+      if v.type is "expression"
+        varInfo.exprInputStr = v.exprInputStr 
+        varInfo.exprTokens = v.exprTokens
+      return varInfo
 
     isAVariable: (token) -> token.length > 0 and token[0] is '$'
 
@@ -236,4 +308,4 @@ module.exports = (env) ->
       )
 
 
-  return exports = { VariableManager }
+  return exports = { VariableManager, api }
