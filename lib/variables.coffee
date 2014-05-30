@@ -181,7 +181,7 @@ module.exports = (env) ->
 
     getAllVariables: () ->
       return (for name, v of @variables
-        varInfo = {name, readonly: v.readonly, type: v.type}
+        varInfo = {name, readonly: v.readonly, type: v.type, value:@getVariableValue(name) }
         if v.type is "expression"
           varInfo.exprInputStr = v.exprInputStr 
           varInfo.exprTokens = v.exprTokens
