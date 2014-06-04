@@ -121,6 +121,10 @@ module.exports =
         doc: "time to keep logged messages in database"
         format: Array
         default: []
+  pages:
+    doc: "Array of gui pages"
+    format: Array
+    default: []
   plugins:
     doc: "Array of plugins to load"
     format: Array

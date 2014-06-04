@@ -461,7 +461,7 @@ describe "VariablePredicateProvider", ->
       getTestvalue: -> Q(42)
 
     sensorDummy = new DummySensor()
-    frameworkDummy.emit 'device', sensorDummy
+    frameworkDummy.emit 'deviceAdded', sensorDummy
 
   describe '#parsePredicate()', ->
 

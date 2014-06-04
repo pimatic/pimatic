@@ -3,30 +3,183 @@ API-Defs
 =========
 ###
 
+t = require('decl-api').types
+
 ###
 #Rules
 ###
 
 api = {}
 
+###
+#Framework
+###
+api.framework = {
+  events:
+    deviceAdded:
+      description: "A new device was added to the devices list"
+      params:
+        device:
+          type: t.object
+          toJson: yes
+    deviceAttributeChanged:
+      description: "The value of a device attribute changed"
+      params:
+        event:
+          type: t.object
+          properties:
+            device:
+              type: t.object
+              toJson: yes
+            attributeName:
+              type: t.string
+            attribute:
+              type: t.object
+            time:
+              type: t.date
+            value: 
+              type: t.any
+    messageLogged:
+      description: "A new log message was emitted"
+      params:
+        event:
+          type: t.object
+          properties:
+            level:
+              type: t.string
+            msg:
+              type: t.string
+            meta:
+              type: t.object
+  actions:
+    getAllDevicesJson:
+      rest:
+        type: "GET"
+        url: "/api/devices"
+      description: "Lists all devices"
+      params: {}
+      result:
+        devices:
+          type: t.array
+          toJson: yes 
+    getDeviceById:
+      description: "Lists all devices"
+      rest:
+        type: "GET"
+        url: "/api/devices/:deviceId"
+      params:
+        deviceId:
+          type: t.string
+      result:
+        device:
+          type: t.object
+          toJson: yes
+    addPluginsToConfig:
+      description: "Add plugins to config"
+      rest:
+        type: "POST"
+        url: "/api/config/plugins"
+      params:
+        pluginNames:
+          type: t.array
+      result:
+        added:
+          type: t.array
+    removePluginsFromConfig:
+      description: "Remove plugins from config"
+      rest:
+        type: "DELETE"
+        url: "/api/config/plugins"
+      params:
+        pluginNames:
+          type: t.array
+      result:
+        removed:
+          type: t.array
+    restart:
+      description: "Restart pimatic"
+      rest:
+        type: "POST"
+        url: "/api/restart"
+      result: {}
+    getAllPages:
+      rest:
+        type: "GET"
+        url: "/api/pages"
+      description: "Lists all pages"
+      params: {}
+      result:
+        pages:
+          type: t.array
+    getPageById:
+      description: "Get a page by id"
+      rest:
+        type: "GET"
+        url: "/api/pages/:pageId"
+      params:
+        pageId:
+          type: t.string
+      result:
+        page:
+          type: t.object
+    removePage:
+      description: "Remove page"
+      rest:
+        type: "DELETE"
+        url: "/api/pages/:pageId"
+      params:
+        pageId:
+          type: t.string
+      result:
+        removed:
+          type: t.object
+    addPage:
+      rest:
+        type: "POST"
+        url: "/api/pages/:pageId"
+      description: "Add a page"
+      params:
+        pageId:
+          type: t.string
+        page:
+          type: t.object
+      result:
+        pages:
+          type: t.array
+    addDeviceToPage:
+      rest:
+        type: "POST"
+        url: "/api/pages/:pageId/:deviceId"
+      description: "Add a page"
+      params:
+        pageId:
+          type: t.string
+        deviceId:
+          type: t.string
+      result:
+        deviceItem:
+          type: t.object
+}
+
+
 ruleParams =  {
   ruleId:
-    type: String
+    type: t.string
   rule:
-    type: Object
+    type: t.object
     properties:
       id:
-        type: String
+        type: t.string
       name:
-        type: String
+        type: t.string
       ruleString:
-        type: String
+        type: t.string
       active:
-        type: Boolean
+        type: t.boolean
       force: 
-        type: Boolean
+        type: t.boolean
       logging:
-        type: Boolean
+        type: t.boolean
 }
 
 api.rules = {
@@ -40,7 +193,7 @@ api.rules = {
         ruleId: ruleParams.ruleId
         rule: ruleParams.rule
         force: 
-          type: Boolean
+          type: t.boolean
     updateRuleByString:
       rest:
         type: "PATCH"
@@ -54,7 +207,7 @@ api.rules = {
       description: "Remove the rule with the given id"
       params:
         ruleId:
-          type: String
+          type: t.string
     getAllRules:
       rest:
         type: "GET"
@@ -68,7 +221,7 @@ api.rules = {
       description: "Lists all rules"
       params: 
         ruleId:
-          type: String
+          type: t.string
 }
 
 ###
@@ -77,11 +230,12 @@ api.rules = {
 
 variableParams = {
   name:
-    type: String
+    type: t.string
   type:
-    type: ["expression", "value"]
+    type: t.string
+    oneOf: ["expression", "value"]
   valueOrExpression:
-    type: "any"
+    type: t.any
 }
 
 api.variables = {
@@ -94,7 +248,7 @@ api.variables = {
       params: {}
       result:
         variables:
-          type: Array
+          type: t.array
     updateVariable:
       description: "Updates a variable value or expression"
       rest:
@@ -114,10 +268,10 @@ api.variables = {
         url: "/api/variables/:name"
       params:
         name:
-          type: String
+          type: t.string
       result:
         variable:
-          type: Object
+          type: t.object
     removeVariable:
       desciption: "Remove a variable"
       rest:
@@ -125,64 +279,7 @@ api.variables = {
         url: "/api/variables/:name"
       params:
         name:
-          type: String
-}
-
-###
-#Framework
-###
-api.framework = {
-  actions:
-    getAllDevices:
-      rest:
-        type: "GET"
-        url: "/api/devices"
-      description: "Lists all devices"
-      params: {}
-      result:
-        devices:
-          type: Array
-          toJson: yes 
-    getDeviceById:
-      description: "Lists all devices"
-      rest:
-        type: "GET"
-        url: "/api/devices/:deviceId"
-      params:
-        deviceId:
-          type: String
-      result:
-        device:
-          type: Object
-          toJson: yes
-    addPluginsToConfig:
-      description: "Add plugins to config"
-      rest:
-        type: "POST"
-        url: "/api/config/plugins"
-      params:
-        pluginNames:
-          type: Array
-      result:
-        added:
-          type: Array
-    removePluginsFromConfig:
-      description: "Remove plugins from config"
-      rest:
-        type: "DELETE"
-        url: "/api/config/plugins"
-      params:
-        pluginNames:
-          type: Array
-      result:
-        removed:
-          type: Array
-    restart:
-      description: "Restart pimatic"
-      rest:
-        type: "POST"
-        url: "/api/restart"
-      result: {}
+          type: t.string
 }
 
 
@@ -197,12 +294,18 @@ api.plugins = {
         type: "GET"
         url: "/api/plugins"
       params: {}
+      result:
+        plugins:
+          type: t.array
     searchForPluginsWithInfo:
       description: "Searches for available plugins"
       rest:
         type: "GET"
         url: "/api/available-plugins"
       params: {}
+      result:
+        plugins:
+          type: t.array
     getOutdatedPlugins:
       description: "Get outdated plugins"
       rest:
@@ -211,7 +314,7 @@ api.plugins = {
       params: {}
       result:
         outdatedPlugins:
-          type: Array
+          type: t.array
     isPimaticOutdated:
       description: "Is pimatic outdated"
       rest:
@@ -228,7 +331,7 @@ api.plugins = {
         url: "/api/update-async"
       params:
         modules:
-          type: Array
+          type: t.array
       result:
         status:
           type: 'any'
@@ -240,20 +343,20 @@ api.plugins = {
 ###
 messageCriteria = {
   criteria:
-    type: Object
+    type: t.object
     optional: yes
     properties:
       level:
         type: 'any'
         optional: yes
       levelOp:
-        type: String
+        type: t.string
         optional: yes
       after:
-        type: Date
+        type: t.date
         optional: yes
       before:
-        type: Date
+        type: t.date
         optional: yes
       limit:
         type: Number
@@ -262,17 +365,17 @@ messageCriteria = {
   
 dataCriteria = {
   criteria:
-    type: Object
+    type: t.object
     optional: yes
     properties:
       deviceId:
-        type: "any"
+        type: t.any
       attributeName:
-        type: "any"
+        type: t.any
       after:
-        type: Date
+        type: t.date
       before:
-        type: Date
+        type: t.date
 }
 
 api.database = {
@@ -285,7 +388,7 @@ api.database = {
       params: messageCriteria
       result:
         messages:
-          type: Array
+          type: t.array
     deleteMessages:
       description: "delets messages older than the given date"
       rest:
@@ -296,11 +399,11 @@ api.database = {
       description: "enable or disable logging for an device attribute"
       params:
         deviceId:
-          type: String
+          type: t.string
         attributeName:
-          type: String
+          type: t.string
         time:
-          type: "any"
+          type: t.any
     queryMessagesTags:
       description: "lists all tags from the matching messages"
       rest:
@@ -309,7 +412,7 @@ api.database = {
       params: messageCriteria
       result:
         tags:
-          type: Array
+          type: t.array
     queryMessagesCount:
       description: "count of all matches matching the criteria"
       rest:
@@ -327,28 +430,35 @@ api.database = {
       params: dataCriteria
       result:
         events:
-          type: Array
+          type: t.array
     getDeviceAttributeLogging:
       description: "get device attribute logging times table"
       params: {}
       result:
         attributeLogging:
-          type: Array
+          type: t.array
     setDeviceAttributeLogging:
       description: "set device attribute logging times table"
       params:
         attributeLogging:
-          type: Array
+          type: t.array
     getDeviceAttributeLoggingTime:
       description: "get device attribute logging times table"
       params:
         deviceId:
-          type: String
+          type: t.string
         attributeName:
-          type: String
+          type: t.string
       result:
         timeInfo:
-          type: Object
+          type: t.object
 }
+
+# all
+actions = {}
+for a in [api.framework, api.rules, api.variables, api.plugins, api.database]
+  for actionName, action of a.actions
+    actions[actionName] = action
+api.all = {actions}
 
 module.exports = api

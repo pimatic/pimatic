@@ -128,5 +128,9 @@
 	"Log Action Execution ": "Log Action Execution ",
 	"Copy as new": "Copy as new",
 	"Delete All": "Delete All",
-	"Events": "Events"
+	"Events": "Events",
+	"Pages": "Pages",
+	"Messages": "Messages",
+	"Settings": "Settings",
+	"Automation": "Automation"
 }

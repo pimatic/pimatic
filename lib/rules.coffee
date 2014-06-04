@@ -962,14 +962,32 @@ module.exports = (env) ->
     # ###getAllRules()
     getAllRules: () ->
       return (for id, r of @rules
-        ruleInfo = {id, name: r.name, active: r.active, valid: r.valid, string: r.string }
+        ruleInfo = {
+          id, 
+          name: r.name, 
+          active: r.active, 
+          valid: r.valid, 
+          string: r.string, 
+          condition: r.conditionToken,
+          actions: r.actionsToken,
+          logging: r.logging
+        }
       )
 
     getRuleById: (ruleId) ->
       r = @rules[ruleId]
       return (
         unless r? then null
-        else  ruleInfo = {id: r.id, name: r.name, active: r.active, valid: r.valid, string: r.string }
+        else  ruleInfo = {
+          id: r.id, 
+          name: r.name, 
+          active: r.active, 
+          valid: r.valid, 
+          string: r.string,
+          condition: r.conditionToken,
+          actions: r.actionsToken
+          logging: r.logging
+        }
       )
 
   return exports = { RuleManager }

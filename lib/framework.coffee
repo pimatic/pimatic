@@ -8,9 +8,13 @@ fs = require "fs"
 convict = require 'convict'
 i18n = require 'i18n'
 express = require "express"
+socketIo = require 'socket.io'
+# Require engine.io from socket.io
+engineIo = require.cache[require.resolve('socket.io')].require('engine.io')
 Q = require 'q'
 path = require 'path'
 S = require 'string'
+_ = require 'lodash'
 
 module.exports = (env) ->
 
@@ -19,6 +23,7 @@ module.exports = (env) ->
     plugins: []
     devices: {}
     app: null
+    io: null
     ruleManager: null
     pluginManager: null
     database: null
@@ -28,7 +33,7 @@ module.exports = (env) ->
       assert configFile?
       @maindir = path.resolve __dirname, '..'
       env.logger.winston.on("logged", (level, msg, meta) => 
-        @_emitLogMessageEvent(level, msg, meta)
+        @_emitMessageLoggedEvent(level, msg, meta)
       )
       @pluginManager = new env.plugins.PluginManager(this)
       @packageJson = @pluginManager.getInstalledPackageInfo('pimatic')
@@ -49,15 +54,9 @@ module.exports = (env) ->
       conf.validate()
       @config = conf.get("")
 
-      # handle legacy config:
-      if @config.sensors? and @config.actuators?
-        @config.devices = @config.sensors.concat @config.actuators
-        delete @config.sensors
-        delete @config.actuators
-        @saveConfig()
-
       assert Array.isArray @config.plugins
       assert Array.isArray @config.devices
+      assert Array.isArray @config.pages
 
       # Turn on long Stack traces if debug mode is on.
       if @config.debug
@@ -73,6 +72,35 @@ module.exports = (env) ->
         defaultLocale: @config.settings.locale,
       })
 
+    addPage: (id, page) ->
+      if _.findIndex(@config.pages, {id: id}) isnt -1
+        throw new Error('A page with this id already exists')
+      unless page.name?
+        throw new Error('No name gien')
+      @config.pages.push({
+        id: id
+        name: page.name
+        devices: []
+      })
+      @saveConfig()
+
+    getPageById: (id) -> _.find(@config.pages, {id: id})
+
+    addDeviceToPage: (pageId, deviceId) ->
+      page = @getPageById(pageId)
+      unless page?
+        throw new Error('Could not find the page')
+      page.devices.push({
+        deviceId: deviceId
+      })
+
+    removePage: (id, page) ->
+      removedPage = _.remove(@config.pages, {id: id})
+      @saveConfig() if removedPage?
+      return removedPage
+
+    getAllPages: () ->
+      return @config.pages
 
     setupExpressApp: () ->
       # Setup express
@@ -111,7 +139,7 @@ module.exports = (env) ->
 
         
       #req.path
-      @app.use (req, res, next) =>
+      @app.use( (req, res, next) =>
         # set expire date if we should keep loggedin
         if req.query.rememberMe is 'true' then req.session.rememberMe = yes
         if req.query.rememberMe is 'false' then req.session.rememberMe = no
@@ -146,10 +174,26 @@ module.exports = (env) ->
           if valid then req.session.username = user 
           return valid
         )(req, res, next)
+      )
 
       if not @config.settings.httpsServer?.enabled and 
          not @config.settings.httpServer?.enabled
         env.logger.warn "You have no https and no http server enabled!"
+
+      socketIoPath = '/socket.io'
+      engine = new engineIo.Server({path: socketIoPath})
+      @io = new socketIo()
+      @io.bind(engine)
+
+      @app.all( '/socket.io/socket.io.js', (req, res) => @io.serve(req, res) )
+      @app.all( '/socket.io/*', (req, res) => engine.handleRequest(req, res) )
+
+      onUpgrade = (req, socket, head) =>
+        if socketIoPath is req.url.substr(0, socketIoPath.length)
+          engine.handleUpgrade(req, socket, head)
+        else
+          socket.end()
+        return
 
       # Start the https-server if it is enabled.
       if @config.settings.httpsServer?.enabled
@@ -164,11 +208,20 @@ module.exports = (env) ->
         httpsOptions.cert = fs.readFileSync path.resolve(@maindir, '../..', httpsConfig.certFile)
         https = require "https"
         @app.httpsServer = https.createServer httpsOptions, @app
+        @app.httpsServer.on('upgrade', onUpgrade)
 
       # Start the http-server if it is enabled.
       if @config.settings.httpServer?.enabled
         http = require "http"
         @app.httpServer = http.createServer @app
+        @app.httpServer.on('upgrade', onUpgrade)
+
+      @io.on('connection', (socket) =>
+        socket.emit('devices', @getAllDevicesJson())
+        socket.emit('rules', @ruleManager.getAllRules())
+        socket.emit('variables', @variableManager.getAllVariables())
+        socket.emit('pages',  @getAllPages())
+      )
 
     listen: () ->
       genErrFunc = (serverConfig) => 
@@ -311,13 +364,46 @@ module.exports = (env) ->
       return removed
 
     _emitDeviceAttributeEvent: (device, attributeName, attribute, time, value) ->
-      @emit 'device-attribute', {device, attributeName, attribute, time, value}
+      @emit 'deviceAttributeChanged', {device, attributeName, attribute, time, value}
+      @io?.emit 'deviceAttributeChanged', {deviceId: device.id, attributeName, time, value}
 
-    _emitNewDeviceEvent: (device) ->
-      @emit 'device', device
+    _emitDeviceAddedEvent: (device) ->
+      @emit 'deviceAdded', device
+      @io?.emit 'deviceAdded', device.toJson()
 
-    _emitLogMessageEvent: (level, msg, meta) ->
-      @emit 'log-message', {level, msg, meta}
+    _emitMessageLoggedEvent: (level, msg, meta) ->
+      @emit 'messageLogged', {level, msg, meta}
+      @io?.emit 'messageLogged', {level, msg, meta}
+
+    _emitRuleAdded: (rule) ->
+      @emit 'ruleAdded', rule
+      @io?.emit 'ruleAdded', {
+        id: rule.id
+        name: rule.name
+        string: rule.string
+        active: rule.active
+        logging: rule.logging
+      }
+
+    _emitRuleRemoved: (rule) ->
+      @emit 'ruleRemoved', rule
+      @io?emit 'ruleRemoved', {
+        id: rule.id
+        name: rule.name
+        string: rule.string
+        active: rule.active
+        logging: rule.logging
+      }
+
+    _emitRuleChanged: (rule) ->
+      @emit 'ruleChanged', rule
+      @io?emit 'ruleChanged', {
+        id: rule.id
+        name: rule.name
+        string: rule.string
+        active: rule.active
+        logging: rule.logging
+      }
 
     registerDevice: (device) ->
       assert device?
@@ -345,7 +431,7 @@ module.exports = (env) ->
             @_emitDeviceAttributeEvent(device, attrName, attr,  new Date(), value)
           )
 
-      @_emitNewDeviceEvent(device)
+      @_emitDeviceAddedEvent(device)
 
 
     loadDevices: ->
@@ -363,6 +449,9 @@ module.exports = (env) ->
       @devices[id]
 
     getAllDevices: -> (device for id, device of @devices)
+
+    getAllDevicesJson: -> (device.toJson() for id, device of @devices)
+
 
     addDeviceToConfig: (deviceConfig) ->
       assert deviceConfig.id?
@@ -482,15 +571,16 @@ module.exports = (env) ->
           # * If a new rule was added then...
           @ruleManager.on "add", (rule) =>
             # ...add it to the rules Array in the config.json file
-            for r in @config.rules 
-              if r.id is rule.id then return
-            @config.rules.push {
-              id: rule.id
-              name: rule.name
-              rule: rule.string
-              active: rule.active
-              logging: rule.logging
-            }
+            inConfig = (_.findIndex(findIndex, {id: rule.id}) isnt -1)
+            unless inConfig 
+              @config.rules.push {
+                id: rule.id
+                name: rule.name
+                rule: rule.string
+                active: rule.active
+                logging: rule.logging
+              }
+            @_emitRuleAdded(rule)
             @emit "config"
           # * If a rule was changed then...
           @ruleManager.on "update", (rule) =>
@@ -505,11 +595,13 @@ module.exports = (env) ->
                   logging: rule.logging
                 }
               else r
+            @_emitRuleChanged(rule)
             @emit "config"
           # * If a rule was removed then
           @ruleManager.on "remove", (rule) =>
             # ...Remove the rule with the right id in the config.json file
             @config.rules = (r for r in @config.rules when r.id isnt rule.id)
+            @_emitRuleRemoved(rule)
             @emit "config"
         )
 

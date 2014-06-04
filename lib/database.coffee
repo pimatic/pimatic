@@ -96,12 +96,12 @@ module.exports = (env) ->
           )
 
         # Save log-messages
-        @framework.on("log-message", ({level, msg, meta}) =>
+        @framework.on("messagedLogged", ({level, msg, meta}) =>
           @saveMessageEvent(meta.timestamp, level, meta.tags, msg).done()
         )
 
         # Save device attribute changes
-        @framework.on('device-attribute', ({device, attributeName, time, value}) =>
+        @framework.on('deviceAttributeChanged', ({device, attributeName, time, value}) =>
           @saveDeviceAttributeEvent(device.id, attributeName, time, value).done()
         )
 

@@ -47,7 +47,7 @@ module.exports = (env) ->
           @setVariableToValue(variable.name, variable.value)
 
       # For each new device add a variable for every attribute
-      @framework.on 'device', (device) =>
+      @framework.on 'deviceAdded', (device) =>
         for attrName, attr of device.attributes
           do (attrName, attr) =>
             varName = "#{device.id}.#{attrName}"
