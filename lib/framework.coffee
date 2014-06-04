@@ -422,7 +422,7 @@ module.exports = (env) ->
               rule.id = newId
 
             unless rule.name? then rule.name = S(rule.id).humanize().s
-            unless rule.logging then rule.logging = yes
+            unless rule.logging? then rule.logging = yes
 
             @ruleManager.addRuleByString(
               rule.id, 
