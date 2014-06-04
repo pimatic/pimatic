@@ -422,12 +422,19 @@ module.exports = (env) ->
               rule.id = newId
 
             unless rule.name? then rule.name = S(rule.id).humanize().s
+            unless rule.logging then rule.logging = yes
 
-            @ruleManager.addRuleByString(rule.id, rule.name, rule.rule, rule.active, true)
-              .catch( (err) =>
-                env.logger.error "Could not parse rule \"#{rule.rule}\": " + err.message 
-                env.logger.debug err.stack
-              )        
+            @ruleManager.addRuleByString(
+              rule.id, 
+              rule.name, 
+              rule.rule, 
+              rule.active, 
+              force = yes,
+              rule.logging
+            ).catch( (err) =>
+              env.logger.error "Could not parse rule \"#{rule.rule}\": " + err.message 
+              env.logger.debug err.stack
+            )        
         )
 
         return Q.all(addRulePromises).then(=>
