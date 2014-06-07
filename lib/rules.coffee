@@ -59,6 +59,65 @@ require "date-format-lite"
 
 module.exports = (env) ->
 
+
+  class Rule
+    id: null
+    name: null
+    string: null
+
+    active: null
+    valid: null
+    logging: null
+
+    # Condition as string
+    conditionToken: null
+    # Actions as string
+    actionsToken: null
+
+    # PredicateHandler
+    predicates: null
+    # Rule as tokens
+    tokens: null
+    # ActionHandler
+    actions: null
+
+    # Error message if not valid
+    error: null
+    # Time the rule was last executed
+    lastExecuteTime: null
+      
+    constructor: (@id, @name, @string) ->
+      assert typeof @id is "string"
+      assert typeof @name is "string"
+      assert typeof @string is "string"
+
+    update: (fromRule) ->
+      assert @id is fromRule.id
+      @name = fromRule.name
+      @string = fromRule.string
+      @active = fromRule.active
+      @valid = fromRule.valid
+      @logging = fromRule.logging
+      @conditionToken = fromRule.conditionToken
+      @actionsToken = fromRule.actionsToken
+      @predicates = fromRule.predicates
+      @tokens = fromRule.tokens
+      @actions = fromRule.actions
+      @error = fromRule.error
+      @lastExecuteTime = fromRule.lastExecuteTime
+
+    toJson: -> {
+      id: @id
+      name: @name
+      string: @string
+      active: @active
+      valid: @valid
+      logging: @logging
+      conditionToken: @conditionToken
+      actionsToken: @actionsToken
+      error: @error
+    }
+
   ###
   The Rule Manager
   ----------------
@@ -133,11 +192,7 @@ module.exports = (env) ->
       assert name? and typeof name is "string"
       assert ruleString? and typeof ruleString is "string"
 
-      rule = 
-        id: id
-        name: name
-        string: ruleString
-
+      rule = new Rule(id, name, ruleString)
       # Allways return a promise
       return Q.fcall( =>
         
@@ -176,7 +231,7 @@ module.exports = (env) ->
         unless context.hasErrors()
           result = @parseRuleActions(id, rule.actionsToken, context)
           rule.actions = result.actions
-          rule.actionTokens = result.tokens
+          rule.actionToken = result.tokens
 
         return rule
       )
@@ -552,7 +607,7 @@ module.exports = (env) ->
 
       context = @createParseContext()
       # First parse the rule.
-      return @parseRuleString(id, name, ruleString, context).then( (rule)=>
+      return @parseRuleString(id, name, ruleString, context).then( (rule) =>
         # If we have parse error we don't need to continue here
         if context.hasErrors()
           error = new Error context.getErrorsAsString()
@@ -566,7 +621,7 @@ module.exports = (env) ->
         rule.valid = yes
         rule.logging = logging
         @rules[id] = rule
-        @emit "add", rule
+        @emit "ruleAdded", rule
         # Check if the condition of the rule is allready true.
         if active
           @doesRuleCondtionHold(rule).then( (isTrue) =>
@@ -590,7 +645,7 @@ module.exports = (env) ->
             rule.active = false
             rule.valid = no
             @rules[id] = rule
-            @emit 'add', rule
+            @emit 'ruleAdded', rule
           else
             env.logger.error 'Could not force add rule, because error had no rule attribute.'
             env.logger.debug error
@@ -611,7 +666,7 @@ module.exports = (env) ->
       # and delete the rule from the array
       delete @rules[id]
       # and emit the event.
-      @emit "remove", rule
+      @emit "ruleRemoved", rule
       return
 
     # ###updateRuleByString()
@@ -619,36 +674,40 @@ module.exports = (env) ->
       assert id? and typeof id is "string" and id.length isnt 0
 
       throw new Error("Invalid ruleId: \"#{id}\"") unless @rules[id]?
-      oldRule = @rules[id]
-      unless name? then name = oldRule.name
-      unless ruleString? then ruleString = oldRule.string
+      rule = @rules[id]
+      unless name? then name = rule.name
+      unless ruleString? then ruleString = rule.string
       context = @createParseContext()
       # First try to parse the updated ruleString.
-      return @parseRuleString(id, name, ruleString, context).then( (rule) =>
+      return @parseRuleString(id, name, ruleString, context).then( (newRule) =>
         if context.hasErrors()
           error = new Error context.getErrorsAsString()
-          error.rule = rule
+          error.rule = newRule
           error.context = context
           throw error
 
-        # If the rule was successfully parsed then get the old rule
-        oldRule = @rules[id]
-        
-        rule.valid = yes
-        rule.active = if active? then active else oldRule.active
-        rule.logging = if logging? then logging else oldRule.logging
+        # Set the properties for the new rule
+        newRule.valid = yes
+        newRule.active = if active? then active else rule.active
+        newRule.logging = if logging? then logging else rule.logging
 
         # and cancel the notifier for the old predicates.
-        @_removePredicateChangeListener(oldRule)
-        @_cancelScheduledActions(oldRule)
+        @_removePredicateChangeListener(rule)
+        @_cancelScheduledActions(rule)
+
+        # If the rule was successfully parsed then update the rule
+        if rule isnt @rules[id]
+          throw new Error("Rule #{rule.id} was removed while updating")
+
+        # We do that to keep the old rule object and not use the new one
+        rule.update(newRule)
+
         # and register the new ones:
-        @_addPredicateChangeListener rule
-        # Then add the rule to the rules array
-        @rules[id] = rule
+        @_addPredicateChangeListener(rule)
         # and emit the event.
-        @emit "update", rule
+        @emit "RuleChanged", rule
         # Then check if the condition of the rule is now true.
-        if active
+        if rule.active
           @doesRuleCondtionHold(rule).then( (isTrue) =>
             # If the condition is true then exectue the action.
             return if isTrue then @executeRuleActionsAndLogResult(rule)
@@ -721,7 +780,7 @@ module.exports = (env) ->
     # ###doesRuleCondtionHold()
     # The same as evaluateConditionOfRule but does not ignore the for-suffixes.
     doesRuleCondtionHold: (rule, knownPredicates = {}) ->
-      assert rule? and rule instanceof Object   
+      assert rule? and typeof rule is "object"
       assert knownPredicates? and knownPredicates instanceof Object
 
       # First evaluate the condition and
@@ -960,34 +1019,9 @@ module.exports = (env) ->
 
   
     # ###getAllRules()
-    getAllRules: () ->
-      return (for id, r of @rules
-        ruleInfo = {
-          id, 
-          name: r.name, 
-          active: r.active, 
-          valid: r.valid, 
-          string: r.string, 
-          condition: r.conditionToken,
-          actions: r.actionsToken,
-          logging: r.logging
-        }
-      )
+    getAllRules: () -> (r for id, r of @rules)
 
-    getRuleById: (ruleId) ->
-      r = @rules[ruleId]
-      return (
-        unless r? then null
-        else  ruleInfo = {
-          id: r.id, 
-          name: r.name, 
-          active: r.active, 
-          valid: r.valid, 
-          string: r.string,
-          condition: r.conditionToken,
-          actions: r.actionsToken
-          logging: r.logging
-        }
-      )
+    getRuleById: (ruleId) -> @rules[ruleId]
+
 
   return exports = { RuleManager }

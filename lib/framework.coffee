@@ -220,10 +220,10 @@ module.exports = (env) ->
         @app.httpServer.on('upgrade', onUpgrade)
 
       @io.on('connection', (socket) =>
-        socket.emit('devices', @getAllDevicesJson())
-        socket.emit('rules', @ruleManager.getAllRules())
-        socket.emit('variables', @variableManager.getAllVariables())
-        socket.emit('pages',  @getAllPages())
+        socket.emit('devices', (d.toJson() for d in @getAllDevices()) )
+        socket.emit('rules', (r.toJson() for r in @ruleManager.getAllRules()) )
+        socket.emit('variables', (v.toJson() for v in @variableManager.getAllVariables()) )
+        socket.emit('pages',  @getAllPages() )
       )
 
     listen: () ->
@@ -388,20 +388,25 @@ module.exports = (env) ->
 
     _emitRuleEvent: (eventType, rule) ->
       @emit(eventType, rule)
-      @io?.emit(eventType, jsonEvent = {
-        id: rule.id
-        name: rule.name
-        string: rule.string
-        active: rule.active
-        logging: rule.logging
-      })
+      @io?.emit(eventType, rule.toJson())
 
     _emitRuleAdded: (rule) -> @_emitRuleEvent('ruleAdded', rule)
     _emitRuleRemoved: (rule) -> @_emitRuleEvent('ruleRemoved', rule)
     _emitRuleChanged: (rule) -> @_emitRuleEvent('ruleChanged', rule)
 
     _emitVariableEvent: (eventType, variable) ->
-      #TODO
+      @emit(eventType, variable)
+      @io?.emit(eventType, variable.toJson())
+
+    _emitVariableAdded: (variable) -> @_emitVariableEvent('variableAdded', variable)
+    _emitVariableRemoved: (variable) -> @_emitVariableEvent('variableRemoved', variable)
+    _emitVariableChanged: (variable) -> @_emitVariableEvent('variableChanged', variable)
+    _emitVariableValueChanged: (variable, value) ->
+      @emit("variableValueChange", variable, value)
+      @io?.emit("variableValueChange", {
+        variableName: variable.name
+        variableValue: value
+      })      
       
     registerDevice: (device) ->
       assert device?
@@ -448,9 +453,6 @@ module.exports = (env) ->
 
     getAllDevices: -> (device for id, device of @devices)
 
-    getAllDevicesJson: -> (device.toJson() for id, device of @devices)
-
-
     addDeviceToConfig: (deviceConfig) ->
       assert deviceConfig.id?
       assert deviceConfig.class?
@@ -490,6 +492,11 @@ module.exports = (env) ->
                 when 'value' then variable.value = changedVar.value
                 when 'expression' then variable.expression = changedVar.exprInputStr
               break
+          @_emitVariableChanged(changedVar)
+          @emit "config"
+        )
+        @variableManager.on("variableValueChange", (changedVar, value) =>
+          @_emitVariableValueChanged(changedVar, value)
           @emit "config"
         )
         @variableManager.on("variableAdded", (addedVar) =>
@@ -502,6 +509,7 @@ module.exports = (env) ->
               name: addedVar.name, 
               expression: addedVar.exprInputStr
             })
+          @_emitVariableAdded(addedVar)
           @emit "config"
         )
         @variableManager.on("variableRemoved", (removedVar) =>
@@ -509,6 +517,7 @@ module.exports = (env) ->
             if variable.name is removedVar.name
               @config.variables.splice(i, 1)
               break
+          @_emitVariableRemoved(removedVar)
           @emit "config"
         )
 
@@ -567,7 +576,7 @@ module.exports = (env) ->
           # Save rule updates to the config file:
           # 
           # * If a new rule was added then...
-          @ruleManager.on "add", (rule) =>
+          @ruleManager.on "ruleAdded", (rule) =>
             # ...add it to the rules Array in the config.json file
             inConfig = (_.findIndex(findIndex, {id: rule.id}) isnt -1)
             unless inConfig 
@@ -581,7 +590,7 @@ module.exports = (env) ->
             @_emitRuleAdded(rule)
             @emit "config"
           # * If a rule was changed then...
-          @ruleManager.on "update", (rule) =>
+          @ruleManager.on "ruleChanged", (rule) =>
             # ...change the rule with the right id in the config.json file
             @config.rules = for r in @config.rules 
               if r.id is rule.id
@@ -596,7 +605,7 @@ module.exports = (env) ->
             @_emitRuleChanged(rule)
             @emit "config"
           # * If a rule was removed then
-          @ruleManager.on "remove", (rule) =>
+          @ruleManager.on "ruleRemoved", (rule) =>
             # ...Remove the rule with the right id in the config.json file
             @config.rules = (r for r in @config.rules when r.id isnt rule.id)
             @_emitRuleRemoved(rule)

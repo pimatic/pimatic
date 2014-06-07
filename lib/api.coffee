@@ -249,6 +249,7 @@ api.variables = {
       result:
         variables:
           type: t.array
+          toJson: yes
     updateVariable:
       description: "Updates a variable value or expression"
       rest:
@@ -272,6 +273,7 @@ api.variables = {
       result:
         variable:
           type: t.object
+          toJson: yes
     removeVariable:
       desciption: "Remove a variable"
       rest:

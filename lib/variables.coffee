@@ -19,16 +19,6 @@ module.exports = (env) ->
     type: 'value'
     readonly: no
 
-    @VarJsonObject = (v) =>
-      @name = v.name
-      @readonly = v.readonly
-      @type = v.type
-      @value = v.value
-      # just for expressions
-      @exprInputStr = v.exprInputStr or null
-      @exprTokens = v.exprTokens or null
-      return
-
     constructor: (@_vars, @name, @type, @readonly) ->
       assert @_vars?
       assert @_vars instanceof VariableManager
@@ -42,7 +32,12 @@ module.exports = (env) ->
       @value = value
       @_vars._emitVariableValueChange(this, @value)
       return true
-    toJson: -> new Variable.VarJsonObject(this)
+    toJson: -> {
+      name: @name
+      readonly: @readonly
+      type: @type
+      value: @value
+    }
 
   class DeviceAttributeVariable extends Variable
     constructor: (vars, @_device, @_attrName) ->
@@ -100,6 +95,13 @@ module.exports = (env) ->
           when "numeric" then @_vars.evaluateNumericExpression(@exprTokens, varsInEvaluation)
           when "string" then @_vars.evaluateStringExpression(@exprTokens, varsInEvaluation)
         )
+
+    toJson: ->
+      jsonObject = super()
+      if @type is "expression"
+        jsonObject.exprInputStr = @exprInputStr
+        jsonObject.exprTokens = @exprTokens
+      return jsonObject
     
     destroy: ->
       @_removeListener()
@@ -263,12 +265,12 @@ module.exports = (env) ->
         @_emitVariableRemoved(variable)
 
     getAllVariables: () ->
-      return (v.toJson() for name, v of @variables)
+      return (v for name, v of @variables)
 
     getVariableByName: (name) ->
       v = @variables[name]
       unless v? then return null
-      return v.toJson()
+      return v
 
     isAVariable: (token) -> token.length > 0 and token[0] is '$'
 
