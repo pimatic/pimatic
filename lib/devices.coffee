@@ -27,6 +27,7 @@ module.exports = (env) ->
     actions: {}
     # attributes the device has. For examples see devices below. 
     attributes: {}
+    _attributesValues: {}
 
     _checkAttributes: ->
       for attr of @attributes 
@@ -58,6 +59,13 @@ module.exports = (env) ->
       assert @name.lenght isnt 0, "the name of the device is empty"
       @_checkAttributes()
       @_constructorCalled = yes
+      for attrName of @attributes
+        do (attrName) =>
+          @on(attrName, (val) => @_attributesValues[attrName] = val )
+
+    destroy: ->
+      @removeAllListeners(attrName) for attrName of @attributes
+      return
 
     # Checks if the actuator has a given action.
     hasAction: (name) -> @actions[name]?
@@ -65,8 +73,11 @@ module.exports = (env) ->
     # Checks if the actuator has the attribute event.
     hasAttribute: (name) -> @attributes[name]?
 
-    getAttributeValue: (attribute) ->
-      getter = 'get' + upperCaseFirst(attribute)
+    getLastAttributeValue: (attrName) ->
+      return @_attributesValues[attrName]
+
+    getAttributeValue: (attrName) ->
+      getter = 'get' + upperCaseFirst(attrName)
       # call the getter
       result = @[getter]()
       # Be sure that it is a promise!
@@ -94,6 +105,7 @@ module.exports = (env) ->
         attrJson = _.cloneDeep(attr)
         attrJson.name = name
         attrJson.type = typeToString(attr.type)
+        attrJson.value = @getLastAttributeValue(name)
         json.attributes.push attrJson
       
       for name, action of @actions

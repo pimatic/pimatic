@@ -11,43 +11,43 @@ describe "VariableManager", ->
   describe '#setVariableToValue()', ->
     it "should set the variable", (finish) ->
       varManager.setVariableToValue('a', 1)
-      varManager.variables['a'].getValue().then( (value) =>
+      varManager.variables['a'].getUpdatedValue().then( (value) =>
         assert.equal value, 1
         finish()
       ).catch(finish)
 
   describe '#setVariableToExpr()', ->
     it "should set the to a numeric expression", (finish) ->
-      varManager.setVariableToExpr('b', ['2'], '2')
-      varManager.variables['b'].getValue().then( (value) =>
+      varManager.setVariableToExpr('b', '2')
+      varManager.variables['b'].getUpdatedValue().then( (value) =>
         assert.equal value, 2
         finish()
       ).catch(finish)
 
     it "should set the to a numeric expression with vars", (finish) ->
-      varManager.setVariableToExpr('c', ['1', '*', '$a', '+', '10', '*', '$b'], '1*$a+10*$b')
-      varManager.variables['c'].getValue().then( (value) =>
+      varManager.setVariableToExpr('c', '1*$a+10*$b')
+      varManager.variables['c'].getUpdatedValue().then( (value) =>
         assert.equal value, 21
         finish()
       ).catch(finish)
 
     it "should set the to a string expression", (finish) ->
-      varManager.setVariableToExpr('d', ['"foo"'], '"foo"')
-      varManager.variables['d'].getValue().then( (value) =>
+      varManager.setVariableToExpr('d', '"foo"')
+      varManager.variables['d'].getUpdatedValue().then( (value) =>
         assert.equal value, "foo"
         finish()
       ).catch(finish)
 
     it "should set the to a string expression with vars", (finish) ->
-      varManager.setVariableToExpr('e', ['""', '$a', '" bars"'], '"$a bars"')
-      varManager.variables['e'].getValue().then( (value) =>
+      varManager.setVariableToExpr('e', '"$a bars"')
+      varManager.variables['e'].getUpdatedValue().then( (value) =>
         assert.equal value, "1 bars"
         finish()
       ).catch(finish)
 
     it "should detect cycles", (finish) ->
-      varManager.setVariableToExpr('f', ['$f'], "$f")
-      varManager.variables['f'].getValue().then( (value) =>
+      varManager.setVariableToExpr('f', "$f")
+      varManager.variables['f'].getUpdatedValue().then( (value) =>
         assert false
       ).catch( (error) =>
         assert error.message is "Dependency cycle detected for variable f"
@@ -61,7 +61,7 @@ describe "VariableManager", ->
 
   describe '#getVariableValue()', ->
     it "get the var value", (finish) ->
-      varManager.getVariableValue('a').then( (value) =>
+      varManager.getVariableUpdatedValue('a').then( (value) =>
         assert.equal value, 1
         finish()
       ).catch(finish)

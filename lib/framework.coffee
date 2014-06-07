@@ -77,12 +77,13 @@ module.exports = (env) ->
         throw new Error('A page with this id already exists')
       unless page.name?
         throw new Error('No name gien')
-      @config.pages.push({
+      @config.pages.push( page = {
         id: id
         name: page.name
         devices: []
       })
       @saveConfig()
+      @_emitPageAdded(page)
 
     getPageById: (id) -> _.find(@config.pages, {id: id})
 
@@ -93,10 +94,12 @@ module.exports = (env) ->
       page.devices.push({
         deviceId: deviceId
       })
+      @_emitPageChanged(page)
 
     removePage: (id, page) ->
       removedPage = _.remove(@config.pages, {id: id})
       @saveConfig() if removedPage?
+      @_emitPageRemoved(page)
       return removedPage
 
     getAllPages: () ->
@@ -375,36 +378,31 @@ module.exports = (env) ->
       @emit 'messageLogged', {level, msg, meta}
       @io?.emit 'messageLogged', {level, msg, meta}
 
-    _emitRuleAdded: (rule) ->
-      @emit 'ruleAdded', rule
-      @io?.emit 'ruleAdded', {
+    _emitPageEvent: (eventType, page) ->
+      @emit(eventType, page)
+      @io?.emit(eventType, page)
+
+    _emitPageAdded: (page) -> @_emitPageEvent('pageAdded', page)
+    _emitPageChanged: (page) -> @_emitPageEvent('pageChanged', page)
+    _emitPageRemoved: (page) -> @_emitPageEvent('pageRemoved', page)
+
+    _emitRuleEvent: (eventType, rule) ->
+      @emit(eventType, rule)
+      @io?.emit(eventType, jsonEvent = {
         id: rule.id
         name: rule.name
         string: rule.string
         active: rule.active
         logging: rule.logging
-      }
+      })
 
-    _emitRuleRemoved: (rule) ->
-      @emit 'ruleRemoved', rule
-      @io?emit 'ruleRemoved', {
-        id: rule.id
-        name: rule.name
-        string: rule.string
-        active: rule.active
-        logging: rule.logging
-      }
+    _emitRuleAdded: (rule) -> @_emitRuleEvent('ruleAdded', rule)
+    _emitRuleRemoved: (rule) -> @_emitRuleEvent('ruleRemoved', rule)
+    _emitRuleChanged: (rule) -> @_emitRuleEvent('ruleChanged', rule)
 
-    _emitRuleChanged: (rule) ->
-      @emit 'ruleChanged', rule
-      @io?emit 'ruleChanged', {
-        id: rule.id
-        name: rule.name
-        string: rule.string
-        active: rule.active
-        logging: rule.logging
-      }
-
+    _emitVariableEvent: (eventType, variable) ->
+      #TODO
+      
     registerDevice: (device) ->
       assert device?
       assert device instanceof env.devices.Device
@@ -483,32 +481,32 @@ module.exports = (env) ->
             env.logger.debug err.stack
 
       initVariables = =>
-        @variableManager.on("change", (varInfo) =>
+        @variableManager.on("variableChanged", (changedVar) =>
           for variable in @config.variables
-            if variable.name is varInfo.name
+            if variable.name is changedVar.name
               delete variable.value
               delete variable.expression
-              switch varInfo.type
-                when 'value' then variable.value = varInfo.value
-                when 'expression' then variable.expression = varInfo.exprInputStr
+              switch changedVar.type
+                when 'value' then variable.value = changedVar.value
+                when 'expression' then variable.expression = changedVar.exprInputStr
               break
           @emit "config"
         )
-        @variableManager.on("add", (varInfo) =>
-          switch varInfo.type
+        @variableManager.on("variableAdded", (addedVar) =>
+          switch addedVar.type
             when 'value' then @config.variables.push({
-              name: varInfo.name, 
-              value: varInfo.value
+              name: addedVar.name, 
+              value: addedVar.value
             })
             when 'expression' then @config.variables.push({
-              name: varInfo.name, 
-              expression: varInfo.exprInputStr
+              name: addedVar.name, 
+              expression: addedVar.exprInputStr
             })
           @emit "config"
         )
-        @variableManager.on("remove", (name) =>
+        @variableManager.on("variableRemoved", (removedVar) =>
           for variable, i in @config.variables
-            if variable.name is name
+            if variable.name is removedVar.name
               @config.variables.splice(i, 1)
               break
           @emit "config"

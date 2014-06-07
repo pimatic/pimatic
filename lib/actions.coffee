@@ -120,7 +120,7 @@ module.exports = (env) ->
     parseAction: (input, context) ->
       result = null
 
-      allVars = @framework.variableManager.getAllVariables()
+      allVars = @framework.variableManager.variables
       varsRight = _(allVars).map( (v) => v.name ).valueOf()
       varsLeft = _(allVars).filter( (v) => not v.readonly ).map( (v) => v.name ).valueOf()
 

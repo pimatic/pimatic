@@ -411,7 +411,7 @@ module.exports = (env) ->
     parsePredicate: (input, context) ->
       result = null
 
-      allVariables = _(@framework.variableManager.getAllVariables()).map( (v) => v.name ).valueOf()
+      allVariables = _(@framework.variableManager.variables).map( (v) => v.name ).valueOf()
 
       M(input, context)
         .matchNumericExpression(allVariables, (next, leftTokens) =>
@@ -460,7 +460,8 @@ module.exports = (env) ->
       @variables = @framework.variableManager.extractVariables(
         @leftTokens.concat @rightTokens
       )
-      @changeListener = () =>
+      @changeListener = (variable, value) =>
+        unless variable.name in @variables then return
         evalPromise = @_evaluate()
         evalPromise.then( (state) =>
           if state isnt @lastState
@@ -470,16 +471,14 @@ module.exports = (env) ->
           env.logger.error "Error in VariablePredicateHandler:", error.message
           env.logger.debug error
         )
-      for v in @variables
-        @framework.variableManager.on("change #{v}", @changeListener)
+      
+      @framework.variableManager.on("variableValueChange", @changeListener)
       super()
     getValue: -> 
       if @lastState? then return Q(@lastState)
       else return @_evaluate()
-
     destroy: -> 
-      for v in @variables
-        @framework.variableManager.removeListener("change #{v}", @changeListener)
+      @framework.variableManager.removeListener("variableValueChange", @changeListener)
       super()
     getType: -> 'state'
 

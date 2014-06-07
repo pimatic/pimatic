@@ -618,10 +618,10 @@ module.exports = (env) ->
     updateRuleByString: (id, {name, ruleString, active, logging}) ->
       assert id? and typeof id is "string" and id.length isnt 0
 
-      assert(typeof name is "string") if name?
-      assert(typeof ruleString is "string") if uleString?
       throw new Error("Invalid ruleId: \"#{id}\"") unless @rules[id]?
-
+      oldRule = @rules[id]
+      unless name? then name = oldRule.name
+      unless ruleString? then ruleString = oldRule.string
       context = @createParseContext()
       # First try to parse the updated ruleString.
       return @parseRuleString(id, name, ruleString, context).then( (rule) =>
