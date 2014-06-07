@@ -221,7 +221,7 @@ module.exports = (env) ->
     updateVariable: (name, type, valueOrExpr) ->
       assert type in ["value", "expression"]
       unless @isVariableDefined(name)
-        throw new Error("No variable with the name \"#{variableName}\" found.")
+        throw new Error("No variable with the name \"#{name}\" found.")
       return (
         switch type
           when "value" then @setVariableToValue(name, valueOrExpr)
@@ -230,7 +230,7 @@ module.exports = (env) ->
 
     addVariable: (name, type, valueOrExpr) ->
       if @isVariableDefined(name)
-        throw new Error("There is already a variable with the name \"#{variableName}\"")
+        throw new Error("There is already a variable with the name \"#{name}\"")
       return @updateVariable(name, type, valueOrExpr)
 
     isVariableDefined: (name) ->

@@ -705,7 +705,7 @@ module.exports = (env) ->
         # and register the new ones:
         @_addPredicateChangeListener(rule)
         # and emit the event.
-        @emit "RuleChanged", rule
+        @emit "ruleChanged", rule
         # Then check if the condition of the rule is now true.
         if rule.active
           @doesRuleCondtionHold(rule).then( (isTrue) =>
