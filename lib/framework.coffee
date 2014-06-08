@@ -90,6 +90,18 @@ module.exports = (env) ->
       })
       @saveConfig()
       @_emitPageAdded(page)
+      return page
+
+    updatePage: (id, page) ->
+      index = _.findIndex(@config.pages, {id: id})
+      if index is -1
+        throw new Error('Page not found')
+      thepage = @config.pages[index]
+      thepage.name = page.name if page.name?
+      @saveConfig()
+      @_emitPageChanged(thepage)
+      return thepage
+
 
     getPageById: (id) -> _.find(@config.pages, {id: id})
 
@@ -101,11 +113,12 @@ module.exports = (env) ->
         deviceId: deviceId
       })
       @_emitPageChanged(page)
+      return page
 
     removePage: (id, page) ->
       removedPage = _.remove(@config.pages, {id: id})
-      @saveConfig() if removedPage?
-      @_emitPageRemoved(page)
+      @saveConfig() if removedPage.length > 0
+      @_emitPageRemoved(removedPage[0])
       return removedPage
 
     getAllPages: () ->
@@ -385,6 +398,7 @@ module.exports = (env) ->
       @io?.emit 'messageLogged', {level, msg, meta}
 
     _emitPageEvent: (eventType, page) ->
+      console.log page
       @emit(eventType, page)
       @io?.emit(eventType, page)
 

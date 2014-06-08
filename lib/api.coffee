@@ -144,8 +144,21 @@ api.framework = {
         page:
           type: t.object
       result:
-        pages:
-          type: t.array
+        page:
+          type: t.object
+    updatePage:
+      rest:
+        type: "PATCH"
+        url: "/api/pages/:pageId"
+      description: "Update a page"
+      params:
+        pageId:
+          type: t.string
+        page:
+          type: t.object
+      result:
+        page:
+          type: t.object
     addDeviceToPage:
       rest:
         type: "POST"
