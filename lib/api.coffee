@@ -170,8 +170,21 @@ api.framework = {
         deviceId:
           type: t.string
       result:
-        deviceItem:
+        page:
           type: t.object
+    removeDeviceFromPage:
+      rest:
+        type: "DELETE"
+        url: "/api/pages/:pageId/devices/:deviceId"
+      description: "Add a page"
+      params:
+        pageId:
+          type: t.string
+        deviceId:
+          type: t.string
+      result:
+        page:
+          type: t.object   
     removeGroup:
       description: "Remove group"
       rest:
@@ -454,7 +467,7 @@ messageCriteria = {
         type: t.date
         optional: yes
       limit:
-        type: Number
+        type: t.number
         optional: yes
 }
   
@@ -465,12 +478,16 @@ dataCriteria = {
     properties:
       deviceId:
         type: t.any
+        optional: yes
       attributeName:
         type: t.any
+        optional: yes
       after:
         type: t.date
+        optional: yes
       before:
         type: t.date
+        optional: yes
 }
 
 api.database = {
@@ -516,7 +533,7 @@ api.database = {
       params: messageCriteria
       result:
         count:
-          type: Number
+          type: t.number
     queryDeviceAttributeEvents:
       rest:
         type: 'GET'

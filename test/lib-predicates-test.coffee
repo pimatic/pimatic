@@ -314,7 +314,7 @@ describe "DeviceAttributePredicateProvider", ->
       attributes:
         testvalue:
           description: "a testvalue"
-          type: Number
+          type: t.number
           unit: '°C'
 
       constructor: () ->
@@ -450,7 +450,7 @@ describe "VariablePredicateProvider", ->
       attributes:
         testvalue:
           description: "a testvalue"
-          type: Number
+          type: t.number
           unit: '°C'
 
       constructor: () ->

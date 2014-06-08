@@ -276,7 +276,7 @@ module.exports = (env) ->
 
       info = {
         id: null
-        type: attribute.type.name
+        type: attribute.type
       }
 
       ###

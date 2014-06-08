@@ -14,6 +14,7 @@ S = require 'string'
 assert = require 'cassert'
 _ = require 'lodash'
 M = require './matcher'
+types = require('decl-api').types
 
 module.exports = (env) ->
 
@@ -294,13 +295,13 @@ module.exports = (env) ->
           setRefValue = (m, v) => info.referenceValue = v
           end =  => matchCount++
 
-          if attribute.type is Boolean
+          if attribute.type is types.boolean
             m = m.matchComparator('boolean', setComparator).match(attribute.labels, (m, v) =>
               if v is attribute.labels[0] then setRefValue(m, true)
               else if v is attribute.labels[1] then setRefValue(m, false)
               else assert(false)
             )
-          else if attribute.type is Number
+          else if attribute.type is types.number
             m = m.matchComparator('number', setComparator)
               .matchNumber( (m,v) => setRefValue(m, parseFloat(v)) )
             if attribute.unit? and attribute.unit.length > 0 
@@ -316,12 +317,12 @@ module.exports = (env) ->
                 ])
               autocompleteFilter = (v) => v is " #{attribute.unit}"
               m = m.match(possibleUnits, {optional: yes, acFilter: autocompleteFilter})
-          else if attribute.type is String
+          else if attribute.type is types.string
             m = m.matchComparator('string', setComparator)
               .or([
                 ( (m) => m.matchString(setRefValue) ),
                 ( (m) => 
-                  if attribute.range? then m.match(attribute.range, setRefValue) 
+                  if attribute.oneOf? then m.match(attribute.oneOf, setRefValue) 
                   else M(null) 
                 )
               ])

@@ -9,6 +9,7 @@ cassert = require 'cassert'
 assert = require 'assert'
 Q = require 'q'
 _ = require 'lodash'
+t = require('decl-api').types
 
 module.exports = (env) ->
 
@@ -38,18 +39,13 @@ module.exports = (env) ->
       assert attr.description?, "no description for #{attrName} of #{@name} given"
       assert attr.type?, "no type for #{attrName} of #{@name} given"
 
-      if Array.isArray(attr.type)
-        attr.range = attr.type
-        attr.type = String
-
-      validTypes = [Boolean, String, Number, Date]
-      isValidType = (t) => t in validTypes
+      isValidType = (type) => type in _.values(t)
       assert isValidType(attr.type), "#{attrName} of #{@name} has no valid type."
 
       # If it is a Number it must have a unit
-      if attr.type is Number and not attr.unit? then attr.unit = ''
+      if attr.type is t.number and not attr.unit? then attr.unit = ''
       # If it is a Boolean it must have labels
-      if attr.type is Boolean and not attr.labels then attr.labels = ["true", "false"]
+      if attr.type is t.boolean and not attr.labels then attr.labels = ["true", "false"]
       unless attr.label then attr.label = upperCaseFirst(attrName)
 
     constructor: ->
@@ -88,10 +84,6 @@ module.exports = (env) ->
     getTemplateName: -> "device"
 
     toJson: ->
-      typeToString = (type) => 
-        if typeof type is "function" then type.name.toLowerCase()
-        else if Array.isArray type then 'string'
-        else "unknown"
 
       json = {
         id: @id
@@ -104,17 +96,12 @@ module.exports = (env) ->
       for name, attr of @attributes
         attrJson = _.cloneDeep(attr)
         attrJson.name = name
-        attrJson.type = typeToString(attr.type)
         attrJson.value = @getLastAttributeValue(name)
         json.attributes.push attrJson
       
       for name, action of @actions
         actionJson = _.cloneDeep(action)
         actionJson.name = name
-        if action.params
-          for paramName, param of action.params
-            if param.type?
-              param.type = typeToString(param.type)
         json.actions.push actionJson
 
       return json
@@ -146,17 +133,17 @@ module.exports = (env) ->
         description: "changes the switch to on or off"
         params:
           state:
-            type: Boolean
+            type: t.boolean
       getState:
         description: "returns the current state of the switch"
         returns:
           state:
-            type: Boolean
+            type: t.boolean
         
     attributes:
       state:
         description: "the current state of the switch"
-        type: Boolean
+        type: t.boolean
         labels: ['on', 'off']
 
     # Returns a promise
@@ -199,12 +186,12 @@ module.exports = (env) ->
         description: "sets the level of the dimmer"
         params:
           dimlevel:
-            type: Number
+            type: t.number
       changeStateTo:
         description: "changes the switch to on or off"
         params:
           state:
-            type: Boolean
+            type: t.boolean
       turnOn:
         description: "turns the dim level to 100%"
       turnOff:
@@ -213,11 +200,11 @@ module.exports = (env) ->
     attributes:
       dimlevel:
         description: "the current dim level"
-        type: Number
+        type: t.number
         unit: "%"
       state:
         description: "the current state of the switch"
-        type: Boolean
+        type: t.boolean
         labels: ['on', 'off']
 
     # Returns a promise
@@ -258,7 +245,8 @@ module.exports = (env) ->
       position:
         label: "Position"
         description: "state of the shutter"
-        type: ['up', 'down', 'stopped']
+        type: t.string
+        oneOf: ['up', 'down', 'stopped']
 
     actions: 
       moveUp:
@@ -271,7 +259,7 @@ module.exports = (env) ->
         description: "changes the shutter state"
         params:
           state:
-            type: String
+            type: t.string
         
     # Returns a promise
     moveUp: -> @moveToPosition('up')
@@ -314,7 +302,7 @@ module.exports = (env) ->
     attributes:
       temperature:
         description: "the messured temperature"
-        type: Number
+        type: t.number
         unit: '°C'
 
     getTemplateName: -> "temperature"
@@ -329,7 +317,7 @@ module.exports = (env) ->
     attributes:
       presence:
         description: "presence of the human/device"
-        type: Boolean
+        type: t.boolean
         labels: ['present', 'absent']
         
 
@@ -353,7 +341,7 @@ module.exports = (env) ->
     attributes:
       contact:
         description: "state of the contact"
-        type: Boolean
+        type: t.boolean
         labels: ['closed', 'opened']
 
     _setContact: (value) ->

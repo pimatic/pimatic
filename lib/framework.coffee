@@ -115,6 +115,14 @@ module.exports = (env) ->
       @_emitPageChanged(page)
       return page
 
+    removeDeviceFromPage: (pageId, deviceId) ->
+      page = @getPageById(pageId)
+      unless page?
+        throw new Error('Could not find the page')
+      index = _.remove(page.devices, {deviceId: deviceId})
+      @_emitPageChanged(page)
+      return page
+
     removePage: (id, page) ->
       removedPage = _.remove(@config.pages, {id: id})
       @saveConfig() if removedPage.length > 0
