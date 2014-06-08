@@ -20,6 +20,9 @@ module.exports = (env) ->
 
   class PluginManager extends events.EventEmitter
 
+    updateProcessStatus: 'idle'
+    updateProcessMessages: []
+
     constructor: (@framework) ->
       @modulesParentDir = path.resolve @framework.maindir, '../../'
 
@@ -64,16 +67,23 @@ module.exports = (env) ->
       assert name.match(/^pimatic-.*$/)?
       return @spawnNpm(['install', name])
 
+    _emitUpdateProcessStatus: (status, info) ->
+      @emit 'updateProcessStatus', status, info
+
+    _emitUpdateProcessMessage: (message, info) ->
+      @emit 'updateProcessMessages', message, info
+
     update: (modules) -> 
-      @emit 'update-start', {modules}
+      @_emitUpdateProcessStatus('running', {modules})
+
       return @spawnNpm(['update'].concat modules).then( onDone = ( =>
-        @emit 'update-done', {modules}
+        @_emitUpdateProcessStatus('done', {modules})
         return modules
       ), onError = ( (error) =>
-        @emit 'update-error', {modules, error}
+        @_emitUpdateProcessStatus('error', {modules})
         throw error
       ), onProgress = ( (message) =>
-        @emit 'update-info', {modules, message}
+        @_emitUpdateProcessMessage(message, {modules})
       ))
 
     pathToPlugin: (name) ->

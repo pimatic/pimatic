@@ -36,6 +36,12 @@ module.exports = (env) ->
         @_emitMessageLoggedEvent(level, msg, meta)
       )
       @pluginManager = new env.plugins.PluginManager(this)
+      @pluginManager.on('updateProcessStatus', (status, info) =>
+        @_emitUpdateProcessStatus(status, info)
+      )
+      @pluginManager.on('updateProcessMessage', (message, info) =>
+        @_emitUpdateProcessMessage(message, info)
+      )
       @packageJson = @pluginManager.getInstalledPackageInfo('pimatic')
       env.logger.info "Starting pimatic version #{@packageJson.version}"
       @loadConfig()
@@ -406,7 +412,21 @@ module.exports = (env) ->
       @io?.emit("variableValueChanged", {
         variableName: variable.name
         variableValue: value
-      })      
+      }) 
+
+    _emitUpdateProcessStatus: (status, info) ->
+      @emit 'updateProcessStatus', status, info
+      @io?.emit("updateProcessStatus", {
+        status: status
+        modules: info.modules
+      }) 
+
+    _emitUpdateProcessMessage: (message, info) ->
+      @emit 'updateProcessMessages', message, info
+      @io?.emit("updateProcessMessages", {
+        message: message
+        modules: info.modules
+      }) 
       
     registerDevice: (device) ->
       assert device?
