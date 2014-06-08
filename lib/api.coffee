@@ -162,12 +162,75 @@ api.framework = {
     addDeviceToPage:
       rest:
         type: "POST"
-        url: "/api/pages/:pageId/:deviceId"
+        url: "/api/pages/:pageId/devices/:deviceId"
       description: "Add a page"
       params:
         pageId:
           type: t.string
         deviceId:
+          type: t.string
+      result:
+        deviceItem:
+          type: t.object
+    removeGroup:
+      description: "Remove group"
+      rest:
+        type: "DELETE"
+        url: "/api/groups/:groupId"
+      params:
+        groupId:
+          type: t.string
+      result:
+        removed:
+          type: t.object
+    addGroup:
+      rest:
+        type: "POST"
+        url: "/api/groups/:groupId"
+      description: "Add a group"
+      params:
+        groupId:
+          type: t.string
+        group:
+          type: t.object
+      result:
+        group:
+          type: t.object
+    updateGroup:
+      rest:
+        type: "PATCH"
+        url: "/api/groups/:groupId"
+      description: "Update a group"
+      params:
+        groupId:
+          type: t.string
+        group:
+          type: t.object
+      result:
+        group:
+          type: t.object
+    addDeviceToGroup:
+      rest:
+        type: "POST"
+        url: "/api/groups/:groupId/devices/:deviceId"
+      description: "Add a device to a group"
+      params:
+        groupId:
+          type: t.string
+        deviceId:
+          type: t.string
+      result:
+        deviceItem:
+          type: t.object
+    addRuleToGroup:
+      rest:
+        type: "POST"
+        url: "/api/groups/:groupId/rules/:deviceId"
+      description: "Add a rule to a group"
+      params:
+        groupId:
+          type: t.string
+        ruleId:
           type: t.string
       result:
         deviceItem:

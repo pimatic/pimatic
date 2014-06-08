@@ -125,6 +125,10 @@ module.exports =
     doc: "Array of gui pages"
     format: Array
     default: []
+  groups:
+    doc: "Array of groups"
+    format: Array
+    default: []
   plugins:
     doc: "Array of plugins to load"
     format: Array

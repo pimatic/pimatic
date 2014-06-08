@@ -63,6 +63,7 @@ module.exports = (env) ->
       assert Array.isArray @config.plugins
       assert Array.isArray @config.devices
       assert Array.isArray @config.pages
+      assert Array.isArray @config.groups
 
       # Turn on long Stack traces if debug mode is on.
       if @config.debug
@@ -82,7 +83,7 @@ module.exports = (env) ->
       if _.findIndex(@config.pages, {id: id}) isnt -1
         throw new Error('A page with this id already exists')
       unless page.name?
-        throw new Error('No name gien')
+        throw new Error('No name given')
       @config.pages.push( page = {
         id: id
         name: page.name
@@ -101,7 +102,6 @@ module.exports = (env) ->
       @saveConfig()
       @_emitPageChanged(thepage)
       return thepage
-
 
     getPageById: (id) -> _.find(@config.pages, {id: id})
 
@@ -123,6 +123,59 @@ module.exports = (env) ->
 
     getAllPages: () ->
       return @config.pages
+
+    addGroup: (id, group) ->
+      if _.findIndex(@config.groups, {id: id}) isnt -1
+        throw new Error('A group with this id already exists')
+      unless group.name?
+        throw new Error('No name given')
+      @config.groups.push( group = {
+        id: id
+        name: group.name
+        devices: []
+        rules: []
+      })
+      @saveConfig()
+      @_emitGroupAdded(group)
+      return group
+
+    updateGroup: (id, group) ->
+      index = _.findIndex(@config.groups, {id: id})
+      if index is -1
+        throw new Error('Group not found')
+      thegroup = @config.groups[index]
+      thegroup.name = group.name if group.name?
+      @saveConfig()
+      @_emitGroupChanged(thegroup)
+      return thegroup
+
+
+    getGroupById: (id) -> _.find(@config.groups, {id: id})
+
+    addDeviceToGroup: (groupId, deviceId) ->
+      group = @getGroupById(groupId)
+      unless group?
+        throw new Error('Could not find the group')
+      group.devices.push(deviceId)
+      @_emitGroupChanged(group)
+      return group
+
+    addRuleToGroup: (groupId, ruleId) ->
+      group = @getGroupById(groupId)
+      unless group?
+        throw new Error('Could not find the group')
+      group.rules.push(ruleId)
+      @_emitGroupChanged(group)
+      return group
+
+    removeGroup: (id, page) ->
+      removedGroup = _.remove(@config.groups, {id: id})
+      @saveConfig() if removedGroup.length > 0
+      @_emitGroupRemoved(removedGroup[0])
+      return removedGroup
+
+    getAllGroups: () ->
+      return @config.groups
 
     setupExpressApp: () ->
       # Setup express
@@ -398,13 +451,21 @@ module.exports = (env) ->
       @io?.emit 'messageLogged', {level, msg, meta}
 
     _emitPageEvent: (eventType, page) ->
-      console.log page
       @emit(eventType, page)
       @io?.emit(eventType, page)
 
     _emitPageAdded: (page) -> @_emitPageEvent('pageAdded', page)
     _emitPageChanged: (page) -> @_emitPageEvent('pageChanged', page)
     _emitPageRemoved: (page) -> @_emitPageEvent('pageRemoved', page)
+
+    _emitGroupEvent: (eventType, group) ->
+      console.log group
+      @emit(eventType, group)
+      @io?.emit(eventType, group)
+
+    _emitGroupAdded: (group) -> @_emitGroupEvent('groupAdded', group)
+    _emitGroupChanged: (group) -> @_emitGroupEvent('groupChanged', group)
+    _emitGroupRemoved: (group) -> @_emitGroupEvent('groupRemoved', group)
 
     _emitRuleEvent: (eventType, rule) ->
       @emit(eventType, rule)
