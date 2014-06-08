@@ -410,9 +410,7 @@ module.exports = (env) ->
 
     parsePredicate: (input, context) ->
       result = null
-
       allVariables = _(@framework.variableManager.variables).map( (v) => v.name ).valueOf()
-
       M(input, context)
         .matchNumericExpression(allVariables, (next, leftTokens) =>
           next.matchComparator('number', (next, comparator) =>
@@ -472,13 +470,13 @@ module.exports = (env) ->
           env.logger.debug error
         )
       
-      @framework.variableManager.on("variableValueChange", @changeListener)
+      @framework.variableManager.on("variableValueChanged", @changeListener)
       super()
     getValue: -> 
       if @lastState? then return Q(@lastState)
       else return @_evaluate()
     destroy: -> 
-      @framework.variableManager.removeListener("variableValueChange", @changeListener)
+      @framework.variableManager.removeListener("variableValueChanged", @changeListener)
       super()
     getType: -> 'state'
 

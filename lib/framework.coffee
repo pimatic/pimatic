@@ -402,8 +402,8 @@ module.exports = (env) ->
     _emitVariableRemoved: (variable) -> @_emitVariableEvent('variableRemoved', variable)
     _emitVariableChanged: (variable) -> @_emitVariableEvent('variableChanged', variable)
     _emitVariableValueChanged: (variable, value) ->
-      @emit("variableValueChange", variable, value)
-      @io?.emit("variableValueChange", {
+      @emit("variableValueChanged", variable, value)
+      @io?.emit("variableValueChanged", {
         variableName: variable.name
         variableValue: value
       })      
@@ -495,9 +495,15 @@ module.exports = (env) ->
           @_emitVariableChanged(changedVar)
           @emit "config"
         )
-        @variableManager.on("variableValueChange", (changedVar, value) =>
+        @variableManager.on("variableValueChanged", (changedVar, value) =>
+          if changedVar.type is 'value'
+            for variable in @config.variables
+              if variable.name is changedVar.name
+                variable.value = value
+                break
+            @emit "config"
           @_emitVariableValueChanged(changedVar, value)
-          @emit "config"
+          
         )
         @variableManager.on("variableAdded", (addedVar) =>
           switch addedVar.type
@@ -566,7 +572,7 @@ module.exports = (env) ->
               name: rule.name, 
               ruleString: rule.rule, 
               active: rule.active
-            }, force: true).catch( (err) =>
+            }, force = true).catch( (err) =>
               env.logger.error "Could not parse rule \"#{rule.rule}\": " + err.message 
               env.logger.debug err.stack
             )        
@@ -578,8 +584,9 @@ module.exports = (env) ->
           # * If a new rule was added then...
           @ruleManager.on "ruleAdded", (rule) =>
             # ...add it to the rules Array in the config.json file
-            inConfig = (_.findIndex(findIndex, {id: rule.id}) isnt -1)
-            unless inConfig 
+            inConfig = (_.findIndex(@config.rules , {id: rule.id}) isnt -1)
+            unless inConfig
+              console.log rule
               @config.rules.push {
                 id: rule.id
                 name: rule.name

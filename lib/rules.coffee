@@ -593,10 +593,13 @@ module.exports = (env) ->
             )
 
     # ###addRuleByString()
-    addRuleByString: (id, {name, ruleString, active, logging}, force = true) ->
+    addRuleByString: (id, {name, ruleString, active, logging}, force = false) ->
       assert id? and typeof id is "string" and id.length isnt 0
       assert name? and typeof name is "string"
       assert ruleString? and typeof ruleString is "string"
+      assert (if active? then typeof active is "boolean" else true)
+      assert (if logging? then typeof logging is "boolean" else true)
+      assert (if force? then typeof force is "boolean" else true)
       unless active? then active = yes
       unless logging? then logging = yes
 
@@ -672,7 +675,10 @@ module.exports = (env) ->
     # ###updateRuleByString()
     updateRuleByString: (id, {name, ruleString, active, logging}) ->
       assert id? and typeof id is "string" and id.length isnt 0
-
+      assert (if name? then typeof name is "string" else true)
+      assert (if ruleString? then typeof ruleString is "string" else true)
+      assert (if active? then typeof active is "boolean" else true)
+      assert (if logging? then typeof logging is "boolean" else true)
       throw new Error("Invalid ruleId: \"#{id}\"") unless @rules[id]?
       rule = @rules[id]
       unless name? then name = rule.name
@@ -691,13 +697,13 @@ module.exports = (env) ->
         newRule.active = if active? then active else rule.active
         newRule.logging = if logging? then logging else rule.logging
 
-        # and cancel the notifier for the old predicates.
-        @_removePredicateChangeListener(rule)
-        @_cancelScheduledActions(rule)
-
         # If the rule was successfully parsed then update the rule
         if rule isnt @rules[id]
           throw new Error("Rule #{rule.id} was removed while updating")
+
+        # and cancel the notifier for the old predicates.
+        @_removePredicateChangeListener(rule)
+        @_cancelScheduledActions(rule)
 
         # We do that to keep the old rule object and not use the new one
         rule.update(newRule)

@@ -96,7 +96,7 @@ module.exports = (env) ->
           )
 
         # Save log-messages
-        @framework.on("messagedLogged", ({level, msg, meta}) =>
+        @framework.on("messageLogged", ({level, msg, meta}) =>
           @saveMessageEvent(meta.timestamp, level, meta.tags, msg).done()
         )
 

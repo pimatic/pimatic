@@ -30,7 +30,7 @@ module.exports = (env) ->
     _setValue: (value) ->
       if value is @value then return false
       @value = value
-      @_vars._emitVariableValueChange(this, @value)
+      @_vars._emitVariableValueChanged(this, @value)
       return true
     toJson: -> {
       name: @name
@@ -75,8 +75,7 @@ module.exports = (env) ->
       @_removeListener()
       @type = "expression"
       variablesInExpr = (t.substring(1) for t in tokens when @_vars.isAVariable(t))
-      @_vars.on('variableValueChange', @_changeListener = (changedVar, value) =>
-        unless changedVar in variablesInExpr then return
+      doUpdate = ( =>
         @getUpdatedValue().then( (value) => 
           @_setValue(value)
         ).catch((error) =>
@@ -84,9 +83,14 @@ module.exports = (env) ->
           env.logger.debug error
         )
       )
+      @_vars.on('variableValueChanged', @_changeListener = (changedVar, value) =>
+        unless changedVar.name in variablesInExpr then return
+        doUpdate()
+      )
+      doUpdate()
     _removeListener: ->
       if @_changeListener?
-        @_vars.removeListener('variableValueChange', @_changeListener)
+        @_vars.removeListener('variableValueChanged', @_changeListener)
         @changeListener = null
     getUpdatedValue: (varsInEvaluation = {})->
       if @type is "value" then return Q(@value)
@@ -158,10 +162,16 @@ module.exports = (env) ->
       assert variable instanceof Variable
       assert (not @variables[variable.name]?)
       @variables[variable.name] = variable
+      variable.getUpdatedValue().then( (value) ->
+        variable._setValue(value)
+      ).catch( (error) ->
+        env.logger.warn("Could not update variable #{variable.name}: #{error.message}")
+        env.logger.debug(error)
+      )
       @_emitVariableAdded(variable)
 
-    _emitVariableValueChange: (variable, value) ->
-      @emit('variableValueChange', variable, value)
+    _emitVariableValueChanged: (variable, value) ->
+      @emit('variableValueChanged', variable, value)
 
     _emitVariableAdded: (variable) ->
       @emit('variableAdded', variable)
@@ -176,19 +186,18 @@ module.exports = (env) ->
       assert name? and typeof name is "string"
       assert typeof inputStr is "string" and inputStr.length > 0
 
-      return (
-        unless @variables[name]?
-          @_addVariable(
-            new ExpressionValueVariable(this, name, 'expression', inputStr)
-          )
-        else
-          variable = @variables[name]
-          unless variable.type in ["expression", "value"]
-            throw new Error("Can not set a non expression or value var to an expression")
-          variable._setToExpression(inputStr)
-          @_emitVariableChanged(variable)
-          variable
-      )
+      unless @variables[name]?
+        @_addVariable(
+          variable = new ExpressionValueVariable(this, name, 'expression', inputStr)
+        )
+      else
+        variable = @variables[name]
+        unless variable.type in ["expression", "value"]
+          throw new Error("Can not set a non expression or value var to an expression")
+        variable.setToExpression(inputStr)
+        @_emitVariableChanged(variable)
+      return variable
+    
 
 
     _checkVariableName: (name) ->
@@ -201,22 +210,21 @@ module.exports = (env) ->
       assert name? and typeof name is "string"
       @_checkVariableName(name)
 
-      return (
-        unless @variables[name]?
-          @_addVariable(
-            new ExpressionValueVariable(this, name, 'value', value)
-          )
-        else
-          variable = @variables[name]
-          unless variable.type in ["expression", "value"]
-            throw new Error("Can not set a non expression or value var to an expression")
-          if variable.type is "expression"
-            variable.setToValue(value)
-            @_emitVariableChanged(variable)
-          else if variable.type is "value"
-            variable.setToValue(value)
-          variable
-      )
+      unless @variables[name]?
+        @_addVariable(
+          variable = new ExpressionValueVariable(this, name, 'value', value)
+        )
+      else
+        variable = @variables[name]
+        unless variable.type in ["expression", "value"]
+          throw new Error("Can not set a non expression or value var to an expression")
+        if variable.type is "expression"
+          variable.setToValue(value)
+          @_emitVariableChanged(variable)
+        else if variable.type is "value"
+          variable.setToValue(value)
+      return variable
+
 
     updateVariable: (name, type, valueOrExpr) ->
       assert type in ["value", "expression"]
@@ -229,9 +237,14 @@ module.exports = (env) ->
       )
 
     addVariable: (name, type, valueOrExpr) ->
+      assert type in ["value", "expression"]
       if @isVariableDefined(name)
         throw new Error("There is already a variable with the name \"#{name}\"")
-      return @updateVariable(name, type, valueOrExpr)
+      return (
+        switch type
+          when "value" then @setVariableToValue(name, valueOrExpr)
+          when "expression" then @setVariableToExpr(name, valueOrExpr)
+      )
 
     isVariableDefined: (name) ->
       assert name? and typeof name is "string"

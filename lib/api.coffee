@@ -161,27 +161,6 @@ api.framework = {
           type: t.object
 }
 
-
-ruleParams =  {
-  ruleId:
-    type: t.string
-  rule:
-    type: t.object
-    properties:
-      id:
-        type: t.string
-      name:
-        type: t.string
-      ruleString:
-        type: t.string
-      active:
-        type: t.boolean
-      force: 
-        type: t.boolean
-      logging:
-        type: t.boolean
-}
-
 api.rules = {
   actions:
     addRuleByString:
@@ -190,16 +169,47 @@ api.rules = {
         type: "POST"
         url: "/api/rules/:ruleId"
       params: 
-        ruleId: ruleParams.ruleId
-        rule: ruleParams.rule
+        ruleId:
+          type: t.string
+        rule:
+          type: t.object
+          properties:
+            name:
+              type: t.string
+            ruleString:
+              type: t.string
+            active:
+              type: t.boolean
+              optional: yes
+            logging:
+              type: t.boolean
+              optional: yes
         force: 
           type: t.boolean
+          optional: yes
     updateRuleByString:
       rest:
         type: "PATCH"
         url: "/api/rules/:ruleId"
       description: "Updates a rule by a string"
-      params: ruleParams
+      params:
+        ruleId:
+          type: t.string
+        rule:
+          type: t.object
+          properties:
+            name:
+              type: t.string
+              optional: yes
+            ruleString:
+              type: t.string
+              optional: yes
+            active:
+              type: t.boolean
+              optional: yes
+            logging:
+              type: t.boolean
+              optional: yes
     removeRule:
       rest:
         type: "DELETE"
@@ -238,6 +248,12 @@ variableParams = {
     type: t.any
 }
 
+variableResult = {
+  variable:
+    type: t.object
+    toJson: yes
+}
+
 api.variables = {
   actions:
     getAllVariables:
@@ -256,12 +272,14 @@ api.variables = {
         type: "PATCH"
         url: "/api/variables/:name"
       params: variableParams
+      result: variableResult
     addVariable:
       description: "Adds a value or expression variable"
       rest:
         type: "POST"
         url: "/api/variables/:name"
       params: variableParams
+      result: variableResult
     getVariableByName:
       description: "Get infos about a variable"
       rest:
@@ -270,10 +288,7 @@ api.variables = {
       params:
         name:
           type: t.string
-      result:
-        variable:
-          type: t.object
-          toJson: yes
+      result: variableResult
     removeVariable:
       desciption: "Remove a variable"
       rest:
@@ -282,6 +297,8 @@ api.variables = {
       params:
         name:
           type: t.string
+      result: variableResult
+
 }
 
 
