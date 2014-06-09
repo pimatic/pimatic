@@ -156,6 +156,13 @@ api.framework = {
           type: t.string
         page:
           type: t.object
+          properties:
+            name:
+              type: t.string
+              optional: yes
+            devicesOrder:
+              type: t.array
+              optional: yes
       result:
         page:
           type: t.object

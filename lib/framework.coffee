@@ -94,11 +94,20 @@ module.exports = (env) ->
       return page
 
     updatePage: (id, page) ->
-      index = _.findIndex(@config.pages, {id: id})
-      if index is -1
+      assert typeof id is "string"
+      assert typeof page is "object"
+      assert(if page.name? then typeof page.name is "string" else true)
+      assert(if page.devicesOrder? then Array.isArray page.devicesOrder else true)
+      thepage = @getPageById(id)
+      unless thepage?
         throw new Error('Page not found')
-      thepage = @config.pages[index]
       thepage.name = page.name if page.name?
+      if page.devicesOrder?
+        thepage.devices = _.sortBy(thepage.devices,  (device) => 
+          index = page.devicesOrder.indexOf device.deviceId
+          # push it to the end if not found
+          return if index is -1 then 99999 else index 
+        )
       @saveConfig()
       @_emitPageChanged(thepage)
       return thepage
@@ -157,7 +166,6 @@ module.exports = (env) ->
       @_emitGroupChanged(thegroup)
       return thegroup
 
-
     getGroupById: (id) -> _.find(@config.groups, {id: id})
 
     addDeviceToGroup: (groupId, deviceId) ->
@@ -184,6 +192,15 @@ module.exports = (env) ->
 
     getAllGroups: () ->
       return @config.groups
+
+    updateRuleOrder: (ruleOrder) ->
+      assert ruleOrder? and Array.isArray ruleOrder?
+      @config.rules = _.sortBy(@config.rules,  (rule) => 
+        index = ruleOrder.indexOf rule.id 
+        return if index is -1 then 99999 else index # push it to the end if not found
+      )
+      @saveConfig()
+      return null
 
     setupExpressApp: () ->
       # Setup express
@@ -304,6 +321,7 @@ module.exports = (env) ->
         socket.emit('rules', (r.toJson() for r in @ruleManager.getAllRules()) )
         socket.emit('variables', (v.toJson() for v in @variableManager.getAllVariables()) )
         socket.emit('pages',  @getAllPages() )
+        socket.emit('groups',  @getAllGroups() )
       )
 
     listen: () ->
@@ -467,7 +485,6 @@ module.exports = (env) ->
     _emitPageRemoved: (page) -> @_emitPageEvent('pageRemoved', page)
 
     _emitGroupEvent: (eventType, group) ->
-      console.log group
       @emit(eventType, group)
       @io?.emit(eventType, group)
 
