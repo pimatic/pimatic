@@ -133,5 +133,8 @@
 	"Messages": "Messages",
 	"Settings": "Settings",
 	"Automation": "Automation",
-	"Delete this Page": "Delete this Page"
+	"Delete this Page": "Delete this Page",
+	"Ungrouped": "Ungrouped",
+	"Device Attributes": "Device Attributes",
+	"Add a new item": "Add a new item"
 }

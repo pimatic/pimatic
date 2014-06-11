@@ -277,8 +277,11 @@ module.exports = (env) ->
         @variables[name] = null
         @_emitVariableRemoved(variable)
 
-    getAllVariables: () ->
-      return (v for name, v of @variables)
+    getVariables: () ->
+      variables = (v for name, v of @variables)
+      # sort in config order
+      variablesInConfig = _.map(@framework.config.variables, (r) => r.name )
+      return _.sortBy(variables, (r) => variablesInConfig.indexOf r.name )
 
     getVariableByName: (name) ->
       v = @variables[name]

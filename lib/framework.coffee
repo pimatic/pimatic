@@ -46,7 +46,7 @@ module.exports = (env) ->
       env.logger.info "Starting pimatic version #{@packageJson.version}"
       @loadConfig()
       @variableManager = new env.variables.VariableManager(this, @config.variables)
-      @ruleManager = new env.rules.RuleManager(@config.rules)
+      @ruleManager = new env.rules.RuleManager(this, @config.rules)
       @database = new env.database.Database(this, @config.settings.database)
       @setupExpressApp()
 
@@ -151,6 +151,7 @@ module.exports = (env) ->
         name: group.name
         devices: []
         rules: []
+        variables: []
       })
       @saveConfig()
       @_emitGroupAdded(group)
@@ -176,11 +177,101 @@ module.exports = (env) ->
       @_emitGroupChanged(group)
       return group
 
-    addRuleToGroup: (groupId, ruleId) ->
+    getGroupOfRule: (ruleId) ->
+      for g in @config.groups
+        index = _.indexOf(g.rules, ruleId)
+        if index isnt -1 then return g
+      return null
+
+    addRuleToGroup: (groupId, ruleId, position) ->
+      assert(typeof ruleId is "string")
+      assert(typeof groupId is "string")
+      assert(if position? then typeof position is "number" else true)
       group = @getGroupById(groupId)
       unless group?
         throw new Error('Could not find the group')
-      group.rules.push(ruleId)
+      oldGroup = @getGroupOfRule(ruleId)
+      if oldGroup?
+        #remove rule from all other groups
+        _.remove(oldGroup.rules, (id) => id is ruleId)
+        @_emitGroupChanged(oldGroup)
+      unless position? or position >= group.rules.length
+        group.rules.push(ruleId)
+      else
+        group.rules.splice(position, 0, ruleId)
+      @saveConfig()
+      @_emitGroupChanged(group)
+      return group
+
+    getGroupOfVariable: (variableName) ->
+      for g in @config.groups
+        index = _.indexOf(g.variables, variableName)
+        if index isnt -1 then return g
+      return null
+    
+    removeDeviceFromGroup: (groupId, deviceId) ->
+      group = @getGroupOfDevice(deviceId)
+      unless group?
+        throw new Error('Device is in no group')
+      if group.id isnt groupId
+        throw new Error("Device is not in group #{groupId}")
+      _.remove(group.devices, (id) => id is deviceId)
+      @saveConfig()
+      @_emitGroupChanged(group)      
+      return group
+
+    removeRuleFromGroup: (groupId, ruleId) ->
+      group = @getGroupOfRule(ruleId)
+      unless group?
+        throw new Error('Rule is in no group')
+      if group.id isnt groupId
+        throw new Error("Rule is not in group #{groupId}")
+      _.remove(group.rules, (id) => id is ruleId)
+      @saveConfig()
+      @_emitGroupChanged(group)      
+      return group
+
+    removeVariableFromGroup: (groupId, variableName) ->
+      group = @getGroupOfVariable(variableName)
+      unless group?
+        throw new Error('Variable is in no group')
+      if group.id isnt groupId
+        throw new Error("Variable is not in group #{groupId}")
+      _.remove(group.variables, (name) => name is variableName)
+      @saveConfig()
+      @_emitGroupChanged(group)      
+      return group
+
+    addVariableToGroup: (groupId, variableName, position) ->
+      assert(typeof variableName is "string")
+      assert(typeof groupId is "string")
+      assert(if position? then typeof position is "number" else true)
+      group = @getGroupById(groupId)
+      unless group?
+        throw new Error('Could not find the group')
+      oldGroup = @getGroupOfVariable(variableName)
+      if oldGroup?
+        #remove rule from all other groups
+        _.remove(oldGroup.variables, (name) => name is variableName)
+        @_emitGroupChanged(oldGroup)
+      unless position? or position >= group.variables.length
+        group.variables.push(variableName)
+      else
+        group.variables.splice(position, 0, variableName)
+      @saveConfig()
+      @_emitGroupChanged(group)
+      return group
+
+    updateVariableGroupOrder: (groupId, variableOrder) ->
+      assert variableOrder? and Array.isArray variableOrder
+      group = @getGroupById(groupId)
+      unless group?
+        throw new Error('Could not find the group')
+      group.variables = _.sortBy(group.variables, (variableName) => 
+        index = variableOrder.indexOf variableName 
+        return if index is -1 then 99999 else index # push it to the end if not found
+      )
+      @saveConfig()
       @_emitGroupChanged(group)
       return group
 
@@ -190,17 +281,65 @@ module.exports = (env) ->
       @_emitGroupRemoved(removedGroup[0])
       return removedGroup
 
-    getAllGroups: () ->
+    updateRuleGroupOrder: (groupId, ruleOrder) ->
+      assert ruleOrder? and Array.isArray ruleOrder
+      group = @getGroupById(groupId)
+      unless group?
+        throw new Error('Could not find the group')
+      group.rules = _.sortBy(group.rules, (ruleId) => 
+        index = ruleOrder.indexOf ruleId 
+        return if index is -1 then 99999 else index # push it to the end if not found
+      )
+      @saveConfig()
+      @_emitGroupChanged(group)
+      return group
+
+
+    updateDeviceGroupOrder: (groupId, deviceOrder) ->
+      assert deviceOrder? and Array.isArray deviceOrder
+      group = @getGroupById(groupId)
+      unless group?
+        throw new Error('Could not find the group')
+      group.devices = _.sortBy(group.devices, (deviceId) => 
+        index = deviceOrder.indexOf deviceId 
+        return if index is -1 then 99999 else index # push it to the end if not found
+      )
+      @saveConfig()
+      @_emitGroupChanged(group)
+      return group
+
+
+    getGroupOfDevice: (deviceId) ->
+      for g in @config.groups
+        index = _.indexOf(g.devices, deviceId)
+        if index isnt -1 then return g
+      return null
+
+
+
+    getGroups: () ->
       return @config.groups
 
     updateRuleOrder: (ruleOrder) ->
-      assert ruleOrder? and Array.isArray ruleOrder?
+      assert ruleOrder? and Array.isArray ruleOrder
       @config.rules = _.sortBy(@config.rules,  (rule) => 
         index = ruleOrder.indexOf rule.id 
         return if index is -1 then 99999 else index # push it to the end if not found
       )
       @saveConfig()
-      return null
+      @_emitRuleOrderChanged(ruleOrder)
+      return ruleOrder
+
+    updateVariableOrder: (variableOrder) ->
+      assert variableOrder? and Array.isArray variableOrder
+      @config.variables = _.sortBy(@config.variables,  (variable) => 
+        index = variableOrder.indexOf variable.name
+        return if index is -1 then 99999 else index # push it to the end if not found
+      )
+      @saveConfig()
+      @_emitVariableOrderChanged(variableOrder)
+      return variableOrder
+
 
     setupExpressApp: () ->
       # Setup express
@@ -317,11 +456,11 @@ module.exports = (env) ->
         @app.httpServer.on('upgrade', onUpgrade)
 
       @io.on('connection', (socket) =>
-        socket.emit('devices', (d.toJson() for d in @getAllDevices()) )
-        socket.emit('rules', (r.toJson() for r in @ruleManager.getAllRules()) )
-        socket.emit('variables', (v.toJson() for v in @variableManager.getAllVariables()) )
+        socket.emit('devices', (d.toJson() for d in @getDevices()) )
+        socket.emit('rules', (r.toJson() for r in @ruleManager.getRules()) )
+        socket.emit('variables', (v.toJson() for v in @variableManager.getVariables()) )
         socket.emit('pages',  @getAllPages() )
-        socket.emit('groups',  @getAllGroups() )
+        socket.emit('groups',  @getGroups() )
       )
 
     listen: () ->
@@ -476,6 +615,10 @@ module.exports = (env) ->
       @emit 'messageLogged', {level, msg, meta}
       @io?.emit 'messageLogged', {level, msg, meta}
 
+    _emitOrderChanged: (eventName, order) ->
+      @emit(eventName, order)
+      @io?.emit(eventName, order)
+
     _emitPageEvent: (eventType, page) ->
       @emit(eventType, page)
       @io?.emit(eventType, page)
@@ -499,6 +642,8 @@ module.exports = (env) ->
     _emitRuleAdded: (rule) -> @_emitRuleEvent('ruleAdded', rule)
     _emitRuleRemoved: (rule) -> @_emitRuleEvent('ruleRemoved', rule)
     _emitRuleChanged: (rule) -> @_emitRuleEvent('ruleChanged', rule)
+    _emitRuleOrderChanged: (ruleOrder) ->
+      @_emitOrderChanged('ruleOrderChanged', ruleOrder)
 
     _emitVariableEvent: (eventType, variable) ->
       @emit(eventType, variable)
@@ -512,7 +657,10 @@ module.exports = (env) ->
       @io?.emit("variableValueChanged", {
         variableName: variable.name
         variableValue: value
-      }) 
+      })
+
+    _emitVariableOrderChanged: (variableOrder) ->
+      @_emitOrderChanged('variableOrderChanged', variableOrder)
 
     _emitUpdateProcessStatus: (status, info) ->
       @emit 'updateProcessStatus', status, info
@@ -571,7 +719,7 @@ module.exports = (env) ->
     getDeviceById: (id) ->
       @devices[id]
 
-    getAllDevices: -> (device for id, device of @devices)
+    getDevices: -> (device for id, device of @devices)
 
     addDeviceToConfig: (deviceConfig) ->
       assert deviceConfig.id?
@@ -706,7 +854,6 @@ module.exports = (env) ->
             # ...add it to the rules Array in the config.json file
             inConfig = (_.findIndex(@config.rules , {id: rule.id}) isnt -1)
             unless inConfig
-              console.log rule
               @config.rules.push {
                 id: rule.id
                 name: rule.name

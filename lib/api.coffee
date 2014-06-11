@@ -52,7 +52,7 @@ api.framework = {
             meta:
               type: t.object
   actions:
-    getAllDevicesJson:
+    getDevices:
       rest:
         type: "GET"
         url: "/api/devices"
@@ -242,19 +242,133 @@ api.framework = {
       result:
         deviceItem:
           type: t.object
+    removeDeviceFromGroup:
+      rest:
+        type: "DELETE"
+        url: "/api/groups/:groupId/devices/:deviceId"
+      description: "Removes a device from a group"
+      params:
+        groupId:
+          type: t.string
+        deviceId:
+          type: t.string
+      result:
+        group:
+          type: t.object  
     addRuleToGroup:
       rest:
         type: "POST"
-        url: "/api/groups/:groupId/rules/:deviceId"
+        url: "/api/groups/:groupId/rules/:ruleId"
       description: "Add a rule to a group"
       params:
         groupId:
           type: t.string
         ruleId:
           type: t.string
+        position:
+          type: t.number
+          optional: yes
       result:
-        deviceItem:
+        group:
           type: t.object
+    removeRuleFromGroup:
+      rest:
+        type: "DELETE"
+        url: "/api/groups/:groupId/rules/:ruleId"
+      description: "Removes a rule from a group"
+      params:
+        groupId:
+          type: t.string
+        ruleId:
+          type: t.string
+      result:
+        group:
+          type: t.object  
+    updateRuleGroupOrder:
+      rest:
+        type: "POST"
+        url: "/api/groups/:groupId/rules"
+      params:
+        groupId:
+          type: t.string
+        ruleOrder:
+          type: t.array
+      result:
+        group:
+          type: t.object
+    addVariableToGroup:
+      rest:
+        type: "POST"
+        url: "/api/groups/:groupId/variables/:variableName"
+      description: "Add a variable to a group"
+      params:
+        groupId:
+          type: t.string
+        variableName:
+          type: t.string
+        position:
+          type: t.number
+          optional: yes
+      result:
+        group:
+          type: t.object
+    updateDeviceGroupOrder:
+      rest:
+        type: "POST"
+        url: "/api/groups/:groupId/devices"
+      params:
+        groupId:
+          type: t.string
+        deviceOrder:
+          type: t.array
+      result:
+        group:
+          type: t.object
+    removeVariableFromGroup:
+      rest:
+        type: "DELETE"
+        url: "/api/groups/:groupId/variables/:variableName"
+      description: "Removes a variable from a group"
+      params:
+        groupId:
+          type: t.string
+        variableName:
+          type: t.string
+      result:
+        group:
+          type: t.object  
+    updateVariableGroupOrder:
+      rest:
+        type: "POST"
+        url: "/api/groups/:groupId/variables"
+      params:
+        groupId:
+          type: t.string
+        variableOrder:
+          type: t.array
+      result:
+        group:
+          type: t.object   
+    updateRuleOrder:
+      rest:
+        type: "POST"
+        url: "/api/rules"
+      params:
+        ruleOrder:
+          type: t.array
+      result:
+        ruleOrder:
+          type: t.array
+    updateVariableOrder:
+      rest:
+        type: "POST"
+        url: "/api/variables"
+      params:
+        variableOrder:
+          type: t.array
+      result:
+        variableOrder:
+          type: t.array
 }
 
 api.rules = {
@@ -314,7 +428,7 @@ api.rules = {
       params:
         ruleId:
           type: t.string
-    getAllRules:
+    getRules:
       rest:
         type: "GET"
         url: "/api/rules"
@@ -352,7 +466,7 @@ variableResult = {
 
 api.variables = {
   actions:
-    getAllVariables:
+    getVariables:
       description: "Lists all variables"
       rest:
         type: "GET"

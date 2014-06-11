@@ -1024,10 +1024,13 @@ module.exports = (env) ->
       }
 
   
-    # ###getAllRules()
-    getAllRules: () -> (r for id, r of @rules)
+    # ###getRules()
+    getRules: () -> 
+      rules = (r for id, r of @rules)
+      # sort in config order
+      rulesInConfig = _.map(@framework.config.rules, (r) => r.id )
+      return _.sortBy(rules, (r) => rulesInConfig.indexOf r.id )
 
     getRuleById: (ruleId) -> @rules[ruleId]
-
 
   return exports = { RuleManager }
