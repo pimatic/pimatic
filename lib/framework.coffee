@@ -157,15 +157,32 @@ module.exports = (env) ->
       @_emitGroupAdded(group)
       return group
 
-    updateGroup: (id, group) ->
+    updateGroup: (id, patch) ->
       index = _.findIndex(@config.groups, {id: id})
       if index is -1
         throw new Error('Group not found')
-      thegroup = @config.groups[index]
-      thegroup.name = group.name if group.name?
+      group = @config.groups[index]
+      
+      if patch.name?
+        group.name = patch.name 
+      if patch.devicesOrder?
+        group.devices = _.sortBy(group.devices, (deviceId) => 
+          index = patch.devicesOrder.indexOf deviceId 
+          return if index is -1 then 99999 else index # push it to the end if not found
+        )
+      if patch.rulesOrder?
+        group.rules = _.sortBy(group.rules, (ruleId) => 
+          index = patch.rulesOrder.indexOf ruleId 
+          return if index is -1 then 99999 else index # push it to the end if not found
+        )
+      if patch.variablesOrder
+        group.variables = _.sortBy(group.variables, (variableName) => 
+          index = patch.variablesOrder.indexOf variableName 
+          return if index is -1 then 99999 else index # push it to the end if not found
+        )
       @saveConfig()
-      @_emitGroupChanged(thegroup)
-      return thegroup
+      @_emitGroupChanged(group)
+      return group
 
     getGroupById: (id) -> _.find(@config.groups, {id: id})
 
@@ -262,60 +279,17 @@ module.exports = (env) ->
       @_emitGroupChanged(group)
       return group
 
-    updateVariableGroupOrder: (groupId, variableOrder) ->
-      assert variableOrder? and Array.isArray variableOrder
-      group = @getGroupById(groupId)
-      unless group?
-        throw new Error('Could not find the group')
-      group.variables = _.sortBy(group.variables, (variableName) => 
-        index = variableOrder.indexOf variableName 
-        return if index is -1 then 99999 else index # push it to the end if not found
-      )
-      @saveConfig()
-      @_emitGroupChanged(group)
-      return group
-
     removeGroup: (id, page) ->
       removedGroup = _.remove(@config.groups, {id: id})
       @saveConfig() if removedGroup.length > 0
       @_emitGroupRemoved(removedGroup[0])
       return removedGroup
 
-    updateRuleGroupOrder: (groupId, ruleOrder) ->
-      assert ruleOrder? and Array.isArray ruleOrder
-      group = @getGroupById(groupId)
-      unless group?
-        throw new Error('Could not find the group')
-      group.rules = _.sortBy(group.rules, (ruleId) => 
-        index = ruleOrder.indexOf ruleId 
-        return if index is -1 then 99999 else index # push it to the end if not found
-      )
-      @saveConfig()
-      @_emitGroupChanged(group)
-      return group
-
-
-    updateDeviceGroupOrder: (groupId, deviceOrder) ->
-      assert deviceOrder? and Array.isArray deviceOrder
-      group = @getGroupById(groupId)
-      unless group?
-        throw new Error('Could not find the group')
-      group.devices = _.sortBy(group.devices, (deviceId) => 
-        index = deviceOrder.indexOf deviceId 
-        return if index is -1 then 99999 else index # push it to the end if not found
-      )
-      @saveConfig()
-      @_emitGroupChanged(group)
-      return group
-
-
     getGroupOfDevice: (deviceId) ->
       for g in @config.groups
         index = _.indexOf(g.devices, deviceId)
         if index isnt -1 then return g
       return null
-
-
 
     getGroups: () ->
       return @config.groups

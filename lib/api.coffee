@@ -226,6 +226,19 @@ api.framework = {
           type: t.string
         group:
           type: t.object
+          properties:
+            name:
+              type: t.name
+              optional: yes
+            devicesOrder:
+              type: t.array
+              optional: yes
+            variablesOrder:
+              type: t.array
+              optional: yes
+            rulesOrder:
+              type: t.array
+              optional: yes
       result:
         group:
           type: t.object
