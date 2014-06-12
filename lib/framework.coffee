@@ -186,11 +186,23 @@ module.exports = (env) ->
 
     getGroupById: (id) -> _.find(@config.groups, {id: id})
 
-    addDeviceToGroup: (groupId, deviceId) ->
+    addDeviceToGroup: (groupId, deviceId, position) ->
+      assert(typeof deviceId is "string")
+      assert(typeof groupId is "string")
+      assert(if position? then typeof position is "number" else true)
       group = @getGroupById(groupId)
       unless group?
         throw new Error('Could not find the group')
-      group.devices.push(deviceId)
+      oldGroup = @getGroupOfDevice(deviceId)
+      if oldGroup?
+        #remove rule from all other groups
+        _.remove(oldGroup.devices, (id) => id is deviceId)
+        @_emitGroupChanged(oldGroup)
+      unless position? or position >= group.devices.length
+        group.devices.push(deviceId)
+      else
+        group.devices.splice(position, 0, deviceId)
+      @saveConfig()
       @_emitGroupChanged(group)
       return group
 
@@ -313,6 +325,16 @@ module.exports = (env) ->
       @saveConfig()
       @_emitVariableOrderChanged(variableOrder)
       return variableOrder
+
+    updateGroupOrder: (groupOrder) ->
+      assert groupOrder? and Array.isArray groupOrder
+      @config.groups = _.sortBy(@config.groups,  (group) => 
+        index = groupOrder.indexOf group.id 
+        return if index is -1 then 99999 else index # push it to the end if not found
+      )
+      @saveConfig()
+      @_emitGroupOrderChanged(groupOrder)
+      return groupOrder
 
 
     setupExpressApp: () ->
@@ -608,6 +630,8 @@ module.exports = (env) ->
     _emitGroupAdded: (group) -> @_emitGroupEvent('groupAdded', group)
     _emitGroupChanged: (group) -> @_emitGroupEvent('groupChanged', group)
     _emitGroupRemoved: (group) -> @_emitGroupEvent('groupRemoved', group)
+    _emitGroupOrderChanged: (proupOrder) ->
+      @_emitOrderChanged('groupOrderChanged', proupOrder)
 
     _emitRuleEvent: (eventType, rule) ->
       @emit(eventType, rule)

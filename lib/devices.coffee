@@ -28,7 +28,6 @@ module.exports = (env) ->
     actions: {}
     # attributes the device has. For examples see devices below. 
     attributes: {}
-    _attributesValues: {}
 
     _checkAttributes: ->
       for attr of @attributes 
@@ -55,6 +54,7 @@ module.exports = (env) ->
       assert @name.lenght isnt 0, "the name of the device is empty"
       @_checkAttributes()
       @_constructorCalled = yes
+      @_attributesValues = {}
       for attrName of @attributes
         do (attrName) =>
           @on(attrName, (val) => @_attributesValues[attrName] = val )

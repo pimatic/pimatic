@@ -136,5 +136,13 @@
 	"Delete this Page": "Delete this Page",
 	"Ungrouped": "Ungrouped",
 	"Device Attributes": "Device Attributes",
-	"Add a new item": "Add a new item"
+	"Add a new item": "Add a new item",
+	"Time": "Time",
+	"Device": "Device",
+	"Attribute": "Attribute",
+	"Groupes": "Groupes",
+	"Drop here to remove group": "Drop here to remove group",
+	"Add a new group": "Add a new group",
+	"Groups": "Groups",
+	"Delete this group": "Delete this group"
 }

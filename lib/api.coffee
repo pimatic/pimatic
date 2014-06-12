@@ -382,6 +382,16 @@ api.framework = {
       result:
         variableOrder:
           type: t.array
+    updateGroupOrder:
+      rest:
+        type: "POST"
+        url: "/api/groups"
+      params:
+        groupOrder:
+          type: t.array
+      result:
+        groupOrder:
+          type: t.array
 }
 
 api.rules = {
