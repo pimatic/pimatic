@@ -439,8 +439,11 @@ module.exports = (env) ->
         )(req, res, next)
       )
 
-      if not @config.settings.httpsServer?.enabled and 
-         not @config.settings.httpServer?.enabled
+      serverEnabled = (
+        @config.settings.httpsServer?.enabled or @config.settings.httpServer?.enabled
+      )
+
+      unless serverEnabled 
         env.logger.warn "You have no https and no http server enabled!"
 
       socketIoPath = '/socket.io'
@@ -490,8 +493,7 @@ module.exports = (env) ->
     listen: () ->
       genErrFunc = (serverConfig) => 
         return (err) =>
-          msg = "Could not listen on port #{serverConfig.port}. " + 
-                "Error: #{err.message}. "
+          msg = "Could not listen on port #{serverConfig.port}. Error: #{err.message}. "
           switch err.code 
             when "EACCES" then msg += "Are you root?."
             when "EADDRINUSE" then msg += "Is a server already running?"
@@ -537,8 +539,10 @@ module.exports = (env) ->
           pluginNames = (p.plugin for p in @config.plugins) 
           for dep in plugin.pluginDependencies
             unless dep in pluginNames
-              env.logger.error "Plugin \"#{pConf.plugin}\" depends on \"#{dep}\". " +
+              env.logger.error(
+                "Plugin \"#{pConf.plugin}\" depends on \"#{dep}\". " +
                 "Please add \"#{dep}\" to your config!"
+              )
 
       # Promise chain, begin with an empty promise
       chain = Q()
@@ -563,10 +567,9 @@ module.exports = (env) ->
               packageInfo = @pluginManager.getInstalledPackageInfo(fullPluginName)
             catch e
               env.logger.debug "Error getting packageinfo of #{fullPluginName}: ", e.message
-            env.logger.info("""
-              loading plugin: "#{pConf.plugin}" #{
-                if packageInfo? then "(" + packageInfo.version  + ")" else ""
-              }""")
+
+            packageInfoStr = (if packageInfo? then "(" + packageInfo.version  + ")" else "")
+            env.logger.info("""loading plugin: "#{pConf.plugin}" #{packageInfoStr}""")
             return @pluginManager.loadPlugin(fullPluginName).then( (plugin) =>
               checkPluginDependencies pConf, plugin
               @registerPlugin(plugin, pConf)
@@ -581,8 +584,10 @@ module.exports = (env) ->
 
     restart: () ->
       unless process.env['PIMATIC_DAEMONIZED']?
-        throw new Error 'Can not restart self, when not daemonized. ' +
+        throw new Error(
+          'Can not restart self, when not daemonized. ' +
           'Please run pimatic with: "node ' + process.argv[1] + ' start" to use this feature.'
+        )
       # monitor will auto restart script
       process.nextTick -> 
         daemon = require 'daemon'
@@ -781,8 +786,10 @@ module.exports = (env) ->
           try
             plugin.plugin.init(@app, this, plugin.config)
           catch err
-            env.logger.error "Could not initialize the plugin \"#{plugin.config.plugin}\": " +
+            env.logger.error(
+              "Could not initialize the plugin \"#{plugin.config.plugin}\": " +
               err.message
+            )
             env.logger.debug err.stack
 
       initVariables = =>
