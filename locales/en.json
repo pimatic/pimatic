@@ -145,5 +145,7 @@
 	"Add a new group": "Add a new group",
 	"Groups": "Groups",
 	"Delete this group": "Delete this group",
-	"Show: ": "Show: "
+	"Show: ": "Show: ",
+	"Delete This Rule": "Delete This Rule",
+	"Copy as New": "Copy as New"
 }

@@ -364,6 +364,13 @@ module.exports = (env) ->
         description: "The last pressed button"
         type: t.string
 
+    actions: 
+      buttonPressed:
+        params:
+          buttonId:
+            type: t.string
+        description: "raise the shutter"
+
     template: "buttons"
 
     _lastPressedButton: null
@@ -374,6 +381,14 @@ module.exports = (env) ->
       super()
 
     getButton: -> Q(@_lastPressedButton)
+
+    buttonPressed: (buttonId) ->
+      for b in @config.buttons
+        if b.id is buttonId
+          @_lastPressedButton = b.id
+          @emit 'button', b.id
+          return
+      throw new Error("No button with the id #{buttonId} found")
 
   return exports = {
     Device

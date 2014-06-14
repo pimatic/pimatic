@@ -611,6 +611,7 @@ module.exports = (env) ->
       context = @createParseContext()
       # First parse the rule.
       return @parseRuleString(id, name, ruleString, context).then( (rule) =>
+        rule.logging = logging
         # If we have parse error we don't need to continue here
         if context.hasErrors()
           error = new Error context.getErrorsAsString()
@@ -622,7 +623,6 @@ module.exports = (env) ->
         # If the rules was successful parsed add it to the rule array.
         rule.active = active
         rule.valid = yes
-        rule.logging = logging
         @rules[id] = rule
         @emit "ruleAdded", rule
         # Check if the condition of the rule is allready true.

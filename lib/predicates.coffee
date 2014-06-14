@@ -503,6 +503,64 @@ module.exports = (env) ->
         when '>=' then left >= right
         else throw new Error "Unknown comparator: #{@comparator}"
 
+  class ButtonPredicateProvider extends PredicateProvider
+
+    _listener: {}
+
+    constructor: (@framework) ->
+
+    parsePredicate: (input, context) ->
+
+      matchCount = 0
+      matchingDevice = null
+      matchingButtonId = null
+      end = () => matchCount++
+      onButtonMatch = (m, {device, buttonId}) =>
+        matchingDevice = device
+        matchingButtonId = buttonId
+
+      buttonDevices = _(@framework.devices).values()
+        .filter((d) => d instanceof env.devices.ButtonsDevice)
+
+      buttonsWithId = buttonDevices
+        .map( (d) => ( [{device: d, buttonId: b.id}, b.id] for b in d.config.buttons) )
+        .flatten(true).valueOf()
+
+      m = M(input, context)
+        .match('the ', optional: true)
+        .match(buttonsWithId, onButtonMatch)
+        .match(' button', optional: true)
+        .match(' is', optional: true)
+        .match(' pressed')
+
+      if m.hadMatch()
+        match = m.getFullMatch()
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          predicateHandler: new ButtonPredicateHandler(this, matchingDevice, matchingButtonId)
+        }
+      return null
+
+  class ButtonPredicateHandler extends PredicateHandler
+
+    constructor: (@provider, @device, @buttonId) ->
+      assert @device? and @device instanceof env.devices.ButtonsDevice
+      assert @buttonId? and typeof @buttonId is "string"
+
+    setup: ->
+      @buttonPressedListener = ( (id) =>
+        if id is @buttonId
+          @emit 'change', 'event'
+      )
+      @device.on 'button', @buttonPressedListener
+      super()
+
+    getValue: -> Q(false)
+    destroy: -> 
+      @device.removeListener 'button', @buttonPressedListener
+      super()
+    getType: -> 'event'
 
   return exports = {
     PredicateProvider
@@ -512,4 +570,5 @@ module.exports = (env) ->
     DeviceAttributePredicateProvider
     VariablePredicateProvider
     ContactPredicateProvider
+    ButtonPredicateProvider
   }
