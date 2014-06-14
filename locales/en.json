@@ -144,5 +144,6 @@
 	"Drop here to remove group": "Drop here to remove group",
 	"Add a new group": "Add a new group",
 	"Groups": "Groups",
-	"Delete this group": "Delete this group"
+	"Delete this group": "Delete this group",
+	"Show: ": "Show: "
 }

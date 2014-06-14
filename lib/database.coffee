@@ -196,8 +196,17 @@ module.exports = (env) ->
       return Q((query).del()) 
 
 
-    queryDeviceAttributeEvents: ({deviceId, attributeName, after, before, order, orderDirection, 
-      offset, limit} = {}) ->
+    queryDeviceAttributeEvents: (queryCriteria = {}) ->
+      {
+        deviceId, 
+        attributeName, 
+        after, 
+        before, 
+        order, 
+        orderDirection, 
+        offset, 
+        limit
+      } = queryCriteria 
       unless order? then order = "time" and orderDirection = "desc"
 
       buildQueryForType = (tableName, query) =>
@@ -238,8 +247,31 @@ module.exports = (env) ->
         return result
       )
 
-
-
+    querySingleDeviceAttributeEvents: (deviceId, attributeName, queryCriteria = {}) ->
+      {
+        after, 
+        before, 
+        order, 
+        orderDirection, 
+        offset, 
+        limit
+      } = queryCriteria 
+      unless order? then order = "time" and orderDirection = "desc"
+      return @_getDeviceAttributeInfo(deviceId, attributeName).then( (info) =>
+        query = @knex("attributeValue#{info.type}").select('time', 'value')
+        query.where('deviceAttributeId', info.id)
+        if after?
+          query.where('time', '>=', after)
+        if before?
+          query.where('time', '<=', before)
+        if order?
+          query.orderBy(order, orderDirection)
+        if offset? then query.offset(offset)
+        if limit? then query.limit(limit)
+        return Q(query).then( (result) =>
+          return result
+        )
+      )
 
     saveDeviceAttributeEvent: (deviceId, attributeName, time, value) ->
       assert typeof deviceId is 'string' and deviceId.length > 0
@@ -261,11 +293,11 @@ module.exports = (env) ->
       info = dbMapping.deviceAttributeCache[fullQualifier]
       return (
         if info? then Q(info)
-        else @_insertDeviceAttribue(deviceId, attributeName)
+        else @_insertDeviceAttribute(deviceId, attributeName)
       )
 
 
-    _insertDeviceAttribue: (deviceId, attributeName) ->
+    _insertDeviceAttribute: (deviceId, attributeName) ->
       assert typeof deviceId is 'string' and deviceId.length > 0
       assert typeof attributeName is 'string' and attributeName.length > 0
 

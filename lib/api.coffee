@@ -632,6 +632,18 @@ dataCriteria = {
       before:
         type: t.date
         optional: yes
+      order:
+        type: t.string
+        optional: yes
+      orderDirection:
+        type: t.string
+        optional: yes
+      offset:
+        type: t.number
+        optional: yes
+      limit:
+        type: t.number
+        optional: yes
 }
 
 api.database = {
@@ -684,6 +696,41 @@ api.database = {
         url: '/api/database/device-attributes/'
       description: "get logged values of device attributes"
       params: dataCriteria
+      result:
+        events:
+          type: t.array
+    querySingleDeviceAttributeEvents:
+      rest:
+        type: 'GET'
+        url: '/api/database/device-attributes/:deviceId/:attributeName'
+      description: "get logged values of device attributes"
+      params:
+        deviceId:
+          type: t.string
+        attributeName:
+          type: t.string
+        criteria:
+          type: t.object
+          optional: yes
+          properties:
+            after:
+              type: t.date
+              optional: yes
+            before:
+              type: t.date
+              optional: yes
+            order:
+              type: t.string
+              optional: yes
+            orderDirection:
+              type: t.string
+              optional: yes
+            offset:
+              type: t.number
+              optional: yes
+            limit:
+              type: t.number
+              optional: yes
       result:
         events:
           type: t.array
