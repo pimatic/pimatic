@@ -29,6 +29,10 @@ module.exports = (env) ->
     # attributes the device has. For examples see devices below. 
     attributes: {}
 
+    template: "device"
+
+    config: {}
+
     _checkAttributes: ->
       for attr of @attributes 
         @_checkAttribute attr
@@ -80,17 +84,16 @@ module.exports = (env) ->
       assert Q.isPromise result, "#{getter} of #{@name} should always return a promise!"
       return result
 
-    # Returns a template name to use in frontends.
-    getTemplateName: -> "device"
-
     toJson: ->
 
       json = {
         id: @id
         name: @name
-        template: @getTemplateName()
+        template: @template
         attributes: []
         actions: []
+        config: @config
+        configDefaults: @config.__proto__
       }
 
       for name, attr of @attributes
@@ -113,8 +116,6 @@ module.exports = (env) ->
   For example a power outlet, a light or door opener.
   ###
   class Actuator extends Device
-
-    getTemplateName: -> "actuator"
 
   ###
   SwitchActuator
@@ -146,6 +147,8 @@ module.exports = (env) ->
         type: t.boolean
         labels: ['on', 'off']
 
+    template: "switch"
+
     # Returns a promise
     turnOn: -> @changeStateTo on
 
@@ -163,8 +166,6 @@ module.exports = (env) ->
       if @_state is state then return
       @_state = state
       @emit "state", state
-
-    getTemplateName: -> "switch"
 
   ###
   PowerSwitch
@@ -207,6 +208,8 @@ module.exports = (env) ->
         type: t.boolean
         labels: ['on', 'off']
 
+    template: "switch"
+
     # Returns a promise
     turnOn: -> @changeDimlevelTo 100
 
@@ -229,8 +232,6 @@ module.exports = (env) ->
 
     # Returns a promise that will be fulfilled with the dim level
     getDimlevel: -> Q(@_dimlevel)
-
-    getTemplateName: -> "dimmer"
 
 
   ###
@@ -260,6 +261,8 @@ module.exports = (env) ->
         params:
           state:
             type: t.string
+
+    template: "shutter"
         
     # Returns a promise
     moveUp: -> @moveToPosition('up')
@@ -272,8 +275,6 @@ module.exports = (env) ->
     # Retuns a promise that is fulfilled when done.
     moveToPosition: (position) ->
       throw new Error "Function \"moveToPosition\" is not implemented!"
-
-    getTemplateName: -> "shutter"
 
     # Returns a promise that will be fulfilled with the position
     getPosition: -> Q(@_position)
@@ -291,8 +292,6 @@ module.exports = (env) ->
   ###
   class Sensor extends Device
 
-    getTemplateName: -> "device"
-
   ###
   TemperatureSensor
   ------
@@ -305,7 +304,7 @@ module.exports = (env) ->
         type: t.number
         unit: '°C'
 
-    getTemplateName: -> "temperature"
+    template: "temperature"
 
   ###
   PresenceSensor
@@ -329,7 +328,7 @@ module.exports = (env) ->
 
     getPresence: -> Q(@_presence)
 
-    getTemplateName: -> "presence"
+    template: "presence"
 
   ###
   ContactSensor
@@ -344,6 +343,8 @@ module.exports = (env) ->
         type: t.boolean
         labels: ['closed', 'opened']
 
+    template: "contact"
+
     _setContact: (value) ->
       if @_contact is value then return
       @_contact = value
@@ -351,12 +352,28 @@ module.exports = (env) ->
 
     getContact: -> Q(@_contact)
 
-    getTemplateName: -> "contact"
-
   upperCaseFirst = (string) -> 
     unless string.length is 0
       string[0].toUpperCase() + string.slice(1)
     else ""
+
+  class ButtonsDevice extends Device
+
+    attributes:
+      button:
+        description: "The last pressed button"
+        type: t.string
+
+    template: "buttons"
+
+    _lastPressedButton: null
+
+    constructor: (@config)->
+      @id = config.id
+      @name = config.name
+      super()
+
+    getButton: -> Q(@_lastPressedButton)
 
   return exports = {
     Device
@@ -369,4 +386,5 @@ module.exports = (env) ->
     TemperatureSensor
     PresenceSensor
     ContactSensor
+    ButtonsDevice
   }

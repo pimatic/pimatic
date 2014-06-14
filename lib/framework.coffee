@@ -15,6 +15,8 @@ Q = require 'q'
 path = require 'path'
 S = require 'string'
 _ = require 'lodash'
+declapi = require 'decl-api'
+util = require 'util'
 
 module.exports = (env) ->
 
@@ -28,6 +30,7 @@ module.exports = (env) ->
     pluginManager: null
     database: null
     config: null
+    deviceClasses: {}
 
     constructor: (@configFile) ->
       assert configFile?
@@ -78,6 +81,31 @@ module.exports = (env) ->
         directory: __dirname + '/../locales',
         defaultLocale: @config.settings.locale,
       })
+
+    registerDeviceClass: (className, {configDef, createCallback, prepareConfig}) ->
+      assert typeof className is "string"
+      assert typeof configDef is "object"
+      assert typeof createCallback is "function"
+      assert(if prepareConfig? then typeof prepareConfig is "function" else true)
+
+      configDef.id = {
+          description: "the id for the device"
+          type: "string"
+      }
+      configDef.name = {
+          description: "the name for the device"
+          type: "string"
+      }
+      configDef.class = {
+          description: "the class to use for the device"
+          type: "string"
+      }
+
+      @deviceClasses[className] = {
+        prepareConfig
+        configDef
+        createCallback
+      }
 
     addPage: (id, page) ->
       if _.findIndex(@config.pages, {id: id}) isnt -1
@@ -702,20 +730,29 @@ module.exports = (env) ->
 
       @_emitDeviceAddedEvent(device)
 
-
     loadDevices: ->
       for deviceConfig in @config.devices
-        found = false
-        for plugin in @plugins
-          if plugin.plugin.createDevice?
-            found = plugin.plugin.createDevice deviceConfig
-            if found then break
-        unless found
-          env.logger.warn "no plugin found for device \"#{deviceConfig.id}\"!"
+        classInfo = @deviceClasses[deviceConfig.class]
+        if classInfo?
+          try
+            warnings = []
+            classInfo.prepareConfig(deviceConfig) if classInfo.prepareConfig?
+            declapi.checkConfig(classInfo.configDef, deviceConfig, warnings)
+            for w in warnings
+              env.logger.warn("Device configuration of #{deviceConfig.id}: #{w}")
+            deviceConfig = declapi.enhanceWithDefaults(classInfo.configDef, deviceConfig)
+            device = classInfo.createCallback(deviceConfig)
+            @registerDevice(device)
+          catch e
+            env.logger.error("Error loading device #{deviceConfig.id}: #{e.message}")
+            env.logger.debug(e)
+        else
+          env.logger.warn(
+            "no plugin found for device \"#{deviceConfig.id}\" of class \"#{deviceConfig.class}\"!"
+          )
       return
 
-    getDeviceById: (id) ->
-      @devices[id]
+    getDeviceById: (id) -> @devices[id]
 
     getDevices: -> (device for id, device of @devices)
 
@@ -818,6 +855,19 @@ module.exports = (env) ->
           predProvInst = new predProv(this)
           @ruleManager.addPredicateProvider(predProvInst)
 
+      initDevices = =>
+        deviceConfigDef = require("../device-config-schema")
+        defaultDevices = [
+          env.devices.ButtonsDevice
+        ]
+        for deviceClass in defaultDevices
+          do (deviceClass) =>
+            @registerDeviceClass(deviceClass.name, {
+              configDef: deviceConfigDef[deviceClass.name], 
+              createCallback: (config) => 
+                return new deviceClass(config)
+            })
+
       initRules = =>
 
         addRulePromises = (for rule in @config.rules
@@ -887,6 +937,7 @@ module.exports = (env) ->
       return @database.init()
         .then( => @loadPlugins())
         .then(initPlugins)
+        .then(initDevices)
         .then( => @loadDevices())
         .then(initVariables)
         .then(initActionProvider)
