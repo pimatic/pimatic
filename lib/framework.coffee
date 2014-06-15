@@ -166,7 +166,7 @@ module.exports = (env) ->
       @_emitPageRemoved(removedPage[0])
       return removedPage
 
-    getAllPages: () ->
+    getPages: () ->
       return @config.pages
 
     addGroup: (id, group) ->
@@ -486,7 +486,7 @@ module.exports = (env) ->
         socket.emit('devices', (d.toJson() for d in @getDevices()) )
         socket.emit('rules', (r.toJson() for r in @ruleManager.getRules()) )
         socket.emit('variables', (v.toJson() for v in @variableManager.getVariables()) )
-        socket.emit('pages',  @getAllPages() )
+        socket.emit('pages',  @getPages() )
         socket.emit('groups',  @getGroups() )
       )
 

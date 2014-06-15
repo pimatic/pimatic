@@ -14,6 +14,54 @@ api = {}
 ###
 #Framework
 ###
+
+device = {
+  type: t.object
+  properties:
+    id:
+      description: "A user chosen string, used to identify that device."
+      type: t.string
+    name:
+      description: "A user chosen string that should be used to display the device."
+      type: t.string
+    template:
+      description: "Name of the template, that should be used to display the device."
+      type: t.string
+    attributes:
+      description: "List of all attributes of the device."
+      type: t.array
+    actions:
+      description: "List of all Actions of the device."
+      type: t.array
+    config: 
+      description: "Config of the device, without default values."
+      type: t.object
+    configDefaults:
+      description: "Default values for the config options."
+      type: t.object
+}
+
+page = {
+  type: t.object
+  properties:
+    id: 
+      description: "A user chosen string, used to identify the page."
+      type: t.string
+    name: 
+      description: "A user chosen string that should be used to display the page."
+      type: t.string
+    devices:
+      description: "List of all device ids that should be displayed on that page"
+      type: t.array
+      elements:
+        deviceItem:
+          type: t.object
+          properties:
+            deviceId:
+              description: "The id of the device to display at that position"
+              type: t.string
+}
+
 api.framework = {
   events:
     deviceAdded:
@@ -53,64 +101,44 @@ api.framework = {
               type: t.object
   actions:
     getDevices:
+      description: "Lists all devices."
       rest:
         type: "GET"
         url: "/api/devices"
-      description: "Lists all devices"
       params: {}
       result:
         devices:
+          description: "Array of all devices."
           type: t.array
-          toJson: yes 
+          toJson: yes
+          elements: 
+            device: device
     getDeviceById:
-      description: "Lists all devices"
+      description: "Retrieve a device by a given id."
       rest:
         type: "GET"
         url: "/api/devices/:deviceId"
       params:
         deviceId:
+          description: "The id of the device that should be returned."
           type: t.string
       result:
         device:
+          description: "The requested device or null if the device was not found."
           type: t.object
           toJson: yes
-    addPluginsToConfig:
-      description: "Add plugins to config"
-      rest:
-        type: "POST"
-        url: "/api/config/plugins"
-      params:
-        pluginNames:
-          type: t.array
-      result:
-        added:
-          type: t.array
-    removePluginsFromConfig:
-      description: "Remove plugins from config"
-      rest:
-        type: "DELETE"
-        url: "/api/config/plugins"
-      params:
-        pluginNames:
-          type: t.array
-      result:
-        removed:
-          type: t.array
-    restart:
-      description: "Restart pimatic"
-      rest:
-        type: "POST"
-        url: "/api/restart"
-      result: {}
-    getAllPages:
+          properties: device.properties
+    getPages:
+      description: "Lists all pages."
       rest:
         type: "GET"
         url: "/api/pages"
-      description: "Lists all pages"
       params: {}
       result:
         pages:
           type: t.array
+          elements:
+            page: page
     getPageById:
       description: "Get a page by id"
       rest:
@@ -118,54 +146,80 @@ api.framework = {
         url: "/api/pages/:pageId"
       params:
         pageId:
+          description: "The id of the page that should be returned."
           type: t.string
       result:
         page:
+          description: "The requested page or null if the page was not found."
           type: t.object
+          properties: page.properties
     removePage:
-      description: "Remove page"
+      description: "Remove a page."
       rest:
         type: "DELETE"
         url: "/api/pages/:pageId"
       params:
         pageId:
+          description: "The id of the page that should be removed."
           type: t.string
       result:
         removed:
+          description: "The removed page."
           type: t.object
+          properties: page.properties
     addPage:
       rest:
         type: "POST"
         url: "/api/pages/:pageId"
-      description: "Add a page"
+      description: "Add a page."
       params:
         pageId:
+          description: "The id of the page that should be added."
           type: t.string
         page:
+          description: "Object with id and name of the page to create."
           type: t.object
-      result:
-        page:
-          type: t.object
+          properties:
+            id: 
+              description: "A user chosen string, used to identify the page."
+              type: t.string
+            name: 
+              description: "A user chosen string that should be used to display the page."
+              type: t.string
+        result:
+          page:
+            description: "The created page."
+            type: t.object
+            properties: page.properties
     updatePage:
+      description: "Update a page name or device order."
       rest:
         type: "PATCH"
         url: "/api/pages/:pageId"
-      description: "Update a page"
       params:
         pageId:
+          description: "The id of the page to change."
           type: t.string
         page:
+          description: "An object with properties that should be updated."
           type: t.object
           properties:
             name:
+              description: "The new name to set."
               type: t.string
               optional: yes
             devicesOrder:
+              description: "Array of ordered deviceIds."
               type: t.array
               optional: yes
+              elements:
+                deviceId:
+                  type: t.string
       result:
         page:
+          description: "The updated page."
           type: t.object
+          properties: page.properties
     addDeviceToPage:
       rest:
         type: "POST"
@@ -301,6 +355,7 @@ api.framework = {
       rest:
         type: "POST"
         url: "/api/groups/:groupId/rules"
+      description: "Add a rule to a group"
       params:
         groupId:
           type: t.string
@@ -329,6 +384,7 @@ api.framework = {
       rest:
         type: "POST"
         url: "/api/groups/:groupId/devices"
+      description: "Update device order in group"
       params:
         groupId:
           type: t.string
@@ -354,6 +410,7 @@ api.framework = {
       rest:
         type: "POST"
         url: "/api/groups/:groupId/variables"
+      description: "Update variable order in group"
       params:
         groupId:
           type: t.string
@@ -366,6 +423,7 @@ api.framework = {
       rest:
         type: "POST"
         url: "/api/rules"
+      description: "Update the Order of all rules"
       params:
         ruleOrder:
           type: t.array
@@ -376,6 +434,7 @@ api.framework = {
       rest:
         type: "POST"
         url: "/api/variables"
+      description: "Update the Order of all variables"
       params:
         variableOrder:
           type: t.array
@@ -386,12 +445,42 @@ api.framework = {
       rest:
         type: "POST"
         url: "/api/groups"
+      description: "Update the Order of all Groups"
       params:
         groupOrder:
           type: t.array
       result:
         groupOrder:
           type: t.array
+    addPluginsToConfig:
+      description: "Add plugins to config"
+      rest:
+        type: "POST"
+        url: "/api/config/plugins"
+      params:
+        pluginNames:
+          type: t.array
+      result:
+        added:
+          type: t.array
+    removePluginsFromConfig:
+      description: "Remove plugins from config"
+      rest:
+        type: "DELETE"
+        url: "/api/config/plugins"
+      params:
+        pluginNames:
+          type: t.array
+      result:
+        removed:
+          type: t.array
+    restart:
+      description: "Restart pimatic"
+      rest:
+        type: "POST"
+        url: "/api/restart"
+      result:
+        void: {}
 }
 
 api.rules = {
@@ -478,7 +567,7 @@ variableParams = {
     type: t.string
     oneOf: ["expression", "value"]
   valueOrExpression:
-    type: t.any
+    type: t.string
 }
 
 variableResult = {
@@ -523,7 +612,7 @@ api.variables = {
           type: t.string
       result: variableResult
     removeVariable:
-      desciption: "Remove a variable"
+      description: "Remove a variable"
       rest:
         type: "DELETE"
         url: "/api/variables/:name"
@@ -621,10 +710,10 @@ dataCriteria = {
     optional: yes
     properties:
       deviceId:
-        type: t.any
+        type: [t.string, t.array]
         optional: yes
       attributeName:
-        type: t.any
+        type: [t.string, t.array]
         optional: yes
       after:
         type: t.date
@@ -649,7 +738,7 @@ dataCriteria = {
 api.database = {
   actions:
     queryMessages:
-      desciption: "list log messages"
+      description: "list log messages"
       rest:
         type: 'GET'
         url: '/api/database/messages'
