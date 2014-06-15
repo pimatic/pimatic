@@ -11,7 +11,7 @@
     "pimatic.js",
     "startup.coffee",
     "Cuntfile.coffee",
-    "coffee-cache.js"
+    "coffee-cache.js",
     "config-schema.coffee",
     "config_default.json",
     "README.md",
