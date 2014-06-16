@@ -3,12 +3,14 @@ assert = require "assert"
 Q = require 'q'
 os = require 'os'
 fs = require 'fs.extra'
+path = require 'path'
 
 env = require('../startup').env
 
 describe "Database", ->
 
   frameworkDummy = {
+    maindir: path.resolve __dirname, '../..'
     on: ->
   }
   database = null
@@ -16,6 +18,7 @@ describe "Database", ->
   describe "#constructor()", ->
 
     it "should connect", (finish) ->
+      pluginManager.pluginManager = new PluginManager(frameworkDummy)
       dbSettings = {
         client: "sqlite3"
         connection: {
