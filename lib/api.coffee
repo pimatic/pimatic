@@ -186,11 +186,11 @@ api.framework = {
             name: 
               description: "A user chosen string that should be used to display the page."
               type: t.string
-        result:
-          page:
-            description: "The created page."
-            type: t.object
-            properties: page.properties
+      result:
+        page:
+          description: "The created page."
+          type: t.object
+          properties: page.properties
     updatePage:
       description: "Update a page name or device order."
       rest:
