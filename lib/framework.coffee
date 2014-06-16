@@ -89,16 +89,16 @@ module.exports = (env) ->
       assert(if prepareConfig? then typeof prepareConfig is "function" else true)
 
       configDef.id = {
-          description: "the id for the device"
-          type: "string"
+        description: "the id for the device"
+        type: "string"
       }
       configDef.name = {
-          description: "the name for the device"
-          type: "string"
+        description: "the name for the device"
+        type: "string"
       }
       configDef.class = {
-          description: "the class to use for the device"
-          type: "string"
+        description: "the class to use for the device"
+        type: "string"
       }
 
       @deviceClasses[className] = {
