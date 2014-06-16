@@ -180,9 +180,6 @@ api.framework = {
           description: "Object with id and name of the page to create."
           type: t.object
           properties:
-            id: 
-              description: "A user chosen string, used to identify the page."
-              type: t.string
             name: 
               description: "A user chosen string that should be used to display the page."
               type: t.string
