@@ -18,7 +18,7 @@ describe "Database", ->
   describe "#constructor()", ->
 
     it "should connect", (finish) ->
-      pluginManager.pluginManager = new PluginManager(frameworkDummy)
+      frameworkDummy.pluginManager = new env.plugins.PluginManager(frameworkDummy)
       dbSettings = {
         client: "sqlite3"
         connection: {
