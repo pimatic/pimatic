@@ -2,6 +2,7 @@ cassert = require "cassert"
 assert = require "assert"
 events = require "events"
 Q = require 'q'
+t = require('decl-api').types
 
 # Setup the environment
 env = require('../startup').env
