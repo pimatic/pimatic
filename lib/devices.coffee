@@ -208,7 +208,7 @@ module.exports = (env) ->
         type: t.boolean
         labels: ['on', 'off']
 
-    template: "switch"
+    template: "dimmer"
 
     # Returns a promise
     turnOn: -> @changeDimlevelTo 100
