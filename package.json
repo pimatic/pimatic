@@ -13,6 +13,7 @@
     "Cuntfile.coffee",
     "coffee-cache.js",
     "config-schema.coffee",
+    "device-config-schema.coffee",
     "config_default.json",
     "README.md",
     "plugins.md",
