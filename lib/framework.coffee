@@ -482,7 +482,20 @@ module.exports = (env) ->
         @app.httpServer = http.createServer @app
         @app.httpServer.on('upgrade', onUpgrade)
 
+      actionsWithBindings = [
+        [env.api.framework.actions, this]
+        [env.api.rules.actions, @ruleManager]
+        [env.api.variables.actions, @variableManager]
+        [env.api.plugins.actions, @pluginManager]
+        [env.api.database.actions, @database]
+      ]
+
+      onError = (error) =>
+        env.logger.error(error.message)
+        env.logger.debug(error)
+
       @io.on('connection', (socket) =>
+        declapi.createSocketIoApi(socket, actionsWithBindings, onError)
         socket.emit('devices', (d.toJson() for d in @getDevices()) )
         socket.emit('rules', (r.toJson() for r in @ruleManager.getRules()) )
         socket.emit('variables', (v.toJson() for v in @variableManager.getVariables()) )
@@ -732,6 +745,8 @@ module.exports = (env) ->
           device.on(attrName, onChange = (value) => 
             @_emitDeviceAttributeEvent(device, attrName, attr,  new Date(), value)
           )
+          # force update of the device value
+          device.getAttributeValue(attrName) if device.getLastAttributeValue(attrName) is null
 
       @_emitDeviceAddedEvent(device)
 
