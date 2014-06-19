@@ -173,7 +173,10 @@ module.exports = (env) ->
         @emit 'change', (if @negated then not p else p)
       @device.on 'presence', @presenceListener
       super()
-    getValue: -> @device.getUpdatedAttributeValue('presence').then((p) => (if @negated then not p else p))
+    getValue: -> 
+      return @device.getUpdatedAttributeValue('presence').then( 
+        (p) => (if @negated then not p else p)
+      )
     destroy: -> 
       @device.removeListener "presence", @presenceListener
       super()
@@ -237,7 +240,9 @@ module.exports = (env) ->
         @emit 'change', (if @negated then not p else p)
       @device.on 'contact', @contactListener
       super()
-    getValue: -> @device.getUpdatedAttributeValue('contact').then((p) => (if @negated then not p else p))
+    getValue: -> @device.getUpdatedAttributeValue('contact').then(
+      (p) => (if @negated then not p else p)
+    )
     destroy: -> 
       @device.removeListener "contact", @contactListener
       super()

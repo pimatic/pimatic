@@ -764,7 +764,8 @@ module.exports = (env) ->
             @_emitDeviceAttributeEvent(device, attrName, attr,  new Date(), value)
           )
           # force update of the device value
-          device.getUpdatedAttributeValue(attrName) if device.getLastAttributeValue(attrName) is null
+          if device.getLastAttributeValue(attrName) is null
+            device.getUpdatedAttributeValue(attrName).done()
 
       @_emitDeviceAdded(device)
 
