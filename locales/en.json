@@ -149,5 +149,8 @@
 	"Delete This Rule": "Delete This Rule",
 	"Copy as New": "Copy as New",
 	"Delete this Group": "Delete this Group",
-	"Class": "Class"
+	"Class": "Class",
+	"Drop here to remove device": "Drop here to remove device",
+	"Add a new device": "Add a new device",
+	"Delete this Device": "Delete this Device"
 }

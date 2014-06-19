@@ -344,6 +344,16 @@ module.exports = (env) ->
       @_emitRuleOrderChanged(ruleOrder)
       return ruleOrder
 
+    updateDeviceOrder: (deviceOrder) ->
+      assert deviceOrder? and Array.isArray deviceOrder
+      @config.devices = _.sortBy(@config.devices,  (device) => 
+        index = deviceOrder.indexOf device.id 
+        return if index is -1 then 99999 else index # push it to the end if not found
+      )
+      @saveConfig()
+      @_emitDeviceOrderChanged(deviceOrder)
+      return deviceOrder
+
     updateVariableOrder: (variableOrder) ->
       assert variableOrder? and Array.isArray variableOrder
       @config.variables = _.sortBy(@config.variables,  (variable) => 
@@ -649,9 +659,17 @@ module.exports = (env) ->
       @emit 'deviceAttributeChanged', {device, attributeName, attribute, time, value}
       @io?.emit 'deviceAttributeChanged', {deviceId: device.id, attributeName, time, value}
 
-    _emitDeviceAddedEvent: (device) ->
-      @emit 'deviceAdded', device
-      @io?.emit 'deviceAdded', device.toJson()
+
+    _emitDeviceEvent: (eventType, device) ->
+      @emit(eventType, device)
+      @io?.emit(eventType, device.toJson())
+
+    _emitDeviceAdded: (device) -> @_emitDeviceEvent('deviceAdded', device)
+    _emitDeviceChanged: (device) -> @_emitDeviceEvent('deviceChanged', device)
+    _emitDeviceRemoved: (device) -> @_emitDeviceEvent('deviceRemoved', device)
+
+    _emitDeviceOrderChanged: (deviceOrder) ->
+      @_emitOrderChanged('deviceOrderChanged', deviceOrder)
 
     _emitMessageLoggedEvent: (level, msg, meta) ->
       @emit 'messageLogged', {level, msg, meta}
@@ -746,23 +764,31 @@ module.exports = (env) ->
             @_emitDeviceAttributeEvent(device, attrName, attr,  new Date(), value)
           )
           # force update of the device value
-          device.getAttributeValue(attrName) if device.getLastAttributeValue(attrName) is null
+          device.getUpdatedAttributeValue(attrName) if device.getLastAttributeValue(attrName) is null
 
-      @_emitDeviceAddedEvent(device)
+      @_emitDeviceAdded(device)
+
+    _loadDevice: (deviceConfig) ->
+      classInfo = @deviceClasses[deviceConfig.class]
+      unless classInfo?
+        throw new Error("Unknown device class \"#{deviceConfig.class}\"")
+      warnings = []
+      classInfo.prepareConfig(deviceConfig) if classInfo.prepareConfig?
+      declapi.checkConfig(classInfo.configDef, deviceConfig, warnings)
+      for w in warnings
+        env.logger.warn("Device configuration of #{deviceConfig.id}: #{w}")
+      deviceConfig = declapi.enhanceWithDefaults(classInfo.configDef, deviceConfig)
+      device = classInfo.createCallback(deviceConfig)
+      assert deviceConfig is device.config
+      @registerDevice(device)
+
 
     loadDevices: ->
       for deviceConfig in @config.devices
         classInfo = @deviceClasses[deviceConfig.class]
         if classInfo?
           try
-            warnings = []
-            classInfo.prepareConfig(deviceConfig) if classInfo.prepareConfig?
-            declapi.checkConfig(classInfo.configDef, deviceConfig, warnings)
-            for w in warnings
-              env.logger.warn("Device configuration of #{deviceConfig.id}: #{w}")
-            deviceConfig = declapi.enhanceWithDefaults(classInfo.configDef, deviceConfig)
-            device = classInfo.createCallback(deviceConfig)
-            @registerDevice(device)
+            @_loadDevice(deviceConfig)
           catch e
             env.logger.error("Error loading device #{deviceConfig.id}: #{e.message}")
             env.logger.debug(e)
@@ -778,7 +804,31 @@ module.exports = (env) ->
 
     getDeviceClasses: -> (className for className of @deviceClasses)
 
-    getDeviceConfigSchema: (className)-> @deviceClasses[className]?.configDef 
+    getDeviceConfigSchema: (className)-> @deviceClasses[className]?.configDef
+
+    addDeviceByConfig: (deviceConfig) ->
+      assert deviceConfig.id?
+      assert deviceConfig.class?
+      if @isDeviceInConfig(deviceConfig.id)
+        throw new Error(
+          "A device with the id \"#{deviceConfig.id}\" is already in the config."
+        )
+      @_loadDevice(deviceConfig)
+      @addDeviceToConfig(deviceConfig)
+
+    updateDeviceByConfig: (deviceConfig) ->
+      throw new Error("The Operation isn't supported yet.")
+
+    removeDevice: (deviceId) ->
+      device = @getDeviceById(deviceId)
+      unless device? then return
+      @_emitDeviceRemoved(device)
+      device.emit 'remove'
+      @config.devices = (d for d in @config.devices when d.id isnt deviceId)
+      @saveConfig()
+      device.destroy()
+      return device
+
 
     addDeviceToConfig: (deviceConfig) ->
       assert deviceConfig.id?

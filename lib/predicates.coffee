@@ -107,7 +107,7 @@ module.exports = (env) ->
       @stateListener = (s) => @emit 'change', (s is @state)
       @device.on 'state', @stateListener
       super()
-    getValue: -> @device.getAttributeValue('state').then( (s) => (s is @state) )
+    getValue: -> @device.getUpdatedAttributeValue('state').then( (s) => (s is @state) )
     destroy: -> 
       @device.removeListener "state", @stateListener
       super()
@@ -173,7 +173,7 @@ module.exports = (env) ->
         @emit 'change', (if @negated then not p else p)
       @device.on 'presence', @presenceListener
       super()
-    getValue: -> @device.getAttributeValue('presence').then((p) => (if @negated then not p else p))
+    getValue: -> @device.getUpdatedAttributeValue('presence').then((p) => (if @negated then not p else p))
     destroy: -> 
       @device.removeListener "presence", @presenceListener
       super()
@@ -237,7 +237,7 @@ module.exports = (env) ->
         @emit 'change', (if @negated then not p else p)
       @device.on 'contact', @contactListener
       super()
-    getValue: -> @device.getAttributeValue('contact').then((p) => (if @negated then not p else p))
+    getValue: -> @device.getUpdatedAttributeValue('contact').then((p) => (if @negated then not p else p))
     destroy: -> 
       @device.removeListener "contact", @contactListener
       super()
@@ -370,7 +370,7 @@ module.exports = (env) ->
       @device.on @attribute, @attributeListener
       super()
     getValue: -> 
-      @device.getAttributeValue(@attribute).then( (value) =>
+      @device.getUpdatedAttributeValue(@attribute).then( (value) =>
         @_compareValues(@comparator, value, @referenceValue)
       )
     destroy: -> 

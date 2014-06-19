@@ -54,16 +54,19 @@ module.exports = (env) ->
     constructor: ->
       assert @id?, "the device has no id"
       assert @name?, "the device has no name"
-      assert @id.lenght isnt 0, "the id of the device is empty"
-      assert @name.lenght isnt 0, "the name of the device is empty"
+      assert @id.length isnt 0, "the id of the device is empty"
+      assert @name.length isnt 0, "the name of the device is empty"
       @_checkAttributes()
       @_constructorCalled = yes
       @_attributesValues = {}
+
       for attrName of @attributes
         do (attrName) =>
           @on(attrName, (val) => @_attributesValues[attrName] = val )
 
     destroy: ->
+      @emit('destroy', @)
+      @removeAllListeners('destroy')
       @removeAllListeners(attrName) for attrName of @attributes
       return
 
@@ -76,7 +79,7 @@ module.exports = (env) ->
     getLastAttributeValue: (attrName) ->
       return @_attributesValues[attrName]
 
-    getAttributeValue: (attrName) ->
+    getUpdatedAttributeValue: (attrName) ->
       getter = 'get' + upperCaseFirst(attrName)
       # call the getter
       result = @[getter]()

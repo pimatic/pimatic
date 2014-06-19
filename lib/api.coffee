@@ -427,6 +427,17 @@ api.framework = {
       result:
         ruleOrder:
           type: t.array
+    updateDeviceOrder:
+      rest:
+        type: "POST"
+        url: "/api/devices"
+      description: "Update the Order of all devices"
+      params:
+        deviceOrder:
+          type: t.array
+      result:
+        deviceOrder:
+          type: t.array
     updateVariableOrder:
       rest:
         type: "POST"
@@ -497,6 +508,36 @@ api.framework = {
       result:
         configSchema:
           type: t.object
+    addDeviceByConfig:
+      description: "Add a device by config values"
+      rest:
+        type: "POST"
+        url: "/api/device-config"
+      params:
+        deviceConfig:
+          type: t.object
+      result:
+        device: device
+    updateDeviceByConfig:
+      description: "Update a device by config values"
+      rest:
+        type: "PATCH"
+        url: "/api/device-config"
+      params:
+        deviceConfig:
+          type: t.object
+      result:
+        device: device
+    removeDevice:
+      description: "Removes a device from the framework an config"
+      rest:
+        type: "DELETE"
+        url: "/api/device-config/:deviceId"
+      params:
+        deviceId:
+          type: t.string
+      result:
+        device: device
 }
 
 api.rules = {

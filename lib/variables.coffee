@@ -44,7 +44,7 @@ module.exports = (env) ->
       super(vars, "#{@_device.id}.#{_attrName}", 'attribute', yes)
       @_device.on(@_attrName, @_attrListener = (value) => @_setValue(value) )
     getUpdatedValue: -> 
-      return @_device.getAttributeValue(@_attrName)
+      return @_device.getUpdatedAttributeValue(@_attrName)
     destroy: => 
       @_device.removeListener(@_attrName, @_attrListener)
       return
