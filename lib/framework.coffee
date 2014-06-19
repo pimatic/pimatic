@@ -776,6 +776,10 @@ module.exports = (env) ->
 
     getDevices: -> (device for id, device of @devices)
 
+    getDeviceClasses: -> (className for className of @deviceClasses)
+
+    getDeviceConfigSchema: (className)-> @deviceClasses[className]?.configDef 
+
     addDeviceToConfig: (deviceConfig) ->
       assert deviceConfig.id?
       assert deviceConfig.class?

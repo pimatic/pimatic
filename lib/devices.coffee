@@ -247,7 +247,7 @@ module.exports = (env) ->
         label: "Position"
         description: "state of the shutter"
         type: t.string
-        oneOf: ['up', 'down', 'stopped']
+        enum: ['up', 'down', 'stopped']
 
     actions: 
       moveUp:

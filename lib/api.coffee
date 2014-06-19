@@ -53,7 +53,7 @@ page = {
     devices:
       description: "List of all device ids that should be displayed on that page"
       type: t.array
-      elements:
+      items:
         deviceItem:
           type: t.object
           properties:
@@ -111,7 +111,7 @@ api.framework = {
           description: "Array of all devices."
           type: t.array
           toJson: yes
-          elements: 
+          items: 
             device: device
     getDeviceById:
       description: "Retrieve a device by a given id."
@@ -137,7 +137,7 @@ api.framework = {
       result:
         pages:
           type: t.array
-          elements:
+          items:
             page: page
     getPageById:
       description: "Get a page by id"
@@ -209,7 +209,7 @@ api.framework = {
               description: "Array of ordered deviceIds."
               type: t.array
               optional: yes
-              elements:
+              items:
                 deviceId:
                   type: t.string
       result:
@@ -478,6 +478,25 @@ api.framework = {
         url: "/api/restart"
       result:
         void: {}
+    getDeviceClasses:
+      description: "List all registered device classes."
+      rest:
+        type: "GET"
+        url: "/api/device-class"
+      result:
+        deviceClasses:
+          type: t.array
+    getDeviceConfigSchema:
+      description: "Gets the config schema of a device class."
+      rest:
+        type: "GET"
+        url: "/api/device-class/:className"
+      params:
+        className:
+          type: t.string
+      result:
+        configSchema:
+          type: t.object
 }
 
 api.rules = {
@@ -562,7 +581,7 @@ variableParams = {
     type: t.string
   type:
     type: t.string
-    oneOf: ["expression", "value"]
+    enum: ["expression", "value"]
   valueOrExpression:
     type: t.string
 }

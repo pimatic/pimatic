@@ -322,7 +322,7 @@ module.exports = (env) ->
               .or([
                 ( (m) => m.matchString(setRefValue) ),
                 ( (m) => 
-                  if attribute.oneOf? then m.match(attribute.oneOf, setRefValue) 
+                  if attribute.enum? then m.match(attribute.enum, setRefValue) 
                   else M(null) 
                 )
               ])
