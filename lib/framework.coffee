@@ -5,7 +5,8 @@ Framework
 
 assert = require 'cassert'
 fs = require "fs"
-convict = require 'convict'
+JaySchema = require 'jayschema'
+RJSON = require 'relaxed-json'
 i18n = require 'i18n'
 express = require "express"
 socketIo = require 'socket.io'
@@ -53,15 +54,24 @@ module.exports = (env) ->
       @database = new env.database.Database(this, @config.settings.database)
       @setupExpressApp()
 
+    _validateConfig: (config, schema) ->
+      js = new JaySchema();
+      errors = js.validate(config, schema)
+      if errors.length > 0
+        errorMessage = "Invalid config: "
+        for e in errors
+          errorMessage += (
+            "\n#{e.instanceContext}: Should have #{e.constraintName} #{e.constraintValue}, was: " + 
+            "#{e.testedValue}"
+          )
+        throw new Error(errorMessage)
+
     loadConfig: () ->
-      # * Uses `node-convict` for config loading. All config options are in the 
-      #   [config-schema](config-schema.html) file.
-      conf = convict require("../config-schema")
-      
-      conf.loadFile @configFile
-      # * Performs the validation.
-      conf.validate()
-      @config = conf.get("")
+      schema = require("../config-schema")
+      contents = fs.readFileSync(@configFile).toString();
+      instance = RJSON.parse(contents, {warnings: yes, duplicate: yes})
+      @_validateConfig(instance, schema)
+      @config = declapi.enhanceJsonSchemaWithDefaults(schema, instance)
 
       assert Array.isArray @config.plugins
       assert Array.isArray @config.devices
@@ -87,16 +97,16 @@ module.exports = (env) ->
       assert typeof configDef is "object"
       assert typeof createCallback is "function"
       assert(if prepareConfig? then typeof prepareConfig is "function" else true)
-
-      configDef.id = {
+      assert typeof configDef.properties is "object"
+      configDef.properties.id = {
         description: "the id for the device"
         type: "string"
       }
-      configDef.name = {
+      configDef.properties.name = {
         description: "the name for the device"
         type: "string"
       }
-      configDef.class = {
+      configDef.properties.class = {
         description: "the class to use for the device"
         type: "string"
       }
@@ -585,21 +595,37 @@ module.exports = (env) ->
           
           chain = chain.then( () =>
             fullPluginName = "pimatic-#{pConf.plugin}"
-            packageInfo = null
-            try
-              packageInfo = @pluginManager.getInstalledPackageInfo(fullPluginName)
-            catch e
-              env.logger.debug "Error getting packageinfo of #{fullPluginName}: ", e.message
-
-            packageInfoStr = (if packageInfo? then "(" + packageInfo.version  + ")" else "")
-            env.logger.info("""loading plugin: "#{pConf.plugin}" #{packageInfoStr}""")
-            return @pluginManager.loadPlugin(fullPluginName).then( (plugin) =>
-              checkPluginDependencies pConf, plugin
-              @registerPlugin(plugin, pConf)
-            ).catch( (error) ->
-              # If an error occures log an ignore it.
-              env.logger.error error.message
-              env.logger.debug error.stack
+            Q.fcall( =>     
+              # If the plugin folder already exist
+              return promise = (
+                if @pluginManager.isInstalled(fullPluginName) then Q()
+                else 
+                  env.logger.info("Installing: \"#{pConf.plugin}\"")
+                  @installPlugin(fullPluginName)
+              )
+            ).then( =>
+              return @pluginManager.loadPlugin(fullPluginName).then( ([plugin, packageInfo]) =>
+                checkPluginDependencies(pConf, plugin)
+                # Check config
+                if packageInfo.configSchema?
+                  pathToSchema = path.resolve(
+                    @pluginManager.pathToPlugin(fullPluginName), 
+                    packageInfo.configSchema
+                  )
+                  configSchema = require(pathToSchema)
+                  @_validateConfig(pConf, configSchema)
+                  pConf = declapi.enhanceJsonSchemaWithDefaults(configSchema, pConf)
+                else
+                  env.logger.warn(
+                    "package.json of \"#{fullPluginName}\" has no \"configSchema\" property. " +
+                    "Could not validate config."
+                  )
+                @registerPlugin(plugin, pConf, configSchema)
+              ).catch( (error) ->
+                # If an error occures log an ignore it.
+                env.logger.error error.message
+                env.logger.debug error.stack
+              )
             )
           )
 
@@ -618,11 +644,11 @@ module.exports = (env) ->
         daemon.daemon process.argv[1], process.argv[2..]
         process.exit 0
 
-    registerPlugin: (plugin, config) ->
+    registerPlugin: (plugin, config, packageInfo) ->
       assert plugin? and plugin instanceof env.plugins.Plugin
       assert config? and config instanceof Object
 
-      @plugins.push {plugin: plugin, config: config}
+      @plugins.push {plugin, config, packageInfo}
       @emit "plugin", plugin
 
     getPlugin: (name) ->
@@ -775,10 +801,11 @@ module.exports = (env) ->
         throw new Error("Unknown device class \"#{deviceConfig.class}\"")
       warnings = []
       classInfo.prepareConfig(deviceConfig) if classInfo.prepareConfig?
-      declapi.checkConfig(classInfo.configDef, deviceConfig, warnings)
+      @_validateConfig(deviceConfig, classInfo.configDef)
+      declapi.checkConfig(classInfo.configDef.properties, deviceConfig, warnings)
       for w in warnings
         env.logger.warn("Device configuration of #{deviceConfig.id}: #{w}")
-      deviceConfig = declapi.enhanceWithDefaults(classInfo.configDef, deviceConfig)
+      deviceConfig = declapi.enhanceJsonSchemaWithDefaults(classInfo.configDef, deviceConfig)
       device = classInfo.createCallback(deviceConfig)
       assert deviceConfig is device.config
       @registerDevice(device)

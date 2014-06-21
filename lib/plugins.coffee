@@ -28,26 +28,16 @@ module.exports = (env) ->
 
     # Loads the given plugin by name
     loadPlugin: (name) ->
-      return Q.fcall =>     
-        # If the plugin folder already exist
-        promise = 
-          if @isInstalled name 
-            # We could instal the depencies...
-            # @installDependencies name
-            # but it takes so long
-            Q()
-          else 
-            # otherwise install the plugin from the npm repository
-            @installPlugin name
+      packageInfo = @getInstalledPackageInfo(name)
+      packageInfoStr = (if packageInfo? then "(" + packageInfo.version  + ")" else "")
+      env.logger.info("""loading plugin: "#{name}" #{packageInfoStr}""")
+      # require the plugin and return it
+      # create a sublogger:
+      pluginEnv = Object.create(env)
+      pluginEnv.logger = env.logger.base.createSublogger(name)
+      plugin = (require name) pluginEnv, module
+      return Q([plugin, packageInfo])
 
-        # After installing
-        return promise.then( =>
-          # require the plugin and return it
-          # create a sublogger:
-          pluginEnv = Object.create(env)
-          pluginEnv.logger = env.logger.base.createSublogger(name)
-          return plugin = (require name) pluginEnv, module
-        )
     # Checks if the plugin folder exists under node_modules
     isInstalled: (name) ->
       assert name?

@@ -21,11 +21,12 @@ module.exports = (env) ->
       'info': 2
       'debug': 3
     typeMap:
-      'Number': 'float' 
-      'String': 'string'
-      'Boolean': 'boolean'
-      'Date': 'timestamp'
+      'number': 'float' 
+      'string': 'string'
+      'boolean': 'boolean'
+      'date': 'timestamp'
     deviceAttributeCache: {}
+    typeToAttributeTable: (type) -> "attributeValue#{S(type).capitalize().s}"
   }
   dbMapping.logIntToLevel = _.invert(dbMapping.logLevelToInt)
 
@@ -86,7 +87,7 @@ module.exports = (env) ->
         )
 
         for typeName, columnType of dbMapping.typeMap
-          pending.push createTableIfNotExists("attributeValue#{typeName}", (table) =>
+          pending.push createTableIfNotExists(dbMapping.typeToAttributeTable(typeName), (table) =>
             table.increments('id').primary()
             table.timestamp('time').index() 
             table.integer('deviceAttributeId')
@@ -214,6 +215,7 @@ module.exports = (env) ->
           "#{tableName}.id AS id", 
           'deviceAttribute.deviceId', 
           'deviceAttribute.attributeName', 
+          'deviceAttribute.type',
           'time', 
           'value'
         ).from(tableName)
@@ -231,7 +233,7 @@ module.exports = (env) ->
 
       query = null
       for type in _.keys(dbMapping.typeMap)
-        tableName = "attributeValue#{type}"
+        tableName = dbMapping.typeToAttributeTable(type)
         unless query?
           query = @knex(tableName)
           buildQueryForType(tableName, query)
@@ -243,7 +245,9 @@ module.exports = (env) ->
         .orderBy(order, orderDirection)
       if offset? then query.offset(offset)
       if limit? then query.limit(limit)
-      return Q(query).then( (result) =>
+      return Q(query).then( (result) ->
+        for r in result
+          if r.type is "boolean" then r.value = !!r.value
         return result
       )
 
@@ -258,7 +262,7 @@ module.exports = (env) ->
       } = queryCriteria 
       unless order? then order = "time" and orderDirection = "desc"
       return @_getDeviceAttributeInfo(deviceId, attributeName).then( (info) =>
-        query = @knex("attributeValue#{info.type}").select('time', 'value')
+        query = @knex(dbMapping.typeToAttributeTable(info.type)).select('time', 'value')
         query.where('deviceAttributeId', info.id)
         if after?
           query.where('time', '>=', after)
@@ -280,7 +284,7 @@ module.exports = (env) ->
       @emit 'device-attribute-save', {deviceId, attributeName, time, value}
 
       return @_getDeviceAttributeInfo(deviceId, attributeName).then( (info) =>
-        tableName = "attributeValue#{info.type}"
+        tableName = dbMapping.typeToAttributeTable(info.type)
         return @knex(tableName).insert(
           time: time
           deviceAttributeId: info.id

@@ -88,7 +88,6 @@ module.exports = (env) ->
       return result
 
     toJson: ->
-
       json = {
         id: @id
         name: @name
@@ -109,7 +108,7 @@ module.exports = (env) ->
         actionJson = _.cloneDeep(action)
         actionJson.name = name
         json.actions.push actionJson
-
+        
       return json
 
   ###
