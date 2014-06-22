@@ -55,7 +55,7 @@ module.exports = (env) ->
       @setupExpressApp()
 
     _validateConfig: (config, schema) ->
-      js = new JaySchema();
+      js = new JaySchema()
       errors = js.validate(config, schema)
       if errors.length > 0
         errorMessage = "Invalid config: "
@@ -68,7 +68,7 @@ module.exports = (env) ->
 
     loadConfig: () ->
       schema = require("../config-schema")
-      contents = fs.readFileSync(@configFile).toString();
+      contents = fs.readFileSync(@configFile).toString()
       instance = RJSON.parse(contents, {warnings: yes, duplicate: yes})
       @_validateConfig(instance, schema)
       @config = declapi.enhanceJsonSchemaWithDefaults(schema, instance)
@@ -793,6 +793,7 @@ module.exports = (env) ->
             device.getUpdatedAttributeValue(attrName).done()
 
       @_emitDeviceAdded(device)
+      return device
 
     _loadDevice: (deviceConfig) ->
       classInfo = @deviceClasses[deviceConfig.class]
@@ -807,7 +808,7 @@ module.exports = (env) ->
       deviceConfig = declapi.enhanceJsonSchemaWithDefaults(classInfo.configDef, deviceConfig)
       device = classInfo.createCallback(deviceConfig)
       assert deviceConfig is device.config
-      @registerDevice(device)
+      return @registerDevice(device)
 
 
     loadDevices: ->
@@ -840,8 +841,9 @@ module.exports = (env) ->
         throw new Error(
           "A device with the id \"#{deviceConfig.id}\" is already in the config."
         )
-      @_loadDevice(deviceConfig)
+      device = @_loadDevice(deviceConfig)
       @addDeviceToConfig(deviceConfig)
+      return device
 
     updateDeviceByConfig: (deviceConfig) ->
       throw new Error("The Operation isn't supported yet.")

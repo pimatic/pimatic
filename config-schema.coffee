@@ -33,9 +33,8 @@ module.exports = {
               type: "boolean"
               default: true
             loginTime:
-              description: """The time in milliseconds to keep the session cookie if rememberMe is checked. 
-              If 0 then delete the cookie on browser close.
-              """
+              description: """The time in milliseconds to keep the session cookie if rememberMe is 
+              checked. If 0 then delete the cookie on browser close. """
               type: "integer"
               default: 30 * 24 * 60 * 60 * 1000 #thirty days
         logLevel:
@@ -73,8 +72,9 @@ module.exports = {
             type: "string"
             default: "" # If is empty then listen to all ip4Adresses
           ###
-          Download and run https://raw.githubusercontent.com/pimatic/pimatic/master/install/ssl-setup
-          and un ssl-setup in you pimatic-app dir to generate the necessary key and certificate files:
+          Download https://raw.githubusercontent.com/pimatic/pimatic/master/install/ssl-setup
+          and run ssl-setup in you pimatic-app dir to generate the necessary key and certificate 
+          files:
           
               wget https://raw.githubusercontent.com/pimatic/pimatic/master/install/ssl-setup
               chmod +x ssl-setup
@@ -90,9 +90,9 @@ module.exports = {
             type: "string"
             default: "ca/pimatic-ssl/public/cert.pem"
           rootCertFile:
-            description: """The public root certificate file of your own CA if you using a self signed 
-            certificate. This option is optional. Its just for the frontent, so that it can provide a 
-            link to the the root certificate for easy importing in mobile devices."""
+            description: """The public root certificate file of your own CA if you using a self 
+            signed  certificate. This option is optional. Its just for the frontent, so that it can 
+            provide a link to the the root certificate for easy importing in mobile devices."""
             type: "string"
             default: "ca/certs/cacert.crt"
         database:
