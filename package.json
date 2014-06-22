@@ -51,7 +51,7 @@
     "moment": "~2.6.0",
     "colors": "~0.6.2",
     "socket.io": "~1.0.2",
-    "decl-api": "0.0.6",
+    "decl-api": "0.0.9",
     "jayschema": "~0.2.7",
     "relaxed-json": "~0.2.4"
   },
