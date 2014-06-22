@@ -96,42 +96,50 @@ module.exports = {
             type: "string"
             default: "ca/certs/cacert.crt"
         database:
-          client: 
-            description: "the databse client to use"
-            type: "string"
-            enum: ["sqlite3", "mysql", "pg"]
-            default: "sqlite3"
-          ###
-          The connection setting is database client dependent. Some examples:
-          __sqlite3:__
+          type: "object"
+          properties:
+            client: 
+              description: "the databse client to use"
+              type: "string"
+              enum: ["sqlite3", "mysql", "pg"]
+              default: "sqlite3"
+            ###
+            The connection setting is database client dependent. Some examples:
+            __sqlite3:__
 
-              {
+                {
+                  filename: "pimatic-database.sqlite"
+                }
+
+            __mysql:__
+
+                {
+                  host     : '127.0.0.1',
+                  user     : 'your_database_user',
+                  password : 'your_database_password',
+                  database : 'myapp_test'
+                }
+            ###
+            connection:
+              description: "the connection settings for the database client"
+              type: "object"
+              default: {
                 filename: "pimatic-database.sqlite"
               }
-
-          __mysql:__
-
-              {
-                host     : '127.0.0.1',
-                user     : 'your_database_user',
-                password : 'your_database_password',
-                database : 'myapp_test'
-              }
-          ###
-          connection:
-            description: "the connection settings for the database client"
-            type: "object"
-            default: {
-              filename: "pimatic-database.sqlite"
-            }
-          deviceAttributeLogging:
-            description: "time to keep logged device attributes values in database"
-            type: "array"
-            default: []
-          messageLogging:
-            description: "time to keep logged messages in database"
-            type: "array"
-            default: []
+            deviceAttributeLogging:
+              description: "time to keep logged device attributes values in database"
+              type: "array"
+              default: [ 
+                { deviceId: '*', attributeName: '*', time: '7d' }
+                { deviceId: '*', attributeName: 'temperature', time: '1y' },
+                { deviceId: '*', attributeName: 'humidity', time: '1y' } 
+              ]
+            messageLogging:
+              description: "time to keep logged messages in database"
+              type: "array"
+              default: [ 
+                { level: '*', tags: [], time: '7d' } 
+              ]
     pages:
       description: "Array of gui pages"
       type: "array"

@@ -72,7 +72,6 @@ module.exports = (env) ->
       instance = RJSON.parse(contents, {warnings: yes, duplicate: yes})
       @_validateConfig(instance, schema)
       @config = declapi.enhanceJsonSchemaWithDefaults(schema, instance)
-
       assert Array.isArray @config.plugins
       assert Array.isArray @config.devices
       assert Array.isArray @config.pages
