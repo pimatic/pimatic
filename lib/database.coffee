@@ -107,34 +107,38 @@ module.exports = (env) ->
         )
 
         @_updateDeviceAttributeExpireInfos()
-        deleteExpiredDeviceAttributesCron = ( =>
-          env.logger.debug("deleteing expired device attributes")
-          return @_deleteExpiredDeviceAttributes()
-            .then( onSucces = ->
-              Q.delay(60000).then(deleteExpiredDeviceAttributesCron)
-            , onError = (error) ->
-              env.logger.error(error.message)
-              env.logger.debug(error)
-              Q.delay(200000).then(deleteExpiredDeviceAttributesCron)
-            )
-        )
-        deleteExpiredDeviceAttributesCron().done()
-
         @_updateMessageseExpireInfos()
-        deleteExpiredMessagesCron = ( =>
-          env.logger.debug("deleteing expired messages")
-          return @_deleteExpiredMessages()
-            .then( onSucces = ->
-              Q.delay(60000).then(deleteExpiredMessagesCron)
-            , onError = (error) ->
-              env.logger.error(error.message)
-              env.logger.debug(error)
-              Q.delay(200000).then(deleteExpiredMessagesCron)
+        return Q.all(pending).then( =>
+          deleteExpiredDeviceAttributesCron = ( =>
+            env.logger.debug("deleteing expired device attributes")
+            return (
+              @_deleteExpiredDeviceAttributes()
+              .then( onSucces = ->
+                Q.delay(60000).then(deleteExpiredDeviceAttributesCron)
+              , onError = (error) ->
+                env.logger.error(error.message)
+                env.logger.debug(error)
+                Q.delay(200000).then(deleteExpiredDeviceAttributesCron)
+              )
             )
-        )
-        deleteExpiredMessagesCron().done()
+          )
+          deleteExpiredDeviceAttributesCron().done()
 
-        return Q.all(pending)
+          deleteExpiredMessagesCron = ( =>
+            env.logger.debug("deleteing expired messages")
+            return (
+              @_deleteExpiredMessages()
+              .then( onSucces = ->
+                Q.delay(60000).then(deleteExpiredMessagesCron)
+              , onError = (error) ->
+                env.logger.error(error.message)
+                env.logger.debug(error)
+                Q.delay(200000).then(deleteExpiredMessagesCron)
+              )
+            )
+          )
+          deleteExpiredMessagesCron().done()
+        )
       )
       return pending
 

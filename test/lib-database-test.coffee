@@ -24,6 +24,14 @@ describe "Database", ->
         connection: {
           filename: ':memory:'
         }
+        deviceAttributeLogging: [ 
+          { deviceId: '*', attributeName: '*', time: '7d' }
+          { deviceId: '*', attributeName: 'temperature', time: '1y' },
+          { deviceId: '*', attributeName: 'humidity', time: '1y' } 
+        ]
+        messageLogging: [
+          { level: '*', tags: [], time: '7d' } 
+        ]
       }
       database = new env.database.Database(frameworkDummy, dbSettings)
       database.init().then( => finish() ).catch(finish)
