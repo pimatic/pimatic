@@ -106,6 +106,34 @@ module.exports = (env) ->
           @saveDeviceAttributeEvent(device.id, attributeName, time, value).done()
         )
 
+        @_updateDeviceAttributeExpireInfos()
+        deleteExpiredDeviceAttributesCron = ( =>
+          env.logger.debug("deleteing expired device attributes")
+          return @_deleteExpiredDeviceAttributes()
+            .then( onSucces = ->
+              Q.delay(60000).then(deleteExpiredDeviceAttributesCron)
+            , onError = (error) ->
+              env.logger.error(error.message)
+              env.logger.debug(error)
+              Q.delay(200000).then(deleteExpiredDeviceAttributesCron)
+            )
+        )
+        deleteExpiredDeviceAttributesCron().done()
+
+        @_updateMessageseExpireInfos()
+        deleteExpiredMessagesCron = ( =>
+          env.logger.debug("deleteing expired messages")
+          return @_deleteExpiredMessages()
+            .then( onSucces = ->
+              Q.delay(60000).then(deleteExpiredMessagesCron)
+            , onError = (error) ->
+              env.logger.error(error.message)
+              env.logger.debug(error)
+              Q.delay(200000).then(deleteExpiredMessagesCron)
+            )
+        )
+        deleteExpiredMessagesCron().done()
+
         return Q.all(pending)
       )
       return pending
@@ -115,23 +143,118 @@ module.exports = (env) ->
 
     setDeviceAttributeLogging: (deviceAttributeLogging) ->
       dbSettings.deviceAttributeLogging = deviceAttributeLogging
+      @_updateDeviceAttributeExpireInfos()
       @framework.saveConfig()
       return
 
+    _updateDeviceAttributeExpireInfos: ->
+      entries = @dbSettings.deviceAttributeLogging
+      i = entries.length - 1
+      sqlNot = ""
+      while i >= 0
+        entry = entries[i]
+        # Get expire info from entry or create it
+        expireInfo = entry.expireInfo
+        unless expireInfo?
+          expireInfo = {
+            expireMs: 0
+            whereSQL: ""
+          }
+          info = {expireInfo}
+          info.__proto__ = entry.__proto__
+          entry.__proto__ = info
+        # Generate sql where to use on deletion
+        ownWhere = "1=1"
+        if entry.deviceId isnt '*'
+          ownWhere += " AND deviceId='#{entry.deviceId}'"
+        if entry.attributeName isnt '*'
+          ownWhere += " AND attributeName='#{entry.attributeName}'"
+        expireInfo.whereSQL = "(#{ownWhere})#{sqlNot}"
+        sqlNot = " AND NOT (#{ownWhere})#{sqlNot}"
+        # Set expire date
+        timeMs = null
+        M(entry.time).matchTimeDuration((m, info) => timeMs = info.timeMs)
+        unless timeMs? then throw new Error("Can not parse database expire time #{entry.time}")
+        expireInfo.expireMs = timeMs  
+        i--
+
+    _updateMessageseExpireInfos: ->
+      entries = @dbSettings.messageLogging
+      i = entries.length - 1
+      sqlNot = ""
+      while i >= 0
+        entry = entries[i]
+        # Get expire info from entry or create it
+        expireInfo = entry.expireInfo
+        unless expireInfo?
+          expireInfo = {
+            expireMs: 0
+            whereSQL: ""
+          }
+          info = {expireInfo}
+          info.__proto__ = entry.__proto__
+          entry.__proto__ = info
+        # Generate sql where to use on deletion
+        ownWhere = "1=1"
+        if entry.level isnt '*'
+          levelInt = dbMapping.logLevelToInt[entry.level]
+          ownWhere += " AND level=#{levelInt}"
+        for tag in entry.tags
+          ownWhere += " AND tags LIKE \"''#{tag}''%\""
+        expireInfo.whereSQL = "(#{ownWhere})#{sqlNot}"
+        sqlNot = " AND NOT (#{ownWhere})#{sqlNot}"
+        # Set expire date
+        timeMs = null
+        M(entry.time).matchTimeDuration((m, info) => timeMs = info.timeMs)
+        unless timeMs? then throw new Error("Can not parse database expire time #{entry.time}")
+        expireInfo.expireMs = timeMs
+        i--
+
     getDeviceAttributeLoggingTime: (deviceId, attributeName) ->
-      time = "0ms"
+      time = null
       for entry in @dbSettings.deviceAttributeLogging
         if (
           (entry.deviceId is "*" or entry.deviceId is deviceId) and 
           (entry.attributeName is "*" or entry.attributeName is attributeName)
         )
-          time = entry.time
-      timeMs = null
-      M(time).matchTimeDuration((m, info) => timeMs = info.timeMs)
-      unless timeMs? then throw new Error("Can not parse time duration #{time}")
-      return {
-        time, timeMs
-      }
+          time = entry.expireInfo.expireMs
+      return time
+
+    getMessageLoggingTime: (time, level, tags, text) ->
+      time = null
+      for entry in @dbSettings.messageLogging
+        if (
+          (entry.level is "*" or entry.level is level) and 
+          (entry.tags.length is 0 or (t for t in entry.tags when t in tags).length > 0)
+        )
+          time = entry.expireInfo.expireMs
+      return time
+
+    _deleteExpiredDeviceAttributes: ->
+      awaiting = []
+      for entry in  @dbSettings.deviceAttributeLogging
+        subquery = @knex('deviceAttribute')
+          .select('id')
+        subquery.whereRaw(entry.expireInfo.whereSQL)
+        subqueryRaw = "deviceAttributeId in (#{subquery.toString()})"
+        for type in _.keys(dbMapping.typeMap)
+          tableName = dbMapping.typeToAttributeTable(type)
+          del = @knex(tableName)
+          del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
+          del.whereRaw(subqueryRaw)
+          del.del()
+          awaiting.push del
+      return Q.all(awaiting)
+
+    _deleteExpiredMessages: ->
+      awaiting = []
+      for entry in  @dbSettings.messageLogging
+        del = @knex('message')
+        del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
+        del.whereRaw(entry.expireInfo.whereSQL)
+        del.del()
+        awaiting.push del
+      return Q.all(awaiting)
 
     saveMessageEvent: (time, level, tags, text) ->
       @emit 'log', {time, level, tags, text}
@@ -139,12 +262,13 @@ module.exports = (env) ->
       assert Array.isArray(tags)
       assert typeof level is 'string'
       assert level in _.keys(dbMapping.logLevelToInt) 
-      return Q(@knex('message').insert(
+      insert = @knex('message').insert(
         time: time
         level: dbMapping.logLevelToInt[level]
         tags: JSON.stringify(tags)
         text: text
-      ))
+      )
+      return Q(insert)
 
     _buildMessageWhere: (query, {level, levelOp, after, before, tags, offset, limit}) ->
       if level?
@@ -285,11 +409,12 @@ module.exports = (env) ->
 
       return @_getDeviceAttributeInfo(deviceId, attributeName).then( (info) =>
         tableName = dbMapping.typeToAttributeTable(info.type)
-        return @knex(tableName).insert(
+        insert = @knex(tableName).insert(
           time: time
           deviceAttributeId: info.id
           value: value
         )
+        return Q(insert)
       )
 
     _getDeviceAttributeInfo: (deviceId, attributeName) ->
