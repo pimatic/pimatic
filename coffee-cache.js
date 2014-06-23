@@ -27,6 +27,9 @@ THE SOFTWARE.
 var fs     = require('fs.extra');
 var path   = require('path');
 var colors = require('colors');
+if(process.env['PIMATIC_DAEMONIZED']) {
+  colors.mode = 'none'
+}
 // We don't want to include our own version of CoffeeScript since we don't know
 // what version the parent relies on
 var coffee;
