@@ -95,8 +95,9 @@ module.exports = {
               default: "ca/pimatic-ssl/public/cert.pem"
             rootCertFile:
               description: """The public root certificate file of your own CA if you using a self 
-              signed  certificate. This option is optional. Its just for the frontent, so that it can 
-              provide a link to the the root certificate for easy importing in mobile devices."""
+              signed  certificate. This option is optional. Its just for the frontent, so that it 
+              can provide a link to the the root certificate for easy importing in mobile devices.
+              """
               type: "string"
               default: "ca/certs/cacert.crt"
         database:

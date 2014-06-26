@@ -152,5 +152,7 @@
 	"Class": "Class",
 	"Drop here to remove device": "Drop here to remove device",
 	"Add a new device": "Add a new device",
-	"Delete this Device": "Delete this Device"
+	"Delete this Device": "Delete this Device",
+	"Showen devices": "Showen devices",
+	"Hide": "Hide"
 }

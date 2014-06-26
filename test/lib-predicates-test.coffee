@@ -439,6 +439,7 @@ describe "VariablePredicateProvider", ->
       value: '3'
     }
   ])
+  frameworkDummy.variableManager.init()
 
   provider = null
   sensorDummy = null
