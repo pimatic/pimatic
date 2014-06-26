@@ -42,59 +42,63 @@ module.exports = {
           type: "string"
           default: "info"
         httpServer:
-          enabled: 
-            description: "Should the http-server be started"
-            type: "boolean"
-            default: true
-          port:
-            description: "The port of the http-server"
-            type: "integer"
-            format: "port"
-            default: 80
-            minimum: 0
-          hostname:
-            description: "The hostname of the http-server"
-            type: "string"
-            default: "" # If is empty then listen to all ip4Adresses
+          type: "object"
+          properties:
+            enabled: 
+              description: "Should the http-server be started"
+              type: "boolean"
+              default: true
+            port:
+              description: "The port of the http-server"
+              type: "integer"
+              format: "port"
+              default: 80
+              minimum: 0
+            hostname:
+              description: "The hostname of the http-server"
+              type: "string"
+              default: "" # If is empty then listen to all ip4Adresses
         httpsServer:
-          enabled: 
-            description: "Should the https-server be started"
-            type: "boolean"
-            default: false
-          port:
-            description: "The port of the https-server"
-            type: "integer"
-            format: "port"
-            default: 443
-            minimum: 0
-          hostname:
-            description: "The hostname of the https-server"
-            type: "string"
-            default: "" # If is empty then listen to all ip4Adresses
-          ###
-          Download https://raw.githubusercontent.com/pimatic/pimatic/master/install/ssl-setup
-          and run ssl-setup in you pimatic-app dir to generate the necessary key and certificate 
-          files:
-          
-              wget https://raw.githubusercontent.com/pimatic/pimatic/master/install/ssl-setup
-              chmod +x ssl-setup
-              ./ssl-setup
+          type: "object"
+          properties:
+            enabled: 
+              description: "Should the https-server be started"
+              type: "boolean"
+              default: false
+            port:
+              description: "The port of the https-server"
+              type: "integer"
+              format: "port"
+              default: 443
+              minimum: 0
+            hostname:
+              description: "The hostname of the https-server"
+              type: "string"
+              default: "" # If is empty then listen to all ip4Adresses
+            ###
+            Download https://raw.githubusercontent.com/pimatic/pimatic/master/install/ssl-setup
+            and run ssl-setup in you pimatic-app dir to generate the necessary key and certificate 
+            files:
+            
+                wget https://raw.githubusercontent.com/pimatic/pimatic/master/install/ssl-setup
+                chmod +x ssl-setup
+                ./ssl-setup
 
-          ###
-          keyFile:
-            description: "Privatekey file"
-            type: "string"
-            default: "ca/pimatic-ssl/private/privkey.pem"
-          certFile:
-            description: "Public certification file in pem-format"
-            type: "string"
-            default: "ca/pimatic-ssl/public/cert.pem"
-          rootCertFile:
-            description: """The public root certificate file of your own CA if you using a self 
-            signed  certificate. This option is optional. Its just for the frontent, so that it can 
-            provide a link to the the root certificate for easy importing in mobile devices."""
-            type: "string"
-            default: "ca/certs/cacert.crt"
+            ###
+            keyFile:
+              description: "Privatekey file"
+              type: "string"
+              default: "ca/pimatic-ssl/private/privkey.pem"
+            certFile:
+              description: "Public certification file in pem-format"
+              type: "string"
+              default: "ca/pimatic-ssl/public/cert.pem"
+            rootCertFile:
+              description: """The public root certificate file of your own CA if you using a self 
+              signed  certificate. This option is optional. Its just for the frontent, so that it can 
+              provide a link to the the root certificate for easy importing in mobile devices."""
+              type: "string"
+              default: "ca/certs/cacert.crt"
         database:
           type: "object"
           properties:
