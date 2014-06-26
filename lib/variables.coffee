@@ -119,9 +119,17 @@ module.exports = (env) ->
 
     variables: {}
 
-    constructor: (@framework, variables) ->
+    constructor: (@framework, @variablesConfig) ->
+      # For each new device add a variable for every attribute
+      @framework.on 'deviceAdded', (device) =>
+        for attrName, attr of device.attributes
+          @_addVariable(
+            new DeviceAttributeVariable(this, device, attrName)
+          )
+
+    init: () ->
       # Import variables
-      for variable in variables
+      for variable in @variablesConfig
         assert variable.name? and variable.name.length > 0
         assert(typeof variable.value is 'number' or variable.value.length > 0) if variable.value?
         variable.name = variable.name.substring(1) if variable.name[0] is '$'
@@ -151,12 +159,6 @@ module.exports = (env) ->
             )
           )
 
-      # For each new device add a variable for every attribute
-      @framework.on 'deviceAdded', (device) =>
-        for attrName, attr of device.attributes
-          @_addVariable(
-            new DeviceAttributeVariable(this, device, attrName)
-          )
           
     _addVariable: (variable) ->
       assert variable instanceof Variable

@@ -891,6 +891,7 @@ module.exports = (env) ->
             env.logger.debug err.stack
 
       initVariables = =>
+        @variableManager.init()
         @variableManager.on("variableChanged", (changedVar) =>
           for variable in @config.variables
             if variable.name is changedVar.name
