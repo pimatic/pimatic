@@ -108,17 +108,20 @@ module.exports = (env) ->
 
         @_updateDeviceAttributeExpireInfos()
         @_updateMessageseExpireInfos()
+
+        deleteExpiredEntriesInterval = 30 * 60 * 1000#ms
+
         return Q.all(pending).then( =>
           deleteExpiredDeviceAttributesCron = ( =>
             env.logger.debug("deleteing expired device attributes")
             return (
               @_deleteExpiredDeviceAttributes()
               .then( onSucces = ->
-                Q.delay(60000).then(deleteExpiredDeviceAttributesCron)
+                Q.delay(deleteExpiredEntriesInterval).then(deleteExpiredDeviceAttributesCron)
               , onError = (error) ->
                 env.logger.error(error.message)
                 env.logger.debug(error)
-                Q.delay(200000).then(deleteExpiredDeviceAttributesCron)
+                Q.delay(2 * deleteExpiredEntriesInterval).then(deleteExpiredDeviceAttributesCron)
               )
             )
           )
@@ -129,11 +132,11 @@ module.exports = (env) ->
             return (
               @_deleteExpiredMessages()
               .then( onSucces = ->
-                Q.delay(60000).then(deleteExpiredMessagesCron)
+                Q.delay(deleteExpiredEntriesInterval).then(deleteExpiredMessagesCron)
               , onError = (error) ->
                 env.logger.error(error.message)
                 env.logger.debug(error)
-                Q.delay(200000).then(deleteExpiredMessagesCron)
+                Q.delay(2 * deleteExpiredEntriesInterval).then(deleteExpiredMessagesCron)
               )
             )
           )
