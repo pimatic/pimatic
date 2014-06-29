@@ -468,6 +468,26 @@ module.exports = (env) ->
       socketIoPath = '/socket.io'
       engine = new engineIo.Server({path: socketIoPath})
       @io = new socketIo()
+      ioCookieParser = express.cookieParser(@app.cookieSessionOptions.secret)
+      @io.use( (socket, next) =>
+        if auth.enabled is no
+          return next()
+        req = socket.request 
+        if req.headers.cookie?
+          req.cookies = null
+          ioCookieParser(req, null, =>
+            sessionCookie = req.signedCookies?[@app.cookieSessionOptions.key]
+            if sessionCookie? and sessionCookie.username is auth.username
+              return next()
+            else 
+              env.logger.debug "socket.io: Cookie is invalid."
+              return next(new Error('Authentication error'))
+          )
+        else
+          env.logger.warn "No cookie transmitted."
+          return next(new Error('unauthorizied'))
+      )
+
       @io.bind(engine)
 
       @app.all( '/socket.io/socket.io.js', (req, res) => @io.serve(req, res) )
