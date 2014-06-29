@@ -149,10 +149,47 @@ module.exports = {
       description: "Array of gui pages"
       type: "array"
       default: []
+      items:
+        type: "object"
+        properties:
+          id:
+            type: "string"
+          name:
+            type: "string"
+          devices:
+            type: "array"
+            default: []
+            items:
+              type: "object"
+              properties:
+                deviceId:
+                  type: "string"
     groups:
       description: "Array of groups"
       type: "array"
       default: []
+      items:
+        type: "object"
+        properties:
+          id:
+            type: "string"
+          name:
+            type: "string"
+          devices:
+            type: "array"
+            default: []
+            items:
+              type: "string"
+          rules:
+            type: "array"
+            default: []
+            items:
+              type: "string"
+          variables:
+            type: "array"
+            default: []
+            items:
+              type: "string"
     plugins:
       description: "Array of plugins to load"
       type: "array"
@@ -161,12 +198,53 @@ module.exports = {
       description: "Array of device definations"
       type: "array"
       default: []
+      items:
+        type: "object"
+        properties:
+          id:
+            type: "string"
+          name:
+            type: "string"
+          class:
+            type: "string"
     rules:
       description: "Array of rules"
       type: "array"
       default: []
+      items:
+        type: "object"
+        properties:
+          id:
+            type: "string"
+          name:
+            type: "string"
+          rule:
+            type: "string"
+          active:
+            type: "boolean"
+          logging:
+            type: "boolean"
     variables:
       description: "Array of variables"
       type: "array"
       default: []
+      items:
+        anyOf: [
+          {
+            type: "object"
+            properties:
+              name:
+                type: "string"
+              value:
+                type: "string"
+          }, 
+          {
+            type: "object"
+            properties:
+              name:
+                type: "string"
+              expression:
+                type: "string"
+          }
+        ]
 }
