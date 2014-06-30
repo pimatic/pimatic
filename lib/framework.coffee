@@ -55,16 +55,19 @@ module.exports = (env) ->
       @database = new env.database.Database(this, @config.settings.database)
       @setupExpressApp()
 
-    _validateConfig: (config, schema) ->
+    _validateConfig: (config, schema, scope = "config") ->
       js = new JaySchema()
       errors = js.validate(config, schema)
       if errors.length > 0
-        errorMessage = "Invalid config: "
+        errorMessage = "Invalid #{scope}: "
         for e in errors
-          errorMessage += (
-            "\n#{e.instanceContext}: Should have #{e.constraintName} #{e.constraintValue}, was: " + 
-            "#{e.testedValue}"
-          )
+          if e.desc?
+            errorMessage += e.desc
+          else
+            errorMessage += (
+              "\n#{e.instanceContext}: Should have #{e.constraintName} #{e.constraintValue}"
+            )
+            if e.testedValue? then errorMessage += ", was: #{e.testedValue}"
         throw new Error(errorMessage)
 
     loadConfig: () ->
@@ -633,7 +636,7 @@ module.exports = (env) ->
                     packageInfo.configSchema
                   )
                   configSchema = require(pathToSchema)
-                  @_validateConfig(pConf, configSchema)
+                  @_validateConfig(pConf, configSchema, "config of #{fullPluginName}")
                   pConf = declapi.enhanceJsonSchemaWithDefaults(configSchema, pConf)
                 else
                   env.logger.warn(
@@ -822,7 +825,7 @@ module.exports = (env) ->
         throw new Error("Unknown device class \"#{deviceConfig.class}\"")
       warnings = []
       classInfo.prepareConfig(deviceConfig) if classInfo.prepareConfig?
-      @_validateConfig(deviceConfig, classInfo.configDef)
+      @_validateConfig(deviceConfig, classInfo.configDef, "config of device #{deviceConfig.id}")
       declapi.checkConfig(classInfo.configDef.properties, deviceConfig, warnings)
       for w in warnings
         env.logger.warn("Device configuration of #{deviceConfig.id}: #{w}")
