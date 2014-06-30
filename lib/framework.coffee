@@ -18,6 +18,7 @@ S = require 'string'
 _ = require 'lodash'
 declapi = require 'decl-api'
 util = require 'util'
+cjson = require 'cjson'
 
 module.exports = (env) ->
 
@@ -69,7 +70,7 @@ module.exports = (env) ->
     loadConfig: () ->
       schema = require("../config-schema")
       contents = fs.readFileSync(@configFile).toString()
-      instance = RJSON.parse(contents, {warnings: yes, duplicate: yes})
+      instance = cjson.parse(RJSON.transform(contents))
       @_validateConfig(instance, schema)
       @config = declapi.enhanceJsonSchemaWithDefaults(schema, instance)
       assert Array.isArray @config.plugins
