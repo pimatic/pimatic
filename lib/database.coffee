@@ -87,7 +87,8 @@ module.exports = (env) ->
         )
 
         for typeName, columnType of dbMapping.typeMap
-          pending.push createTableIfNotExists(dbMapping.typeToAttributeTable(typeName), (table) =>
+          tableName = dbMapping.typeToAttributeTable(typeName)
+          pending.push createTableIfNotExists(tableName, (table) =>
             table.increments('id').primary()
             table.timestamp('time').index() 
             table.integer('deviceAttributeId')
@@ -95,6 +96,11 @@ module.exports = (env) ->
               .inTable('deviceAttribute')
             table[columnType]('value')
           )
+          Q(@knex.raw("""
+            CREATE INDEX IF NOT EXISTS
+            deviceAttributeIdTime 
+            ON #{tableName} (deviceAttributeId, time);
+          """)).done()
 
         # Save log-messages
         @framework.on("messageLogged", ({level, msg, meta}) =>
@@ -403,7 +409,10 @@ module.exports = (env) ->
           query.orderBy(order, orderDirection)
         if offset? then query.offset(offset)
         if limit? then query.limit(limit)
+        time = new Date().getTime()
         return Q(query).then( (result) =>
+          timeDiff = new Date().getTime()-time
+          env.logger.debug "quering #{result.length} events took #{timeDiff}ms."
           return result
         )
       )
