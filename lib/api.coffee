@@ -865,6 +865,9 @@ api.database = {
             before:
               type: t.date
               optional: yes
+            groupByTime:
+              type: t.number
+              optional: yes
             order:
               type: t.string
               optional: yes

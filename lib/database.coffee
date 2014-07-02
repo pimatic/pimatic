@@ -345,7 +345,9 @@ module.exports = (env) ->
         offset, 
         limit
       } = queryCriteria 
-      unless order? then order = "time" and orderDirection = "desc"
+      unless order?
+        order = "time"
+        orderDirection = "desc"
 
       buildQueryForType = (tableName, query) =>
         query.select(
@@ -395,21 +397,32 @@ module.exports = (env) ->
         order, 
         orderDirection, 
         offset, 
-        limit
+        limit,
+        groupByTime
       } = queryCriteria 
-      unless order? then order = "time" and orderDirection = "desc"
+      unless order?
+        order = "time"
+        orderDirection = "asc"
       return @_getDeviceAttributeInfo(deviceId, attributeName).then( (info) =>
-        query = @knex(dbMapping.typeToAttributeTable(info.type)).select('time', 'value')
+        query = @knex(dbMapping.typeToAttributeTable(info.type))
+        unless groupByTime?
+          query.select('time', 'value')
+        else
+          query.select(@knex.raw('MIN(time) AS time'), @knex.raw('AVG(value) AS value'))
         query.where('deviceAttributeId', info.id)
         if after?
-          query.where('time', '>=', after)
+          query.where('time', '>=', parseFloat(after))
         if before?
-          query.where('time', '<=', before)
+          query.where('time', '<=', parseFloat(before))
         if order?
           query.orderBy(order, orderDirection)
+        if groupByTime?
+          groupByTime = parseFloat(groupByTime);
+          query.groupByRaw("time/#{groupByTime}")
         if offset? then query.offset(offset)
         if limit? then query.limit(limit)
         time = new Date().getTime()
+        env.logger.debug "query:", query.toString() 
         return Q(query).then( (result) =>
           timeDiff = new Date().getTime()-time
           env.logger.debug "quering #{result.length} events took #{timeDiff}ms."
