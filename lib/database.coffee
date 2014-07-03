@@ -369,6 +369,9 @@ module.exports = (env) ->
           query.where('deviceId', deviceId)
         if attributeName?
           query.where('attributeName', attributeName)
+        # if (not offset?) or offset is 0
+        #   query.orderBy(order, orderDirection)
+        #   query.limit(limit)
 
       query = null
       for type in _.keys(dbMapping.typeMap)
@@ -384,8 +387,13 @@ module.exports = (env) ->
         .orderBy(order, orderDirection)
       if offset? then query.offset(offset)
       if limit? then query.limit(limit)
+      env.logger.debug "query:", query.toString()
+      time = new Date().getTime()
       return Q(query).then( (result) ->
+        timeDiff = new Date().getTime()-time
+        env.logger.debug "quering #{result.length} events took #{timeDiff}ms."
         for r in result
+          # convert boolean values to boolean
           if r.type is "boolean" then r.value = !!r.value
         return result
       )
@@ -421,8 +429,8 @@ module.exports = (env) ->
           query.groupByRaw("time/#{groupByTime}")
         if offset? then query.offset(offset)
         if limit? then query.limit(limit)
+        env.logger.debug "query:", query.toString()
         time = new Date().getTime()
-        env.logger.debug "query:", query.toString() 
         return Q(query).then( (result) =>
           timeDiff = new Date().getTime()-time
           env.logger.debug "quering #{result.length} events took #{timeDiff}ms."
