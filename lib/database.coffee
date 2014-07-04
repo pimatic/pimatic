@@ -352,7 +352,6 @@ module.exports = (env) ->
 
       buildQueryForType = (tableName) =>
         query = @knex(tableName).select(
-          "#{tableName}.id AS id", 
           'deviceAttribute.deviceId AS deviceId', 
           'deviceAttribute.attributeName AS attributeName', 
           'deviceAttribute.type AS type',
@@ -385,7 +384,7 @@ module.exports = (env) ->
       return Q.all(queries).then( (results) =>
         timeDiff = new Date().getTime()-time
         env.logger.debug "quering took #{timeDiff}ms."
-        all = _.sortBy(_.flatten(results), (e) -> -e.time )
+        all = _.first(_.sortBy(_.flatten(results, yes), (e) -> -e.time ), limit)
         #console.log all
         return all
       )
