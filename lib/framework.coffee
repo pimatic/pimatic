@@ -814,7 +814,9 @@ module.exports = (env) ->
           )
           # force update of the device value
           if device.getLastAttributeValue(attrName) is null
-            device.getUpdatedAttributeValue(attrName).done()
+            device.getUpdatedAttributeValue(attrName).then( (value) ->
+              device._attributesValues[attrName] = value unless device._attributesValues[attrName]?
+            ).done()
 
       @_emitDeviceAdded(device)
       return device
