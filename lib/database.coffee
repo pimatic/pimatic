@@ -95,12 +95,13 @@ module.exports = (env) ->
               .references('id')
               .inTable('deviceAttribute')
             table[columnType]('value')
+          ).then( =>
+            return @knex.raw("""
+              CREATE INDEX IF NOT EXISTS
+              deviceAttributeIdTime 
+              ON #{tableName} (deviceAttributeId, time);
+            """)
           )
-          Q(@knex.raw("""
-            CREATE INDEX IF NOT EXISTS
-            deviceAttributeIdTime 
-            ON #{tableName} (deviceAttributeId, time);
-          """)).done()
 
         # Save log-messages
         @framework.on("messageLogged", ({level, msg, meta}) =>
@@ -430,7 +431,7 @@ module.exports = (env) ->
         if order?
           query.orderBy(order, orderDirection)
         if groupByTime?
-          groupByTime = parseFloat(groupByTime);
+          groupByTime = parseFloat(groupByTime)
           query.groupByRaw("time/#{groupByTime}")
         if offset? then query.offset(offset)
         if limit? then query.limit(limit)
