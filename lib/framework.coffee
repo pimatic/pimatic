@@ -169,7 +169,7 @@ module.exports = (env) ->
       page = @getPageById(pageId)
       unless page?
         throw new Error('Could not find the page')
-      index = _.remove(page.devices, {deviceId: deviceId})
+      _.remove(page.devices, {deviceId: deviceId})
       @_emitPageChanged(page)
       return page
 
@@ -684,24 +684,18 @@ module.exports = (env) ->
 
     addPluginsToConfig: (plugins) ->
       Array.isArray pluginNames
-      pluginNames = (p.plugin for p in framework.config.plugins)
+      pluginNames = (p.plugin for p in @config.plugins)
       added = []
       for p in plugins
         unless p in pluginNames
-          framework.config.plugins.push {plugin: p}
+          @config.plugins.push {plugin: p}
           added.push p
       @saveConfig()
       return added
 
     removePluginsFromConfig: (plugins) ->
-      removed = []
-      for pToRemove in plugins
-        for p, i in framework.config.plugins
-          if p.plugin is pToRemove
-            framework.config.plugins.splice(i, 1)
-            removed.push p.plugin
-            break
-      framework.saveConfig()
+      removed = _.remove(@config.plugins, (p) -> p.plugin in plugins)
+      @saveConfig()
       return removed
 
     _emitDeviceAttributeEvent: (device, attributeName, attribute, time, value) ->
