@@ -350,48 +350,47 @@ module.exports = (env) ->
         order = "time"
         orderDirection = "desc"
 
-      buildQueryForType = (tableName) =>
-        query = @knex(tableName).select(
+      buildQueryForType = (tableName, query) =>
+        query.select(
+          "#{tableName}.id AS id", 
           'deviceAttribute.deviceId AS deviceId', 
           'deviceAttribute.attributeName AS attributeName', 
           'deviceAttribute.type AS type',
           'time AS time', 
           'value AS value'
-        ).from(tableName).join('deviceAttribute', 
-          "#{tableName}.deviceAttributeId", '=', 'deviceAttribute.id',
-        )
+        ).from(tableName)
         if after?
           query.where('time', '>=', parseFloat(after))
         if before?
           query.where('time', '<=', parseFloat(before))
+        query.join('deviceAttribute', 
+          "#{tableName}.deviceAttributeId", '=', 'deviceAttribute.id',
+        )
         if deviceId?
           query.where('deviceId', deviceId)
         if attributeName?
           query.where('attributeName', attributeName)
-        query.orderBy(order, orderDirection)
-        if offset? then query.offset(offset)
-        if limit? then query.limit(limit)
-        return query
 
-      queries = []
+      query = null
       for type in _.keys(dbMapping.typeMap)
         tableName = dbMapping.typeToAttributeTable(type)
-        query = buildQueryForType(tableName)
-        queries.push(query)
-        env.logger.debug "query:", query.toString()
-
-      time = new Date().getTime()
-      return Q.all(queries).then( (results) =>
-        timeDiff = new Date().getTime()-time
-        env.logger.debug "quering took #{timeDiff}ms."
-        all = _.first(_.sortBy(_.flatten(results, yes), (e) -> -e.time ), limit)
-        #console.log all
-        return all
-      )
+        unless query?
+          query = @knex(tableName)
+          buildQueryForType(tableName, query)
+        else
+          query.unionAll( -> buildQueryForType(tableName, this) )
+      query.orderBy(order, orderDirection)
+      if offset? then query.offset(offset)
+      if limit? then query.limit(limit)
+      return query
 
     queryDeviceAttributeEvents: (queryCriteria) ->
-      result = @_buildQueryDeviceAttributeEvents(queryCriteria)
-      return result.then( (result) ->
+      query = @_buildQueryDeviceAttributeEvents(queryCriteria)
+      env.logger.debug "query:", query.toString()
+      time = new Date().getTime()
+      return Q(query).then( (result) ->
+        timeDiff = new Date().getTime()-time
+        env.logger.debug "quering #{result.length} events took #{timeDiff}ms."
         for r in result
           if r.type is "boolean" then r.value = !!r.value
         return result
