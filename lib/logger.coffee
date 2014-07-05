@@ -45,7 +45,9 @@ TaggedConsoleTarget::log = (level, msg, meta, callback) ->
   if @colorize
     timeString = timeString.grey
     tags = tags.green
-  header = timeString + tags
+    header = timeString + tags
+  else
+    header = "#{timeString}#{tags} #{level}:"
   target = @target
 
   msg.split("\n").forEach (line, index) =>
