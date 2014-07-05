@@ -698,6 +698,11 @@ module.exports = (env) ->
       @saveConfig()
       return removed
 
+    getGuiSetttings: () -> {
+      config: @config.settings.gui
+      defaults: @config.settings.gui.__proto__
+    }
+
     _emitDeviceAttributeEvent: (device, attributeName, attribute, time, value) ->
       @emit 'deviceAttributeChanged', {device, attributeName, attribute, time, value}
       @io?.emit 'deviceAttributeChanged', {deviceId: device.id, attributeName, time, value}

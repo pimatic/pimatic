@@ -482,6 +482,19 @@ api.framework = {
       result:
         removed:
           type: t.array
+    getGuiSetttings:
+      description: "Get the gui config options"
+      rest: 
+        type: "GET"
+        url: "/api/config/settings/gui"
+      result:
+        guiSettings:
+          type: "object"
+          properties:
+            config:
+              type: "object"
+            defaults:
+              type: "object"
     restart:
       description: "Restart pimatic"
       rest:

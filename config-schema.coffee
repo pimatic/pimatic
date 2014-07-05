@@ -143,8 +143,19 @@ module.exports = {
               description: "time to keep logged messages in database"
               type: "array"
               default: [ 
-                { level: '*', tags: [], time: '7d' } 
+                { level: '*', tags: [], time: '7d' }
               ]
+        gui:
+          type: "object"
+          properties:
+            hideRuleName: 
+              description: "Dont show the name of rules on the rules page"
+              type: "boolean"
+              default: false
+            hideRuleText: 
+              description: "Dont show the text of rules on the rules page"
+              type: "boolean"
+              default: false
     pages:
       description: "Array of gui pages"
       type: "array"
