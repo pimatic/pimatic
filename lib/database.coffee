@@ -74,7 +74,7 @@ module.exports = (env) ->
 
         pending.push createTableIfNotExists('message', (table) =>
           table.increments('id').primary()
-          table.timestamp('time')
+          table.timestamp('time').index()
           table.integer('level')
           table.text('tags')
           table.text('text')
@@ -352,33 +352,41 @@ module.exports = (env) ->
 
       buildQueryForType = (tableName, query) =>
         query.select(
-          "#{tableName}.id AS id", 
-          'deviceAttribute.deviceId AS deviceId', 
-          'deviceAttribute.attributeName AS attributeName', 
-          'deviceAttribute.type AS type',
-          'time AS time', 
-          'value AS value'
+          'deviceAttributeId',
+          'time', 
+          'value'
         ).from(tableName)
         if after?
           query.where('time', '>=', parseFloat(after))
         if before?
           query.where('time', '<=', parseFloat(before))
-        query.join('deviceAttribute', 
-          "#{tableName}.deviceAttributeId", '=', 'deviceAttribute.id',
-        )
+        query
         if deviceId?
           query.where('deviceId', deviceId)
         if attributeName?
           query.where('attributeName', attributeName)
 
-      query = null
+      subquery = null
       for type in _.keys(dbMapping.typeMap)
         tableName = dbMapping.typeToAttributeTable(type)
-        unless query?
-          query = @knex(tableName)
-          buildQueryForType(tableName, query)
+        unless subquery?
+          subquery = @knex(tableName)
+          buildQueryForType(tableName, subquery)
         else
-          query.unionAll( -> buildQueryForType(tableName, this) )
+          subquery.unionAll( -> buildQueryForType(tableName, this) )
+      subquery.orderBy(order, orderDirection)
+      if offset? then subquery.offset(offset)
+      if limit? then subquery.limit(limit)
+
+      query = @knex(@knex.raw("(#{subquery.toString()}) AS vals")).select(
+        'deviceAttribute.deviceId AS deviceId', 
+        'deviceAttribute.attributeName AS attributeName', 
+        'deviceAttribute.type AS type',
+        'vals.time AS time', 
+        'vals.value AS value'
+      ).join('deviceAttribute', 
+        "vals.deviceAttributeId", '=', 'deviceAttribute.id',
+      )
       query.orderBy(order, orderDirection)
       if offset? then query.offset(offset)
       if limit? then query.limit(limit)
