@@ -624,6 +624,54 @@ api.rules = {
       params: 
         ruleId:
           type: t.string
+    getRuleActionsHints:
+      rest:
+        type: "POST"
+        url: "/api/rules-parser/get-actions-hints"
+      description: "Get hints for the rule actions input field"
+      params:
+        actionsInput:
+          type: t.string
+      result:
+        hints:
+          type: t.object
+          properties:
+            actions:
+              type: t.array
+            tokens:
+              type: t.array
+            autocomplete:
+              type: t.array
+            errors:
+              type: t.array
+            warnings:
+              type: t.array
+            format:
+              type: t.array
+    getRuleConditionHints:
+      rest:
+        type: "POST"
+        url: "/api/rules-parser/get-condition-hints"
+      description: "Get hints for the rule condition input field"
+      params:
+        conditionInput:
+          type: t.string
+      result:
+        hints:
+          type: t.object
+          properties:
+            predicates:
+              type: t.array
+            tokens:
+              type: t.array
+            autocomplete:
+              type: t.array
+            errors:
+              type: t.array
+            warnings:
+              type: t.array
+            format:
+              type: t.array
 }
 
 ###

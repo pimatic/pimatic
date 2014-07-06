@@ -457,6 +457,18 @@ module.exports = (env) ->
         )(req, res, next)
       )
 
+      @app.get('/remember', (req, res) =>
+        rememberMe = req.query.rememberMe
+        # rememberMe is handled by the framework, so see if it was picked up:
+        if rememberMe is 'true' then rememberMe = yes
+        if rememberMe is 'false' then rememberMe = no
+        if req.session.rememberMe is rememberMe
+          res.send 200, { success: true,  message: 'done' }
+        else 
+          res.send 200, {success: false, message: 'illegal param'}
+        return
+      )
+
       serverEnabled = (
         @config.settings.httpsServer?.enabled or @config.settings.httpServer?.enabled
       )
@@ -619,7 +631,7 @@ module.exports = (env) ->
                 if @pluginManager.isInstalled(fullPluginName) then Promise.resolve()
                 else 
                   env.logger.info("Installing: \"#{pConf.plugin}\"")
-                  @installPlugin(fullPluginName)
+                  @pluginManager.installPlugin(fullPluginName)
               )
             ).then( =>
               return @pluginManager.loadPlugin(fullPluginName).then( ([plugin, packageInfo]) =>

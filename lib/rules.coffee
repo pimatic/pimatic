@@ -1032,4 +1032,45 @@ module.exports = (env) ->
 
     getRuleById: (ruleId) -> @rules[ruleId]
 
+    getRuleActionsHints: (actionsInput) ->
+      context =  null
+      result = null
+
+      context = @createParseContext()
+      result = @parseRuleActions("id", actionsInput, context)
+      context.finalize()
+
+      for a in result.actions
+        delete a.handler
+
+      return {
+        tokens: result.tokens
+        actions: result.actions
+        autocomplete: context.autocomplete
+        errors: context.errors
+        format: context.format
+        warnings: context.warnings
+      }
+
+    getRuleConditionHints: (conditionInput) ->
+      context =  null
+      result = null
+
+      context = @createParseContext()
+      result = @parseRuleCondition("id", conditionInput, context)
+      context.finalize()
+
+      for p in result.predicates
+        delete p.handler
+
+      return {
+        tokens: result.tokens
+        predicates: result.predicates
+        autocomplete: context.autocomplete
+        errors: context.errors
+        format: context.format
+        warnings: context.warnings
+      }
+
+
   return exports = { RuleManager }
