@@ -464,6 +464,8 @@ module.exports = (env) ->
       unless serverEnabled 
         env.logger.warn "You have no https and no http server enabled!"
 
+      @initRestApi()
+
       socketIoPath = '/socket.io'
       engine = new engineIo.Server({path: socketIoPath})
       @io = new socketIo()
@@ -1081,6 +1083,35 @@ module.exports = (env) ->
 
           Promise.all(context.waitFor).then => @listen()
         )
+
+    initRestApi: ->
+      onError = (error) =>
+        if error instanceof Error
+          message = error.message
+          env.logger.error error.message
+          env.logger.debug error.stack
+
+      @app.get("/api/device/:deviceId/:actionName", (req, res, next) =>
+        deviceId = req.params.deviceId
+        actionName = req.params.actionName
+        device = framework.getDeviceById(deviceId)
+        if device?
+          if device.hasAction(actionName)
+            action = device.actions[actionName]
+            declapi.callActionFromReqAndRespond(actionName, action, device, req, res)
+          else
+            declapi.sendErrorResponse(res, 'device hasn\'t that action')
+        else declapi.sendErrorResponse(res, 'device not found')
+      )
+
+      @app.get("/api", (req, res, nest) => res.send(declapi.stringifyApi(env.api.all)) )
+      @app.get("/api/decl-api-client.js", declapi.serveClient)
+
+      declapi.createExpressRestApi(@app, env.api.framework.actions, this, onError)
+      declapi.createExpressRestApi(@app, env.api.rules.actions, this.ruleManager, onError)
+      declapi.createExpressRestApi(@app, env.api.variables.actions, this.variableManager, onError)
+      declapi.createExpressRestApi(@app, env.api.plugins.actions, this.pluginManager, onError)
+      declapi.createExpressRestApi(@app, env.api.database.actions, this.database, onError)
 
     saveConfig: ->
       assert @config?
