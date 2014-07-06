@@ -7,7 +7,7 @@ Devices
 
 cassert = require 'cassert'
 assert = require 'assert'
-Q = require 'q'
+Promise = require 'bluebird'
 _ = require 'lodash'
 t = require('decl-api').types
 
@@ -84,7 +84,7 @@ module.exports = (env) ->
       # call the getter
       result = @[getter]()
       # Be sure that it is a promise!
-      assert Q.isPromise result, "#{getter} of #{@name} should always return a promise!"
+      assert result.then?, "#{getter} of #{@name} should always return a promise!"
       return result
 
     toJson: ->
@@ -162,7 +162,7 @@ module.exports = (env) ->
       throw new Error "Function \"changeStateTo\" is not implemented!"
 
     # Returns a promise that will be fulfilled with the state
-    getState: -> Q(@_state)
+    getState: -> Promise.resolve(@_state)
 
     _setState: (state) ->
       if @_state is state then return
@@ -233,7 +233,7 @@ module.exports = (env) ->
       @_setState(level > 0)
 
     # Returns a promise that will be fulfilled with the dim level
-    getDimlevel: -> Q(@_dimlevel)
+    getDimlevel: -> Promise.resolve(@_dimlevel)
 
 
   ###
@@ -279,8 +279,8 @@ module.exports = (env) ->
       throw new Error "Function \"moveToPosition\" is not implemented!"
 
     # Returns a promise that will be fulfilled with the position
-    getPosition: -> Q(@_position)
-    getTime: -> Q(@_time)
+    getPosition: -> Promise.resolve(@_position)
+    getTime: -> Promise.resolve(@_time)
 
     _setPosition: (position) ->
       assert position in ['up', 'down', 'stopped']
@@ -328,7 +328,7 @@ module.exports = (env) ->
       @emit 'presence', value
 
 
-    getPresence: -> Q(@_presence)
+    getPresence: -> Promise.resolve(@_presence)
 
     template: "presence"
 
@@ -352,7 +352,7 @@ module.exports = (env) ->
       @_contact = value
       @emit 'contact', value
 
-    getContact: -> Q(@_contact)
+    getContact: -> Promise.resolve(@_contact)
 
   upperCaseFirst = (string) -> 
     unless string.length is 0
@@ -382,7 +382,7 @@ module.exports = (env) ->
       @name = config.name
       super()
 
-    getButton: -> Q(@_lastPressedButton)
+    getButton: -> Promise.resolve(@_lastPressedButton)
 
     buttonPressed: (buttonId) ->
       for b in @config.buttons

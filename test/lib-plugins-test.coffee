@@ -1,5 +1,5 @@
 assert = require "cassert"
-Q = require 'q'
+Promise = require 'bluebird'
 os = require 'os'
 fs = require 'fs.extra'
 
@@ -67,9 +67,9 @@ describe "PluginManager", ->
       pkgInfo = pluginManager.getInstalledPackageInfo('pimatic-cron')
       assert pkgInfo.name is 'pimatic-cron' 
 
-  describe '#getNpmInfo()', (done) ->
+  describe '#getNpmInfo()', ->
 
-    it 'should return pimatic package info from the registry', ->
+    it 'should return pimatic package info from the registry', (done) ->
       promise = pluginManager.getNpmInfo('pimatic')
       promise.then( (pkgInfo) ->
         assert pkgInfo.name is "pimatic"

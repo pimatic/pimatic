@@ -9,7 +9,7 @@ special event happen.
 ###
 
 __ = require("i18n").__
-Q = require 'q'
+Promise = require 'bluebird'
 S = require 'string'
 assert = require 'cassert'
 _ = require 'lodash'
@@ -479,7 +479,7 @@ module.exports = (env) ->
       @framework.variableManager.on("variableValueChanged", @changeListener)
       super()
     getValue: -> 
-      if @lastState? then return Q(@lastState)
+      if @lastState? then return Promise.resolve(@lastState)
       else return @_evaluate()
     destroy: -> 
       @framework.variableManager.removeListener("variableValueChanged", @changeListener)
@@ -489,7 +489,7 @@ module.exports = (env) ->
     _evaluate: ->
       leftPromise = @framework.variableManager.evaluateNumericExpression(@leftTokens)
       rightPromise = @framework.variableManager.evaluateNumericExpression(@rightTokens)
-      return Q.all([leftPromise, rightPromise]).then( ([leftValue, rightValue]) =>
+      return Promise.all([leftPromise, rightPromise]).then( ([leftValue, rightValue]) =>
         return state = @_compareValues(leftValue, rightValue)
       )
 
@@ -561,7 +561,7 @@ module.exports = (env) ->
       @device.on 'button', @buttonPressedListener
       super()
 
-    getValue: -> Q(false)
+    getValue: -> Promise.resolve(false)
     destroy: -> 
       @device.removeListener 'button', @buttonPressedListener
       super()

@@ -43,7 +43,7 @@ should be executed when the confition of the rule is true. Take a look at the
  
 assert = require 'cassert'
 util = require 'util'
-Q = require 'q'
+Promise = require 'bluebird'
 _ = require 'lodash'
 S = require 'string'
 M = require './matcher'
@@ -194,7 +194,7 @@ module.exports = (env) ->
 
       rule = new Rule(id, name, ruleString)
       # Allways return a promise
-      return Q.fcall( =>
+      return Promise.try( =>
         
         ###
         First take the string apart, so that
@@ -751,7 +751,7 @@ module.exports = (env) ->
                 knownPredicates[pred.id] = state
               )
 
-      return Q.all(awaiting).then( (predicateValues) =>
+      return Promise.all(awaiting).then( (predicateValues) =>
         bet.operators['and'] =
           assoc: 'left'
           prec: 0
@@ -800,91 +800,90 @@ module.exports = (env) ->
 
         # Create a deferred that will be resolve with the return value when the decision can be 
         # made. 
-        deferred = Q.defer()
+        return new Promise( (resolve, reject) =>
 
-        # We will collect all predicates that have a for suffix and are not yet decideable in an 
-        # awaiting list.
-        awaiting = {}
+          # We will collect all predicates that have a for suffix and are not yet decideable in an 
+          # awaiting list.
+          awaiting = {}
 
-        # Whenever an awaiting predicate gets resolved then we will revalidate the rule condition.
-        reevaluateCondition = () =>
-          return @evaluateConditionOfRule(rule, knownPredicates).then( (isTrueNew) =>
-            # If it is true
-            if isTrueNew 
-              # then resolve the return value as true
-              deferred.resolve true
-              # and cancel all awaitings.
-              for id, a of awaiting
-                a.cancel()
-              return
+          # Whenever an awaiting predicate gets resolved then we will revalidate the rule condition.
+          reevaluateCondition = () =>
+            return @evaluateConditionOfRule(rule, knownPredicates).then( (isTrueNew) =>
+              # If it is true
+              if isTrueNew 
+                # then resolve the return value as true
+                resolve true
+                # and cancel all awaitings.
+                for id, a of awaiting
+                  a.cancel()
+                return
 
-            # Else check if we have awaiting predicates.
-            # If we have no awaiting predicates
-            if (id for id of awaiting).length is 0
-              # then we can resolve the return value as false
-              deferred.resolve false 
-          ).catch( (error) => 
-            env.logger.error """
-              Error on evaluation of rule condition of rule #{rule.id}: #{error.message}
-            """ 
-            env.logger.debug error
-            deferred.reject error.message
-          )
+              # Else check if we have awaiting predicates.
+              # If we have no awaiting predicates
+              if (id for id of awaiting).length is 0
+                # then we can resolve the return value as false
+                resolve false 
+            ).catch( (error) => 
+              env.logger.error """
+                Error on evaluation of rule condition of rule #{rule.id}: #{error.message}
+              """ 
+              env.logger.debug error
+              reject error.message
+            )
 
-        nowTime = (new Date()).getTime()
-        # Fill the awaiting list:
-        # Check for each predicate,
-        for pred in rule.predicates
-          do (pred) => 
-            # if it has a for suffix.
-            if pred.for?
-              # If it has a for suffix and its an event something gone wrong, because an event 
-              # can't hold (its just one time)
-              assert pred.handler.getType() is 'state'
-              assert pred.lastChange?
+          nowTime = (new Date()).getTime()
+          # Fill the awaiting list:
+          # Check for each predicate,
+          for pred in rule.predicates
+            do (pred) => 
+              # if it has a for suffix.
+              if pred.for?
+                # If it has a for suffix and its an event something gone wrong, because an event 
+                # can't hold (its just one time)
+                assert pred.handler.getType() is 'state'
+                assert pred.lastChange?
 
-              # The time since last change
-              lastChangeTimeDiff = nowTime - pred.lastChange 
-              # Time to wait till condition becomes true, if not change occures
-              timeToWait = pred.for - lastChangeTimeDiff
+                # The time since last change
+                lastChangeTimeDiff = nowTime - pred.lastChange 
+                # Time to wait till condition becomes true, if not change occures
+                timeToWait = pred.for - lastChangeTimeDiff
 
-              if timeToWait > 0              
-                # Mark that we are awaiting the result
-                awaiting[pred.id] = {}
-                # and as long as we are awaiting the result, the predicate is false.
-                knownPredicates[pred.id] = false
+                if timeToWait > 0              
+                  # Mark that we are awaiting the result
+                  awaiting[pred.id] = {}
+                  # and as long as we are awaiting the result, the predicate is false.
+                  knownPredicates[pred.id] = false
 
-                # When the time passes
-                timeout = setTimeout( ( =>
-                  knownPredicates[pred.id] = true
-                  # the predicate remains true and no value is awaited anymore.
-                  awaiting[pred.id].cancel()
-                  reevaluateCondition()
-                ), timeToWait)
-
-                # Let us be notified when it becomes false.
-                pred.handler.on 'change', changeListener = (state) =>
-                  assert state is true or state is false
-                  # If it changes to false
-                  if state is false
-                    # then the predicate is false
-                    knownPredicates[pred.id] = false
-                    # and clear the timeout.
+                  # When the time passes
+                  timeout = setTimeout( ( =>
+                    knownPredicates[pred.id] = true
+                    # the predicate remains true and no value is awaited anymore.
                     awaiting[pred.id].cancel()
                     reevaluateCondition()
+                  ), timeToWait)
 
-                awaiting[pred.id].cancel = =>
-                  delete awaiting[pred.id]
-                  clearTimeout timeout
-                  # and we can cancel the notify
-                  pred.handler.removeListener 'change', changeListener
+                  # Let us be notified when it becomes false.
+                  pred.handler.on 'change', changeListener = (state) =>
+                    assert state is true or state is false
+                    # If it changes to false
+                    if state is false
+                      # then the predicate is false
+                      knownPredicates[pred.id] = false
+                      # and clear the timeout.
+                      awaiting[pred.id].cancel()
+                      reevaluateCondition()
 
-        # If we have not found awaiting predicates
-        if (id for id of awaiting).length is 0
-          # then resolve the return value to true.
-          deferred.resolve true 
-        # At then end return the deferred promise. 
-        return deferred.promise.catch( (error) =>
+                  awaiting[pred.id].cancel = =>
+                    delete awaiting[pred.id]
+                    clearTimeout timeout
+                    # and we can cancel the notify
+                    pred.handler.removeListener 'change', changeListener
+
+          # If we have not found awaiting predicates
+          if (id for id of awaiting).length is 0
+            # then resolve the return value to true.
+            resolve true 
+        ).catch( (error) =>
           # Cancel all awatting changeHandler
           for id, a of awaiting
             a.cancel()
@@ -901,7 +900,7 @@ module.exports = (env) ->
         delta = currentTime - rule.lastExecuteTime
         if delta <= 500
           env.logger.debug "Suppressing rule #{rule.id} execute because it was executed resently."
-          return Q()
+          return Promise.resolve()
       rule.lastExecuteTime = currentTime
 
       actionResults = @executeRuleActions(rule, false)
@@ -918,7 +917,7 @@ module.exports = (env) ->
           if rule.logging
             env.logger.info "rule #{rule.id}: #{message}"
           if next?
-            assert Q.isPromise(next)
+            assert next.then?
             next = logMessageForResult(next)
           return [message, next]
         ).catch( (error) =>
@@ -928,7 +927,7 @@ module.exports = (env) ->
 
       for actionResult in actionResults
         actionResult = logMessageForResult(actionResult)
-      return Q.all(actionResults)
+      return Promise.all(actionResults)
 
     # ###executeAction()
     # Executes the actions in the given actionString
@@ -956,13 +955,13 @@ module.exports = (env) ->
               )
           else
             promise = @executeAction(action)
-          assert Q.isPromise(promise)
+          assert promise.then?
           actionResults.push promise
       return actionResults
 
     executeAction: (action, simulate) =>
       # wrap into an fcall to convert throwen erros to a rejected promise
-      return Q.fcall( => 
+      return Promise.try( => 
         promise = action.handler.executeAction(simulate)
         if action.for?
           promise = promise.then( (message) =>
@@ -974,30 +973,30 @@ module.exports = (env) ->
 
     executeRestoreAction: (action, simulate) =>
       # wrap into an fcall to convert throwen erros to a rejected promise
-      return Q.fcall( => action.handler.executeRestoreAction(simulate) )
+      return Promise.try( => action.handler.executeRestoreAction(simulate) )
 
     scheduleAction: (action, ms, isRestore = no) =>
       assert action?
       if action.scheduled?
         action.scheduled.cancel("clearing scheduled action")
 
-      deferred = Q.defer()
-      timeoutHandle = setTimeout((=> 
-        promise = (
-          unless isRestore then @executeAction(action, no)
-          else @executeRestoreAction(action, no)
-        )
-        deferred.resolve(promise)
-        delete action.scheduled
-      ), ms)
-      action.scheduled = {
-        startDate: new Date()
-        cancel: (reason) =>
-          clearTimeout(timeoutHandle)
+      return new Promise( (resolve, reject) =>
+        timeoutHandle = setTimeout((=> 
+          promise = (
+            unless isRestore then @executeAction(action, no)
+            else @executeRestoreAction(action, no)
+          )
+          resolve(promise)
           delete action.scheduled
-          deferred.resolve(reason)
-      }
-      return deferred.promise
+        ), ms)
+        action.scheduled = {
+          startDate: new Date()
+          cancel: (reason) =>
+            clearTimeout(timeoutHandle)
+            delete action.scheduled
+            resolve(reason)
+        }
+      )
 
     createParseContext: ->
       return context = {

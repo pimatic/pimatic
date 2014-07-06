@@ -5,7 +5,7 @@ Variable Manager
 
 assert = require 'cassert'
 util = require 'util'
-Q = require 'q'
+Promise = require 'bluebird'
 _ = require 'lodash'
 S = require 'string'
 M = require './matcher'
@@ -93,7 +93,7 @@ module.exports = (env) ->
         @_vars.removeListener('variableValueChanged', @_changeListener)
         @changeListener = null
     getUpdatedValue: (varsInEvaluation = {})->
-      if @type is "value" then return Q(@value)
+      if @type is "value" then return Promise.resolve(@value)
       else return (
         switch @_datatype
           when "numeric" then @_vars.evaluateNumericExpression(@exprTokens, varsInEvaluation)
@@ -258,8 +258,10 @@ module.exports = (env) ->
       assert name? and typeof name is "string"
       if @variables[name]?
         if varsInEvaluation[name]?
-          if varsInEvaluation[name].value? then return Q(varsInEvaluation[name].value)
-          else return Q.fcall => throw new Error("Dependency cycle detected for variable #{name}")
+          if varsInEvaluation[name].value?
+            return Promise.resolve(varsInEvaluation[name].value)
+          else 
+            return Promise.try => throw new Error("Dependency cycle detected for variable #{name}")
         else
           varsInEvaluation[name] = {}
           return @variables[name].getUpdatedValue(varsInEvaluation).then( (value) =>
@@ -296,7 +298,7 @@ module.exports = (env) ->
       return (vars = t.substring(1) for t in tokens when @isAVariable(t))
 
     evaluateNumericExpression: (tokens, varsInEvaluation = {}) ->
-      return Q.fcall( =>
+      return Promise.try( =>
         tokens = _.clone(tokens)
         awaiting = []
         for t, i in tokens
@@ -315,11 +317,11 @@ module.exports = (env) ->
                   tokens[i] = parseFloat(value)
                 )
               )
-        return Q.all(awaiting).then( => bet.evaluateSync(tokens) )
+        return Promise.all(awaiting).then( => bet.evaluateSync(tokens) )
       )
 
     evaluateStringExpression: (tokens, varsInEvaluation = {}) ->
-      return Q.fcall( =>
+      return Promise.try( =>
         tokens = _.clone(tokens)
         awaiting = []
         for t, i in tokens
@@ -338,7 +340,7 @@ module.exports = (env) ->
               assert t.length >= 2
               assert t[0] is '"' and t[t.length-1] is '"' 
               tokens[i] = t[1...t.length-1]
-        return Q.all(awaiting).then( => _(tokens).reduce( (l, r) => "#{l}#{r}") )
+        return Promise.all(awaiting).then( => _(tokens).reduce( (l, r) => "#{l}#{r}") )
       )
 
 

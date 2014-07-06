@@ -154,5 +154,6 @@
 	"Add a new device": "Add a new device",
 	"Delete this Device": "Delete this Device",
 	"Showen devices": "Showen devices",
-	"Hide": "Hide"
+	"Hide": "Hide",
+	"pushover message sent successfully": "pushover message sent successfully"
 }

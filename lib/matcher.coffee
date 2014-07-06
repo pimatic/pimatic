@@ -4,7 +4,7 @@ Matcher/Parser helper for predicate and action strings
 ###
 
 __ = require("i18n").__
-Q = require 'q'
+Promise = require 'bluebird'
 S = require 'string'
 assert = require 'cassert'
 _ = require 'lodash'

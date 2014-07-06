@@ -3,9 +3,9 @@ Plugin Manager
 =======
 ###
 
-fs = require 'fs'
+Promise = require 'bluebird'
+fs = require 'fs'; Promise.promisifyAll(fs)
 path = require 'path'
-Q = require 'q'
 util = require 'util'
 assert = require 'cassert'
 byline = require 'byline'
@@ -36,7 +36,7 @@ module.exports = (env) ->
       pluginEnv = Object.create(env)
       pluginEnv.logger = env.logger.base.createSublogger(name)
       plugin = (require name) pluginEnv, module
-      return Q([plugin, packageInfo])
+      return Promise.resolve([plugin, packageInfo])
 
     # Checks if the plugin folder exists under node_modules
     isInstalled: (name) ->
@@ -99,7 +99,7 @@ module.exports = (env) ->
           waiting.push @getNpmInfo(p).then( (info) =>
             found[p] = info
           )
-      return Q.allSettled(waiting).then( (results) =>
+      return Promise.allSettled(waiting).then( (results) =>
         env.logger.error(r.reason) for r in results when r.state is "rejected"
         return found
       ).catch( (e) => env.logger.error e )
@@ -160,7 +160,7 @@ module.exports = (env) ->
                 latest: latest.version
               }
             )
-        return Q.allSettled(waiting).then( (results) =>
+        return Promise.allSettled(waiting).then( (results) =>
           env.logger.error(r.reason) for r in results when r.state is "rejected"
 
           ret = []
@@ -177,40 +177,39 @@ module.exports = (env) ->
       )
 
     spawnNpm: (args) ->
-      deferred = Q.defer()
-      if @npmRunning
-        deferred.reject "npm is currently in use"
-        return deferred.promise
-      @npmRunning = yes
-      output = ''
-      npm = spawn('npm', args, cwd: @modulesParentDir)
-      stdout = byline(npm.stdout)
-      npmLogger = env.logger.createSublogger("npm")
-      stdout.on "data", (line) => 
-        line = line.toString()
-        output += "#{line}\n"
-        if line.indexOf('npm http 304') is 0 then return
-        deferred.notify(line)
-        npmLogger.info S(line).chompLeft('npm ').s
-      stderr = byline(npm.stderr)
-      stderr.on "data", (line) => 
-        line = line.toString()
-        output += "#{line}\n"
-        deferred.notify(line)
-        npmLogger.info S(line).chompLeft('npm ').s
+      return new Promise( (resolve, reject) =>
+        if @npmRunning
+          reject "npm is currently in use"
+          return
+        @npmRunning = yes
+        output = ''
+        npm = spawn('npm', args, cwd: @modulesParentDir)
+        stdout = byline(npm.stdout)
+        npmLogger = env.logger.createSublogger("npm")
+        stdout.on "data", (line) => 
+          line = line.toString()
+          output += "#{line}\n"
+          if line.indexOf('npm http 304') is 0 then return
+          notify(line)
+          npmLogger.info S(line).chompLeft('npm ').s
+        stderr = byline(npm.stderr)
+        stderr.on "data", (line) => 
+          line = line.toString()
+          output += "#{line}\n"
+          notify(line)
+          npmLogger.info S(line).chompLeft('npm ').s
 
-      npm.on "close", (code) =>
-        @npmRunning = no
-        command = "npm " + _.reduce(args, (akk, a) -> "#{akk} #{a}")
-        if code isnt 0
-          deferred.reject new Error("Error running \"#{command}\"")
-        else deferred.resolve(output)
+        npm.on "close", (code) =>
+          @npmRunning = no
+          command = "npm " + _.reduce(args, (akk, a) -> "#{akk} #{a}")
+          if code isnt 0
+            reject new Error("Error running \"#{command}\"")
+          else resolve(output)
 
-      return deferred.promise
-      
+      )
 
     getInstalledPlugins: ->
-      return Q.nfcall(fs.readdir, "#{@framework.maindir}/..").then( (files) =>
+      return fs.readdirAsync("#{@framework.maindir}/..").then( (files) =>
         return plugins = (f for f in files when f.match(/^pimatic-.*/)?)
       )
 
@@ -232,13 +231,12 @@ module.exports = (env) ->
       )
 
     installUpdatesAsync: (modules) ->
-      deferred = Q.defer()
-      # resolve when complete
-      @update(modules).then(deferred.resolve)
-      # or after 10 seconds to prevent a timeout
-      Q.delay('still running', 10000).then(deferred.resolve)
-      # If the promise gets fullfilled:
-      return deferred.promise
+      return new Promise( (resolve, reject) =>
+        # resolve when complete
+        @update(modules).then(resolve)
+        # or after 10 seconds to prevent a timeout
+        Promise.delay('still running', 10000).then(resolve)
+      )
 
     getInstalledPackageInfo: (name) ->
       assert name?
@@ -248,19 +246,20 @@ module.exports = (env) ->
       )
 
     getNpmInfo: (name) ->
-      deferred = Q.defer()
-      https.get("https://registry.npmjs.org/#{name}/latest", (res) =>
-        str = ""
-        res.on "data", (chunk) -> str += chunk
-        res.on "end", ->
-          try
-            info = JSON.parse(str)
-            if info.error? then throw new Error("getting info about #{name} failed: #{info.reason}")
-            deferred.resolve info
-          catch e
-            deferred.reject e.message
-      ).on "error", deferred.reject
-      return deferred.promise
+      return new Promise( (resolve, reject) =>
+        https.get("https://registry.npmjs.org/#{name}/latest", (res) =>
+          str = ""
+          res.on "data", (chunk) -> str += chunk
+          res.on "end", ->
+            try
+              info = JSON.parse(str)
+              if info.error?
+                throw new Error("getting info about #{name} failed: #{info.reason}")
+              resolve info
+            catch e
+              reject e.message
+        ).on "error", reject
+      )
 
 
   class Plugin extends require('events').EventEmitter

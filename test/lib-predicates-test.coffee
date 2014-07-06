@@ -1,7 +1,7 @@
 cassert = require "cassert"
 assert = require "assert"
 events = require "events"
-Q = require 'q'
+Promise = require 'bluebird'
 t = require('decl-api').types
 
 # Setup the environment
@@ -460,7 +460,7 @@ describe "VariablePredicateProvider", ->
         @name = 'test sensor'
         super()
 
-      getTestvalue: -> Q(42)
+      getTestvalue: -> Promise.resolve(42)
 
     sensorDummy = new DummySensor()
     frameworkDummy.emit 'deviceAdded', sensorDummy
@@ -549,5 +549,5 @@ describe "VariablePredicateProvider", ->
         predicateHandler.once 'change', (state) ->
           cassert state is true
           finish()
-        sensorDummy.getTestvalue = => Q(50)
+        sensorDummy.getTestvalue = => Promise.resolve(50)
         sensorDummy.emit 'testvalue', 50

@@ -12,7 +12,7 @@ if(semver.lt(process.version, '0.10.0')) {
 }
 
 run = function () {
-  require('./startup').startup().fail(function(e){/*error gets already handled by startup*/});
+  require('./startup').startup().catch(function(e){/*error gets already handled by startup*/});
 };
 
 var command = process.argv[2];

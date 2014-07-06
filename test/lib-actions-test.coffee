@@ -1,5 +1,5 @@
 assert = require "cassert"
-Q = require 'q'
+Promise = require 'bluebird'
 i18n = require 'i18n'
 events = require 'events'
 
@@ -33,12 +33,12 @@ describe "SwitchActionHandler", ->
       turnOnCalled = false
       dummySwitch.turnOn = ->
         turnOnCalled = true
-        return Q.fcall -> true
+        return Promise.resolve true
 
       turnOffCalled = false
       dummySwitch.turnOff = ->
         turnOffCalled = true
-        return Q.fcall -> true
+        return Promise.resolve true
 
     validRulePrefixes = [
       'turn the dummy switch'
@@ -110,7 +110,7 @@ describe "ShutteActionHandler", ->
     id: 'shutter-id'
     name: 'shutter'
 
-    moveToPosition: () -> Q()
+    moveToPosition: () -> Promise.resolve()
 
   shutterDevice = new Shutter()
   frameworkDummy.devices['dummy-switch-id'] = shutterDevice
@@ -124,16 +124,16 @@ describe "ShutteActionHandler", ->
       moveUpCalled = false
       shutterDevice.moveUp = ->
         moveUpCalled = true
-        return Q.fcall -> true
+        return Promise.resolve true
 
       moveDownCalled = false
       shutterDevice.moveDown = ->
         moveDownCalled = true
-        return Q.fcall -> true
+        return Promise.resolve true
       stopCalled = false
       shutterDevice.stop = ->
         stopCalled = true
-        return Q.fcall -> true
+        return Promise.resolve true
 
     it "should parse: raise shutter up", (finish) ->
       result = shutterActionProvider.parseAction('raise shutter up')
@@ -245,7 +245,7 @@ describe "DimmerActionHandler", ->
       dimlevel = null
       dummyDimmer.changeDimlevelTo = (dl) ->
         dimlevel = dl
-        return Q()
+        return Promise.resolve()
 
     validRulePrefixes = [
       'dim the dummy dimmer to'

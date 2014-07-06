@@ -5,7 +5,7 @@ Database
 
 assert = require 'cassert'
 util = require 'util'
-Q = require 'q'
+Promise = require 'bluebird'
 _ = require 'lodash'
 S = require 'string'
 Knex = require 'knex'
@@ -44,7 +44,7 @@ module.exports = (env) ->
       if @dbSettings.client is 'sqlite3' and connection.filename isnt ':memory:'
         connection.filename = path.resolve(@framework.maindir, '../..', connection.filename)
 
-      pending = Q()
+      pending = Promise.resolve()
 
       dbPackageToInstall = @dbSettings.client
       try
@@ -118,17 +118,21 @@ module.exports = (env) ->
 
         deleteExpiredEntriesInterval = 30 * 60 * 1000#ms
 
-        return Q.all(pending).then( =>
+        return Promise.all(pending).then( =>
           deleteExpiredDeviceAttributesCron = ( =>
             env.logger.debug("deleteing expired device attributes")
             return (
               @_deleteExpiredDeviceAttributes()
               .then( onSucces = ->
-                Q.delay(deleteExpiredEntriesInterval).then(deleteExpiredDeviceAttributesCron)
+                Promise
+                  .delay(deleteExpiredEntriesInterval)
+                  .then(deleteExpiredDeviceAttributesCron)
               , onError = (error) ->
                 env.logger.error(error.message)
                 env.logger.debug(error)
-                Q.delay(2 * deleteExpiredEntriesInterval).then(deleteExpiredDeviceAttributesCron)
+                Promise
+                  .delay(2 * deleteExpiredEntriesInterval)
+                  .then(deleteExpiredDeviceAttributesCron)
               )
             )
           )
@@ -139,11 +143,11 @@ module.exports = (env) ->
             return (
               @_deleteExpiredMessages()
               .then( onSucces = ->
-                Q.delay(deleteExpiredEntriesInterval).then(deleteExpiredMessagesCron)
+                Promise.delay(deleteExpiredEntriesInterval).then(deleteExpiredMessagesCron)
               , onError = (error) ->
                 env.logger.error(error.message)
                 env.logger.debug(error)
-                Q.delay(2 * deleteExpiredEntriesInterval).then(deleteExpiredMessagesCron)
+                Promise.delay(2 * deleteExpiredEntriesInterval).then(deleteExpiredMessagesCron)
               )
             )
           )
@@ -258,7 +262,7 @@ module.exports = (env) ->
           del.whereRaw(subqueryRaw)
           del.del()
           awaiting.push del
-      return Q.all(awaiting)
+      return Promise.all(awaiting)
 
     _deleteExpiredMessages: ->
       awaiting = []
@@ -268,7 +272,7 @@ module.exports = (env) ->
         del.whereRaw(entry.expireInfo.whereSQL)
         del.del()
         awaiting.push del
-      return Q.all(awaiting)
+      return Promise.all(awaiting)
 
     saveMessageEvent: (time, level, tags, text) ->
       @emit 'log', {time, level, tags, text}
@@ -282,7 +286,7 @@ module.exports = (env) ->
         tags: JSON.stringify(tags)
         text: text
       )
-      return Q(insert)
+      return Promise.resolve(insert)
 
     _buildMessageWhere: (query, {level, levelOp, after, before, tags, offset, limit}) ->
       if level?
@@ -309,12 +313,12 @@ module.exports = (env) ->
     queryMessagesCount: (criteria = {})->
       query = @knex('message').count('*')
       @_buildMessageWhere(query, criteria)
-      return Q(query).then( (result) => result[0]["count(*)"] )
+      return Promise.resolve(query).then( (result) => result[0]["count(*)"] )
 
     queryMessagesTags: (criteria = {})->
       query = @knex('message').distinct('tags').select()
       @_buildMessageWhere(query, criteria)
-      return Q(query).then( (tags) =>
+      return Promise.resolve(query).then( (tags) =>
         _(tags).map((r)=>JSON.parse(r.tags)).flatten().uniq().valueOf()
       )
 
@@ -322,7 +326,7 @@ module.exports = (env) ->
     queryMessages: (criteria = {}) ->
       query = @knex('message').select('time', 'level', 'tags', 'text')
       @_buildMessageWhere(query, criteria)
-      return Q(query).then( (msgs) =>
+      return Promise.resolve(query).then( (msgs) =>
         for m in msgs
           m.tags = JSON.parse(m.tags)
           m.level = dbMapping.logIntToLevel[m.level]
@@ -332,7 +336,7 @@ module.exports = (env) ->
     deleteMessages: (criteria = {}) ->
       query = @knex('message')
       @_buildMessageWhere(query, criteria)
-      return Q((query).del()) 
+      return Promise.resolve((query).del()) 
 
 
     _buildQueryDeviceAttributeEvents: (queryCriteria = {}) ->
@@ -396,7 +400,7 @@ module.exports = (env) ->
       query = @_buildQueryDeviceAttributeEvents(queryCriteria)
       env.logger.debug "query:", query.toString()
       time = new Date().getTime()
-      return Q(query).then( (result) ->
+      return Promise.resolve(query).then( (result) ->
         timeDiff = new Date().getTime()-time
         env.logger.debug "quering #{result.length} events took #{timeDiff}ms."
         for r in result
@@ -445,7 +449,7 @@ module.exports = (env) ->
         if limit? then query.limit(limit)
         env.logger.debug "query:", query.toString()
         time = new Date().getTime()
-        return Q(query).then( (result) =>
+        return Promise.resolve(query).then( (result) =>
           timeDiff = new Date().getTime()-time
           env.logger.debug "quering #{result.length} events took #{timeDiff}ms."
           return result
@@ -465,14 +469,14 @@ module.exports = (env) ->
           deviceAttributeId: info.id
           value: value
         )
-        return Q(insert)
+        return Promise.resolve(insert)
       )
 
     _getDeviceAttributeInfo: (deviceId, attributeName) ->
       fullQualifier = "#{deviceId}.#{attributeName}"
       info = dbMapping.deviceAttributeCache[fullQualifier]
       return (
-        if info? then Q(info)
+        if info? then Promise.resolve(info)
         else @_insertDeviceAttribute(deviceId, attributeName)
       )
 

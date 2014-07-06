@@ -1,6 +1,6 @@
 cassert = require "cassert"
 assert = require "assert"
-Q = require 'q'
+Promise = require 'bluebird'
 S = require 'string'
 
 env = require('../startup').env
@@ -17,7 +17,7 @@ describe "RuleManager", ->
   class DummyPredicateHandler extends env.predicates.PredicateHandler
 
     constructor: -> 
-    getValue: -> Q(false)
+    getValue: -> Promise.resolve(false)
     destroy: -> 
     getType: -> 'state'
 
@@ -36,12 +36,12 @@ describe "RuleManager", ->
   class DummyActionHandler extends env.actions.ActionHandler
 
     executeAction: (simulate) =>
-      return Q "action 1 executed"
+      return Promise.resolve "action 1 executed"
 
     hasRestoreAction: => yes
 
     executeRestoreAction: (simulate) =>
-      return Q "restore action 1 executed"
+      return Promise.resolve "restore action 1 executed"
 
   class DummyActionProvider
 
@@ -619,7 +619,7 @@ describe "RuleManager", ->
       ruleManager.rules['test5'].actions[0].handler.executeAction = (simulate) =>
         cassert not simulate
         finish()
-        return Q "execute action"
+        return Promise.resolve "execute action"
 
       setTimeout((-> changeHandler('event')), 2001)
 
@@ -634,13 +634,13 @@ describe "RuleManager", ->
       predHandler1 = new DummyPredicateHandler()
       predHandler1.on = (event, listener) -> 
         cassert event is 'change'
-      predHandler1.getValue = => Q true
+      predHandler1.getValue = => Promise.resolve true
       predHandler1.getType = => "state"
 
       predHandler2 = new DummyPredicateHandler()
       predHandler2.on = (event, listener) -> 
         cassert event is 'change'
-      predHandler2.getValue = => Q true
+      predHandler2.getValue = => Promise.resolve true
       predHandler2.getType = => "state"
 
 
@@ -669,7 +669,7 @@ describe "RuleManager", ->
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
         cassert isTrue is true
       ).then( -> 
-        predHandler1.getValue = => Q false 
+        predHandler1.getValue = => Promise.resolve false 
       ).then( -> ruleManager.doesRuleCondtionHold rule).then( (isTrue) ->
         cassert isTrue is false
         finish()
@@ -714,8 +714,8 @@ describe "RuleManager", ->
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
         cassert isTrue is true
       ).then( -> 
-        predHandler1.getValue = => Q true
-        predHandler2.getValue = => Q false
+        predHandler1.getValue = => Promise.resolve true
+        predHandler2.getValue = => Promise.resolve false
       ).then( -> ruleManager.doesRuleCondtionHold rule ).then( (isTrue) ->
         cassert isTrue is false
         finish()
@@ -760,8 +760,8 @@ describe "RuleManager", ->
       ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
         cassert isTrue is true
       ).then( ->       
-        predHandler1.getValue = => Q true
-        predHandler2.getValue = => Q false
+        predHandler1.getValue = => Promise.resolve true
+        predHandler2.getValue = => Promise.resolve false
       ).then( -> ruleManager.doesRuleCondtionHold rule ).then( (isTrue) ->
         cassert isTrue is true
         finish()
@@ -1082,7 +1082,7 @@ describe "RuleManager", ->
           onCalled = i
           i++
 
-        predHandler.getVale = => Q true
+        predHandler.getVale = => Promise.resolve true
         predHandler.getType => 'event'
         return {
           token: "predicate 2"
@@ -1093,7 +1093,7 @@ describe "RuleManager", ->
       actionProvider.parseAction = (input, context) -> 
         cassert S(input).startsWith("action 1")
         actHandler = new DummyActionHandler()
-        actHandler.executeAction = (simulate) => Q "execute action"
+        actHandler.executeAction = (simulate) => Promise.resolve "execute action"
         return {
           token: "action 1"
           nextInput: S(input).chompLeft("action 1").s
@@ -1119,7 +1119,7 @@ describe "RuleManager", ->
       actHandler.executeAction = (simulate) =>
         cassert not simulate
         finish()
-        return Q "execute action"
+        return Promise.resolve "execute action"
 
       setTimeout( ->
         changeListener('event')

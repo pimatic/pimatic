@@ -1,6 +1,6 @@
 cassert = require "cassert"
 assert = require "assert"
-Q = require 'q'
+Promise = require 'bluebird'
 os = require 'os'
 fs = require 'fs.extra'
 path = require 'path'
@@ -51,7 +51,7 @@ describe "Database", ->
       #   msgs.push msg
       #   pending.push database.saveMessageEvent(msg.time, msg.level, msg.tags, msg.text)
 
-      # Q.all(pending).then( ->
+      # Promise.all(pending).then( ->
       #   database.queryMessages().then( (msgsResult) ->
       #     console.log msgsResult
       #     console.log msgs

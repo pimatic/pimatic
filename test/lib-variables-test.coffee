@@ -1,5 +1,5 @@
 assert = require "assert"
-Q = require 'q'
+Promise = require 'bluebird'
 events = require('events')
 env = require('../startup').env
 

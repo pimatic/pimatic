@@ -12,7 +12,7 @@ express = require "express"
 socketIo = require 'socket.io'
 # Require engine.io from socket.io
 engineIo = require.cache[require.resolve('socket.io')].require('engine.io')
-Q = require 'q'
+Promise = require 'bluebird'
 path = require 'path'
 S = require 'string'
 _ = require 'lodash'
@@ -80,11 +80,6 @@ module.exports = (env) ->
       assert Array.isArray @config.devices
       assert Array.isArray @config.pages
       assert Array.isArray @config.groups
-
-      # Turn on long Stack traces if debug mode is on.
-      if @config.debug
-        Q.longStackSupport = yes
-        # require("better-stack-traces").install()
 
       # * Set the log level
       env.logger.winston.transports.taggedConsoleLogger.level = @config.settings.logLevel
@@ -562,28 +557,26 @@ module.exports = (env) ->
 
       listenPromises = []
       if @app.httpsServer?
-        deferred = Q.defer()
         httpsServerConfig = @config.settings.httpsServer
         @app.httpsServer.on 'error', genErrFunc(@config.settings.httpsServer)
-        @app.httpsServer.listen(
-          httpsServerConfig.port, httpsServerConfig.hostname, deferred.makeNodeResolver()
+        awaiting = Promise.promisify(@app.httpsServer.listen, @app.httpsServer)(
+          httpsServerConfig.port, httpsServerConfig.hostname
         )
-        listenPromises.push deferred.promise.then( =>
+        listenPromises.push awaiting.then( =>
           env.logger.info "listening for https-request on port #{httpsServerConfig.port}..."
         )
         
       if @app.httpServer?
-        deferred = Q.defer()
         httpServerConfig = @config.settings.httpServer
         @app.httpServer.on 'error', genErrFunc(@config.settings.httpServer)
-        @app.httpServer.listen(
-          httpServerConfig.port, httpServerConfig.hostname, deferred.makeNodeResolver()
+        awaiting = Promise.promisify(@app.httpServer.listen, @app.httpServer)(
+          httpServerConfig.port, httpServerConfig.hostname
         )
-        listenPromises.push deferred.promise.then( =>
+        listenPromises.push awaiting.then( =>
           env.logger.info "listening for http-request on port #{httpServerConfig.port}..."
         )
         
-      Q.all(listenPromises).then( =>
+      Promise.all(listenPromises).then( =>
         @emit "server listen", "startup"
       )
       
@@ -601,7 +594,7 @@ module.exports = (env) ->
               )
 
       # Promise chain, begin with an empty promise
-      chain = Q()
+      chain = Promise.resolve()
 
       for pConf, i in @config.plugins
         do (pConf, i) =>
@@ -618,10 +611,10 @@ module.exports = (env) ->
           
           chain = chain.then( () =>
             fullPluginName = "pimatic-#{pConf.plugin}"
-            Q.fcall( =>     
+            Promise.try( =>     
               # If the plugin folder already exist
               return promise = (
-                if @pluginManager.isInstalled(fullPluginName) then Q()
+                if @pluginManager.isInstalled(fullPluginName) then Promise.resolve()
                 else 
                   env.logger.info("Installing: \"#{pConf.plugin}\"")
                   @installPlugin(fullPluginName)
@@ -1026,7 +1019,7 @@ module.exports = (env) ->
             )        
         )
 
-        return Q.all(addRulePromises).then(=>
+        return Promise.all(addRulePromises).then(=>
           # Save rule updates to the config file:
           # 
           # * If a new rule was added then...
@@ -1086,7 +1079,7 @@ module.exports = (env) ->
 
           @emit "after init", context
 
-          Q.all(context.waitFor).then => @listen()
+          Promise.all(context.waitFor).then => @listen()
         )
 
     saveConfig: ->

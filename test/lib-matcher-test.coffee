@@ -1,5 +1,5 @@
 assert = require "assert"
-Q = require 'q'
+Promise = require 'bluebird'
 M = require '../lib/matcher'
 
 env = require('../startup').env

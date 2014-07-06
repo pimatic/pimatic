@@ -3,7 +3,7 @@
 assert = require 'cassert'
 fs = require 'fs'
 path = require 'path'
-Q = require 'q'
+Promise = require 'bluebird'
 
 # Setup the environment
 env = { logger: require './lib/logger' }
@@ -31,7 +31,7 @@ startup = =>
 
   # Setup the framework
   env.framework = (require './lib/framework') env 
-  Q.fcall( =>
+  Promise.try( =>
     framework = new env.framework.Framework configFile
     promise = framework.init()
     return promise.then( => framework )

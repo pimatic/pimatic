@@ -7,7 +7,7 @@ For actions and rule explenations take a look at the [rules file](rules.html).
 ###
 
 __ = require("i18n").__
-Q = require 'q'
+Promise = require 'bluebird'
 assert = require 'cassert'
 _ = require('lodash')
 S = require('string')
@@ -162,13 +162,13 @@ module.exports = (env) ->
     executeAction: (simulate, context) ->
       if simulate
         # just return a promise fulfilled with a description about what we would do.
-        return Q __("would set $%s to value of %s", @variableName, 
+        return Promise.resolve __("would set $%s to value of %s", @variableName, 
           _(@rightTokens).reduce( (left, right) => "#{left} #{right}" )
         )
       else
         return @framework.variableManager.evaluateNumericExpression(@rightTokens).then( (value) => 
           @framework.variableManager.setVariableToValue(@variableName, value)
-          return Q("set $#{@variableName} to #{value}")
+          return Promise.resolve("set $#{@variableName} to #{value}")
         )
 
 
@@ -257,8 +257,8 @@ module.exports = (env) ->
     _doExectuteAction: (simulate, state) =>
       return (
         if simulate
-          if state then Q __("would turn %s on", @device.name)
-          else Q __("would turn %s off", @device.name)
+          if state then Promise.resolve __("would turn %s on", @device.name)
+          else Promise.resolve __("would turn %s off", @device.name)
         else
           if state then @device.turnOn().then( => __("turned %s on", @device.name) )
           else @device.turnOff().then( => __("turned %s off", @device.name) )
@@ -346,8 +346,8 @@ module.exports = (env) ->
     executeAction: (simulate) => 
       return (
         if simulate
-          if @position is 'up' then Q __("would raise %s", @device.name)
-          else Q __("would lower %s", @device.name)
+          if @position is 'up' then Promise.resolve __("would raise %s", @device.name)
+          else Promise.resolve __("would lower %s", @device.name)
         else
           if @position is 'up' then @device.moveUp().then( => __("raised %s", @device.name) )
           else @device.moveDown().then( => __("lowered %s", @device.name) )
@@ -356,7 +356,7 @@ module.exports = (env) ->
     hasRestoreAction: -> @device.hasAction('stop')
     # ### executeRestoreAction()
     executeRestoreAction: (simulate) => 
-      if simulate then Q __("would stop %s", @device.name)
+      if simulate then Promise.resolve __("would stop %s", @device.name)
       else @device.stop().then( =>  __("stopped %s", @device.name) )
 
   ###
@@ -417,7 +417,7 @@ module.exports = (env) ->
     executeAction: (simulate) => 
       return (
         if simulate
-          Q __("would stop %s", @device.name)
+          Promise.resolve __("would stop %s", @device.name)
         else
           @device.stop().then( => __("stopped %s", @device.name) )
       )
@@ -527,7 +527,7 @@ module.exports = (env) ->
     # ### hasRestoreAction()
     hasRestoreAction: -> yes
     # ### executeRestoreAction()
-    executeRestoreAction: (simulate) => Q(@_doExecuteAction(simulate, @lastValue))
+    executeRestoreAction: (simulate) => Promise.resolve(@_doExecuteAction(simulate, @lastValue))
 
   # Export the classes so that they can be accessed by the framework
   return exports = {
