@@ -1106,7 +1106,7 @@ module.exports = (env) ->
       @app.get("/api/device/:deviceId/:actionName", (req, res, next) =>
         deviceId = req.params.deviceId
         actionName = req.params.actionName
-        device = framework.getDeviceById(deviceId)
+        device = @getDeviceById(deviceId)
         if device?
           if device.hasAction(actionName)
             action = device.actions[actionName]
