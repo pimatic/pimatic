@@ -77,11 +77,9 @@ module.exports = (env) ->
       getValue = (
         switch type
           when "numeric" then (varsInEvaluation) => 
-            if lastValue? then Q(lastValue) 
-            else @evaluateNumericExpression(tokens, varsInEvaluation)
+            @evaluateNumericExpression(tokens, varsInEvaluation)
           when "string" then  (varsInEvaluation) => 
-            if lastValue? then Q(lastValue)
-            else @evaluateStringExpression(tokens, varsInEvaluation)
+            @evaluateStringExpression(tokens, varsInEvaluation)
       )
 
       assert typeof getValue is "function"
@@ -94,8 +92,8 @@ module.exports = (env) ->
         oldVariable.destroy()
 
       variables = (t.substring(1) for t in tokens when @isAVariable(t)) 
-      @on('change', changeListener = (vName, value) =>
-        if vName in variables
+      @on('change', changeListener = (info) =>
+        if info.name in variables
           getValue().then( (value) => 
             if lastValue is value then return 
             lastValue = value
