@@ -353,6 +353,36 @@ class Matcher
       callback(m, d)
     return next
     
+  matchTimeDurationExpression: (variables = null, callback) ->
+    unless @input? then return @
+    if typeof variables is 'function'
+      callback = variables
+      variables = null
+
+    # Parse the for-Suffix:
+    timeUnits = [
+      "ms", 
+      "second", "seconds", "s", 
+      "minute", "minutes", "m", 
+      "hour", "hours", "h", 
+      "day", "days","d", 
+      "year", "years", "y"
+    ]
+    tokens = 0
+    unit = ""
+    onTimeExpressionMatch = (m, ts) => tokens = ts  
+    onMatchUnit = (m, u) => unit = u
+
+    m = @matchNumericExpression(variables, onTimeExpressionMatch).match(
+      _(timeUnits).map((u) => [" #{u}", u]).flatten().valueOf()
+    , {acFilter: (u) => u[0] is ' '}, onMatchUnit
+    )
+
+    if m.hadMatch()
+      callback(m, {tokens, unit})
+    return m
+
+
 
   matchTimeDuration: (options = null, callback) ->
     unless @input? then return @

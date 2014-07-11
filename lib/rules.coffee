@@ -48,6 +48,7 @@ _ = require 'lodash'
 S = require 'string'
 M = require './matcher'
 require "date-format-lite"
+milliseconds = require './milliseconds'
 
 (requireNoCache = ->
   # Require bet without caching it, because we change some operations, that 
@@ -316,7 +317,6 @@ module.exports = (env) ->
         id: predId
         token: null
         handler: null
-        forToken: null
         for: null
         justTrigger: null
 
@@ -363,17 +363,20 @@ module.exports = (env) ->
           if timeParseResult?
             token += timeParseResult.token
             nextInput = timeParseResult.nextInput
-            predicate.forToken = timeParseResult.timeToken
-            predicate.for = timeParseResult.time
+            predicate.for = {
+              token: timeParseResult.timeToken
+              exprTokens: timeParseResult.timeExprTokens
+              unit: timeParseResult.unit
+            }
 
-          if predicate.justTrigger and predicate.forToken?
+          if predicate.justTrigger and predicate.for?
             context.addError(
-              "\"#{token}\" is markes as trigger, it can't be true for \"#{redicate.forToken}\"."
+              "\"#{token}\" is markes as trigger, it can't be true for \"#{redicate.token}\"."
             )
 
-          if predicate.handler.getType() is 'event' and predicate.forToken?
+          if predicate.handler.getType() is 'event' and predicate.for?
             context.addError(
-              "\"#{token}\" is an event it can't be true for \"#{redicate.forToken}\"."
+              "\"#{token}\" is an event it can't be true for \"#{redicate.token}\"."
             )
 
         else
@@ -384,20 +387,23 @@ module.exports = (env) ->
 
     parseTimePart: (nextInput, prefixToken, context, options = null) ->
       # Parse the for-Suffix:
-      time = null
+      timeExprTokens = null
+      unit = null
+      onTimeduration = (m, tp) => 
+        timeExprTokens = tp.tokens
+        unit = tp.unit
 
-      onTimeduration = (m, tp) => time = tp.timeMs
-
+      allVariables = _(@framework.variableManager.variables).map( (v) => v.name ).valueOf()
       m = M(nextInput, context)
         .match(prefixToken, options)
-        .matchTimeDuration(onTimeduration)
+        .matchTimeDurationExpression(allVariables, onTimeduration)
 
       unless m.hadNoMatch()
         token = m.getFullMatch()
         assert S(nextInput).startsWith(token)
         timeToken = S(token).chompLeft(prefixToken).s
         nextInput = nextInput.substring(token.length)
-        return {token, nextInput, timeToken, time}
+        return {token, nextInput, timeToken, timeExprTokens, unit}
       else
         return null
 
@@ -448,7 +454,6 @@ module.exports = (env) ->
         id: actionId
         token: null
         handler: null
-        afterToken: null
         after: null
         forToken: null
         for: null
@@ -461,9 +466,11 @@ module.exports = (env) ->
           if type is 'prefix'
             if nextInput.length > 0 and nextInput[0] is ' '
               nextInput = nextInput.substring(1)
-          action.afterToken = timeParseResult.timeToken
-          action.after = timeParseResult.time
-        
+          action.after = {
+            token: timeParseResult.timeToken
+            exprTokens: timeParseResult.timeExprTokens
+            unit: timeParseResult.unit
+          }
       # Try to macth after as prefix: after 10 seconds log "42" 
       parseAfter('prefix')
 
@@ -494,7 +501,7 @@ module.exports = (env) ->
           action.handler = parseResult.actionHandler
 
           # try to match after as suffix: log "42" after 10 seconds
-          unless action.afterToken?
+          unless action.after?
             parseAfter('suffix')
 
           # try to parse "for 10 seconds"
@@ -504,10 +511,13 @@ module.exports = (env) ->
           })
           if timeParseResult?
             nextInput = timeParseResult.nextInput
-            action.forToken = timeParseResult.timeToken
-            action.for = timeParseResult.time
+            action.for = {
+              token: timeParseResult.timeToken
+              exprTokens: timeParseResult.timeExprTokens
+              unit: timeParseResult.unit
+            }
 
-          if action.forToken? and forSuffixAllowed is no
+          if action.for? and forSuffixAllowed is no
             context.addError(
               """Action "#{action.token}" can't have an "for"-Suffix."""
             )
@@ -831,58 +841,65 @@ module.exports = (env) ->
               reject error.message
             )
 
-          nowTime = (new Date()).getTime()
-          # Fill the awaiting list:
-          # Check for each predicate,
+          predsWithForTime = []
           for pred in rule.predicates
-            do (pred) => 
-              # if it has a for suffix.
+            do (pred) =>
               if pred.for?
                 # If it has a for suffix and its an event something gone wrong, because an event 
                 # can't hold (its just one time)
                 assert pred.handler.getType() is 'state'
-                assert pred.lastChange?
+                promise = @_evaluateTimeExpr(
+                  pred.for.exprTokens,
+                  pred.for.unit
+                ).then( (ms) => [pred, ms] )
+                predsWithForTime.push(promise)
+          nowTime = (new Date()).getTime()
+          # Fill the awaiting list:
+          # Check for each predicate,
+          return Promise.each(predsWithForTime, ([pred, forTime]) =>
+            assert pred.lastChange?
+            # The time since last change
+            lastChangeTimeDiff = nowTime - pred.lastChange 
+            # Time to wait till condition becomes true, if not change occures
+            timeToWait = forTime - lastChangeTimeDiff
 
-                # The time since last change
-                lastChangeTimeDiff = nowTime - pred.lastChange 
-                # Time to wait till condition becomes true, if not change occures
-                timeToWait = pred.for - lastChangeTimeDiff
+            if timeToWait > 0              
+              # Mark that we are awaiting the result
+              awaiting[pred.id] = {}
+              # and as long as we are awaiting the result, the predicate is false.
+              knownPredicates[pred.id] = false
 
-                if timeToWait > 0              
-                  # Mark that we are awaiting the result
-                  awaiting[pred.id] = {}
-                  # and as long as we are awaiting the result, the predicate is false.
+              # When the time passes
+              timeout = setTimeout( ( =>
+                knownPredicates[pred.id] = true
+                # the predicate remains true and no value is awaited anymore.
+                awaiting[pred.id].cancel()
+                reevaluateCondition()
+              ), timeToWait)
+
+              # Let us be notified when it becomes false.
+              pred.handler.on 'change', changeListener = (state) =>
+                assert state is true or state is false
+                # If it changes to false
+                if state is false
+                  # then the predicate is false
                   knownPredicates[pred.id] = false
+                  # and clear the timeout.
+                  awaiting[pred.id].cancel()
+                  reevaluateCondition()
 
-                  # When the time passes
-                  timeout = setTimeout( ( =>
-                    knownPredicates[pred.id] = true
-                    # the predicate remains true and no value is awaited anymore.
-                    awaiting[pred.id].cancel()
-                    reevaluateCondition()
-                  ), timeToWait)
-
-                  # Let us be notified when it becomes false.
-                  pred.handler.on 'change', changeListener = (state) =>
-                    assert state is true or state is false
-                    # If it changes to false
-                    if state is false
-                      # then the predicate is false
-                      knownPredicates[pred.id] = false
-                      # and clear the timeout.
-                      awaiting[pred.id].cancel()
-                      reevaluateCondition()
-
-                  awaiting[pred.id].cancel = =>
-                    delete awaiting[pred.id]
-                    clearTimeout timeout
-                    # and we can cancel the notify
-                    pred.handler.removeListener 'change', changeListener
-
-          # If we have not found awaiting predicates
-          if (id for id of awaiting).length is 0
-            # then resolve the return value to true.
-            resolve true 
+              awaiting[pred.id].cancel = =>
+                delete awaiting[pred.id]
+                clearTimeout timeout
+                # and we can cancel the notify
+                pred.handler.removeListener 'change', changeListener
+            return
+          ).then( =>
+            # If we have not found awaiting predicates
+            if (id for id of awaiting).length is 0
+              # then resolve the return value to true.
+              resolve true
+          )
         ).catch( (error) =>
           # Cancel all awatting changeHandler
           for id, a of awaiting
@@ -945,13 +962,16 @@ module.exports = (env) ->
               # cancel scheule for pending executes
               if action.scheduled?
                 action.scheduled.cancel(
-                  "reschedule action #{action.token} in #{action.afterToken}"
+                  "reschedule action #{action.token} in #{action.after.token}"
                 ) 
               # schedule new action
-              promise = @scheduleAction(action, action.after)
+              promise = @_evaluateTimeExpr(
+                action.after.exprTokens, 
+                action.after.unit
+              ).then( (ms) => @scheduleAction(action, ms) )
             else
               promise = @executeAction(action, simulate).then( (message) => 
-                "#{message} after #{action.afterToken}"
+                "#{message} after #{action.after.token}"
               )
           else
             promise = @executeAction(action)
@@ -959,13 +979,21 @@ module.exports = (env) ->
           actionResults.push promise
       return actionResults
 
+    _evaluateTimeExpr: (exprTokens, unit) =>
+      @framework.variableManager.evaluateNumericExpression(exprTokens).then( (time) =>
+        return milliseconds.parse "#{time} #{unit}"
+      )
+
     executeAction: (action, simulate) =>
       # wrap into an fcall to convert throwen erros to a rejected promise
       return Promise.try( => 
         promise = action.handler.executeAction(simulate)
         if action.for?
           promise = promise.then( (message) =>
-            restoreActionPromise = @scheduleAction(action, action.for, yes)
+            restoreActionPromise = @_evaluateTimeExpr(
+              action.for.exprTokens, 
+              action.for.unit
+            ).then( (ms) => @scheduleAction(action, ms, yes) )
             return [message, restoreActionPromise]
           )
         return promise
