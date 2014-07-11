@@ -17,4 +17,21 @@ module.exports = {
             text:
               type: "string"
   }
+  VariablesDevice: {
+    title: "VariablesDevice config"
+    type: "object"
+    properties:
+      variables:
+        description: "Variables to display"
+        type: "array"
+        default: []
+        format: "table"
+        items:
+          type: "object"
+          properties:
+            name:
+              type: "string"
+            expression:
+              type: "string"
+  }
 }

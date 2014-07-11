@@ -65,13 +65,10 @@ module.exports = (env) ->
       @exprTokens = null
       return @_setValue(value)
     setToExpression: (expression) ->
-      tokens = null
-      m = M(expression).matchAnyExpression((m, ts) => tokens = ts)
-      unless m.hadMatch() and m.getFullMatch() is expression
-        throw new Error("Could not parse expression")
+      {tokens, datatype} = @_vars.parseVariableExpression(expression)
       @exprInputStr = expression
       @exprTokens = tokens
-      @_datatype = (if tokens[0][0] is '"' then "string" else "numeric")
+      @_datatype = datatype
       @_removeListener()
       @type = "expression"
       variablesInExpr = (t.substring(1) for t in tokens when @_vars.isAVariable(t))
@@ -183,6 +180,16 @@ module.exports = (env) ->
 
     _emitVariableRemoved: (variable) ->
       @emit('variableRemoved', variable)
+
+
+    parseVariableExpression: (expression) ->
+      tokens = null
+      m = M(expression).matchAnyExpression((m, ts) => tokens = ts)
+      unless m.hadMatch() and m.getFullMatch() is expression
+        throw new Error("Could not parse expression")
+      datatype = (if tokens[0][0] is '"' then "string" else "numeric")
+      return {tokens, datatype}
+
 
     setVariableToExpr: (name, inputStr) ->
       assert name? and typeof name is "string"

@@ -62,7 +62,9 @@ module.exports = (env) ->
 
       for attrName of @attributes
         do (attrName) =>
-          @on(attrName, (val) => @_attributesValues[attrName] = val )
+          @on(attrName, (val) => 
+            @_attributesValues[attrName] = val
+          )
 
     destroy: ->
       @emit('destroy', @)
@@ -77,7 +79,8 @@ module.exports = (env) ->
     hasAttribute: (name) -> @attributes[name]?
 
     getLastAttributeValue: (attrName) ->
-      return @_attributesValues[attrName]
+      val = @_attributesValues[attrName]
+      return val
 
     getUpdatedAttributeValue: (attrName) ->
       getter = 'get' + upperCaseFirst(attrName)
@@ -86,6 +89,11 @@ module.exports = (env) ->
       # Be sure that it is a promise!
       assert result.then?, "#{getter} of #{@name} should always return a promise!"
       return result
+
+    _createGetter: (attributeName, fn) ->
+      getterName = 'get' + attributeName[0].toUpperCase() + attributeName.slice(1)
+      @[getterName] = fn
+      return 
 
     toJson: ->
       json = {
@@ -392,6 +400,52 @@ module.exports = (env) ->
           return
       throw new Error("No button with the id #{buttonId} found")
 
+  class VariablesDevice extends Device
+
+    constructor: (@config, framework) ->
+      @id = config.id
+      @name = config.name
+
+      vars = framework.variableManager
+
+      @attributes = {}
+      for variable in @config.variables
+        do (variable) =>
+          name = variable.name
+          info = vars.parseVariableExpression(variable.expression)
+          variablesInExpr = (
+            token.substring(1) for token in info.tokens when vars.isAVariable(token)
+          )
+          @attributes[name] = {
+            description: name
+            label: "$#{name}"
+            type: (
+              switch info.datatype
+                when "string" then t.string
+                when "numeric" then t.number
+                else assert false 
+              )
+          }
+          evaluate = ( => 
+            (
+              switch info.datatype
+                when "numeric" then vars.evaluateNumericExpression(info.tokens)
+                when "string" then vars.evaluateStringExpression(info.tokens)
+                else assert false
+            ).then( (val) =>
+              if val isnt @_attributesValues[name]
+                @emit name, val
+              return val
+            )
+          )
+          @_createGetter(name, evaluate)
+          vars.on('variableValueChanged', changeListener = (changedVar, value) =>
+            unless changedVar.name in variablesInExpr then return
+            evaluate()
+          )
+      super()
+
+
   return exports = {
     Device
     Actuator
@@ -404,4 +458,5 @@ module.exports = (env) ->
     PresenceSensor
     ContactSensor
     ButtonsDevice
+    VariablesDevice
   }

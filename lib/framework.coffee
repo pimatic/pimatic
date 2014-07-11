@@ -30,6 +30,7 @@ module.exports = (env) ->
     io: null
     ruleManager: null
     pluginManager: null
+    variableManager: null
     database: null
     config: null
     deviceClasses: {}
@@ -157,6 +158,7 @@ module.exports = (env) ->
       page.devices.push({
         deviceId: deviceId
       })
+      @saveConfig()
       @_emitPageChanged(page)
       return page
 
@@ -165,6 +167,7 @@ module.exports = (env) ->
       unless page?
         throw new Error('Could not find the page')
       _.remove(page.devices, {deviceId: deviceId})
+      @saveConfig()
       @_emitPageChanged(page)
       return page
 
@@ -819,7 +822,8 @@ module.exports = (env) ->
             @_emitDeviceAttributeEvent(device, attrName, attr,  new Date(), value)
           )
           # force update of the device value
-          if device.getLastAttributeValue(attrName) is null
+          lastValue = device.getLastAttributeValue(attrName)
+          unless lastValue?
             device.getUpdatedAttributeValue(attrName).then( (value) ->
               device._attributesValues[attrName] = value unless device._attributesValues[attrName]?
             ).done()
@@ -998,13 +1002,14 @@ module.exports = (env) ->
         deviceConfigDef = require("../device-config-schema")
         defaultDevices = [
           env.devices.ButtonsDevice
+          env.devices.VariablesDevice
         ]
         for deviceClass in defaultDevices
           do (deviceClass) =>
             @registerDeviceClass(deviceClass.name, {
               configDef: deviceConfigDef[deviceClass.name], 
               createCallback: (config) => 
-                return new deviceClass(config)
+                return new deviceClass(config, this)
             })
 
       initRules = =>
