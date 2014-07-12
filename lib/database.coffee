@@ -375,8 +375,9 @@ module.exports = (env) ->
           else
             subquery.unionAll( -> buildQueryForType(tableName, this) )
       subquery.orderBy(order, orderDirection)
-      if offset? then subquery.offset(offset)
-      if limit? then subquery.limit(limit)
+      unless deviceId? or attributeName?
+        if offset? then subquery.offset(offset)
+        if limit? then subquery.limit(limit)
 
       query = @knex(@knex.raw("(#{subquery.toString()}) AS vals")).select(
         'deviceAttribute.deviceId AS deviceId', 
