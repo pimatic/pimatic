@@ -364,20 +364,16 @@ module.exports = (env) ->
           query.where('time', '>=', parseFloat(after))
         if before?
           query.where('time', '<=', parseFloat(before))
-        query
-        if deviceId?
-          query.where('deviceId', deviceId)
-        if attributeName?
-          query.where('attributeName', attributeName)
 
       subquery = null
       for type in _.keys(dbMapping.typeMap)
-        tableName = dbMapping.typeToAttributeTable(type)
-        unless subquery?
-          subquery = @knex(tableName)
-          buildQueryForType(tableName, subquery)
-        else
-          subquery.unionAll( -> buildQueryForType(tableName, this) )
+        do (type) =>
+          tableName = dbMapping.typeToAttributeTable(type)
+          unless subquery?
+            subquery = @knex(tableName)
+            buildQueryForType(tableName, subquery)
+          else
+            subquery.unionAll( -> buildQueryForType(tableName, this) )
       subquery.orderBy(order, orderDirection)
       if offset? then subquery.offset(offset)
       if limit? then subquery.limit(limit)
@@ -391,6 +387,12 @@ module.exports = (env) ->
       ).join('deviceAttribute', 
         "vals.deviceAttributeId", '=', 'deviceAttribute.id',
       )
+
+      if deviceId?
+        query.where('deviceId', deviceId)
+      if attributeName?
+        query.where('attributeName', attributeName)
+
       query.orderBy(order, orderDirection)
       if offset? then query.offset(offset)
       if limit? then query.limit(limit)
@@ -408,7 +410,7 @@ module.exports = (env) ->
         return result
       )
 
-    queryDeviceAttributeEventsCounts: () ->
+    queryDeviceAttributeEventsCount: () ->
       pending = []
       for type in _.keys(dbMapping.typeMap)
         tableName = dbMapping.typeToAttributeTable(type)

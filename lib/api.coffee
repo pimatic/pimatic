@@ -926,7 +926,7 @@ api.database = {
       result:
         events:
           type: t.array
-    queryDeviceAttributeEventsCounts:
+    queryDeviceAttributeEventsCount:
       rest:
         type: 'GET'
         url: '/api/database/device-attributes/count'
