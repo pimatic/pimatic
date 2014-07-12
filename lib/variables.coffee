@@ -129,7 +129,7 @@ module.exports = (env) ->
         exec: (args) -> Math.min(args[0], args[1])
       max:
         argc: 2
-        exec: (args) -> Math.min(args[0], args[1])
+        exec: (args) -> Math.max(args[0], args[1])
       random:
         argc: 2
         exec: (args) -> Math.floor((Math.random() * args[1]) + args[0])
@@ -336,7 +336,7 @@ module.exports = (env) ->
             else if @isAVariable(t)
               varName = t.substring(1)
               # Replace variable by its value
-              unless @isVariableDefined(varName)
+              unless @isVariableDefined(varName)f
                 throw new Error("#{t} is not defined")
               awaiting.push(
                 @getVariableUpdatedValue(varName, _.clone(varsInEvaluation)).then( (value) ->
