@@ -69,7 +69,7 @@ describe "RuleManager", ->
     context = null
 
     beforeEach ->
-      context = ruleManager.createParseContext()
+      context = ruleManager._createParseContext()
 
     testCases = [
       {
@@ -271,14 +271,14 @@ describe "RuleManager", ->
     for tc in testCases
       do (tc) ->
         it "it should parse \"#{tc.input}\"", ->
-          result = ruleManager.parseRuleCondition("test1", tc.input, context)
+          result = ruleManager._parseRuleCondition("test1", tc.input, context)
           assert.deepEqual result, tc.result
 
   describe '#parseRuleActions', ->
     context = null
 
     beforeEach ->
-      context = ruleManager.createParseContext()
+      context = ruleManager._createParseContext()
 
     testCases = [
       {
@@ -433,7 +433,7 @@ describe "RuleManager", ->
     for tc in testCases
       do (tc) ->
         it "it should parse \"#{tc.input}\"", ->
-          result = ruleManager.parseRuleActions("test1", tc.input, context) 
+          result = ruleManager._parseRuleActions("test1", tc.input, context) 
           assert result?
           for action in result.actions
             assert action.handler instanceof env.actions.ActionHandler
@@ -445,11 +445,11 @@ describe "RuleManager", ->
     context = null
 
     beforeEach ->
-      context = ruleManager.createParseContext()
+      context = ruleManager._createParseContext()
 
 
     it 'should parse: "if predicate 1 then action 1"', (finish) ->
-      ruleManager.parseRuleString("test1", "test1", "if predicate 1 then action 1", context)
+      ruleManager._parseRuleString("test1", "test1", "if predicate 1 then action 1", context)
       .then( (rule) -> 
         cassert rule.id is 'test1'
         cassert rule.conditionToken is 'predicate 1'
@@ -463,7 +463,7 @@ describe "RuleManager", ->
     ruleWithForSuffix = 'if predicate 1 for 10 seconds then action 1'
     it """should parse rule with for "10 seconds" suffix: #{ruleWithForSuffix}'""", (finish) ->
 
-      ruleManager.parseRuleString("test1", "test1", ruleWithForSuffix, context)
+      ruleManager._parseRuleString("test1", "test1", ruleWithForSuffix, context)
       .then( (rule) -> 
         cassert rule.id is 'test1'
         cassert rule.conditionToken is 'predicate 1 for 10 seconds'
@@ -480,7 +480,7 @@ describe "RuleManager", ->
     ruleWithHoursSuffix = "if predicate 1 for 2 hours then action 1"
     it """should parse rule with for "2 hours" suffix: #{ruleWithHoursSuffix}""", (finish) ->
 
-      ruleManager.parseRuleString("test1", "test1", ruleWithHoursSuffix, context)
+      ruleManager._parseRuleString("test1", "test1", ruleWithHoursSuffix, context)
       .then( (rule) -> 
         cassert rule.id is 'test1'
         cassert rule.conditionToken is 'predicate 1 for 2 hours'
@@ -495,7 +495,7 @@ describe "RuleManager", ->
 
     it 'should not detect for "42 foo" as for suffix', (finish) ->
 
-      ruleManager.parseRuleString(
+      ruleManager._parseRuleString(
         "test1", "test1", "if predicate 1 for 42 foo then action 1", context
       ).then( (rule) -> 
         cassert rule.id is 'test1'
@@ -511,7 +511,7 @@ describe "RuleManager", ->
 
     it 'should reject wrong rule format', (finish) ->
       # Missing `then`:
-      ruleManager.parseRuleString("test2", "test1", "if predicate 1 and action 1", context)
+      ruleManager._parseRuleString("test2", "test1", "if predicate 1 and action 1", context)
       .then( -> 
         finish new Error 'Accepted invalid rule'
       ).catch( (error) -> 
@@ -527,7 +527,7 @@ describe "RuleManager", ->
         canDecideCalled = true
         return null
 
-      ruleManager.parseRuleString('test3', "test1", 'if predicate 2 then action 1', context)
+      ruleManager._parseRuleString('test3', "test1", 'if predicate 2 then action 1', context)
         .then( -> 
           cassert context.hasErrors()
           cassert context.errors.length is 1
@@ -556,7 +556,7 @@ describe "RuleManager", ->
         parseActionCalled = true
         return null
 
-      ruleManager.parseRuleString('test4', "test1", 'if predicate 1 then action 2', context)
+      ruleManager._parseRuleString('test4', "test1", 'if predicate 1 then action 2', context)
         .then( -> 
           cassert context.hasErrors()
           cassert context.errors.length is 1
@@ -663,11 +663,11 @@ describe "RuleManager", ->
         string: "if predicate 1 then action 1"
 
 
-      ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
+      ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         cassert isTrue is true
       ).then( -> 
         predHandler1.getValue = => Promise.resolve false 
-      ).then( -> ruleManager.doesRuleCondtionHold rule).then( (isTrue) ->
+      ).then( -> ruleManager._doesRuleCondtionHold rule).then( (isTrue) ->
         cassert isTrue is false
         finish()
       ).catch(finish).done()
@@ -708,12 +708,12 @@ describe "RuleManager", ->
         string: "if predicate 1 and predicate 2 then action 1"
 
 
-      ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
+      ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         cassert isTrue is true
       ).then( -> 
         predHandler1.getValue = => Promise.resolve true
         predHandler2.getValue = => Promise.resolve false
-      ).then( -> ruleManager.doesRuleCondtionHold rule ).then( (isTrue) ->
+      ).then( -> ruleManager._doesRuleCondtionHold rule ).then( (isTrue) ->
         cassert isTrue is false
         finish()
       ).catch(finish).done()
@@ -754,12 +754,12 @@ describe "RuleManager", ->
         string: "if predicate 1 or predicate 2 then action 1"
 
 
-      ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
+      ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         cassert isTrue is true
       ).then( ->       
         predHandler1.getValue = => Promise.resolve true
         predHandler2.getValue = => Promise.resolve false
-      ).then( -> ruleManager.doesRuleCondtionHold rule ).then( (isTrue) ->
+      ).then( -> ruleManager._doesRuleCondtionHold rule ).then( (isTrue) ->
         cassert isTrue is true
         finish()
       ).catch(finish).done()
@@ -793,7 +793,7 @@ describe "RuleManager", ->
         string: "if predicate 1 for 1 second then action 1"
 
 
-      ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
+      ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
         cassert isTrue is true
         cassert elapsed >= 1000
@@ -833,7 +833,7 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 for 1 second then action 1"
 
-      ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
+      ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
         cassert isTrue is false
         cassert elapsed < 1000
@@ -885,7 +885,7 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 for 1 second and predicate 2 for 2 seconds then action 1"
 
-      ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
+      ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
         cassert isTrue is true
         cassert elapsed >= 2000
@@ -944,7 +944,7 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 for 1 second and predicate 2 for 2 seconds then action 1"
 
-      ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
+      ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
         cassert isTrue is false
         cassert elapsed < 3000
@@ -1002,7 +1002,7 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 for 1 second or predicate 2 for 2 seconds then action 1"
 
-      ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
+      ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
         cassert isTrue is true
         cassert elapsed >= 1000
@@ -1068,7 +1068,7 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 for 1 second or predicate 2 for 2 seconds then action 1"
 
-      ruleManager.doesRuleCondtionHold(rule).then( (isTrue) ->
+      ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
         cassert isTrue is false
         cassert elapsed < 1000

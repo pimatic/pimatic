@@ -169,7 +169,7 @@ module.exports = (env) ->
     addActionProvider: (ah) -> @actionProviders.push ah
     addPredicateProvider: (pv) -> @predicateProviders.push pv
 
-    # ###parseRuleString()
+    # ###_parseRuleString()
     # This function parses a rule given by a string and returns a rule object.
     # A rule string is for example 'if its 10pm and light is on then turn the light off'
     # it get parsed to the follwoing rule object:
@@ -189,7 +189,7 @@ module.exports = (env) ->
     #     active: false or true
     #  
     # The function returns a promise!
-    parseRuleString: (id, name, ruleString, context) ->
+    _parseRuleString: (id, name, ruleString, context) ->
       assert id? and typeof id is "string" and id.length isnt 0
       assert name? and typeof name is "string"
       assert ruleString? and typeof ruleString is "string"
@@ -226,19 +226,19 @@ module.exports = (env) ->
         if rule.actionsToken.length is 0
           throw new Error("Actions part of rule #{id} is empty.")
 
-        result = @parseRuleCondition(id, rule.conditionToken, context)
+        result = @_parseRuleCondition(id, rule.conditionToken, context)
         rule.predicates = result.predicates
         rule.tokens = result.tokens
 
         unless context.hasErrors()
-          result = @parseRuleActions(id, rule.actionsToken, context)
+          result = @_parseRuleActions(id, rule.actionsToken, context)
           rule.actions = result.actions
           rule.actionToken = result.tokens
 
         return rule
       )
 
-    parseRuleCondition: (id, conditionString, context) ->
+    _parseRuleCondition: (id, conditionString, context) ->
       assert typeof id is "string" and id.length isnt 0
       assert typeof conditionString is "string"
       assert context?
@@ -282,7 +282,7 @@ module.exports = (env) ->
         i = predicates.length
         predId = "prd-#{id}-#{i}"
 
-        { predicate, token, nextInput } = @parsePredicate(predId, nextInput, context)
+        { predicate, token, nextInput } = @_parsePredicate(predId, nextInput, context)
         unless context.hasErrors()
           predicates.push(predicate)
           tokens = tokens.concat ["predicate", "(", i, ")"]
@@ -309,7 +309,7 @@ module.exports = (env) ->
         tokens: tokens
       }
 
-    parsePredicate: (predId, nextInput, context) =>
+    _parsePredicate: (predId, nextInput, context) =>
       assert typeof predId is "string" and predId.length isnt 0
       assert typeof nextInput is "string"
       assert context?
@@ -359,7 +359,7 @@ module.exports = (env) ->
           nextInput = parseResult.nextInput
           predicate.handler = parseResult.predicateHandler
 
-          timeParseResult = @parseTimePart(nextInput, " for ", context)
+          timeParseResult = @_parseTimePart(nextInput, " for ", context)
           if timeParseResult?
             token += timeParseResult.token
             nextInput = timeParseResult.nextInput
@@ -385,7 +385,7 @@ module.exports = (env) ->
           )
       return { predicate, token, nextInput }
 
-    parseTimePart: (nextInput, prefixToken, context, options = null) ->
+    _parseTimePart: (nextInput, prefixToken, context, options = null) ->
       # Parse the for-Suffix:
       timeExprTokens = null
       unit = null
@@ -408,7 +408,7 @@ module.exports = (env) ->
       else
         return null
 
-    parseRuleActions: (id, nextInput, context) ->
+    _parseRuleActions: (id, nextInput, context) ->
       assert typeof id is "string" and id.length isnt 0
       assert typeof nextInput is "string"
       assert context?
@@ -423,7 +423,7 @@ module.exports = (env) ->
       while (not context.hasErrors()) and nextInput.length isnt 0
         i = actions.length
         actionId = "act-#{id}-#{i}"
-        { action, token, nextInput } = @parseAction(actionId, nextInput, context)
+        { action, token, nextInput } = @_parseAction(actionId, nextInput, context)
         unless context.hasErrors()
           actions.push action
           tokens = tokens.concat ['action', '(', i, ')']
@@ -445,7 +445,7 @@ module.exports = (env) ->
         tokens: tokens
       }
 
-    parseAction: (actionId, nextInput, context) =>
+    _parseAction: (actionId, nextInput, context) =>
       assert typeof nextInput is "string"
       assert context?
 
@@ -460,7 +460,7 @@ module.exports = (env) ->
 
       parseAfter = (type) =>
         prefixToken =  (if type is "prefix" then "after " else " after ")
-        timeParseResult = @parseTimePart(nextInput, prefixToken, context)
+        timeParseResult = @_parseTimePart(nextInput, prefixToken, context)
         if timeParseResult?
           nextInput = timeParseResult.nextInput
           if type is 'prefix'
@@ -506,7 +506,7 @@ module.exports = (env) ->
 
           # try to parse "for 10 seconds"
           forSuffixAllowed = action.handler.hasRestoreAction()
-          timeParseResult = @parseTimePart(nextInput, " for ", context, {
+          timeParseResult = @_parseTimePart(nextInput, " for ", context, {
             acFilter: () => forSuffixAllowed
           })
           if timeParseResult?
@@ -566,10 +566,10 @@ module.exports = (env) ->
         knownPredicates[predicateId] = true
 
         # and check if the rule is now true.
-        @doesRuleCondtionHold(rule, knownPredicates).then( (isTrue) =>
+        @_doesRuleCondtionHold(rule, knownPredicates).then( (isTrue) =>
           # if the rule is now true, then execute its action
           if isTrue 
-            return @executeRuleActionsAndLogResult(rule)
+            return @_executeRuleActionsAndLogResult(rule)
         ).catch( (error) => 
           env.logger.error """
             Error on evaluation of rule condition of rule #{rule.id}: #{error.message}
@@ -618,9 +618,9 @@ module.exports = (env) ->
         "alpha numerical symbols, \"-\" and  \"_\""
       if @rules[id]? then throw new Error "There is already a rule with the id \"#{id}\""
 
-      context = @createParseContext()
+      context = @_createParseContext()
       # First parse the rule.
-      return @parseRuleString(id, name, ruleString, context).then( (rule) =>
+      return @_parseRuleString(id, name, ruleString, context).then( (rule) =>
         rule.logging = logging
         # If we have parse error we don't need to continue here
         if context.hasErrors()
@@ -637,10 +637,10 @@ module.exports = (env) ->
         @emit "ruleAdded", rule
         # Check if the condition of the rule is allready true.
         if active
-          @doesRuleCondtionHold(rule).then( (isTrue) =>
+          @_doesRuleCondtionHold(rule).then( (isTrue) =>
             # If the confition is true then execute the action.
             if isTrue 
-              return @executeRuleActionsAndLogResult(rule)
+              return @_executeRuleActionsAndLogResult(rule)
           ).catch( (error) =>
             env.logger.error """
               Error on evaluation of rule condition of rule #{rule.id}: #{error.message}
@@ -693,9 +693,9 @@ module.exports = (env) ->
       rule = @rules[id]
       unless name? then name = rule.name
       unless ruleString? then ruleString = rule.string
-      context = @createParseContext()
+      context = @_createParseContext()
       # First try to parse the updated ruleString.
-      return @parseRuleString(id, name, ruleString, context).then( (newRule) =>
+      return @_parseRuleString(id, name, ruleString, context).then( (newRule) =>
         if context.hasErrors()
           error = new Error context.getErrorsAsString()
           error.rule = newRule
@@ -724,9 +724,9 @@ module.exports = (env) ->
         @emit "ruleChanged", rule
         # Then check if the condition of the rule is now true.
         if rule.active
-          @doesRuleCondtionHold(rule).then( (isTrue) =>
+          @_doesRuleCondtionHold(rule).then( (isTrue) =>
             # If the condition is true then exectue the action.
-            return if isTrue then @executeRuleActionsAndLogResult(rule)
+            return if isTrue then @_executeRuleActionsAndLogResult(rule)
           ).catch( (error) =>
             env.logger.error """
               Error on evaluation of rule condition of rule #{rule.id}: #{error.message}
@@ -736,12 +736,12 @@ module.exports = (env) ->
         return context
       )
 
-    # ###evaluateConditionOfRule()
+    # ###_evaluateConditionOfRule()
     # Uses the 'bet' node.js module to evaluate rule.tokens. This function returnes a promise that
     # will be fulfilled with true if the condition of the rule is true. This function ignores all 
     # the "for"-suffixes of predicates. The `knownPredicates` is an object containing a value for
     # each predicate for that the state is already known.
-    evaluateConditionOfRule: (rule, knownPredicates = {}) ->
+    _evaluateConditionOfRule: (rule, knownPredicates = {}) ->
       assert rule? and rule instanceof Object
       assert knownPredicates? and knownPredicates instanceof Object
 
@@ -793,14 +793,14 @@ module.exports = (env) ->
         return isTrue
       )
 
-    # ###doesRuleCondtionHold()
-    # The same as evaluateConditionOfRule but does not ignore the for-suffixes.
-    doesRuleCondtionHold: (rule, knownPredicates = {}) ->
+    # ###_doesRuleCondtionHold()
+    # The same as _evaluateConditionOfRule but does not ignore the for-suffixes.
+    _doesRuleCondtionHold: (rule, knownPredicates = {}) ->
       assert rule? and typeof rule is "object"
       assert knownPredicates? and knownPredicates instanceof Object
 
       # First evaluate the condition and
-      return @evaluateConditionOfRule(rule, knownPredicates).then( (isTrue) =>
+      return @_evaluateConditionOfRule(rule, knownPredicates).then( (isTrue) =>
         # if the condition is false then the condition con not hold, because it is already false
         # so return false.
         unless isTrue then return false
@@ -818,7 +818,7 @@ module.exports = (env) ->
 
           # Whenever an awaiting predicate gets resolved then we will revalidate the rule condition.
           reevaluateCondition = () =>
-            return @evaluateConditionOfRule(rule, knownPredicates).then( (isTrueNew) =>
+            return @_evaluateConditionOfRule(rule, knownPredicates).then( (isTrueNew) =>
               # If it is true
               if isTrueNew 
                 # then resolve the return value as true
@@ -908,10 +908,10 @@ module.exports = (env) ->
         )
       )
 
-    # ###executeRuleActionsAndLogResult()
+    # ###_executeRuleActionsAndLogResult()
     # Executes the actions of the string using `executeAction` and logs the result to 
     # the env.logger.    
-    executeRuleActionsAndLogResult: (rule) ->
+    _executeRuleActionsAndLogResult: (rule) ->
       currentTime = (new Date).getTime()
       if rule.lastExecuteTime?
         delta = currentTime - rule.lastExecuteTime
@@ -920,7 +920,7 @@ module.exports = (env) ->
           return Promise.resolve()
       rule.lastExecuteTime = currentTime
 
-      actionResults = @executeRuleActions(rule, false)
+      actionResults = @_executeRuleActions(rule, false)
 
       logMessageForResult = (actionResult) =>
         return actionResult.then( (result) =>
@@ -948,7 +948,7 @@ module.exports = (env) ->
 
     # ###executeAction()
     # Executes the actions in the given actionString
-    executeRuleActions: (rule, simulate) ->
+    _executeRuleActions: (rule, simulate) ->
       assert rule?
       assert rule.actions?
       assert simulate? and typeof simulate is "boolean"
@@ -968,13 +968,13 @@ module.exports = (env) ->
               promise = @_evaluateTimeExpr(
                 action.after.exprTokens, 
                 action.after.unit
-              ).then( (ms) => @scheduleAction(action, ms) )
+              ).then( (ms) => @_scheduleAction(action, ms) )
             else
-              promise = @executeAction(action, simulate).then( (message) => 
+              promise = @_executeAction(action, simulate).then( (message) => 
                 "#{message} after #{action.after.token}"
               )
           else
-            promise = @executeAction(action)
+            promise = @_executeAction(action)
           assert promise.then?
           actionResults.push promise
       return actionResults
@@ -984,7 +984,7 @@ module.exports = (env) ->
         return milliseconds.parse "#{time} #{unit}"
       )
 
-    executeAction: (action, simulate) =>
+    _executeAction: (action, simulate) =>
       # wrap into an fcall to convert throwen erros to a rejected promise
       return Promise.try( => 
         promise = action.handler.executeAction(simulate)
@@ -993,17 +993,17 @@ module.exports = (env) ->
             restoreActionPromise = @_evaluateTimeExpr(
               action.for.exprTokens, 
               action.for.unit
-            ).then( (ms) => @scheduleAction(action, ms, yes) )
+            ).then( (ms) => @_scheduleAction(action, ms, yes) )
             return [message, restoreActionPromise]
           )
         return promise
       )
 
-    executeRestoreAction: (action, simulate) =>
+    _executeRestoreAction: (action, simulate) =>
       # wrap into an fcall to convert throwen erros to a rejected promise
       return Promise.try( => action.handler.executeRestoreAction(simulate) )
 
-    scheduleAction: (action, ms, isRestore = no) =>
+    _scheduleAction: (action, ms, isRestore = no) =>
       assert action?
       if action.scheduled?
         action.scheduled.cancel("clearing scheduled action")
@@ -1011,8 +1011,8 @@ module.exports = (env) ->
       return new Promise( (resolve, reject) =>
         timeoutHandle = setTimeout((=> 
           promise = (
-            unless isRestore then @executeAction(action, no)
-            else @executeRestoreAction(action, no)
+            unless isRestore then @_executeAction(action, no)
+            else @_executeRestoreAction(action, no)
           )
           resolve(promise)
           delete action.scheduled
@@ -1026,7 +1026,7 @@ module.exports = (env) ->
         }
       )
 
-    createParseContext: ->
+    _createParseContext: ->
       return context = {
         autocomplete: []
         format: []
@@ -1064,8 +1064,8 @@ module.exports = (env) ->
       context =  null
       result = null
 
-      context = @createParseContext()
-      result = @parseRuleActions("id", actionsInput, context)
+      context = @_createParseContext()
+      result = @_parseRuleActions("id", actionsInput, context)
       context.finalize()
 
       for a in result.actions
@@ -1084,7 +1084,7 @@ module.exports = (env) ->
       context =  null
       result = null
 
-      context = @createParseContext()
+      context = @_createParseContext()
       result = @parseRuleCondition("id", conditionInput, context)
       context.finalize()
 
@@ -1100,5 +1100,12 @@ module.exports = (env) ->
         warnings: context.warnings
       }
 
+    executeAction: (actionString, simulate) =>
+      context = @_createParseContext()
+      parseResult = @_parseAction('custom-action', actionString, context)
+      context.finalize()
+      if context.hasErrors()
+        return Promise.reject new Error(context.errors)
+      return @_executeAction(parseResult.action, simulate)
 
   return exports = { RuleManager }

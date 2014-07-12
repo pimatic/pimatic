@@ -162,7 +162,6 @@ describe "Matcher", ->
       }
       M("min(1, 2)").matchNumericExpression([], functions, (m, tokens) =>
         assert m?
-        console.log "tokens:", tokens
         assert.deepEqual(tokens, ['min', '(', '1', ',', '2', ')'])
         finish()
       )
