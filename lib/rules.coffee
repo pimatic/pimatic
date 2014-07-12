@@ -1100,12 +1100,15 @@ module.exports = (env) ->
         warnings: context.warnings
       }
 
-    executeAction: (actionString, simulate) =>
+    executeAction: (actionString, simulate = false, logging = yes) =>
       context = @_createParseContext()
       parseResult = @_parseAction('custom-action', actionString, context)
       context.finalize()
       if context.hasErrors()
         return Promise.reject new Error(context.errors)
-      return @_executeAction(parseResult.action, simulate)
+      return @_executeAction(parseResult.action, simulate).then( (message) =>
+        env.logger.info "execute action: #{message}" if logging
+        return message
+      )
 
   return exports = { RuleManager }

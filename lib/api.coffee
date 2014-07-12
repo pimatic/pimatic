@@ -672,6 +672,26 @@ api.rules = {
               type: t.array
             format:
               type: t.array
+    executeAction:
+      rest:
+        type: "POST"
+        url: "/api/execute-action"
+      description: "Execute a rule action by a given string"
+      params:
+        actionString: 
+          description: "The action to executed"
+          type: t.string
+        simulate:
+          description: "If it is true then only simulate the action."
+          type: t.boolean
+          optional: yes
+        logging:
+          description: "Log result message"
+          type: t.string
+          optional: yes
+      result:
+        message:
+          type: t.string
 }
 
 ###
