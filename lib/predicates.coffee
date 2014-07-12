@@ -400,7 +400,7 @@ module.exports = (env) ->
   ###
   The Device-Attribute Watchdog Provider
   ----------------
-  Handles predicates that will become true of a attribute for a device was not updated for a
+  Handles predicates that will become true if a attribute of a device was not updated for a
   certain time.
 
   * _attribute_ of _device_ was not updated for _time_
