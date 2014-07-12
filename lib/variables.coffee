@@ -336,7 +336,7 @@ module.exports = (env) ->
             else if @isAVariable(t)
               varName = t.substring(1)
               # Replace variable by its value
-              unless @isVariableDefined(varName)f
+              unless @isVariableDefined(varName)
                 throw new Error("#{t} is not defined")
               awaiting.push(
                 @getVariableUpdatedValue(varName, _.clone(varsInEvaluation)).then( (value) ->
