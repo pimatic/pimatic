@@ -1085,7 +1085,7 @@ module.exports = (env) ->
       result = null
 
       context = @_createParseContext()
-      result = @parseRuleCondition("id", conditionInput, context)
+      result = @_parseRuleCondition("id", conditionInput, context)
       context.finalize()
 
       for p in result.predicates

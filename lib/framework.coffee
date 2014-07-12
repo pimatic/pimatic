@@ -993,6 +993,7 @@ module.exports = (env) ->
           env.predicates.VariablePredicateProvider
           env.predicates.ContactPredicateProvider
           env.predicates.ButtonPredicateProvider
+          env.predicates.DeviceAttributeWatchdogProvider
         ]
         for predProv in defaultPredicateProvider
           predProvInst = new predProv(this)

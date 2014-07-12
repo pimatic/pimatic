@@ -266,11 +266,7 @@ module.exports = (env) ->
 
     constructor: (@framework) ->
 
-    # ### _parsePredicate()
-    ###
-    Parses the string and setups the info object as explained in the DeviceEventPredicateProvider.
-    Read the description of it to understand the return value.
-    ###
+    # ### parsePredicate()
     parsePredicate: (input, context) ->
 
       allAttributes = _(@framework.devices).values().map((device) => _.keys(device.attributes))
@@ -400,6 +396,96 @@ module.exports = (env) ->
         else throw new Error "Unknown comparator: #{comparator}"
       return result
 
+
+  ###
+  The Device-Attribute Watchdog Provider
+  ----------------
+  Handles predicates that will become true of a attribute for a device was not updated for a
+  certain time.
+
+  * _attribute_ of _device_ was not updated for _time_
+  ####
+  class DeviceAttributeWatchdogProvider extends PredicateProvider
+
+    constructor: (@framework) ->
+
+    # ### parsePredicate()
+    parsePredicate: (input, context) ->
+
+      allAttributes = _(@framework.devices).values().map((device) => _.keys(device.attributes))
+        .flatten().uniq().value()
+
+      result = null
+      match = null
+
+      M(input, context)
+      .match(allAttributes, (m, attr) =>
+        info = {
+          device: null
+          attributeName: null
+          timeMs: null
+        }
+
+        info.attributeName = attr
+        devices = _(@framework.devices).values()
+          .filter( (device) => device.hasAttribute(attr) ).value()
+        m.match(' of ').matchDevice(devices, (m, device) =>
+          info.device = device
+          unless device.hasAttribute(attr) then return
+          attribute = device.attributes[attr]
+
+          m.match(' was not updated for ').matchTimeDuration( (m, {time, unit, timeMs}) =>
+            info.timeMs = timeMs
+            result = info
+            match = m.getFullMatch()
+          )
+        )
+      )
+
+      if result?
+        assert result.device?
+        assert result.attributeName?
+        assert result.timeMs?
+
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          predicateHandler: new DeviceAttributeWatchdogPredicateHandler(
+            result.device, result.attributeName, result.timeMs
+          )
+        }
+        
+      return null
+
+
+  class DeviceAttributeWatchdogPredicateHandler extends PredicateHandler
+
+    constructor: (@device, @attribute, @timeMs) ->
+
+    setup: ->
+      @_state = false
+      @_rescheduleTimeout()
+      @attributeListener = ( => 
+        if @_state is true
+          @_state = false
+          @emit 'change', false
+        @_rescheduleTimeout() 
+      )
+      @device.on @attribute, @attributeListener
+      super()
+    getValue: -> Promise.resolve(@_state)
+    destroy: -> 
+      @device.removeListener @attribute, @attributeListener
+      clearTimeout(@_timer)
+      super()
+    getType: -> 'state'
+
+    _rescheduleTimeout: ->
+      clearTimeout(@_timer)
+      @_timer = setTimeout( ( =>
+        @_state = true
+        @emit 'change', true 
+      ), @timeMs)
 
   ###
   The Variable Predicate Provider
@@ -576,4 +662,5 @@ module.exports = (env) ->
     VariablePredicateProvider
     ContactPredicateProvider
     ButtonPredicateProvider
+    DeviceAttributeWatchdogProvider
   }
