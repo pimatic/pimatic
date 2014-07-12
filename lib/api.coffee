@@ -926,6 +926,23 @@ api.database = {
       result:
         events:
           type: t.array
+    queryDeviceAttributeEventsCounts:
+      rest:
+        type: 'GET'
+        url: '/api/database/device-attributes/count'
+      description: "Get count of saved device attributes events"
+      params: {}
+      result:
+        count:
+          type: t.number
+    queryDeviceAttributeEventsDevices:
+      rest:
+        type: 'GET'
+        url: '/api/database/device-attributes/devices'
+      params: {}
+      result:
+        devices:
+          type: t.array
     querySingleDeviceAttributeEvents:
       rest:
         type: 'GET'

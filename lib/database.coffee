@@ -408,6 +408,26 @@ module.exports = (env) ->
         return result
       )
 
+    queryDeviceAttributeEventsCounts: () ->
+      pending = []
+      for type in _.keys(dbMapping.typeMap)
+        tableName = dbMapping.typeToAttributeTable(type)
+        pending.push @knex(tableName).count('* AS count')
+      return Promise.all(pending).then( (counts) =>
+        count = 0
+        for c in counts
+          count += c[0].count
+        return count
+      )
+
+    queryDeviceAttributeEventsDevices: () ->
+      return @knex('deviceAttribute').select(
+        'deviceId', 
+        'attributeName', 
+        'type'
+      )
+
+
     # queryDeviceAttributeEventsStream: (queryCriteria) ->
     #   query = @_queryDeviceAttributeEvents(queryCriteria)
     #   query.stream( (stream)  =>
