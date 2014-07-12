@@ -2,6 +2,7 @@ cassert = require "cassert"
 assert = require "assert"
 Promise = require 'bluebird'
 S = require 'string'
+util = require 'util'
 
 env = require('../startup').env
 
@@ -54,8 +55,12 @@ describe "RuleManager", ->
       }
 
   predProvider = new DummyPredicateProvider()
-  serverDummy = {}
-  ruleManager = new env.rules.RuleManager(serverDummy, [])
+  frameworkDummy = {
+    variableManager:
+      variables: {}
+      evaluateNumericExpression: (expr) -> Promise.resolve parseFloat(expr)
+  }
+  ruleManager = new env.rules.RuleManager(frameworkDummy, [])
   ruleManager.addPredicateProvider predProvider
   actionProvider = new DummyActionProvider()
   ruleManager.actionProviders = [actionProvider]
@@ -75,7 +80,6 @@ describe "RuleManager", ->
               id: 'prd-test1-0',
               token: 'predicate 1',
               handler: {},
-              forToken: null,
               for: null
               justTrigger: false
             }
@@ -91,8 +95,10 @@ describe "RuleManager", ->
               id: 'prd-test1-0',
               token: 'predicate 1',
               handler: {},
-              forToken: '10 seconds',
-              for: 10000
+              for:
+                token: '10 seconds'
+                exprTokens: ['10']
+                unit: 'seconds'
               justTrigger: false
             }
           ]
@@ -107,8 +113,10 @@ describe "RuleManager", ->
               id: 'prd-test1-0',
               token: 'predicate 1',
               handler: {},
-              forToken: '2 hours',
-              for: 7200000 
+              for:
+                token: '2 hours'
+                exprTokens: ['2']
+                unit: 'hours'
               justTrigger: false
             }
           ]
@@ -123,7 +131,6 @@ describe "RuleManager", ->
               id: 'prd-test1-0',
               token: 'predicate 1',
               handler: {},
-              forToken: null
               for: null 
               justTrigger: false
             }
@@ -131,7 +138,6 @@ describe "RuleManager", ->
               id: 'prd-test1-1',
               token: 'predicate 1',
               handler: {},
-              forToken: null
               for: null 
               justTrigger: false
             }
@@ -147,7 +153,6 @@ describe "RuleManager", ->
               id: 'prd-test1-0',
               token: 'predicate 1',
               handler: {},
-              forToken: null
               for: null 
               justTrigger: false
             }
@@ -155,7 +160,6 @@ describe "RuleManager", ->
               id: 'prd-test1-1',
               token: 'predicate 1',
               handler: {},
-              forToken: null
               for: null 
               justTrigger: false
             }
@@ -171,7 +175,6 @@ describe "RuleManager", ->
               id: 'prd-test1-0',
               token: 'predicate 1',
               handler: {},
-              forToken: null
               for: null 
               justTrigger: false
             }
@@ -179,7 +182,6 @@ describe "RuleManager", ->
               id: 'prd-test1-1',
               token: 'predicate 1',
               handler: {},
-              forToken: null
               for: null 
               justTrigger: false
             }
@@ -195,7 +197,6 @@ describe "RuleManager", ->
               id: 'prd-test1-0',
               token: 'predicate 1',
               handler: {},
-              forToken: null
               for: null 
               justTrigger: false
             }
@@ -203,7 +204,6 @@ describe "RuleManager", ->
               id: 'prd-test1-1',
               token: 'predicate 1',
               handler: {},
-              forToken: null
               for: null 
               justTrigger: false
             }
@@ -219,15 +219,16 @@ describe "RuleManager", ->
               id: 'prd-test1-0',
               token: 'predicate 1',
               handler: {},
-              forToken: '2 hours',
-              for: 7200000 
+              for: 
+                token: '2 hours'
+                exprTokens: [ '2']
+                unit: 'hours'
               justTrigger: false
             }
             { 
               id: 'prd-test1-1',
               token: 'predicate 1',
               handler: {},
-              forToken: null
               for: null 
               justTrigger: false
             }
@@ -243,7 +244,6 @@ describe "RuleManager", ->
               id: 'prd-test1-0',
               token: 'predicate 1',
               handler: {},
-              forToken: null
               for: null 
               justTrigger: false
             }
@@ -251,7 +251,6 @@ describe "RuleManager", ->
               id: 'prd-test1-1',
               token: 'predicate 1',
               handler: {},
-              forToken: null
               for: null 
               justTrigger: false
             }
@@ -259,7 +258,6 @@ describe "RuleManager", ->
               id: 'prd-test1-2',
               token: 'predicate 1',
               handler: {},
-              forToken: null
               for: null 
               justTrigger: false
             }
@@ -291,9 +289,7 @@ describe "RuleManager", ->
               id: 'act-test1-0', 
               token: 'action 1', 
               handler: {} # should be the dummyHandler
-              afterToken: null
               after: null
-              forToken: null
               for: null
             } 
           ],
@@ -308,18 +304,14 @@ describe "RuleManager", ->
               id: 'act-test1-0', 
               token: 'action 1', 
               handler: {} # should be the dummyHandler
-              afterToken: null
               after: null
-              forToken: null
               for: null
             }
             { 
               id: 'act-test1-1', 
               token: 'action 1', 
               handler: {} # should be the dummyHandler
-              afterToken: null
               after: null
-              forToken: null
               for: null
             } 
           ],
@@ -334,9 +326,10 @@ describe "RuleManager", ->
               id: 'act-test1-0', 
               token: 'action 1', 
               handler: {} # should be the dummyHandler
-              afterToken: '1 minute'
-              after: 1*60*1000
-              forToken: null
+              after:
+                token: '1 minute'
+                exprTokens: [ '1']
+                unit: 'minute'
               for: null
             } 
           ],
@@ -351,9 +344,10 @@ describe "RuleManager", ->
               id: 'act-test1-0', 
               token: 'action 1', 
               handler: {} # should be the dummyHandler
-              afterToken: '1 minute'
-              after: 1*60*1000
-              forToken: null
+              after:
+                token: '1 minute'
+                exprTokens: [ '1']
+                unit: 'minute'
               for: null
             } 
           ],
@@ -368,18 +362,20 @@ describe "RuleManager", ->
               id: 'act-test1-0', 
               token: 'action 1', 
               handler: {} # should be the dummyHandler
-              afterToken: "2 minutes"
-              after: 2*60*1000
-              forToken: null
+              after:
+                token: '2 minutes',
+                exprTokens: [ '2'],
+                unit: 'minutes'
               for: null
             }
             { 
               id: 'act-test1-1', 
               token: 'action 1', 
               handler: {} # should be the dummyHandler
-              afterToken: "1 hour"
-              after: 60*60*1000
-              forToken: null
+              after:
+                token: '1 hour',
+                exprTokens: [ '1'],
+                unit: 'hour'
               for: null
             } 
           ],
@@ -394,18 +390,20 @@ describe "RuleManager", ->
               id: 'act-test1-0', 
               token: 'action 1', 
               handler: {} # should be the dummyHandler
-              afterToken: "2 minutes"
-              after: 2*60*1000
-              forToken: null
+              after:
+                token: '2 minutes',
+                exprTokens: [ '2'],
+                unit: 'minutes'
               for: null
             }
             { 
               id: 'act-test1-1', 
               token: 'action 1', 
               handler: {} # should be the dummyHandler
-              afterToken: "1 hour"
-              after: 60*60*1000
-              forToken: null
+              after:
+                token: '1 hour',
+                exprTokens: [ '1'],
+                unit: 'hour'
               for: null
             } 
           ],
@@ -420,10 +418,11 @@ describe "RuleManager", ->
               id: 'act-test1-0', 
               token: 'action 1', 
               handler: {} # should be the dummyHandler
-              afterToken: null 
               after: null
-              forToken: '1 minute'
-              for: 1*60*1000
+              for:
+                token: '1 minute',
+                exprTokens: [ '1'],
+                unit: 'minute'
             } 
           ],
           tokens: [ 'action', '(', 0, ')' ] 
@@ -434,12 +433,11 @@ describe "RuleManager", ->
     for tc in testCases
       do (tc) ->
         it "it should parse \"#{tc.input}\"", ->
-          result = ruleManager.parseRuleActions("test1", tc.input, context)
+          result = ruleManager.parseRuleActions("test1", tc.input, context) 
           assert result?
           for action in result.actions
             assert action.handler instanceof env.actions.ActionHandler
             action.handler = {}
-
           assert(not context.hasErrors())
           assert.deepEqual result, tc.result
 
@@ -471,8 +469,8 @@ describe "RuleManager", ->
         cassert rule.conditionToken is 'predicate 1 for 10 seconds'
         cassert rule.tokens.length > 0
         cassert rule.predicates.length is 1
-        cassert rule.predicates[0].forToken is '10 seconds'
-        cassert rule.predicates[0].for is 10*1000
+        cassert rule.predicates[0].for.token is '10 seconds'
+        assert.deepEqual rule.predicates[0].for.exprTokens, ['10']
         cassert rule.actionsToken is 'action 1'
         cassert rule.string is 'if predicate 1 for 10 seconds then action 1'
         finish() 
@@ -488,8 +486,8 @@ describe "RuleManager", ->
         cassert rule.conditionToken is 'predicate 1 for 2 hours'
         cassert rule.tokens.length > 0
         cassert rule.predicates.length is 1
-        cassert rule.predicates[0].forToken is '2 hours'
-        cassert rule.predicates[0].for is 2*60*60*1000
+        cassert rule.predicates[0].for.token is '2 hours'
+        assert.deepEqual rule.predicates[0].for.exprTokens, ['2']
         cassert rule.actionsToken is 'action 1'
         cassert rule.string is 'if predicate 1 for 2 hours then action 1'
         finish() 
@@ -504,7 +502,6 @@ describe "RuleManager", ->
         cassert rule.conditionToken is 'predicate 1 for 42 foo'
         cassert rule.tokens.length > 0
         cassert rule.predicates.length is 1
-        cassert rule.predicates[0].forToken is null
         cassert rule.predicates[0].for is null
         cassert rule.actionsToken is 'action 1'
         cassert rule.string is 'if predicate 1 for 42 foo then action 1'
@@ -780,8 +777,10 @@ describe "RuleManager", ->
           token: "predicate 1"
           type: "state"
           handler: predHandler1
-          forToken: "1 second"
-          for: 1000
+          for:
+            token: '1 second'
+            exprTokens: ['1']
+            unit: 'second'
           lastChange: start
         ]
         tokens: [
@@ -819,8 +818,10 @@ describe "RuleManager", ->
           token: "predicate 1"
           type: "state"
           handler: predHandler1
-          forToken: "1 second"
-          for: 1000
+          for:
+            token: '1 second'
+            exprTokens: ['1']
+            unit: 'second'
           lastChange: start
         ]
         tokens: [
@@ -852,8 +853,10 @@ describe "RuleManager", ->
             token: "predicate 1"
             type: "state"
             handler: predHandler1
-            forToken: "1 second"
-            for: 1000
+            for:
+              token: '1 second'
+              exprTokens: ['1']
+              unit: 'second'
             lastChange: start
           }
           {
@@ -861,8 +864,10 @@ describe "RuleManager", ->
             token: "predicate 2"
             type: "state"
             handler: predHandler2
-            forToken: "2 seconds"
-            for: 2000
+            for:
+              token: '2 seconds'
+              exprTokens: ['2']
+              unit: 'seconds'
             lastChange: start
           }
         ]
@@ -907,8 +912,10 @@ describe "RuleManager", ->
             token: "predicate 1"
             type: "state"
             handler: predHandler1
-            forToken: "1 second"
-            for: 1000
+            for:
+              token: '1 second'
+              exprTokens: ['1']
+              unit: 'second'
             lastChange: start
           }
           {
@@ -916,8 +923,10 @@ describe "RuleManager", ->
             token: "predicate 2"
             type: "state"
             handler: predHandler2
-            forToken: "2 seconds"
-            for: 2000
+            for:
+              token: '2 seconds'
+              exprTokens: ['2']
+              unit: 'seconds'
             lastChange: start
           }
         ]
@@ -961,8 +970,10 @@ describe "RuleManager", ->
             token: "predicate 1"
             type: "state"
             handler: predHandler1
-            forToken: "1 second"
-            for: 1000
+            for:
+              token: '1 second'
+              exprTokens: ['1']
+              unit: 'second'
             lastChange: start
           }
           {
@@ -970,8 +981,10 @@ describe "RuleManager", ->
             token: "predicate 2"
             type: "state"
             handler: predHandler2
-            forToken: "2 seconds"
-            for: 2000
+            for:
+              token: '2 seconds'
+              exprTokens: ['2']
+              unit: 'seconds'
             lastChange: start
           }
         ]
@@ -1023,8 +1036,10 @@ describe "RuleManager", ->
             token: "predicate 1"
             type: "state"
             handler: predHandler1
-            forToken: "1 second"
-            for: 1000
+            for:
+              token: '1 second'
+              exprTokens: ['1']
+              unit: 'second'
             lastChange: start
           }
           {
@@ -1032,8 +1047,10 @@ describe "RuleManager", ->
             token: "predicate 2"
             type: "state"
             handler: predHandler2
-            forToken: "2 seconds"
-            for: 2000
+            for:
+              token: '2 seconds'
+              exprTokens: ['2']
+              unit: 'seconds'
             lastChange: start
           }
         ]

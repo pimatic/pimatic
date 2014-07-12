@@ -220,11 +220,65 @@ class Matcher
       callback(next, tokens)
     return next
 
-  matchNumericExpression: (variables, openParanteses = 0, callback) ->
+  matchFunctionCallArgs: (variables, functions, callback) ->
+    unless @input? then return @
+    assert typeof callback is "function"
+    tokens = []
+    last = this
+    @matchNumericExpression(variables, functions, (next, ts) =>
+      tokens = tokens.concat ts
+      last = next
+      next
+        .match([',', ' , ', ' ,', ', '], {acFilter: (op) => op is ', '})
+        .matchFunctionCallArgs(variables, functions, (m, ts) =>
+          tokens.push ','
+          tokens = tokens.concat ts
+          last = m
+        )
+    )
+    callback(last, tokens)
+    return last
+
+  matchFunctionCall: (variables, functions, callback) ->
+    unless @input? then return @
+    functionNames = (
+      if functions? then (fname for fname of functions)
+      else []
+    )
+    tokens = []
+    last = null
+    @match(functionNames, (next, funcName) =>
+      tokens.push funcName
+      next.match(['(', ' (', ' ( ', '( '], {acFilter: (op) => op is '('}, (next) => 
+        tokens.push '('
+        next.matchFunctionCallArgs(variables, functions, (next, ts) =>
+          tokens = tokens.concat ts
+          next.match([')', ' )'], {acFilter: (op) => op is ')'},  (next) => 
+            tokens.push ')'
+            last = next
+          )
+        )
+      )
+    )
+    if last?
+      callback(last, tokens)
+      return last
+    else return M(null, @context)
+
+  matchNumericExpression: (variables, functions, openParanteses = 0, callback) ->
     unless @input? then return @
     if typeof variables is "function"
       callback = variables
       variables = null
+
+    if typeof functions is "function"
+      callback = functions
+      functions = null
+
+    if typeof functions is "number"
+      callback = openParanteses
+      openParanteses = functions
+      functions = null 
 
     if typeof openParanteses is "function"
       callback = openParanteses
@@ -233,6 +287,7 @@ class Matcher
     assert typeof callback is "function"
     assert typeof openParanteses is "number"
     assert Array.isArray variables if variables?
+    assert typeof functions is "object" if functions?
 
     binarOps = ['+','-','*', '/']
     binarOpsFull = _(binarOps).map((op)=>[op, " #{op} ", " #{op}", "#{op} "]).flatten().valueOf()
@@ -246,12 +301,17 @@ class Matcher
     ).or([
       ( (m) => m.matchNumber( (m, match) => tokens.push(match); last = m ) ),
       ( (m) => m.matchVariable(variables, (m, match) => tokens.push(match); last = m ) )
+      ( (m) => m.matchFunctionCall(variables, functions, (m, match) => 
+          tokens = tokens.concat match
+          last = m
+        )
+      )
     ]).matchCloseParenthese(')', openParanteses, (m, ptokens) =>
       tokens = tokens.concat ptokens
       openParanteses -= ptokens.length
       last = m
     ).match(binarOpsFull, {acFilter: (op) => op[0] is ' ' and op[op.length-1] is ' '}, (m, op) => 
-      m.matchNumericExpression(variables, openParanteses, (m, nextTokens) => 
+      m.matchNumericExpression(variables, functions, openParanteses, (m, nextTokens) => 
         tokens.push(op.trim())
         tokens = tokens.concat(nextTokens)
         last = m
@@ -353,12 +413,12 @@ class Matcher
       callback(m, d)
     return next
     
-  matchTimeDurationExpression: (variables = null, callback) ->
+  matchTimeDurationExpression: (variables = null, functions = null, callback) ->
     unless @input? then return @
     if typeof variables is 'function'
       callback = variables
       variables = null
-
+    assert typeof callback is "function"
     # Parse the for-Suffix:
     timeUnits = [
       "ms", 
@@ -371,9 +431,9 @@ class Matcher
     tokens = 0
     unit = ""
     onTimeExpressionMatch = (m, ts) => tokens = ts  
-    onMatchUnit = (m, u) => unit = u
+    onMatchUnit = (m, u) => unit = u.trim()
 
-    m = @matchNumericExpression(variables, onTimeExpressionMatch).match(
+    m = @matchNumericExpression(variables, functions, onTimeExpressionMatch).match(
       _(timeUnits).map((u) => [" #{u}", u]).flatten().valueOf()
     , {acFilter: (u) => u[0] is ' '}, onMatchUnit
     )

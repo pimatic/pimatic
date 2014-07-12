@@ -156,6 +156,18 @@ describe "Matcher", ->
         finish()
       )
 
+    it "should match min(1, 2)", (finish) ->
+      functions = {
+        min: {}
+      }
+      M("min(1, 2)").matchNumericExpression([], functions, (m, tokens) =>
+        assert m?
+        console.log "tokens:", tokens
+        assert.deepEqual(tokens, ['min', '(', '1', ',', '2', ')'])
+        finish()
+      )
+
+
   describe '#matchStringWithVars()', ->
 
     it "should match \"foo\"", (finish) ->

@@ -50,12 +50,13 @@ M = require './matcher'
 require "date-format-lite"
 milliseconds = require './milliseconds'
 
-(requireNoCache = ->
+bet = (requireNoCache = ->
   # Require bet without caching it, because we change some operations, that 
   # should be local to this file
   betPath = require.resolve 'bet'
-  global.bet = require betPath
+  bet = require betPath
   delete require.cache[betPath]
+  return bet
 )()
 
 module.exports = (env) ->
@@ -298,7 +299,7 @@ module.exports = (env) ->
           m = M(nextInput, context).match(possibleTokens, onMatch)
           unless nextInput.length is 0
             if m.hadNoMatch()
-              context.addError("""Expected one of: "and", "or", ")".""")
+              context.addError("""Expected one of: "and", "or", "]".""")
             else
               token = m.getFullMatch()
               assert S(nextInput.toLowerCase()).startsWith(token.toLowerCase())
@@ -359,7 +360,6 @@ module.exports = (env) ->
           predicate.handler = parseResult.predicateHandler
 
           timeParseResult = @parseTimePart(nextInput, " for ", context)
-
           if timeParseResult?
             token += timeParseResult.token
             nextInput = timeParseResult.nextInput
@@ -394,9 +394,10 @@ module.exports = (env) ->
         unit = tp.unit
 
       allVariables = _(@framework.variableManager.variables).map( (v) => v.name ).valueOf()
+      functions = @framework.variableManager.functions
       m = M(nextInput, context)
         .match(prefixToken, options)
-        .matchTimeDurationExpression(allVariables, onTimeduration)
+        .matchTimeDurationExpression(allVariables, functions, onTimeduration)
 
       unless m.hadNoMatch()
         token = m.getFullMatch()
@@ -455,7 +456,6 @@ module.exports = (env) ->
         token: null
         handler: null
         after: null
-        forToken: null
         for: null
 
       parseAfter = (type) =>
@@ -645,7 +645,7 @@ module.exports = (env) ->
             env.logger.error """
               Error on evaluation of rule condition of rule #{rule.id}: #{error.message}
             """ 
-            env.logger.debug error
+            env.logger.debug error.stack
           )
         return context
       ).catch( (error) =>
@@ -661,7 +661,7 @@ module.exports = (env) ->
             @emit 'ruleAdded', rule
           else
             env.logger.error 'Could not force add rule, because error had no rule attribute.'
-            env.logger.debug error
+            env.logger.debug error.stack
         throw error
       )
 
@@ -899,12 +899,12 @@ module.exports = (env) ->
             if (id for id of awaiting).length is 0
               # then resolve the return value to true.
               resolve true
+          ).catch( (error) =>
+            # Cancel all awatting changeHandler
+            for id, a of awaiting
+              a.cancel()
+            throw error
           )
-        ).catch( (error) =>
-          # Cancel all awatting changeHandler
-          for id, a of awaiting
-            a.cancel()
-          throw error
         )
       )
 

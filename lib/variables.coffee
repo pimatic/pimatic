@@ -9,7 +9,15 @@ Promise = require 'bluebird'
 _ = require 'lodash'
 S = require 'string'
 M = require './matcher'
-bet = require 'bet'
+
+bet = (requireNoCache = ->
+  # Require bet without caching it, because we change some operations, that 
+  # should be local to this file
+  betPath = require.resolve 'bet'
+  bet = require betPath
+  delete require.cache[betPath]
+  return bet
+)()
 
 module.exports = (env) ->
 
@@ -115,6 +123,17 @@ module.exports = (env) ->
   class VariableManager extends require('events').EventEmitter
 
     variables: {}
+    functions: {
+      min:
+        argc: 2
+        exec: (args) -> Math.min(args[0], args[1])
+      max:
+        argc: 2
+        exec: (args) -> Math.min(args[0], args[1])
+      random:
+        argc: 2
+        exec: (args) -> Math.floor((Math.random() * args[1]) + args[0])
+    }
 
     constructor: (@framework, @variablesConfig) ->
       # For each new device add a variable for every attribute
@@ -294,6 +313,8 @@ module.exports = (env) ->
       variablesInConfig = _.map(@framework.config.variables, (r) => r.name )
       return _.sortBy(variables, (r) => variablesInConfig.indexOf r.name )
 
+    getFunctions: () -> @functions
+
     getVariableByName: (name) ->
       v = @variables[name]
       unless v? then return null
@@ -306,7 +327,7 @@ module.exports = (env) ->
 
     evaluateNumericExpression: (tokens, varsInEvaluation = {}) ->
       return Promise.try( =>
-        tokens = _.clone(tokens)
+        tokens = (t for t in tokens when t isnt ',')
         awaiting = []
         for t, i in tokens
           do (i, t) =>
@@ -324,6 +345,8 @@ module.exports = (env) ->
                   tokens[i] = parseFloat(value)
                 )
               )
+        for n,f of @functions
+          bet.functions[n] = f
         return Promise.all(awaiting).then( => bet.evaluateSync(tokens) )
       )
 
