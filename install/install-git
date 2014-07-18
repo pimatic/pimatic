@@ -1,5 +1,5 @@
 #!/bin/sh
-# run with: curl -s https://raw.github.com/pimatic/pimatic/development/install/install-git | sudo bash /dev/stdin development
+# run with: curl -s https://raw.githubusercontent.com/pimatic/pimatic/development/install/install-git | sudo bash /dev/stdin development
 BRANCH=$1
 if [ ! -d pimatic-git ]
 then
