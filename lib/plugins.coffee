@@ -190,13 +190,11 @@ module.exports = (env) ->
           line = line.toString()
           output += "#{line}\n"
           if line.indexOf('npm http 304') is 0 then return
-          notify(line)
           npmLogger.info S(line).chompLeft('npm ').s
         stderr = byline(npm.stderr)
         stderr.on "data", (line) => 
           line = line.toString()
           output += "#{line}\n"
-          notify(line)
           npmLogger.info S(line).chompLeft('npm ').s
 
         npm.on "close", (code) =>
