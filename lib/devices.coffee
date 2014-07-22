@@ -379,7 +379,7 @@ module.exports = (env) ->
         params:
           buttonId:
             type: t.string
-        description: "raise the shutter"
+        description: "Press a button"
 
     template: "buttons"
 
@@ -411,7 +411,7 @@ module.exports = (env) ->
       for variable in @config.variables
         do (variable) =>
           name = variable.name
-          info = vars.parseVariableExpression(variable.expression)
+          info = @_vars.parseVariableExpression(variable.expression)
           @attributes[name] = {
             description: name
             label: "$#{name}"
@@ -425,8 +425,8 @@ module.exports = (env) ->
           evaluate = ( => 
             (
               switch info.datatype
-                when "numeric" then vars.evaluateNumericExpression(info.tokens)
-                when "string" then vars.evaluateStringExpression(info.tokens)
+                when "numeric" then @_vars.evaluateNumericExpression(info.tokens)
+                when "string" then @_vars.evaluateStringExpression(info.tokens)
                 else assert false
             ).then( (val) =>
               if val isnt @_attributesValues[name]
@@ -435,7 +435,7 @@ module.exports = (env) ->
             )
           )
           @_createGetter(name, evaluate)
-          vars.notifyOnChange(info.tokens, evaluate)
+          @_vars.notifyOnChange(info.tokens, evaluate)
           @_exprChangeListeners.push evaluate
       super()
 
