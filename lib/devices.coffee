@@ -405,17 +405,13 @@ module.exports = (env) ->
     constructor: (@config, framework) ->
       @id = config.id
       @name = config.name
-
-      vars = framework.variableManager
-
+      @_vars = framework.variableManager
+      @_exprChangeListeners = []
       @attributes = {}
       for variable in @config.variables
         do (variable) =>
           name = variable.name
           info = vars.parseVariableExpression(variable.expression)
-          variablesInExpr = (
-            token.substring(1) for token in info.tokens when vars.isAVariable(token)
-          )
           @attributes[name] = {
             description: name
             label: "$#{name}"
@@ -439,12 +435,13 @@ module.exports = (env) ->
             )
           )
           @_createGetter(name, evaluate)
-          vars.on('variableValueChanged', changeListener = (changedVar, value) =>
-            unless changedVar.name in variablesInExpr then return
-            evaluate()
-          )
+          vars.notifyOnChange(info.tokens, evaluate)
+          @_exprChangeListeners.push evaluate
       super()
 
+    destroy: ->
+      @_vars.cancelNotifyOnChange(cl) for cl in @_exprChangeListeners
+      super()
 
   return exports = {
     Device

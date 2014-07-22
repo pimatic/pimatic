@@ -325,6 +325,18 @@ module.exports = (env) ->
     extractVariables: (tokens) ->
       return (vars = t.substring(1) for t in tokens when @isAVariable(t))
 
+    notifyOnChange: (tokens, listener) ->
+      variablesInExpr = @extractVariables(tokens)
+      @on('variableValueChanged', changeListener = (changedVar, value) =>
+        unless changedVar.name in variablesInExpr then return
+        listener(changedVar)
+      )
+      listener.__variableChangeListener = changeListener
+
+    cancelNotifyOnChange: (listener) ->
+      assert typeof listener.__variableChangeListener is "function"
+      @removeListener('variableValueChanged', listener.__variableChangeListener)
+
     evaluateNumericExpression: (tokens, varsInEvaluation = {}) ->
       return Promise.try( =>
         tokens = (t for t in tokens when t isnt ',')
