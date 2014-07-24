@@ -145,6 +145,8 @@ module.exports = (env) ->
         params:
           state:
             type: t.boolean
+      toggle:
+        description: "toggle the state of the switch"
       getState:
         description: "returns the current state of the switch"
         returns:
@@ -164,6 +166,9 @@ module.exports = (env) ->
 
     # Retuns a promise
     turnOff: -> @changeStateTo off
+
+    toggle: ->
+      @getState().then( (state) => @changeStateTo(!state) )
 
     # Retuns a promise that is fulfilled when done.
     changeStateTo: (state) ->

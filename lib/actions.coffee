@@ -271,7 +271,79 @@ module.exports = (env) ->
     # ### executeRestoreAction()
     executeRestoreAction: (simulate) => @_doExectuteAction(simulate, (not @state))
 
+  ###
+  The Toggle Action Provider
+  -------------
+  Provides the ability to toggle switch devices on or off. 
+  Currently it handles the following actions:
 
+  * toggle the state of _device_
+  * toggle the state of [the] _device_
+  * toggle _device_ state 
+  * toggle  [the] _device_ state
+
+  where _device_ is the name or id of a device and "the" is optional.
+  ###
+  class ToggleActionProvider extends ActionProvider
+
+    constructor: (@framework) ->
+
+    # ### parseAction()
+    ###
+    Parses the above actions.
+    ###
+    parseAction: (input, context) =>
+      # The result the function will return:
+      retVar = null
+
+      switchDevices = _(@framework.devices).values().filter( 
+        (device) => device.hasAction("toggle")
+      ).value()
+
+      if switchDevices.length is 0 then return
+
+      device = null
+      match = null
+
+      onDeviceMatch = ( (m, d) -> device = d; match = m.getFullMatch() )
+
+      m = M(input, context)
+        .match('toggle ')
+        .or([
+          ( (m) => 
+            return m.match('the state of ', optional: yes)
+              .matchDevice(switchDevices, onDeviceMatch)
+          ),
+          ( (m) => 
+            return m.matchDevice(switchDevices, (m, d) ->
+              return m.match(' state', optional: yes, (m)-> onDeviceMatch(m, d) )
+            )
+          )
+        ])
+        
+      if match?
+        assert device?
+        assert typeof match is "string"
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new ToggleActionHandler(device)
+        }
+      else
+        return null
+
+  class ToggleActionHandler extends ActionHandler
+
+    constructor: (@device) -> #nop
+
+    # ### executeAction()
+    executeAction: (simulate) => 
+      return (
+        if simulate
+          Promise.resolve __("would toggle state of %s", @device.name)
+        else
+          @device.toggle().then( => __("toggled state of %s", @device.name) )
+      )
 
   ###
   The Shutter Action Provider
@@ -539,4 +611,5 @@ module.exports = (env) ->
     LogActionProvider
     ShutterActionProvider
     StopShutterActionProvider
+    ToggleActionProvider
   }

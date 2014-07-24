@@ -980,6 +980,7 @@ module.exports = (env) ->
           env.actions.SetVariableActionProvider
           env.actions.ShutterActionProvider
           env.actions.StopShutterActionProvider
+          env.actions.ToggleActionProvider
         ]
         for actProv in defaultActionProvider
           actProvInst = new actProv(this)
