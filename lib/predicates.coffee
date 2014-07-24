@@ -610,12 +610,13 @@ module.exports = (env) ->
         matchingDevice = device
         matchingButtonId = buttonId
 
-      buttonDevices = _(@framework.devices).values()
-        .filter((d) => d instanceof env.devices.ButtonsDevice)
+      buttonsWithId = [] 
 
-      buttonsWithId = buttonDevices
-        .map( (d) => ( [{device: d, buttonId: b.id}, b.id] for b in d.config.buttons) )
-        .flatten(true).valueOf()
+      for id, d of @framework.devices
+        continue unless d instanceof env.devices.ButtonsDevice
+        for b in d.config.buttons
+          buttonsWithId.push [{device: d, buttonId: b.id}, b.id]
+          buttonsWithId.push [{device: d, buttonId: b.id}, b.text] if b.id isnt b.text
 
       m = M(input, context)
         .match('the ', optional: true)
