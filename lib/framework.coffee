@@ -385,6 +385,15 @@ module.exports = (env) ->
       @_emitGroupOrderChanged(groupOrder)
       return groupOrder
 
+    updatePageOrder: (pageOrder) ->
+      assert pageOrder? and Array.isArray pageOrder
+      @config.pages = _.sortBy(@config.pages,  (page) => 
+        index = pageOrder.indexOf page.id 
+        return if index is -1 then 99999 else index # push it to the end if not found
+      )
+      @saveConfig()
+      @_emitPageOrderChanged(pageOrder)
+      return pageOrder
 
     setupExpressApp: () ->
       # Setup express
@@ -744,6 +753,8 @@ module.exports = (env) ->
     _emitPageAdded: (page) -> @_emitPageEvent('pageAdded', page)
     _emitPageChanged: (page) -> @_emitPageEvent('pageChanged', page)
     _emitPageRemoved: (page) -> @_emitPageEvent('pageRemoved', page)
+    _emitPageOrderChanged: (pageOrder) ->
+      @_emitOrderChanged('pageOrderChanged', pageOrder)
 
     _emitGroupEvent: (eventType, group) ->
       @emit(eventType, group)

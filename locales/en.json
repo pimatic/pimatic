@@ -165,5 +165,8 @@
 	"up to ": "up to ",
 	"Show ": "Show ",
 	"played \"%s\"": "played \"%s\"",
-	"toggled state of %s": "toggled state of %s"
+	"toggled state of %s": "toggled state of %s",
+	"Edit Pages": "Edit Pages",
+	"Drop here to remove page": "Drop here to remove page",
+	"Add a new page": "Add a new page"
 }

@@ -460,6 +460,17 @@ api.framework = {
       result:
         groupOrder:
           type: t.array
+    updatePageOrder:
+      rest:
+        type: "POST"
+        url: "/api/pages"
+      description: "Update the Order of all Pages"
+      params:
+        pageOrder:
+          type: t.array
+      result:
+        pageOrder:
+          type: t.array
     addPluginsToConfig:
       description: "Add plugins to config"
       rest:
