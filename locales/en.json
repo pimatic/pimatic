@@ -164,5 +164,6 @@
 	" from ": " from ",
 	"up to ": "up to ",
 	"Show ": "Show ",
-	"played \"%s\"": "played \"%s\""
+	"played \"%s\"": "played \"%s\"",
+	"toggled state of %s": "toggled state of %s"
 }

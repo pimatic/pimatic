@@ -21,12 +21,20 @@ module.exports = (env) ->
       'info': 2
       'debug': 3
     typeMap:
-      'number': 'float' 
-      'string': 'string'
-      'boolean': 'boolean'
-      'date': 'timestamp'
+      'number': "attributeValueNumber"
+      'string': "attributeValueString"
+      'boolean': "attributeValueNumber"
+      'date': "attributeValueNumber"
+    attributeValueTables:
+      "attributeValueNumber": {
+        valueColumnType: "float"
+      }
+      "attributeValueString": {
+        valueColumnType: "string"
+      }
+
     deviceAttributeCache: {}
-    typeToAttributeTable: (type) -> "attributeValue#{S(type).capitalize().s}"
+    typeToAttributeTable: (type) -> @typeMap[type]
   }
   dbMapping.logIntToLevel = _.invert(dbMapping.logLevelToInt)
 
@@ -86,15 +94,14 @@ module.exports = (env) ->
           table.string('type')
         )
 
-        for typeName, columnType of dbMapping.typeMap
-          tableName = dbMapping.typeToAttributeTable(typeName)
+        for tableName, tableInfo of dbMapping.attributeValueTables
           pending.push createTableIfNotExists(tableName, (table) =>
             table.increments('id').primary()
             table.timestamp('time').index() 
             table.integer('deviceAttributeId')
               .references('id')
               .inTable('deviceAttribute')
-            table[columnType]('value')
+            table[tableInfo.valueColumnType]('value')
           ).then( =>
             return @knex.raw("""
               CREATE INDEX IF NOT EXISTS
@@ -255,8 +262,7 @@ module.exports = (env) ->
           .select('id')
         subquery.whereRaw(entry.expireInfo.whereSQL)
         subqueryRaw = "deviceAttributeId in (#{subquery.toString()})"
-        for type in _.keys(dbMapping.typeMap)
-          tableName = dbMapping.typeToAttributeTable(type)
+        for tableName in _.keys(dbMapping.attributeValueTables)
           del = @knex(tableName)
           del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
           del.whereRaw(subqueryRaw)
@@ -366,9 +372,8 @@ module.exports = (env) ->
           query.where('time', '<=', parseFloat(before))
 
       subquery = null
-      for type in _.keys(dbMapping.typeMap)
-        do (type) =>
-          tableName = dbMapping.typeToAttributeTable(type)
+      for tableName in _.keys(dbMapping.attributeValueTables)
+        do (tableName) =>
           unless subquery?
             subquery = @knex(tableName)
             buildQueryForType(tableName, subquery)
@@ -413,8 +418,7 @@ module.exports = (env) ->
 
     queryDeviceAttributeEventsCount: () ->
       pending = []
-      for type in _.keys(dbMapping.typeMap)
-        tableName = dbMapping.typeToAttributeTable(type)
+      for tableName in _.keys(dbMapping.attributeValueTables)
         pending.push @knex(tableName).count('* AS count')
       return Promise.all(pending).then( (counts) =>
         count = 0
