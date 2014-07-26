@@ -125,17 +125,17 @@ module.exports = (env) ->
 
         deleteExpiredEntriesInterval = 30 * 60 * 1000#ms
 
-        return Promise.all(pending).then(
+        return Promise.all(pending).then( =>
           return @knex.raw("""
-              CREATE INDEX IF NOT EXISTS
-              deviceAttributeDeviceIdAttributeName ON 
-              deviceAttribute(deviceId, attributeName);
-              CREATE INDEX IF NOT EXISTS
-              deviceAttributeDeviceId ON 
-              deviceAttribute(deviceId);
-              CREATE INDEX IF NOT EXISTS
-              deviceAttributeAttributeName ON 
-              deviceAttribute(attributeName);
+            CREATE INDEX IF NOT EXISTS
+            deviceAttributeDeviceIdAttributeName ON 
+            deviceAttribute(deviceId, attributeName);
+            CREATE INDEX IF NOT EXISTS
+            deviceAttributeDeviceId ON 
+            deviceAttribute(deviceId);
+            CREATE INDEX IF NOT EXISTS
+            deviceAttributeAttributeName ON 
+            deviceAttribute(attributeName);
           """)
         ).then( =>
           deleteExpiredDeviceAttributesCron = ( =>
