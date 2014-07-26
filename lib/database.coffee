@@ -362,43 +362,31 @@ module.exports = (env) ->
 
       buildQueryForType = (tableName, query) =>
         query.select(
-          'deviceAttributeId',
-          'time', 
-          'value'
-        ).from(tableName)
-        if after?
-          query.where('time', '>=', parseFloat(after))
-        if before?
-          query.where('time', '<=', parseFloat(before))
+          'deviceAttribute.deviceId AS deviceId', 
+          'deviceAttribute.attributeName AS attributeName', 
+          'deviceAttribute.type AS type',
+          'time AS time', 
+          'value AS value'
+        ).from(tableName).join('deviceAttribute', 
+          "#{tableName}.deviceAttributeId", '=', 'deviceAttribute.id',
+        )
+        if deviceId?
+          query.where('deviceId', deviceId)
+        if attributeName?
+          query.where('attributeName', attributeName)
 
-      subquery = null
+      query = null
       for tableName in _.keys(dbMapping.attributeValueTables)
-        do (tableName) =>
-          unless subquery?
-            subquery = @knex(tableName)
-            buildQueryForType(tableName, subquery)
-          else
-            subquery.unionAll( -> buildQueryForType(tableName, this) )
-      subquery.orderBy(order, orderDirection)
-      unless deviceId? or attributeName?
-        if offset? then subquery.offset(offset)
-        if limit? then subquery.limit(limit)
+        unless query?
+          query = @knex(tableName)
+          buildQueryForType(tableName, query)
+        else
+          query.unionAll( -> buildQueryForType(tableName, this) )
 
-      query = @knex(@knex.raw("(#{subquery.toString()}) AS vals")).select(
-        'deviceAttribute.deviceId AS deviceId', 
-        'deviceAttribute.attributeName AS attributeName', 
-        'deviceAttribute.type AS type',
-        'vals.time AS time', 
-        'vals.value AS value'
-      ).join('deviceAttribute', 
-        "vals.deviceAttributeId", '=', 'deviceAttribute.id',
-      )
-
-      if deviceId?
-        query.where('deviceId', deviceId)
-      if attributeName?
-        query.where('attributeName', attributeName)
-
+      if after?
+        query.where('time', '>=', parseFloat(after))
+      if before?
+        query.where('time', '<=', parseFloat(before))
       query.orderBy(order, orderDirection)
       if offset? then query.offset(offset)
       if limit? then query.limit(limit)
