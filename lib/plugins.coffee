@@ -160,8 +160,8 @@ module.exports = (env) ->
                 latest: latest.version
               }
             )
-        return Promise.allSettled(waiting).then( (results) =>
-          env.logger.error(r.reason) for r in results when r.state is "rejected"
+        return Promise.settle(waiting).then( (results) =>
+          env.logger.error(r.reason()) for r in results when r.isRejected()
 
           ret = []
           for info in infos
