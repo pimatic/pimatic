@@ -50,15 +50,6 @@ M = require './matcher'
 require "date-format-lite"
 milliseconds = require './milliseconds'
 
-bet = (requireNoCache = ->
-  # Require bet without caching it, because we change some operations, that 
-  # should be local to this file
-  betPath = require.resolve 'bet'
-  bet = require betPath
-  delete require.cache[betPath]
-  return bet
-)()
-
 module.exports = (env) ->
 
 
@@ -87,6 +78,8 @@ module.exports = (env) ->
     error: null
     # Time the rule was last executed
     lastExecuteTime: null
+
+    conditionExprTree: null
       
     constructor: (@id, @name, @string) ->
       assert typeof @id is "string"
@@ -107,6 +100,7 @@ module.exports = (env) ->
       @actions = fromRule.actions
       @error = fromRule.error
       @lastExecuteTime = fromRule.lastExecuteTime
+      @conditionExprTree = fromRule.conditionExprTree
 
     toJson: -> {
       id: @id
@@ -119,6 +113,87 @@ module.exports = (env) ->
       actionsToken: @actionsToken
       error: @error
     }
+
+  class Expression
+
+  class AndExpression extends Expression
+    constructor: (@left, @right) -> #nop
+    evaluate: (cache) -> 
+      return @left.evaluate(cache).then( (val) => 
+        if val then @right.evaluate(cache) else false 
+      )
+    toString: -> "and(#{@left.toString()}, #{@right.toString()})"
+  class OrExpression extends Expression
+    constructor: (@left, @right) -> #nop
+    evaluate: (cache) -> 
+      return @left.evaluate(cache).then( (val) => 
+        if val then true else @right.evaluate(cache) 
+      )
+    toString: -> "or(#{@left.toString()}, #{@right.toString()})"
+  class PredicateExpression extends Expression
+    constructor: (@predicate) -> #nop
+    evaluate: (cache) -> 
+      id = @predicate.id
+      value = cache[id]
+      return (
+        if value? then Promise.resolve(value)
+        else @predicate.handler.getValue().then( (value) =>
+          cache[id] = value
+          return value
+        )
+      )
+    toString: -> "predicate('#{@predicate.token}')"
+
+  class ExpressionTreeBuilder
+    _nextToken: ->
+      if @pos < @tokens.length
+        @token = @tokens[@pos++]
+      else
+        @token = ''
+    build: (@tokens, @predicates) ->
+      @pos = 0
+      @_nextToken()
+      return @_buildExpression()
+    _buildExpression: (left = null, greedy = yes) ->
+      switch @token
+        when 'predicate'
+          @_nextToken()
+          predicateExpr = @_buildPredicateExpression()
+          return (
+            if greedy then @_buildExpression(predicateExpr, greedy)
+            else predicateExpr
+          )
+        when 'or'
+          @_nextToken()
+          return new OrExpression(left, @_buildExpression(null, yes))
+        when 'and'
+          @_nextToken()
+          right = @_buildExpression(null, false)
+          return @_buildExpression(new AndExpression(left, right), yes)
+        when '['
+          @_nextToken()
+          innerExpr = @_buildExpression(null, yes)
+          assert @token is ']'
+          @_nextToken()
+          return (
+            if greedy then @_buildExpression(innerExpr, greedy)
+            else innerExpr
+          )
+        when ']', ''
+          return left
+        else
+          assert false
+
+    _buildPredicateExpression: ->
+      assert @token is '('
+      @_nextToken()
+      predicateIndex = @token
+      assert typeof predicateIndex is "number"
+      @_nextToken()
+      assert @token is ')'
+      @_nextToken()
+      predicate = @predicates[predicateIndex]
+      return new PredicateExpression(predicate)
 
   ###
   The Rule Manager
@@ -234,7 +309,8 @@ module.exports = (env) ->
           result = @_parseRuleActions(id, rule.actionsToken, context)
           rule.actions = result.actions
           rule.actionToken = result.tokens
-
+          rule.conditionExprTree = (new ExpressionTreeBuilder())
+            .build(rule.tokens, rule.predicates)
         return rule
       )
 
@@ -260,8 +336,6 @@ module.exports = (env) ->
        
           predicates = [ {token: '12:30'}, {token: 'temperature > 10'}]
        
-      We do this because we want o parse the condition with [bet](https://github.com/paulmoore/BET) 
-      later and bet can only parse mathematical functions.
       ### 
       predicates = []
       tokens = []
@@ -304,6 +378,7 @@ module.exports = (env) ->
               token = m.getFullMatch()
               assert S(nextInput.toLowerCase()).startsWith(token.toLowerCase())
               nextInput = nextInput.substring(token.length)
+
       return {
         predicates: predicates
         tokens: tokens
@@ -744,54 +819,7 @@ module.exports = (env) ->
     _evaluateConditionOfRule: (rule, knownPredicates = {}) ->
       assert rule? and rule instanceof Object
       assert knownPredicates? and knownPredicates instanceof Object
-
-      awaiting = []
-      predNumToId = []
-      for pred, i in rule.predicates
-        do (pred) =>
-          predNumToId[i] = pred.id
-          unless knownPredicates[pred.id]?
-            if pred.justTrigger is yes
-              knownPredicates[pred.id] = false
-            else
-              awaiting.push pred.handler.getValue().then( (state) =>
-                unless state?
-                  state = false
-                  env.logger.info "Could not decide #{pred.token} yet."
-                knownPredicates[pred.id] = state
-              )
-
-      return Promise.all(awaiting).then( (predicateValues) =>
-        bet.operators['and'] =
-          assoc: 'left'
-          prec: 0
-          argc: 2
-          fix: 'in'
-          exec: (args) => if args[0] isnt 0 and args[1] isnt 0 then 1 else 0
-        bet.operators['or'] =
-          assoc: 'left'
-          prec: 1
-          argc: 2
-          fix: 'in'
-          exec: (args) => if args[0] isnt 0 or args[1] isnt 0 then 1 else 0
-        bet.functions['predicate'] =
-          argc: 1
-          exec: (args) => 
-            predId = predNumToId[args[0]]
-            assert knownPredicates[predId]?
-            if knownPredicates[predId] then 1 else 0
-
-        # bet uses '(', ')' as parentheses, so replace ']' and '[' in the tokens
-        tokens = _(rule.tokens).map( (token) =>
-          switch token
-            when '[' then '('
-            when ']' then ')'
-            else token
-        ).valueOf()
-
-        isTrue = (bet.evaluateSync(tokens) is 1)
-        return isTrue
-      )
+      return rule.conditionExprTree.evaluate(knownPredicates)
 
     # ###_doesRuleCondtionHold()
     # The same as _evaluateConditionOfRule but does not ignore the for-suffixes.
@@ -1111,4 +1139,4 @@ module.exports = (env) ->
         return message
       )
 
-  return exports = { RuleManager }
+  return exports = { RuleManager, ExpressionTreeBuilder }

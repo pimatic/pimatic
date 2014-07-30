@@ -662,7 +662,8 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 then action 1"
 
-
+      rule.conditionExprTree = (new env.rules.ExpressionTreeBuilder())
+        .build(rule.tokens, rule.predicates)
       ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         cassert isTrue is true
       ).then( -> 
@@ -707,7 +708,8 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 and predicate 2 then action 1"
 
-
+      rule.conditionExprTree = (new env.rules.ExpressionTreeBuilder())
+        .build(rule.tokens, rule.predicates)
       ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         cassert isTrue is true
       ).then( -> 
@@ -753,7 +755,8 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 or predicate 2 then action 1"
 
-
+      rule.conditionExprTree = (new env.rules.ExpressionTreeBuilder())
+        .build(rule.tokens, rule.predicates)
       ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         cassert isTrue is true
       ).then( ->       
@@ -792,7 +795,8 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 for 1 second then action 1"
 
-
+      rule.conditionExprTree = (new env.rules.ExpressionTreeBuilder())
+        .build(rule.tokens, rule.predicates)
       ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
         cassert isTrue is true
@@ -833,6 +837,8 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 for 1 second then action 1"
 
+      rule.conditionExprTree = (new env.rules.ExpressionTreeBuilder())
+        .build(rule.tokens, rule.predicates)
       ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
         cassert isTrue is false
@@ -885,6 +891,8 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 for 1 second and predicate 2 for 2 seconds then action 1"
 
+      rule.conditionExprTree = (new env.rules.ExpressionTreeBuilder())
+        .build(rule.tokens, rule.predicates)
       ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
         cassert isTrue is true
@@ -944,6 +952,8 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 for 1 second and predicate 2 for 2 seconds then action 1"
 
+      rule.conditionExprTree = (new env.rules.ExpressionTreeBuilder())
+        .build(rule.tokens, rule.predicates)
       ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
         cassert isTrue is false
@@ -1002,6 +1012,8 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 for 1 second or predicate 2 for 2 seconds then action 1"
 
+      rule.conditionExprTree = (new env.rules.ExpressionTreeBuilder())
+        .build(rule.tokens, rule.predicates)
       ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
         cassert isTrue is true
@@ -1068,6 +1080,8 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 for 1 second or predicate 2 for 2 seconds then action 1"
 
+      rule.conditionExprTree = (new env.rules.ExpressionTreeBuilder())
+        .build(rule.tokens, rule.predicates)
       ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
         cassert isTrue is false
