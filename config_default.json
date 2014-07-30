@@ -17,9 +17,7 @@
       "plugin": "cron" 
     }, 
     { 
-      "plugin": "mobile-frontend",
-      "items": [ 
-      ] 
+      "plugin": "mobile-frontend"
     }
   ],
   "devices": [
