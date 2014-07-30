@@ -14,9 +14,6 @@
   },
   "plugins": [
     { 
-      "plugin": "rest-api" 
-    }, 
-    { 
       "plugin": "cron" 
     }, 
     { 
