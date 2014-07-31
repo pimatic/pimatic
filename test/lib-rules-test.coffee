@@ -8,6 +8,8 @@ env = require('../startup').env
 
 describe "RuleManager", ->
 
+  rulesAst = require '../lib/rules-ast-builder'
+
   before ->
     env.logger.winston.transports.taggedConsoleLogger.level = 'error'
 
@@ -662,7 +664,7 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 then action 1"
 
-      rule.conditionExprTree = (new env.rules.ExpressionTreeBuilder())
+      rule.conditionExprTree = (new rulesAst.BoolExpressionTreeBuilder())
         .build(rule.tokens, rule.predicates)
       ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         cassert isTrue is true
@@ -708,7 +710,7 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 and predicate 2 then action 1"
 
-      rule.conditionExprTree = (new env.rules.ExpressionTreeBuilder())
+      rule.conditionExprTree = (new rulesAst.BoolExpressionTreeBuilder())
         .build(rule.tokens, rule.predicates)
       ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         cassert isTrue is true
@@ -755,7 +757,7 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 or predicate 2 then action 1"
 
-      rule.conditionExprTree = (new env.rules.ExpressionTreeBuilder())
+      rule.conditionExprTree = (new rulesAst.BoolExpressionTreeBuilder())
         .build(rule.tokens, rule.predicates)
       ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         cassert isTrue is true
@@ -795,7 +797,7 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 for 1 second then action 1"
 
-      rule.conditionExprTree = (new env.rules.ExpressionTreeBuilder())
+      rule.conditionExprTree = (new rulesAst.BoolExpressionTreeBuilder())
         .build(rule.tokens, rule.predicates)
       ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
@@ -837,7 +839,7 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 for 1 second then action 1"
 
-      rule.conditionExprTree = (new env.rules.ExpressionTreeBuilder())
+      rule.conditionExprTree = (new rulesAst.BoolExpressionTreeBuilder())
         .build(rule.tokens, rule.predicates)
       ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
@@ -891,7 +893,7 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 for 1 second and predicate 2 for 2 seconds then action 1"
 
-      rule.conditionExprTree = (new env.rules.ExpressionTreeBuilder())
+      rule.conditionExprTree = (new rulesAst.BoolExpressionTreeBuilder())
         .build(rule.tokens, rule.predicates)
       ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
@@ -952,7 +954,7 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 for 1 second and predicate 2 for 2 seconds then action 1"
 
-      rule.conditionExprTree = (new env.rules.ExpressionTreeBuilder())
+      rule.conditionExprTree = (new rulesAst.BoolExpressionTreeBuilder())
         .build(rule.tokens, rule.predicates)
       ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
@@ -1012,7 +1014,7 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 for 1 second or predicate 2 for 2 seconds then action 1"
 
-      rule.conditionExprTree = (new env.rules.ExpressionTreeBuilder())
+      rule.conditionExprTree = (new rulesAst.BoolExpressionTreeBuilder())
         .build(rule.tokens, rule.predicates)
       ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
@@ -1080,7 +1082,7 @@ describe "RuleManager", ->
         action: "action 1"
         string: "if predicate 1 for 1 second or predicate 2 for 2 seconds then action 1"
 
-      rule.conditionExprTree = (new env.rules.ExpressionTreeBuilder())
+      rule.conditionExprTree = (new rulesAst.BoolExpressionTreeBuilder())
         .build(rule.tokens, rule.predicates)
       ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
         elapsed = getTime() - start
