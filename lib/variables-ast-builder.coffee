@@ -5,7 +5,8 @@ Builds a Abstract Syntax Tree (AST) from a variable expression token sequence.
 ###
 
  
-assert = require 'cassert'
+cassert = require 'cassert'
+assert = require 'assert'
 util = require 'util'
 Promise = require 'bluebird'
 _ = require 'lodash'
@@ -55,14 +56,40 @@ class VariableExpression extends Expression
   evaluate: (cache) -> @variable.getValue()
   toString: -> "var(#{@variable.name})"
 
+class FunctionCallExpression extends Expression
+  constructor: (@name, @func, @args) -> #nop
+  evaluate: (cache) -> Promise.resolve(@func.exec(@args...))
+  toString: -> 
+    argsStr = (
+      if @args.length > 0 then _.reduce(@args, (l,r) -> "#{l.toString()}, #{r.toString()}" )
+      else ""
+    )
+    return "fun(#{@name}, [#{argsStr}])"
+
+class StringExpression extends Expression
+  constructor: (@value) -> #nop
+  evaluate: -> Promise.resolve @value
+  toString: -> "str('#{@value}')"
+
+class StringConcatExpression extends Expression
+  constructor: (@left, @right) -> #nop
+  evaluate: (cache) -> 
+    return @left.evaluate(cache).then( (val1) => 
+      @right.evaluate(cache).then( (val2) => "#{val1}#{val2}" )
+    )
+  toString: -> "con(#{@left.toString()}, #{@right.toString()})"
 
 class ExpressionTreeBuilder
+  constructor: (@variables, @functions) -> 
+    assert @variables? and typeof @variables is "object"
+    assert @functions? and typeof @functions is "object"
+
   _nextToken: ->
     if @pos < @tokens.length
       @token = @tokens[@pos++]
     else
       @token = ''
-  build: (@tokens, @predicates) ->
+  build: (@tokens) ->
     @pos = 0
     @_nextToken()
     return @_buildExpression()
@@ -81,9 +108,9 @@ class ExpressionTreeBuilder
         @_nextToken()
         right = @_buildTerm()
         return @_buildExpressionPrime(new SubExpression(left, right))
-      when ')', ''
+      when ')', '', ','
         return left
-      else assert false
+      else assert false, "unexpected token: '#{@token}'"
 
   _buildTerm: () ->
     left = @_buildFactor()
@@ -99,27 +126,58 @@ class ExpressionTreeBuilder
         @_nextToken()
         right = @_buildFactor()
         return @_buildTermPrime(new DivExpression(left, right))
-      when '+', '-', ')', ''
+      when '+', '-', ')', '', ','
         return left
-      else assert false
+      else 
+        right = @_buildFactor()
+        return @_buildTermPrime(new StringConcatExpression(left, right))
 
   _buildFactor: () ->
     switch 
       when @token is '('
         @_nextToken()
         expr = @_buildExpression()
-        assert @token is ')'
+        cassert @token is ')'
         @_nextToken()
         return expr
-      when typeof @token is "number"
+      when @_isNumberToken()
         numberExpr = new NumberExpression(@token)
         @_nextToken()
         return numberExpr
-      when @token.length > 0 and @token[0] is '$'
-        varExpr = new VariableExpression(@token)
+      when @_isVariableToken()
+        varName = @token.substr(1)
+        variable = @variables[varName]
+        unless variable? then throw new Error("Could not find variable #{@token}")
+        varExpr = new VariableExpression(variable)
         @_nextToken()
         return varExpr
-      else assert false
+      when @_isStringToken()
+        str = @token[1...@token.length-1]
+        strExpr = new StringExpression(str)
+        @_nextToken()
+        return strExpr
+      when @token.match(/[_a-zA-Z][_a-zA-Z0-9]*/)?
+        funcName = @token
+        func = @functions[funcName]
+        unless func? then throw new Error("Could not find function #{funcName}")
+        @_nextToken()
+        cassert @token is '('
+        @_nextToken()
+        args = []
+        while @token isnt ')'
+          args.push @_buildExpression()
+          cassert @token in [')', ',']
+          @_nextToken() if @token is ','
+        cassert @token is ')'
+        @_nextToken()
+        funcCallExpr = new FunctionCallExpression(funcName, func, args)
+        return funcCallExpr
+      else assert false, "unexpected token: '#{@token}'"
+
+  _isStringToken: -> (@token.length > 0 and @token[0] is '"')
+  _isVariableToken: -> (@token.length > 0 and @token[0] is '$')
+  _isNumberToken: -> (typeof @token is "number")
+
 
 module.exports = {
   AddExpression
