@@ -121,13 +121,13 @@ module.exports = (env) ->
     functions: {
       min:
         argc: 2
-        exec: (args) -> Math.min(args[0], args[1])
+        exec: (a, b) -> Math.min(a, b)
       max:
         argc: 2
-        exec: (args) -> Math.max(args[0], args[1])
+        exec: (a, b) -> Math.max(a, b)
       random:
         argc: 2
-        exec: (args) -> Math.floor((Math.random() * args[1]) + args[0])
+        exec: (min, max) -> Math.floor((Math.random() * max) + min)
     }
 
     constructor: (@framework, @variablesConfig) ->
