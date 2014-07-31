@@ -1,7 +1,7 @@
 ###
 Rules AST Builder
 ===========
-Builds a Abstract Syntax Tree (AST) from an rule condition token stream.
+Builds a Abstract Syntax Tree (AST) from a rule condition token sequence.
 ###
 
  
