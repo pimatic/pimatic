@@ -732,9 +732,9 @@ module.exports = (env) ->
       )
 
     # ###_evaluateConditionOfRule()
-    # Uses the 'bet' node.js module to evaluate rule.tokens. This function returnes a promise that
-    # will be fulfilled with true if the condition of the rule is true. This function ignores all 
-    # the "for"-suffixes of predicates. The `knownPredicates` is an object containing a value for
+    # This function returnes a promise thatwill be fulfilled with true if the condition of the 
+    # rule is true. This function ignores all the "for"-suffixes of predicates. 
+    # The `knownPredicates` is an object containing a value for
     # each predicate for that the state is already known.
     _evaluateConditionOfRule: (rule, knownPredicates = {}) ->
       assert rule? and rule instanceof Object

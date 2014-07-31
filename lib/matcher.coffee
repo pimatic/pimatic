@@ -299,7 +299,7 @@ class Matcher
       tokens = tokens.concat ptokens
       openParanteses += ptokens.length
     ).or([
-      ( (m) => m.matchNumber( (m, match) => tokens.push(match); last = m ) ),
+      ( (m) => m.matchNumber( (m, match) => tokens.push(parseFloat(match)); last = m ) ),
       ( (m) => m.matchVariable(variables, (m, match) => tokens.push(match); last = m ) )
       ( (m) => m.matchFunctionCall(variables, functions, (m, match) => 
           tokens = tokens.concat match

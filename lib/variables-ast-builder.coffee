@@ -17,32 +17,32 @@ class Expression
 class AddExpression extends Expression
   constructor: (@left, @right) -> #nop
   evaluate: (cache) -> 
-    return @left.evaluate(cache).then( (val1) => 
-      @right.evaluate(cache).then( (val2) => val1 + val2 )
+    return @left.evaluate(cache, yes).then( (val1) => 
+      @right.evaluate(cache, yes).then( (val2) => val1 + val2 )
     )
   toString: -> "add(#{@left.toString()}, #{@right.toString()})"
 
 class SubExpression extends Expression
   constructor: (@left, @right) -> #nop
   evaluate: (cache) -> 
-    return @left.evaluate(cache).then( (val1) => 
-      @right.evaluate(cache).then( (val2) => val1 - val2 )
+    return @left.evaluate(cache, yes).then( (val1) => 
+      @right.evaluate(cache, yes).then( (val2) => val1 - val2 )
     )
   toString: -> "sub(#{@left.toString()}, #{@right.toString()})"
 
 class MulExpression extends Expression
   constructor: (@left, @right) -> #nop
   evaluate: (cache) -> 
-    return @left.evaluate(cache).then( (val1) => 
-      @right.evaluate(cache).then( (val2) => val1 * val2 )
+    return @left.evaluate(cache, yes).then( (val1) => 
+      @right.evaluate(cache, yes).then( (val2) => val1 * val2 )
     )
   toString: -> "mul(#{@left.toString()}, #{@right.toString()})"
 
 class DivExpression extends Expression
   constructor: (@left, @right) -> #nop
   evaluate: (cache) -> 
-    return @left.evaluate(cache).then( (val1) => 
-      @right.evaluate(cache).then( (val2) => val1 / val2 )
+    return @left.evaluate(cache, yes).then( (val1) => 
+      @right.evaluate(cache, yes).then( (val2) => val1 / val2 )
     )
   toString: -> "div(#{@left.toString()}, #{@right.toString()})"
 
@@ -53,7 +53,27 @@ class NumberExpression extends Expression
 
 class VariableExpression extends Expression
   constructor: (@variable) -> #nop
-  evaluate: (cache) -> @variable.getValue()
+  evaluate: (cache, expectNumeric) ->
+    name = @variable.name
+    val = cache[name]
+    return Promise.resolve().then( =>
+      if cache[name]?
+        if cache[name].value? then return cache[name].value
+        else throw new Error("Dependency cycle detected for variable #{name}")
+      else
+        cache[name] = {}
+        return @variable.getUpdatedValue(cache).then( (value) =>
+          cache[name].value = value
+          return value
+        )
+    ).then( (val) =>
+      if expectNumeric
+        numVal = parseFloat(val)
+        if isNaN(numVal) 
+          throw new Error("Expected variable #{@variable.name} to have a numeric value.")
+        return numVal
+      else return val
+    )
   toString: -> "var(#{@variable.name})"
 
 class FunctionCallExpression extends Expression

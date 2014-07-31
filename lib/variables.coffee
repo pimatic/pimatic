@@ -10,14 +10,7 @@ _ = require 'lodash'
 S = require 'string'
 M = require './matcher'
 
-bet = (requireNoCache = ->
-  # Require bet without caching it, because we change some operations, that 
-  # should be local to this file
-  betPath = require.resolve 'bet'
-  bet = require betPath
-  delete require.cache[betPath]
-  return bet
-)()
+varsAst = require './variables-ast-builder'
 
 module.exports = (env) ->
 
@@ -36,6 +29,8 @@ module.exports = (env) ->
 
     getCurrentValue: -> @value
     _setValue: (value) ->
+      numValue = parseFloat(value)
+      value = numValue unless isNaN(numValue)
       if value is @value then return false
       @value = value
       @_vars._emitVariableValueChanged(this, @value)
@@ -337,53 +332,19 @@ module.exports = (env) ->
       assert typeof listener.__variableChangeListener is "function"
       @removeListener('variableValueChanged', listener.__variableChangeListener)
 
-    evaluateNumericExpression: (tokens, varsInEvaluation = {}) ->
-      return Promise.try( =>
-        tokens = (t for t in tokens when t isnt ',')
-        awaiting = []
-        for t, i in tokens
-          do (i, t) =>
-            unless isNaN(parseFloat(t))
-              tokens[i] = parseFloat(t)
-            else if @isAVariable(t)
-              varName = t.substring(1)
-              # Replace variable by its value
-              unless @isVariableDefined(varName)
-                throw new Error("#{t} is not defined")
-              awaiting.push(
-                @getVariableUpdatedValue(varName, _.clone(varsInEvaluation)).then( (value) ->
-                  if isNaN(parseFloat(value))
-                    throw new Error("Expected #{t} to have a numeric value (was: #{value}).")
-                  tokens[i] = parseFloat(value)
-                )
-              )
-        for n,f of @functions
-          bet.functions[n] = f
-        return Promise.all(awaiting).then( => bet.evaluateSync(tokens) )
+    evaluateExpression: (tokens, varsInEvaluation = {}) ->
+      builder = new varsAst.ExpressionTreeBuilder(@variables, @functions)
+      # do building async
+      return Promise.resolve().then( =>
+        expr = builder.build(tokens)
+        return expr.evaluate(varsInEvaluation)
       )
 
+    evaluateNumericExpression: (tokens, varsInEvaluation = {}) ->
+      return @evaluateExpression(tokens, varsInEvaluation)
+
     evaluateStringExpression: (tokens, varsInEvaluation = {}) ->
-      return Promise.try( =>
-        tokens = _.clone(tokens)
-        awaiting = []
-        for t, i in tokens
-          do (i, t) =>
-            if @isAVariable(t)
-              varName = t.substring(1)
-              # Replace variable by its value
-              unless @isVariableDefined(varName)
-                throw new Error("#{t} is not defined")
-              awaiting.push(
-                @getVariableUpdatedValue(varName, _.clone(varsInEvaluation)).then( (value) ->
-                  tokens[i] = value
-                )
-              )
-            else 
-              assert t.length >= 2
-              assert t[0] is '"' and t[t.length-1] is '"' 
-              tokens[i] = t[1...t.length-1]
-        return Promise.all(awaiting).then( => _(tokens).reduce( (l, r) => "#{l}#{r}") )
-      )
+      return @evaluateExpression(tokens, varsInEvaluation)
 
 
   return exports = { VariableManager }

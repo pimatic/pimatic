@@ -69,13 +69,13 @@ describe "VariableManager", ->
 
   describe '#evaluateNumericExpression()', ->
     it 'should calculate 1 + 2 * 3', (finish) ->
-      varManager.evaluateNumericExpression(['1', '+', '2', '*', '3']).then( (result) =>
+      varManager.evaluateNumericExpression([1, '+', 2, '*', 3]).then( (result) =>
         assert result, 7
         finish()
       ).catch(finish)
 
     it 'should calculate 3 + $a * 2', (finish) ->
-      varManager.evaluateNumericExpression(['3', '+', '$a', '*', '2']).then( (result) =>
+      varManager.evaluateNumericExpression([3, '+', '$a', '*', 2]).then( (result) =>
         assert result, 5
         finish()
       ).catch(finish)
