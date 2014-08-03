@@ -54,12 +54,15 @@ module.exports = (env) ->
 
 
   class ExpressionValueVariable extends Variable
-    constructor: (vars, name, type, valueOrExpr) ->
+    constructor: (vars, name, type, valueOrExpr = null) ->
       super(vars, name, type, no)
       assert type in ['value', 'expression']
-      switch type
-        when 'value' then @setToValue(valueOrExpr)
-        when 'expression' then @setToExpression(valueOrExpr)
+      if valueOrExpr?
+        switch type
+          when 'value' then @setToValue(valueOrExpr)
+          when 'expression' then @setToExpression(valueOrExpr)
+          else assert false
+
     setToValue: (value) ->
       @_removeListener()
       @type = "value"
@@ -67,6 +70,7 @@ module.exports = (env) ->
       @exprInputStr = null
       @exprTokens = null
       return @_setValue(value)
+
     setToExpression: (expression) ->
       {tokens, datatype} = @_vars.parseVariableExpression(expression)
       @exprInputStr = expression
@@ -78,27 +82,28 @@ module.exports = (env) ->
       doUpdate = ( =>
         @getUpdatedValue().then( (value) => 
           @_setValue(value)
-        ).catch((error) =>
+        ).catch( (error) =>
           env.logger.error("Error updating expression value:", error.message)
           env.logger.debug error
+          return error
         )
       )
       @_vars.on('variableValueChanged', @_changeListener = (changedVar, value) =>
         unless changedVar.name in variablesInExpr then return
         doUpdate()
       )
-      doUpdate()
+      return doUpdate()
+
     _removeListener: ->
       if @_changeListener?
         @_vars.removeListener('variableValueChanged', @_changeListener)
         @changeListener = null
+
     getUpdatedValue: (varsInEvaluation = {})->
       if @type is "value" then return Promise.resolve(@value)
-      else return (
-        switch @_datatype
-          when "numeric" then @_vars.evaluateNumericExpression(@exprTokens, varsInEvaluation)
-          when "string" then @_vars.evaluateStringExpression(@exprTokens, varsInEvaluation)
-        )
+      else 
+        assert @exprTokens?
+        return @_vars.evaluateExpression(@exprTokens, varsInEvaluation)
 
     toJson: ->
       jsonObject = super()
@@ -140,48 +145,62 @@ module.exports = (env) ->
 
     init: () ->
       # Import variables
+      setExpressions = []
+
       for variable in @variablesConfig
-        assert variable.name? and variable.name.length > 0
-        assert(typeof variable.value is 'number' or variable.value.length > 0) if variable.value?
-        variable.name = variable.name.substring(1) if variable.name[0] is '$'
-        if variable.expression?
-          try
+        do (variable) =>
+          assert variable.name? and variable.name.length > 0
+          assert(typeof variable.value is 'number' or variable.value.length > 0) if variable.value?
+          variable.name = variable.name.substring(1) if variable.name[0] is '$'
+          if variable.expression?
+            try
+              exprVar = new ExpressionValueVariable(
+                this, 
+                variable.name, 
+                'expression'
+              )
+              # We first add the variable, but parse the expression later, because it could
+              # contain other variables, added later
+              @_addVariable(exprVar)
+              setExpressions.push( -> 
+                try
+                  exprVar.setToExpression(variable.expression.trim()) 
+                catch
+                  env.logger.error(
+                    "Error parsing expression variable #{variable.name}:", e.message
+                  )
+                  env.logger.debug e
+              )
+            catch e
+              env.logger.error(
+                "Error adding expression variable #{variable.name}:", e.message
+              )
+              env.logger.debug e.stack
+          else
+            assert variable.value?
             @_addVariable(
               new ExpressionValueVariable(
                 this, 
                 variable.name, 
-                'expression', 
-                variable.expression.trim()
+                'value', 
+                variable.value
               )
             )
-          catch e
-            env.logger.error(
-              "Error parsing and adding expression variable #{variable.name}:", e.message
-            )
-            env.logger.debug e
-        else
-          assert variable.value?
-          @_addVariable(
-            new ExpressionValueVariable(
-              this, 
-              variable.name, 
-              'value', 
-              variable.value
-            )
-          )
 
+      setExpr() for setExpr in setExpressions
           
     _addVariable: (variable) ->
       assert variable instanceof Variable
       assert (not @variables[variable.name]?)
       @variables[variable.name] = variable
-      variable.getUpdatedValue().then( (value) ->
-        variable._setValue(value)
+      Promise.resolve().then( ->
+        variable.getUpdatedValue().then( (value) -> variable._setValue(value) )
       ).catch( (error) ->
         env.logger.warn("Could not update variable #{variable.name}: #{error.message}")
         env.logger.debug(error)
       )
       @_emitVariableAdded(variable)
+      return
 
     _emitVariableValueChanged: (variable, value) ->
       @emit('variableValueChanged', variable, value)
@@ -195,10 +214,20 @@ module.exports = (env) ->
     _emitVariableRemoved: (variable) ->
       @emit('variableRemoved', variable)
 
+    getVariablesAndFunctions: (ops) -> 
+      unless ops?
+        return {variables: @variables, functions: @functions}
+      else
+        return { 
+          variables: _.filter(@variables, ops)
+          functions: @functions
+        }
+     
 
     parseVariableExpression: (expression) ->
       tokens = null
-      m = M(expression).matchAnyExpression((m, ts) => tokens = ts)
+      varsAndFuns = @getVariablesAndFunctions()
+      m = M(expression).matchAnyExpression(varsAndFuns, (m, ts) => tokens = ts)
       unless m.hadMatch() and m.getFullMatch() is expression
         throw new Error("Could not parse expression")
       datatype = (if tokens[0][0] is '"' then "string" else "numeric")

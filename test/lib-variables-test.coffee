@@ -18,42 +18,56 @@ describe "VariableManager", ->
       ).catch(finish)
 
   describe '#setVariableToExpr()', ->
-    it "should set the to a numeric expression", (finish) ->
+    it "should set the variable to a numeric expression", (finish) ->
       varManager.setVariableToExpr('b', '2')
       varManager.variables['b'].getUpdatedValue().then( (value) =>
         assert.equal value, 2
         finish()
       ).catch(finish)
 
-    it "should set the to a numeric expression with vars", (finish) ->
+    it "should set the variable to a numeric expression with vars", (finish) ->
       varManager.setVariableToExpr('c', '1*$a+10*$b')
       varManager.variables['c'].getUpdatedValue().then( (value) =>
         assert.equal value, 21
         finish()
       ).catch(finish)
 
-    it "should set the to a string expression", (finish) ->
+    it "should set the variable to a string expression", (finish) ->
       varManager.setVariableToExpr('d', '"foo"')
       varManager.variables['d'].getUpdatedValue().then( (value) =>
         assert.equal value, "foo"
         finish()
       ).catch(finish)
 
-    it "should set the to a string expression with vars", (finish) ->
+    it "should set the variable to a string expression with vars", (finish) ->
       varManager.setVariableToExpr('e', '"$a bars"')
       varManager.variables['e'].getUpdatedValue().then( (value) =>
         assert.equal value, "1 bars"
         finish()
       ).catch(finish)
 
-    it "should detect cycles", (finish) ->
-      varManager.setVariableToExpr('f', "$f")
+    it "should set the variable to a numeric expression with vars", (finish) ->
+      varManager.setVariableToExpr('f', '$c')
       varManager.variables['f'].getUpdatedValue().then( (value) =>
+        assert.equal value, 21
+        finish()
+      ).catch(finish)
+
+    it "should detect cycles", (finish) ->
+      varManager.setVariableToExpr('c', "$f")
+      varManager.variables['c'].getUpdatedValue().then( (value) =>
         assert false
       ).catch( (error) =>
         assert error.message is "Dependency cycle detected for variable f"
         finish()
       ).done()
+
+    it "should set the variable to a function expression", (finish) ->
+      varManager.setVariableToExpr('g', 'min(1, 2)', )
+      varManager.variables['g'].getUpdatedValue().then( (value) =>
+        assert.equal value, 1
+        finish()
+      ).catch(finish)
 
   describe '#isVariableDefined()', ->
     it "should return true", ->

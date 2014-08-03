@@ -11,6 +11,26 @@ i18n.configure(
 
 env = require('../startup').env
 
+createDummyParseContext = ->
+  variables = {}
+  functions = {}
+  return context = {
+    autocomplete: []
+    format: []
+    errors: []
+    warnings: []
+    variables,
+    functions
+    addHint: ({autocomplete: a, format: f}) ->
+    addError: (message) -> @errors.push message
+    addWarning: (message) -> @warnings.push message
+    hasErrors: -> (@errors.length > 0)
+    getErrorsAsString: -> _(@errors).reduce((ms, m) => "#{ms}, #{m}")
+    finalize: () -> 
+      @autocomplete = _(@autocomplete).uniq().sortBy((s)=>s.toLowerCase()).value()
+      @format = _(@format).uniq().sortBy((s)=>s.toLowerCase()).value()
+  }
+
 describe "SwitchActionHandler", ->
 
   frameworkDummy =
@@ -52,7 +72,8 @@ describe "SwitchActionHandler", ->
 
         ruleWithOn = rulePrefix + ' on'
         it "should parse: #{ruleWithOn}", (finish) ->
-          result = switchActionProvider.parseAction(ruleWithOn)
+          context = createDummyParseContext()
+          result = switchActionProvider.parseAction(ruleWithOn, context)
           assert result?
           assert result.token is ruleWithOn
           assert result.nextInput is ""
@@ -65,7 +86,8 @@ describe "SwitchActionHandler", ->
 
         ruleWithOff = rulePrefix + ' off'
         it "should execute: #{ruleWithOff}", (finish) ->
-          result = switchActionProvider.parseAction(ruleWithOff)
+          context = createDummyParseContext()
+          result = switchActionProvider.parseAction(ruleWithOff, context)
           assert result?
           assert result.token is ruleWithOff
           assert result.nextInput is ""
@@ -77,7 +99,8 @@ describe "SwitchActionHandler", ->
           ).done()
 
     it "should execute: turn on the dummy switch", (finish) ->
-      result = switchActionProvider.parseAction("turn on the dummy switch")
+      context = createDummyParseContext()
+      result = switchActionProvider.parseAction("turn on the dummy switch", context)
       assert result?
       assert result.token is "turn on the dummy switch"
       assert result.nextInput is ""
@@ -89,12 +112,14 @@ describe "SwitchActionHandler", ->
       ).done()
 
     it 'should not execute: invalid-id on', ->
-      result = switchActionProvider.parseAction("invalid-id on")
+      context = createDummyParseContext()
+      result = switchActionProvider.parseAction("invalid-id on", context)
       assert not result?
       assert not turnOnCalled
 
     it 'should not execute: another dummy switch on', ->
-      result = switchActionProvider.parseAction("another dummy switch on", false)
+      context = createDummyParseContext()
+      result = switchActionProvider.parseAction("another dummy switch on", context)
       assert not result?
       assert not turnOnCalled
 
@@ -136,7 +161,8 @@ describe "ShutteActionHandler", ->
         return Promise.resolve true
 
     it "should parse: raise shutter up", (finish) ->
-      result = shutterActionProvider.parseAction('raise shutter up')
+      context = createDummyParseContext()
+      result = shutterActionProvider.parseAction('raise shutter up', context)
       assert result?
       assert result.token is 'raise shutter up'
       assert result.nextInput is ""
@@ -148,7 +174,8 @@ describe "ShutteActionHandler", ->
       ).done()
 
     it "should parse: raise shutter", (finish) ->
-      result = shutterActionProvider.parseAction('raise shutter')
+      context = createDummyParseContext()
+      result = shutterActionProvider.parseAction('raise shutter', context)
       assert result?
       assert result.token is 'raise shutter'
       assert result.nextInput is ""
@@ -161,7 +188,8 @@ describe "ShutteActionHandler", ->
 
 
     it "should parse: move shutter up", (finish) ->
-      result = shutterActionProvider.parseAction('move shutter up')
+      context = createDummyParseContext()
+      result = shutterActionProvider.parseAction('move shutter up', context)
       assert result?
       assert result.token is 'move shutter up'
       assert result.nextInput is ""
@@ -173,7 +201,8 @@ describe "ShutteActionHandler", ->
       ).done()
 
     it "should parse: lower shutter down", (finish) ->
-      result = shutterActionProvider.parseAction('lower shutter down')
+      context = createDummyParseContext()
+      result = shutterActionProvider.parseAction('lower shutter down', context)
       assert result?
       assert result.token is 'lower shutter down'
       assert result.nextInput is ""
@@ -185,7 +214,8 @@ describe "ShutteActionHandler", ->
       ).done()
 
     it "should parse: lower shutter", (finish) ->
-      result = shutterActionProvider.parseAction('lower shutter')
+      context = createDummyParseContext()
+      result = shutterActionProvider.parseAction('lower shutter', context)
       assert result?
       assert result.token is 'lower shutter'
       assert result.nextInput is ""
@@ -197,7 +227,8 @@ describe "ShutteActionHandler", ->
       ).done()
 
     it "should parse: move shutter down", (finish) ->
-      result = shutterActionProvider.parseAction('move shutter down')
+      context = createDummyParseContext()
+      result = shutterActionProvider.parseAction('move shutter down', context)
       assert result?
       assert result.token is 'move shutter down'
       assert result.nextInput is ""
@@ -209,7 +240,8 @@ describe "ShutteActionHandler", ->
       ).done()
 
     it "should parse: stop shutter", (finish) ->
-      result = stopShutterActionProvider.parseAction('stop shutter')
+      context = createDummyParseContext()
+      result = stopShutterActionProvider.parseAction('stop shutter', context)
       assert result?
       assert result.token is 'stop shutter'
       assert result.nextInput is ""
@@ -256,7 +288,8 @@ describe "DimmerActionHandler", ->
       do (rulePrefix) ->
         action = "#{rulePrefix} 10%"
         it "should execute: #{action}", (finish) ->
-          result = dimmerActionProvider.parseAction(action)
+          context = createDummyParseContext()
+          result = dimmerActionProvider.parseAction(action, context)
           assert result.actionHandler?
           result.actionHandler.executeAction(false).then( (message) ->
             assert dimlevel is 10
@@ -276,7 +309,8 @@ describe "LogActionProvider", ->
 
   describe "#parseAction()", =>
     it 'should parse: log "a test message"', ->
-      result = logActionProvider.parseAction('log "a test message"')
+      context = createDummyParseContext()
+      result = logActionProvider.parseAction('log "a test message"', context)
       assert result?
       assert result.token is 'log "a test message"'
       assert result.nextInput is ''

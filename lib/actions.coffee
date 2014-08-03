@@ -120,15 +120,13 @@ module.exports = (env) ->
     parseAction: (input, context) ->
       result = null
 
-      allVars = @framework.variableManager.variables
-      varsRight = _(allVars).map( (v) => v.name ).valueOf()
-      varsLeft = _(allVars).filter( (v) => not v.readonly ).map( (v) => v.name ).valueOf()
+      varsAndFunsWriteable =  @framework.variableManager.getVariablesAndFunctions(readonly: false)
 
       M(input, context)
         .match("set ", optional: yes)
-        .matchVariable(varsLeft, (next, variableName) =>
+        .matchVariable(varsAndFunsWriteable, (next, variableName) =>
           next.match([" to ", " := ", " = "], (next) =>
-            next.matchNumericExpression(varsRight, (next, rightTokens) => 
+            next.matchNumericExpression( (next, rightTokens) => 
               match = next.getFullMatch()
               variableName = variableName.substring(1)
               result = { variableName, rightTokens, match }

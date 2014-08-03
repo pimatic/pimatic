@@ -502,11 +502,11 @@ module.exports = (env) ->
 
     parsePredicate: (input, context) ->
       result = null
-      allVariables = _(@framework.variableManager.variables).map( (v) => v.name ).valueOf()
+
       M(input, context)
-        .matchNumericExpression(allVariables, (next, leftTokens) =>
+        .matchNumericExpression( (next, leftTokens) =>
           next.matchComparator('number', (next, comparator) =>
-            next.matchNumericExpression(allVariables, (next, rightTokens) =>
+            next.matchNumericExpression( (next, rightTokens) =>
               result = {
                 leftTokens
                 rightTokens

@@ -3,6 +3,7 @@ assert = require "assert"
 Promise = require 'bluebird'
 S = require 'string'
 util = require 'util'
+events = require 'events'
 
 env = require('../startup').env
 
@@ -57,11 +58,9 @@ describe "RuleManager", ->
       }
 
   predProvider = new DummyPredicateProvider()
-  frameworkDummy = {
-    variableManager:
-      variables: {}
-      evaluateNumericExpression: (expr) -> Promise.resolve parseFloat(expr)
-  }
+  frameworkDummy = new events.EventEmitter()
+  frameworkDummy.variableManager = new env.variables.VariableManager(frameworkDummy, [])
+  frameworkDummy.variableManager.init()
   ruleManager = new env.rules.RuleManager(frameworkDummy, [])
   ruleManager.addPredicateProvider predProvider
   actionProvider = new DummyActionProvider()
@@ -330,7 +329,7 @@ describe "RuleManager", ->
               handler: {} # should be the dummyHandler
               after:
                 token: '1 minute'
-                exprTokens: [ '1']
+                exprTokens: [ 1 ]
                 unit: 'minute'
               for: null
             } 
@@ -348,7 +347,7 @@ describe "RuleManager", ->
               handler: {} # should be the dummyHandler
               after:
                 token: '1 minute'
-                exprTokens: [ '1']
+                exprTokens: [ 1 ]
                 unit: 'minute'
               for: null
             } 
@@ -366,7 +365,7 @@ describe "RuleManager", ->
               handler: {} # should be the dummyHandler
               after:
                 token: '2 minutes',
-                exprTokens: [ '2'],
+                exprTokens: [ 2],
                 unit: 'minutes'
               for: null
             }
@@ -376,7 +375,7 @@ describe "RuleManager", ->
               handler: {} # should be the dummyHandler
               after:
                 token: '1 hour',
-                exprTokens: [ '1'],
+                exprTokens: [ 1 ],
                 unit: 'hour'
               for: null
             } 
@@ -394,7 +393,7 @@ describe "RuleManager", ->
               handler: {} # should be the dummyHandler
               after:
                 token: '2 minutes',
-                exprTokens: [ '2'],
+                exprTokens: [ 2 ],
                 unit: 'minutes'
               for: null
             }
@@ -404,7 +403,7 @@ describe "RuleManager", ->
               handler: {} # should be the dummyHandler
               after:
                 token: '1 hour',
-                exprTokens: [ '1'],
+                exprTokens: [ 1 ],
                 unit: 'hour'
               for: null
             } 
@@ -423,7 +422,7 @@ describe "RuleManager", ->
               after: null
               for:
                 token: '1 minute',
-                exprTokens: [ '1'],
+                exprTokens: [ 1 ],
                 unit: 'minute'
             } 
           ],
@@ -784,7 +783,7 @@ describe "RuleManager", ->
           handler: predHandler1
           for:
             token: '1 second'
-            exprTokens: ['1']
+            exprTokens: [ 1 ]
             unit: 'second'
           lastChange: start
         ]
@@ -826,7 +825,7 @@ describe "RuleManager", ->
           handler: predHandler1
           for:
             token: '1 second'
-            exprTokens: ['1']
+            exprTokens: [ 1 ]
             unit: 'second'
           lastChange: start
         ]
@@ -863,7 +862,7 @@ describe "RuleManager", ->
             handler: predHandler1
             for:
               token: '1 second'
-              exprTokens: ['1']
+              exprTokens: [ 1 ]
               unit: 'second'
             lastChange: start
           }
@@ -874,7 +873,7 @@ describe "RuleManager", ->
             handler: predHandler2
             for:
               token: '2 seconds'
-              exprTokens: ['2']
+              exprTokens: [ 2 ]
               unit: 'seconds'
             lastChange: start
           }
@@ -924,7 +923,7 @@ describe "RuleManager", ->
             handler: predHandler1
             for:
               token: '1 second'
-              exprTokens: ['1']
+              exprTokens: [ 1 ]
               unit: 'second'
             lastChange: start
           }
@@ -935,7 +934,7 @@ describe "RuleManager", ->
             handler: predHandler2
             for:
               token: '2 seconds'
-              exprTokens: ['2']
+              exprTokens: [ 2 ]
               unit: 'seconds'
             lastChange: start
           }
@@ -984,7 +983,7 @@ describe "RuleManager", ->
             handler: predHandler1
             for:
               token: '1 second'
-              exprTokens: ['1']
+              exprTokens: [ 1 ]
               unit: 'second'
             lastChange: start
           }
@@ -995,7 +994,7 @@ describe "RuleManager", ->
             handler: predHandler2
             for:
               token: '2 seconds'
-              exprTokens: ['2']
+              exprTokens: [ 2 ]
               unit: 'seconds'
             lastChange: start
           }
@@ -1052,7 +1051,7 @@ describe "RuleManager", ->
             handler: predHandler1
             for:
               token: '1 second'
-              exprTokens: ['1']
+              exprTokens: [ 1 ]
               unit: 'second'
             lastChange: start
           }
@@ -1063,7 +1062,7 @@ describe "RuleManager", ->
             handler: predHandler2
             for:
               token: '2 seconds'
-              exprTokens: ['2']
+              exprTokens: [ 2 ]
               unit: 'seconds'
             lastChange: start
           }

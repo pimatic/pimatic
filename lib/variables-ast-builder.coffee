@@ -78,7 +78,8 @@ class VariableExpression extends Expression
 
 class FunctionCallExpression extends Expression
   constructor: (@name, @func, @args) -> #nop
-  evaluate: (cache) -> Promise.resolve(@func.exec(@args...))
+  evaluate: (cache) -> 
+    return Promise.map(@args, (a) -> a.evaluate() ).then( (args) => @func.exec(args...) )
   toString: -> 
     argsStr = (
       if @args.length > 0 then _.reduce(@args, (l,r) -> "#{l.toString()}, #{r.toString()}" )

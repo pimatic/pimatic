@@ -36,121 +36,130 @@ describe "Matcher", ->
           assert.deepEqual(m.input, tc.result.nextInput)
 
   describe '#matchNumericExpression()', ->
-
+    varsAndFuns = {
+      variables: {
+        'abc': {}
+      },
+      functions: {
+        'min': {
+          argc: 2
+        }
+      }
+    }
     it "should match 1", (finish) ->
-      M("1").matchNumericExpression( (m, tokens) =>
+      M("1").matchNumericExpression(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['1'])
         finish()
       )
 
     it "should match 1 + 2", (finish) ->
-      M("1 + 2").matchNumericExpression( (m, tokens) =>
+      M("1 + 2").matchNumericExpression(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['1','+','2'])
         finish()
       )
 
     it "should match 1 + 2 * 3", (finish) ->
-      M("1 + 2 * 3").matchNumericExpression( (m, tokens) =>
+      M("1 + 2 * 3").matchNumericExpression(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['1','+','2', '*', '3'])
         finish()
       )
 
     it "should match $abc", (finish) ->
-      M("$abc").matchNumericExpression( (m, tokens) =>
+      M("$abc").matchNumericExpression(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['$abc'])
         finish()
       )
 
     it "should match $abc + 2 * 3", (finish) ->
-      M("$abc + 2 * 3").matchNumericExpression( (m, tokens) =>
+      M("$abc + 2 * 3").matchNumericExpression(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['$abc','+','2', '*', '3'])
         finish()
       )
 
     it "should match 1 + $abc * 3", (finish) ->
-      M("1 + $abc * 3").matchNumericExpression( (m, tokens) =>
+      M("1 + $abc * 3").matchNumericExpression(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['1','+','$abc', '*', '3'])
         finish()
       )
 
     it "should match 1+2", (finish) ->
-      M("1+2").matchNumericExpression( (m, tokens) =>
+      M("1+2").matchNumericExpression(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['1','+','2'])
         finish()
       )
 
     it "should match 1+2*3", (finish) ->
-      M("1+2*3").matchNumericExpression( (m, tokens) =>
+      M("1+2*3").matchNumericExpression(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['1','+','2', '*', '3'])
         finish()
       )
 
     it "should match $abc with given var list", (finish) ->
-      M("$abc").matchNumericExpression(['abc'], (m, tokens) =>
+      M("$abc").matchNumericExpression(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['$abc'])
         finish()
       )
 
     it "should match $abc+2*3", (finish) ->
-      M("$abc+2*3").matchNumericExpression( (m, tokens) =>
+      M("$abc+2*3").matchNumericExpression(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['$abc','+','2', '*', '3'])
         finish()
       )
 
     it "should match 1+$abc*3", (finish) ->
-      M("1+$abc*3").matchNumericExpression( (m, tokens) =>
+      M("1+$abc*3").matchNumericExpression(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['1','+','$abc', '*', '3'])
         finish()
       )
 
     it "should match (1+2*3)", (finish) ->
-      M("(1+2*3)").matchNumericExpression( (m, tokens) =>
+      M("(1+2*3)").matchNumericExpression(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['(', '1','+','2', '*', '3', ')'])
         finish()
       )
 
     it "should match ( 1 + 2 * 3 )", (finish) ->
-      M("( 1 + 2 * 3 )").matchNumericExpression( (m, tokens) =>
+      M("( 1 + 2 * 3 )").matchNumericExpression(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['(', '1','+','2', '*', '3', ')'])
         finish()
       )
 
     it "should match (1 + 2) * 3", (finish) ->
-      M("(1 + 2) * 3").matchNumericExpression( (m, tokens) =>
+      M("(1 + 2) * 3").matchNumericExpression(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['(', '1','+','2', ')', '*', '3'])
         finish()
       )
 
     it "should match (1+2)*3", (finish) ->
-      M("(1+2)*3").matchNumericExpression( (m, tokens) =>
+      M("(1+2)*3").matchNumericExpression(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['(', '1','+','2', ')', '*', '3'])
         finish()
       )
 
     it "should match 1+(2*3)", (finish) ->
-      M("1+(2*3)").matchNumericExpression( (m, tokens) =>
+      M("1+(2*3)").matchNumericExpression(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['1','+','(', '2', '*', '3', ')'])
         finish()
       )
 
     it "should match (1)", (finish) ->
-      M("(1)").matchNumericExpression( (m, tokens) =>
+      M("(1)").matchNumericExpression(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['(', '1', ')'])
         finish()
@@ -160,7 +169,7 @@ describe "Matcher", ->
       functions = {
         min: {}
       }
-      M("min(1, 2)").matchNumericExpression([], functions, (m, tokens) =>
+      M("min(1, 2)").matchNumericExpression(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['min', '(', '1', ',', '2', ')'])
         finish()
@@ -168,37 +177,46 @@ describe "Matcher", ->
 
 
   describe '#matchStringWithVars()', ->
-
+    varsAndFuns = {
+      variables: {
+        'bar': {}
+      },
+      functions: {
+        'min': {
+          argc: 2
+        }
+      }
+    }
     it "should match \"foo\"", (finish) ->
-      M('"foo"').matchStringWithVars( (m, tokens) =>
+      M('"foo"').matchStringWithVars(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['"foo"'])
         finish()
       )
 
     it "should match the empty string", (finish) ->
-      M('""').matchStringWithVars( (m, tokens) =>
+      M('""').matchStringWithVars(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['""'])
         finish()
       )
 
     it "should match \"foo $bar\"", (finish) ->
-      M('"foo $bar"').matchStringWithVars( (m, tokens) =>
+      M('"foo $bar"').matchStringWithVars(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['"foo "', '$bar', '""'])
         finish()
       )
 
     it "should match \"foo $bar test\"", (finish) ->
-      M('"foo $bar test"').matchStringWithVars( (m, tokens) =>
+      M('"foo $bar test"').matchStringWithVars(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['"foo "', '$bar', '" test"'])
         finish()
       )
 
     it "should match \"$bar foo test\"", (finish) ->
-      M('"$bar foo test"').matchStringWithVars( (m, tokens) =>
+      M('"$bar foo test"').matchStringWithVars(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['""', '$bar', '" foo test"'])
         finish()

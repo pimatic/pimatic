@@ -388,11 +388,10 @@ module.exports = (env) ->
         timeExprTokens = tp.tokens
         unit = tp.unit
 
-      allVariables = _(@framework.variableManager.variables).map( (v) => v.name ).valueOf()
-      functions = @framework.variableManager.functions
+      varsAndFuns = @framework.variableManager.getVariablesAndFunctions()
       m = M(nextInput, context)
         .match(prefixToken, options)
-        .matchTimeDurationExpression(allVariables, functions, onTimeduration)
+        .matchTimeDurationExpression(varsAndFuns, onTimeduration)
 
       unless m.hadNoMatch()
         token = m.getFullMatch()
@@ -975,11 +974,14 @@ module.exports = (env) ->
       )
 
     _createParseContext: ->
+      {variables, functions} = @framework.variableManager.getVariablesAndFunctions()
       return context = {
         autocomplete: []
         format: []
         errors: []
         warnings: []
+        variables,
+        functions
         addHint: ({autocomplete: a, format: f}) ->
           if a?
             if Array.isArray a 

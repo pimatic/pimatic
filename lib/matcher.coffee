@@ -156,27 +156,25 @@ class Matcher
       @context?.addHint(format: 'Number')
     return next
 
-  matchVariable: (variables, callback) -> 
+  matchVariable: (varsAndFuns, callback) -> 
     unless @input? then return @
-    if typeof variables is "function"
-      callback = variables
-      variables = null
 
+    if typeof varsAndFuns is "function"
+      callback = varsAndFuns
+      varsAndFuns = @context
+
+    {variables} = varsAndFuns
+
+    assert variables? and typeof variables is "object"
     assert typeof callback is "function"
 
-    # If a variable array is given match one of them
-    if variables?
-      assert Array.isArray variables
-      varsWithDollar = _(variables).map((v) => "$#{v}").valueOf()
-      matches = []
-      next = @match(varsWithDollar, (m, match) => matches.push([m, match]) )
-      if matches.length > 0
-        [next, match] = _(matches).sortBy( ([m, s]) => s.length ).last()
-        callback(next, match)
-      return next
-    else
-      # match with generic expression
-      return @match /^(\$[a-zA-z0-9_\-\.]+)(.*?)$/, callback
+    varsWithDollar = _(variables).keys().map( (v) => "$#{v}" ).valueOf()
+    matches = []
+    next = @match(varsWithDollar, (m, match) => matches.push([m, match]) )
+    if matches.length > 0
+      [next, match] = _(matches).sortBy( ([m, s]) => s.length ).last()
+      callback(next, match)
+    return next
 
   matchString: (callback) -> 
     unless @input? then return @
@@ -220,17 +218,26 @@ class Matcher
       callback(next, tokens)
     return next
 
-  matchFunctionCallArgs: (variables, functions, callback) ->
+  matchFunctionCallArgs: (varsAndFuns, callback) ->
     unless @input? then return @
+
+    if typeof varsAndFuns is "function"
+      callback = varsAndFuns
+      varsAndFuns = @context
+
+    {variables, functions} = varsAndFuns
+    assert variables? and typeof variables is "object"
+    assert functions? and typeof functions is "object"
     assert typeof callback is "function"
+
     tokens = []
     last = this
-    @matchNumericExpression(variables, functions, (next, ts) =>
+    @matchNumericExpression(varsAndFuns, (next, ts) =>
       tokens = tokens.concat ts
       last = next
       next
         .match([',', ' , ', ' ,', ', '], {acFilter: (op) => op is ', '})
-        .matchFunctionCallArgs(variables, functions, (m, ts) =>
+        .matchFunctionCallArgs(varsAndFuns, (m, ts) =>
           tokens.push ','
           tokens = tokens.concat ts
           last = m
@@ -239,19 +246,25 @@ class Matcher
     callback(last, tokens)
     return last
 
-  matchFunctionCall: (variables, functions, callback) ->
+  matchFunctionCall: (varsAndFuns, callback) ->
     unless @input? then return @
-    functionNames = (
-      if functions? then (fname for fname of functions)
-      else []
-    )
+
+    if typeof varsAndFuns is "function"
+      callback = varsAndFuns
+      varsAndFuns = @context
+
+    {variables, functions} = varsAndFuns
+    assert variables? and typeof variables is "object"
+    assert functions? and typeof functions is "object"
+    assert typeof callback is "function"
+
     tokens = []
     last = null
-    @match(functionNames, (next, funcName) =>
+    @match(_.keys(functions), (next, funcName) =>
       tokens.push funcName
       next.match(['(', ' (', ' ( ', '( '], {acFilter: (op) => op is '('}, (next) => 
         tokens.push '('
-        next.matchFunctionCallArgs(variables, functions, (next, ts) =>
+        next.matchFunctionCallArgs(varsAndFuns, (next, ts) =>
           tokens = tokens.concat ts
           next.match([')', ' )'], {acFilter: (op) => op is ')'},  (next) => 
             tokens.push ')'
@@ -265,32 +278,28 @@ class Matcher
       return last
     else return M(null, @context)
 
-  matchNumericExpression: (variables, functions, openParanteses = 0, callback) ->
+  matchNumericExpression: (varsAndFuns, openParanteses = 0, callback) ->
     unless @input? then return @
-    if typeof variables is "function"
-      callback = variables
-      variables = null
 
-    if typeof functions is "function"
-      callback = functions
-      functions = null
-
-    if typeof functions is "number"
-      callback = openParanteses
-      openParanteses = functions
-      functions = null 
+    if typeof varsAndFuns is "function"
+      callback = varsAndFuns
+      varsAndFuns = @context
+      openParanteses = 0
+    
+    {variables, functions} = varsAndFuns
 
     if typeof openParanteses is "function"
       callback = openParanteses
       openParanteses = 0
 
-    assert typeof callback is "function"
-    assert typeof openParanteses is "number"
-    assert Array.isArray variables if variables?
-    assert typeof functions is "object" if functions?
+    assert callback? and typeof callback is "function"
+    assert openParanteses? and typeof openParanteses is "number"
+    assert variables? and typeof variables is "object"
+    assert functions? and typeof functions is "object"
+
 
     binarOps = ['+','-','*', '/']
-    binarOpsFull = _(binarOps).map((op)=>[op, " #{op} ", " #{op}", "#{op} "]).flatten().valueOf()
+    binarOpsFull = _(binarOps).map( (op)=>[op, " #{op} ", " #{op}", "#{op} "] ).flatten().valueOf()
 
     last = null
     tokens = []
@@ -300,8 +309,8 @@ class Matcher
       openParanteses += ptokens.length
     ).or([
       ( (m) => m.matchNumber( (m, match) => tokens.push(parseFloat(match)); last = m ) ),
-      ( (m) => m.matchVariable(variables, (m, match) => tokens.push(match); last = m ) )
-      ( (m) => m.matchFunctionCall(variables, functions, (m, match) => 
+      ( (m) => m.matchVariable(varsAndFuns, (m, match) => tokens.push(match); last = m ) )
+      ( (m) => m.matchFunctionCall(varsAndFuns, (m, match) => 
           tokens = tokens.concat match
           last = m
         )
@@ -311,7 +320,7 @@ class Matcher
       openParanteses -= ptokens.length
       last = m
     ).match(binarOpsFull, {acFilter: (op) => op[0] is ' ' and op[op.length-1] is ' '}, (m, op) => 
-      m.matchNumericExpression(variables, functions, openParanteses, (m, nextTokens) => 
+      m.matchNumericExpression(varsAndFuns, openParanteses, (m, nextTokens) => 
         tokens.push(op.trim())
         tokens = tokens.concat(nextTokens)
         last = m
@@ -323,14 +332,17 @@ class Matcher
       return last
     else return M(null, @context)
 
-  matchStringWithVars: (variables, callback) ->
+  matchStringWithVars: (varsAndFuns, callback) ->
     unless @input? then return @
-    if typeof variables is "function"
-      callback = variables
-      variables = null
 
+    if typeof varsAndFuns is "function"
+      callback = varsAndFuns
+      varsAndFuns = @context
+
+    {variables, functions} = varsAndFuns
+    assert variables? and typeof variables is "object"
+    assert functions? and typeof functions is "object"
     assert typeof callback is "function"
-    assert Array.isArray variables if variables?
 
     last = null
     tokens = []
@@ -347,7 +359,7 @@ class Matcher
           last = end
         # else test if it is a var
         else
-          next = m.matchVariable(variables, (m, match) => 
+          next = m.matchVariable(varsAndFuns, (m, match) => 
             tokens.push(match)
           )
       )
@@ -357,12 +369,22 @@ class Matcher
       return last
     else return M(null, @context)
 
-  matchAnyExpression: (callback) ->
+  matchAnyExpression: (varsAndFuns, callback) ->
     unless @input? then return @
+
+    if typeof varsAndFuns is "function"
+      callback = varsAndFuns
+      varsAndFuns = @context
+
+    {variables, functions} = varsAndFuns
+    assert variables? and typeof variables is "object"
+    assert functions? and typeof functions is "object"
+    assert typeof callback is "function"
+
     tokens = null
     next = @or([
-      ( (m) => m.matchStringWithVars((m, ts) => tokens = ts; return m) ),
-      ( (m) => m.matchNumericExpression((m, ts) => tokens = ts; return m) )
+      ( (m) => m.matchStringWithVars(varsAndFuns, (m, ts) => tokens = ts; return m) ),
+      ( (m) => m.matchNumericExpression(varsAndFuns, (m, ts) => tokens = ts; return m) )
     ])
     if tokens?
       callback(next, tokens)
@@ -413,12 +435,18 @@ class Matcher
       callback(m, d)
     return next
     
-  matchTimeDurationExpression: (variables = null, functions = null, callback) ->
+  matchTimeDurationExpression: (varsAndFuns, callback) ->
     unless @input? then return @
-    if typeof variables is 'function'
-      callback = variables
-      variables = null
+
+    if typeof varsAndFuns is "function"
+      callback = varsAndFuns
+      varsAndFuns = @context
+
+    {variables, functions} = varsAndFuns
+    assert variables? and typeof variables is "object"
+    assert functions? and typeof functions is "object"
     assert typeof callback is "function"
+
     # Parse the for-Suffix:
     timeUnits = [
       "ms", 
@@ -433,7 +461,7 @@ class Matcher
     onTimeExpressionMatch = (m, ts) => tokens = ts  
     onMatchUnit = (m, u) => unit = u.trim()
 
-    m = @matchNumericExpression(variables, functions, onTimeExpressionMatch).match(
+    m = @matchNumericExpression(varsAndFuns, onTimeExpressionMatch).match(
       _(timeUnits).map((u) => [" #{u}", u]).flatten().valueOf()
     , {acFilter: (u) => u[0] is ' '}, onMatchUnit
     )
@@ -441,7 +469,6 @@ class Matcher
     if m.hadMatch()
       callback(m, {tokens, unit})
     return m
-
 
 
   matchTimeDuration: (options = null, callback) ->

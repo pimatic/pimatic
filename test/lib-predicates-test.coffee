@@ -7,6 +7,27 @@ t = require('decl-api').types
 # Setup the environment
 env = require('../startup').env
 
+createDummyParseContext = ->
+  variables = {}
+  functions = {}
+  return context = {
+    autocomplete: []
+    format: []
+    errors: []
+    warnings: []
+    variables,
+    functions
+    addHint: ({autocomplete: a, format: f}) ->
+    addError: (message) -> @errors.push message
+    addWarning: (message) -> @warnings.push message
+    hasErrors: -> (@errors.length > 0)
+    getErrorsAsString: -> _(@errors).reduce((ms, m) => "#{ms}, #{m}")
+    finalize: () -> 
+      @autocomplete = _(@autocomplete).uniq().sortBy((s)=>s.toLowerCase()).value()
+      @format = _(@format).uniq().sortBy((s)=>s.toLowerCase()).value()
+  }
+
+
 describe "PresencePredicateProvider", ->
 
   frameworkDummy = 
@@ -70,7 +91,8 @@ describe "PresencePredicateProvider", ->
         for input in testCase.inputs
           do (input) =>
             it "should parse \"#{input}\"", =>
-              result = provider.parsePredicate input
+              context = createDummyParseContext()
+              result = provider.parsePredicate(input, context)
               testCase.checkOutput(input, result)
 
     it 'should return null if id is wrong', ->
@@ -81,7 +103,8 @@ describe "PresencePredicateProvider", ->
     describe '#on "change"', ->  
       predicateHandler = null
       before ->
-        result = provider.parsePredicate "test is present"
+        context = createDummyParseContext()
+        result = provider.parsePredicate("test is present", context)
         assert result?
         predicateHandler = result.predicateHandler
         predicateHandler.setup()
@@ -165,7 +188,8 @@ describe "ContactPredicateProvider", ->
         for input in testCase.inputs
           do (input) =>
             it "should parse \"#{input}\"", =>
-              result = provider.parsePredicate input
+              context = createDummyParseContext()
+              result = provider.parsePredicate(input, context)
               testCase.checkOutput(input, result)
 
     it 'should return null if id is wrong', ->
@@ -176,7 +200,8 @@ describe "ContactPredicateProvider", ->
     describe '#on "change"', ->  
       predicateHandler = null
       before ->
-        result = provider.parsePredicate "test is closed"
+        context = createDummyParseContext()
+        result = provider.parsePredicate("test is closed", context)
         assert result?
         predicateHandler = result.predicateHandler
         predicateHandler.setup()
@@ -262,7 +287,8 @@ describe "SwitchPredicateProvider", ->
         for input in testCase.inputs
           do (input) =>
             it "should parse \"#{input}\"", =>
-              result = provider.parsePredicate input
+              context = createDummyParseContext()
+              result = provider.parsePredicate input, context
               testCase.checkOutput(input, result)
 
   describe "SwitchPredicateHandler", ->
@@ -270,7 +296,7 @@ describe "SwitchPredicateProvider", ->
     describe '#on "change"', ->  
       predicateHandler = null
       before ->
-        result = provider.parsePredicate "test is on"
+        result = provider.parsePredicate "test is on", context
         assert result?
         predicateHandler = result.predicateHandler
         predicateHandler.setup()
@@ -294,12 +320,6 @@ describe "SwitchPredicateProvider", ->
 
 
 describe "DeviceAttributePredicateProvider", ->
-
-
-  context = {
-    addHint: ->
-    addMatch: (@match) ->
-  }
 
   frameworkDummy = 
     devices: {}
@@ -361,6 +381,7 @@ describe "DeviceAttributePredicateProvider", ->
         testPredicate = "testvalue of test sensor #{comp} 42"
 
         it "should parse \"#{testPredicate}\"", ->
+          context = createDummyParseContext()
           result = provider.parsePredicate testPredicate, context
           cassert result?
           cassert result.predicateHandler?
@@ -373,6 +394,7 @@ describe "DeviceAttributePredicateProvider", ->
           cassert result.nextInput is ""
 
     it "should parse predicate with unit: testvalue of test sensor is 42 °C", ->
+      context = createDummyParseContext()
       result = provider.parsePredicate "testvalue of test sensor is 42 °C", context
       cassert result?
       cassert result.predicateHandler?
@@ -385,6 +407,7 @@ describe "DeviceAttributePredicateProvider", ->
       cassert result.nextInput is ""
 
     it "should parse predicate with unit: testvalue of test sensor is 42 C", ->
+      context = createDummyParseContext()
       result = provider.parsePredicate "testvalue of test sensor is 42 C", context
       cassert result?
       cassert result.predicateHandler?
@@ -401,7 +424,8 @@ describe "DeviceAttributePredicateProvider", ->
     describe '#on "change"', ->  
       predicateHandler = null
       before ->
-        result = provider.parsePredicate "testvalue of test is greater than 20"
+        context = createDummyParseContext()
+        result = provider.parsePredicate "testvalue of test is greater than 20", context
         assert result?
         predicateHandler = result.predicateHandler
         predicateHandler.setup()
@@ -513,7 +537,11 @@ describe "VariablePredicateProvider", ->
     for tc in testCases
       do (tc) =>
         it "should parse \"#{tc.input}\"", (finish) =>
-          result = provider.parsePredicate(tc.input)
+          context = createDummyParseContext()
+          varsAndFuns = frameworkDummy.variableManager.getVariablesAndFunctions()
+          context.variables = varsAndFuns.variables
+          context.functions = varsAndFuns.functions
+          result = provider.parsePredicate(tc.input, context)
           assert result?
           result.predicateHandler.getValue().then( (val) =>
             assert.equal val, tc.result.value
@@ -528,7 +556,11 @@ describe "VariablePredicateProvider", ->
       after -> predicateHandler.destroy()
 
       it "should notify when $a is greater than 20", (finish) ->
-        result = provider.parsePredicate "$a > 20"
+        context = createDummyParseContext()
+        varsAndFuns = frameworkDummy.variableManager.getVariablesAndFunctions()
+        context.variables = varsAndFuns.variables
+        context.functions = varsAndFuns.functions
+        result = provider.parsePredicate "$a > 20", context
         assert result?
         predicateHandler = result.predicateHandler
         predicateHandler.setup()
@@ -542,7 +574,11 @@ describe "VariablePredicateProvider", ->
       after -> predicateHandler.destroy()
 
       it "should notify when $test.testvalue is greater than 42", (finish) ->
-        result = provider.parsePredicate "$test.testvalue > 42"
+        context = createDummyParseContext()
+        varsAndFuns = frameworkDummy.variableManager.getVariablesAndFunctions()
+        context.variables = varsAndFuns.variables
+        context.functions = varsAndFuns.functions
+        result = provider.parsePredicate "$test.testvalue > 42", context
         assert result?
         predicateHandler = result.predicateHandler
         predicateHandler.setup()
