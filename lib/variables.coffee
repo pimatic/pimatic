@@ -218,8 +218,12 @@ module.exports = (env) ->
       unless ops?
         return {variables: @variables, functions: @functions}
       else
-        return { 
-          variables: _.filter(@variables, ops)
+        filteredVars = _.filter(@variables, ops)
+        variables = {}
+        for v in filteredVars
+          variables[v.name] = v
+        return {
+          variables,
           functions: @functions
         }
      
