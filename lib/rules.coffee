@@ -975,30 +975,7 @@ module.exports = (env) ->
 
     _createParseContext: ->
       {variables, functions} = @framework.variableManager.getVariablesAndFunctions()
-      return context = {
-        autocomplete: []
-        format: []
-        errors: []
-        warnings: []
-        variables,
-        functions
-        addHint: ({autocomplete: a, format: f}) ->
-          if a?
-            if Array.isArray a 
-              @autocomplete = @autocomplete.concat a
-            else @autocomplete.push a
-          if f?
-            if Array.isArray f
-              @format = @format.concat f
-            else @format.push f
-        addError: (message) -> @errors.push message
-        addWarning: (message) -> @warnings.push message
-        hasErrors: -> (@errors.length > 0)
-        getErrorsAsString: -> _(@errors).reduce((ms, m) => "#{ms}, #{m}")
-        finalize: () -> 
-          @autocomplete = _(@autocomplete).uniq().sortBy((s)=>s.toLowerCase()).value()
-          @format = _(@format).uniq().sortBy((s)=>s.toLowerCase()).value()
-      }
+      return M.createParseContext(variables, functions)
 
   
     # ###getRules()

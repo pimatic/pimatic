@@ -3,6 +3,7 @@ assert = require "assert"
 events = require "events"
 Promise = require 'bluebird'
 t = require('decl-api').types
+M = require '../lib/matcher'
 
 # Setup the environment
 env = require('../startup').env
@@ -10,23 +11,7 @@ env = require('../startup').env
 createDummyParseContext = ->
   variables = {}
   functions = {}
-  return context = {
-    autocomplete: []
-    format: []
-    errors: []
-    warnings: []
-    variables,
-    functions
-    addHint: ({autocomplete: a, format: f}) ->
-    addError: (message) -> @errors.push message
-    addWarning: (message) -> @warnings.push message
-    hasErrors: -> (@errors.length > 0)
-    getErrorsAsString: -> _(@errors).reduce((ms, m) => "#{ms}, #{m}")
-    finalize: () -> 
-      @autocomplete = _(@autocomplete).uniq().sortBy((s)=>s.toLowerCase()).value()
-      @format = _(@format).uniq().sortBy((s)=>s.toLowerCase()).value()
-  }
-
+  return M.createParseContext(variables, functions)
 
 describe "PresencePredicateProvider", ->
 

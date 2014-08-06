@@ -2,6 +2,7 @@ assert = require "cassert"
 Promise = require 'bluebird'
 i18n = require 'i18n'
 events = require 'events'
+M = require '../lib/matcher'
 
 i18n.configure(
   locales:['en', 'de']
@@ -14,22 +15,7 @@ env = require('../startup').env
 createDummyParseContext = ->
   variables = {}
   functions = {}
-  return context = {
-    autocomplete: []
-    format: []
-    errors: []
-    warnings: []
-    variables,
-    functions
-    addHint: ({autocomplete: a, format: f}) ->
-    addError: (message) -> @errors.push message
-    addWarning: (message) -> @warnings.push message
-    hasErrors: -> (@errors.length > 0)
-    getErrorsAsString: -> _(@errors).reduce((ms, m) => "#{ms}, #{m}")
-    finalize: () -> 
-      @autocomplete = _(@autocomplete).uniq().sortBy((s)=>s.toLowerCase()).value()
-      @format = _(@format).uniq().sortBy((s)=>s.toLowerCase()).value()
-  }
+  return M.createParseContext(variables, functions)
 
 describe "SwitchActionHandler", ->
 

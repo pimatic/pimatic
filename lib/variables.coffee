@@ -231,7 +231,8 @@ module.exports = (env) ->
     parseVariableExpression: (expression) ->
       tokens = null
       varsAndFuns = @getVariablesAndFunctions()
-      m = M(expression).matchAnyExpression(varsAndFuns, (m, ts) => tokens = ts)
+      context = M.createParseContext(@variables, @functions)
+      m = M(expression, context).matchAnyExpression( (m, ts) => tokens = ts)
       unless m.hadMatch() and m.getFullMatch() is expression
         throw new Error("Could not parse expression")
       datatype = (if tokens[0][0] is '"' then "string" else "numeric")
