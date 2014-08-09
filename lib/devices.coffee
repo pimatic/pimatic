@@ -58,19 +58,38 @@ module.exports = (env) ->
       assert @name.length isnt 0, "the name of the device is empty"
       @_checkAttributes()
       @_constructorCalled = yes
-      @_attributesValues = {}
+      @_attributesMeta = {}
 
       for attrName of @attributes
         do (attrName) =>
-          @on(attrName, (val) => 
-            @_attributesValues[attrName] = val
-          )
+          @_attributesMeta[attrName] = {
+            value: null
+            history: []
+            update: (value) ->
+              timestamp = (new Date()).getTime();
+              @value = value
+              @lastUpdate = timestamp
+              if @history.length is 20
+                @history.shift()
+              @history.push {ts:timestamp, value}
+          }
+          @on(attrName, (value) => @_attributesMeta[attrName].update(value) )
 
     destroy: ->
       @emit('destroy', @)
       @removeAllListeners('destroy')
       @removeAllListeners(attrName) for attrName of @attributes
       return
+
+    afterRegister: ->
+      for attrName of @attributes
+        do (attrName) =>
+          # force update of the device value
+          meta = @_attributesMeta[attrName]
+          unless meta.value?
+            @getUpdatedAttributeValue(attrName).then( (value) ->
+              meta.update(value) unless meta.value?
+            ).done()
 
     # Checks if the actuator has a given action.
     hasAction: (name) -> @actions[name]?
@@ -79,8 +98,7 @@ module.exports = (env) ->
     hasAttribute: (name) -> @attributes[name]?
 
     getLastAttributeValue: (attrName) ->
-      val = @_attributesValues[attrName]
-      return val
+      return @_attributesMeta[attrName].value
 
     getUpdatedAttributeValue: (attrName) ->
       getter = 'get' + upperCaseFirst(attrName)
@@ -107,16 +125,18 @@ module.exports = (env) ->
       }
 
       for name, attr of @attributes
+        meta = @_attributesMeta[name]
         attrJson = _.cloneDeep(attr)
         attrJson.name = name
-        attrJson.value = @getLastAttributeValue(name)
+        attrJson.value = meta.value
+        attrJson.history = meta.history
+        attrJson.lastUpdate = meta.lastUpdate
         json.attributes.push attrJson
       
       for name, action of @actions
         actionJson = _.cloneDeep(action)
         actionJson.name = name
         json.actions.push actionJson
-        
       return json
 
   ###
@@ -434,7 +454,7 @@ module.exports = (env) ->
                 when "string" then @_vars.evaluateStringExpression(info.tokens)
                 else assert false
             ).then( (val) =>
-              if val isnt @_attributesValues[name]
+              if val isnt @_attributesMeta[name].value
                 @emit name, val
               return val
             )

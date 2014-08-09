@@ -832,13 +832,7 @@ module.exports = (env) ->
           device.on(attrName, onChange = (value) => 
             @_emitDeviceAttributeEvent(device, attrName, attr,  new Date(), value)
           )
-          # force update of the device value
-          lastValue = device.getLastAttributeValue(attrName)
-          unless lastValue?
-            device.getUpdatedAttributeValue(attrName).then( (value) ->
-              device._attributesValues[attrName] = value unless device._attributesValues[attrName]?
-            ).done()
-
+      device.afterRegister()
       @_emitDeviceAdded(device)
       return device
 
