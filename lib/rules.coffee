@@ -641,7 +641,7 @@ module.exports = (env) ->
             """ 
             env.logger.debug error.stack
           )
-        return context
+        return
       ).catch( (error) =>
         # If there was an error pasring the rule, but the rule is forced to be added, then add
         # the rule with an error.
@@ -727,7 +727,7 @@ module.exports = (env) ->
             """ 
             env.logger.debug error
           )
-        return context
+        return
       )
 
     # ###_evaluateConditionOfRule()

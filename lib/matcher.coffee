@@ -219,7 +219,7 @@ class Matcher
       callback(next, tokens)
     return next
 
-  matchFunctionCallArgs: (varsAndFuns, callback) ->
+  matchFunctionCallArgs: (varsAndFuns, {funcName, argn}, callback) ->
     unless @input? then return @
 
     if typeof varsAndFuns is "function"
@@ -233,17 +233,37 @@ class Matcher
 
     tokens = []
     last = this
-    @matchNumericExpression(varsAndFuns, (next, ts) =>
+
+    hint = yes
+
+    @matchAnyExpression(varsAndFuns, (next, ts) =>
       tokens = tokens.concat ts
       last = next
       next
-        .match([',', ' , ', ' ,', ', '], {acFilter: (op) => op is ', '})
-        .matchFunctionCallArgs(varsAndFuns, (m, ts) =>
+        .match([',', ' , ', ' ,', ', '], {acFilter: (op) => op is ', '}, -> hint = false)
+        .matchFunctionCallArgs(varsAndFuns, {funcName, argn: argn+1}, (m, ts) =>
           tokens.push ','
           tokens = tokens.concat ts
           last = m
         )
     )
+
+    if hint and last.input is ""
+      func = functions[funcName]
+      if func.args?
+        i = 0
+        for argName, arg of func.args
+          if arg.multiple?
+            if argn > i
+              @context?.addHint(format: argName)
+            break
+          if argn is i
+            if arg.optional
+              @context?.addHint(format: "[#{argName}]")
+            else
+              @context?.addHint(format: argName)
+          i++
+
     callback(last, tokens)
     return last
 
@@ -265,7 +285,7 @@ class Matcher
       tokens.push funcName
       next.match(['(', ' (', ' ( ', '( '], {acFilter: (op) => op is '('}, (next) => 
         tokens.push '('
-        next.matchFunctionCallArgs(varsAndFuns, (next, ts) =>
+        next.matchFunctionCallArgs(varsAndFuns, {funcName, argn: 0}, (next, ts) =>
           tokens = tokens.concat ts
           next.match([')', ' )'], {acFilter: (op) => op is ')'},  (next) => 
             tokens.push ')'

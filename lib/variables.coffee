@@ -125,17 +125,36 @@ module.exports = (env) ->
     variables: {}
     functions: {
       min:
-        argc: 2
-        exec: (a, b) -> Math.min(parseFloat(a), parseFloat(b))
+        args:
+          numbers:
+            type: "number"
+            multiple: yes
+        exec: (args...) -> _.reduce(_.map(args, parseFloat), (a, b) -> Math.min(a,b) )
       max:
-        argc: 2
-        exec: (a, b) -> Math.max(parseFloat(a), parseFloat(b))
+        args:
+          numbers:
+            type: "number"
+            multiple: yes
+        exec: (args...) -> _.reduce(_.map(args, parseFloat), (a, b) -> Math.max(a,b) )
+      avg:
+        args:
+          numbers:
+            type: "number"
+            multiple: yes
+        exec: (args...) ->  _.reduce(_.map(args, parseFloat), (a, b) -> a+b) / args.length    
       random:
-        argc: 2
+        args:
+          min:
+            type: "number"
+          max:
+            type: "number"
         exec: (min, max) -> Math.floor((Math.random() * parseFloat(max)) + parseFloat(min))
       date:
-        argc: 0
-        exec: () -> (new Date()).format('YYYY-MM-DD hh:mm:ss')
+        args:
+          format:
+            type: "string"
+            optional: yes
+        exec: (format) -> (new Date()).format(if format? then format else 'YYYY-MM-DD hh:mm:ss')
     }
 
     constructor: (@framework, @variablesConfig) ->
