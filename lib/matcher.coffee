@@ -350,7 +350,7 @@ class Matcher
 
     next = @match('"')
     while next.hadMatch() and (not last?)
-      next.match(/^([^"\$]*)(.*?)$/, (m, strPart) =>
+      next.match(/^([^"\$\{]*)(.*?)$/, (m, strPart) =>
         # strPart is string till first var or ending quote
         # Check for end:
         tokens.push('"' + strPart + '"')
@@ -360,9 +360,24 @@ class Matcher
           last = end
         # else test if it is a var
         else
-          next = m.matchVariable(varsAndFuns, (m, match) => 
-            tokens.push(match)
-          )
+          next = m.or([
+            ( (m) => next = m.matchVariable(varsAndFuns, (m, match) => tokens.push(match) ); next ),
+            ( (m) => 
+              retMatcher = M(null, @context)
+              m.match(['{', '{ '], {acFilter: (t)-> t is '{'}, (m, match) =>
+                m.matchAnyExpression(varsAndFuns, (m, ts) =>
+                  m.match(['}', ' }'], {acFilter: (t)-> t is '}'}, (m) =>
+                    tokens.push('{')
+                    tokens = tokens.concat ts
+                    tokens.push('}')
+                    retMatcher = m
+                  )
+                )
+              )
+              return retMatcher
+            )
+          ])
+
       )
       
     if last?

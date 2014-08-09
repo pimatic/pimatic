@@ -222,6 +222,34 @@ describe "Matcher", ->
         finish()
       )
 
+    it "should match \"foo {$bar}\"", (finish) ->
+      M('"foo {$bar}"').matchStringWithVars(varsAndFuns, (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['"foo "', '{', '$bar', '}', '""'])
+        finish()
+      )
+
+    it "should match \"{$bar} foo\"", (finish) ->
+      M('"{$bar} foo"').matchStringWithVars(varsAndFuns, (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['""', '{', '$bar', '}', '" foo"'])
+        finish()
+      )
+
+    it "should match \"{min(1, 2)} foo\"", (finish) ->
+      M('"{min(1, 2)} foo"').matchStringWithVars(varsAndFuns, (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['""', '{', 'min', '(', 1, ',' , 2, ')',  '}', '" foo"'])
+        finish()
+      )
+
+    it "should match \"{ min(1, 2) + 1 }\"", (finish) ->
+      M('"{ min(1, 2) + 1 } foo"').matchStringWithVars(varsAndFuns, (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['""', '{', 'min', '(', 1, ',' , 2, ')', '+', 1,'}', '" foo"'])
+        finish()
+      )
+
   describe '#matchString()', ->
 
     it "should match \"foo\"", (finish) ->
