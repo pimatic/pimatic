@@ -126,13 +126,16 @@ module.exports = (env) ->
     functions: {
       min:
         argc: 2
-        exec: (a, b) -> Math.min(a, b)
+        exec: (a, b) -> Math.min(parseFloat(a), parseFloat(b))
       max:
         argc: 2
-        exec: (a, b) -> Math.max(a, b)
+        exec: (a, b) -> Math.max(parseFloat(a), parseFloat(b))
       random:
         argc: 2
-        exec: (min, max) -> Math.floor((Math.random() * max) + min)
+        exec: (min, max) -> Math.floor((Math.random() * parseFloat(max)) + parseFloat(min))
+      date:
+        argc: 0
+        exec: () -> (new Date()).format('YYYY-MM-DD hh:mm:ss')
     }
 
     constructor: (@framework, @variablesConfig) ->
