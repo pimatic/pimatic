@@ -367,9 +367,9 @@ class Matcher
               m.match(['{', '{ '], {acFilter: (t)-> t is '{'}, (m, match) =>
                 m.matchAnyExpression(varsAndFuns, (m, ts) =>
                   m.match(['}', ' }'], {acFilter: (t)-> t is '}'}, (m) =>
-                    tokens.push('{')
+                    tokens.push '('
                     tokens = tokens.concat ts
-                    tokens.push('}')
+                    tokens.push ')'
                     retMatcher = m
                   )
                 )

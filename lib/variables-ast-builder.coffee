@@ -18,7 +18,7 @@ class AddExpression extends Expression
   constructor: (@left, @right) -> #nop
   evaluate: (cache) -> 
     return @left.evaluate(cache, yes).then( (val1) => 
-      @right.evaluate(cache, yes).then( (val2) => val1 + val2 )
+      @right.evaluate(cache, yes).then( (val2) => parseFloat(val1) + parseFloat(val2) )
     )
   toString: -> "add(#{@left.toString()}, #{@right.toString()})"
 
@@ -26,7 +26,7 @@ class SubExpression extends Expression
   constructor: (@left, @right) -> #nop
   evaluate: (cache) -> 
     return @left.evaluate(cache, yes).then( (val1) => 
-      @right.evaluate(cache, yes).then( (val2) => val1 - val2 )
+      @right.evaluate(cache, yes).then( (val2) => parseFloat(val1) - parseFloat(val2) )
     )
   toString: -> "sub(#{@left.toString()}, #{@right.toString()})"
 
@@ -34,7 +34,7 @@ class MulExpression extends Expression
   constructor: (@left, @right) -> #nop
   evaluate: (cache) -> 
     return @left.evaluate(cache, yes).then( (val1) => 
-      @right.evaluate(cache, yes).then( (val2) => val1 * val2 )
+      @right.evaluate(cache, yes).then( (val2) => parseFloat(val1) * parseFloat(val2) )
     )
   toString: -> "mul(#{@left.toString()}, #{@right.toString()})"
 
@@ -42,7 +42,7 @@ class DivExpression extends Expression
   constructor: (@left, @right) -> #nop
   evaluate: (cache) -> 
     return @left.evaluate(cache, yes).then( (val1) => 
-      @right.evaluate(cache, yes).then( (val2) => val1 / val2 )
+      @right.evaluate(cache, yes).then( (val2) => parseFloat(val1) / parseFloat(val2) )
     )
   toString: -> "div(#{@left.toString()}, #{@right.toString()})"
 

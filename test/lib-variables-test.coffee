@@ -109,8 +109,13 @@ describe "VariableManager", ->
       ).catch(finish)
 
     it 'should interpolate "abc $a"', (finish) ->
-      varManager.evaluateStringExpression(['"abc"', '$a']).then( (result) =>
+      varManager.evaluateStringExpression(['"abc "', '$a']).then( (result) =>
         assert result, "abc 1"
+        finish()
+      ).catch(finish)
+    it 'should interpolate "abc $a de"', (finish) ->
+      varManager.evaluateStringExpression(['"abc "', '$a', '" de"']).then( (result) =>
+        assert result, "abc 1 de"
         finish()
       ).catch(finish)
 
