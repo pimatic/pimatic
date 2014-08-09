@@ -724,7 +724,10 @@ module.exports = (env) ->
 
     _emitDeviceAttributeEvent: (device, attributeName, attribute, time, value) ->
       @emit 'deviceAttributeChanged', {device, attributeName, attribute, time, value}
-      @io?.emit 'deviceAttributeChanged', {deviceId: device.id, attributeName, time, value}
+      @io?.emit(
+        'deviceAttributeChanged', 
+        {deviceId: device.id, attributeName, time: time.getTime(), value}
+      )
 
 
     _emitDeviceEvent: (eventType, device) ->
