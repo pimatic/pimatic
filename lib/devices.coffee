@@ -69,9 +69,9 @@ module.exports = (env) ->
               timestamp = (new Date()).getTime();
               @value = value
               @lastUpdate = timestamp
-              if @history.length is 20
+              if @history.length is 30
                 @history.shift()
-              @history.push {ts:timestamp, value}
+              @history.push {t:timestamp, v:value}
           }
           @on(attrName, (value) => @_attributesMeta[attrName].update(value) )
 
