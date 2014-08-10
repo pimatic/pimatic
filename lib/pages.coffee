@@ -78,7 +78,7 @@ module.exports = (env) ->
 
     updatePageOrder: (pageOrder) ->
       assert pageOrder? and Array.isArray pageOrder
-      @pages = _.sortBy(@pages,  (page) => 
+      @framework.config.pages = @pages = _.sortBy(@pages,  (page) => 
         index = pageOrder.indexOf page.id 
         return if index is -1 then 99999 else index # push it to the end if not found
       )

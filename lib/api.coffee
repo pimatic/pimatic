@@ -113,17 +113,6 @@ api.framework = {
           toJson: yes
           items: 
             device: device
-    updateRuleOrder:
-      rest:
-        type: "POST"
-        url: "/api/rules"
-      description: "Update the Order of all rules"
-      params:
-        ruleOrder:
-          type: t.array
-      result:
-        ruleOrder:
-          type: t.array
     updateDeviceOrder:
       rest:
         type: "POST"
@@ -134,17 +123,6 @@ api.framework = {
           type: t.array
       result:
         deviceOrder:
-          type: t.array
-    updateVariableOrder:
-      rest:
-        type: "POST"
-        url: "/api/variables"
-      description: "Update the Order of all variables"
-      params:
-        variableOrder:
-          type: t.array
-      result:
-        variableOrder:
           type: t.array
     addPluginsToConfig:
       description: "Add plugins to config"
@@ -378,6 +356,17 @@ api.rules = {
       result:
         message:
           type: t.string
+    updateRuleOrder:
+      rest:
+        type: "POST"
+        url: "/api/rules"
+      description: "Update the Order of all rules"
+      params:
+        ruleOrder:
+          type: t.array
+      result:
+        ruleOrder:
+          type: t.array
 }
 
 
@@ -711,7 +700,7 @@ api.groups = {
           type: t.array
       result:
         groupOrder:
-          type: t.array  
+          type: t.array 
 }
 
 ###
@@ -778,7 +767,17 @@ api.variables = {
         name:
           type: t.string
       result: variableResult
-
+   updateVariableOrder:
+      rest:
+        type: "POST"
+        url: "/api/variables"
+      description: "Update the Order of all variables"
+      params:
+        variableOrder:
+          type: t.array
+      result:
+        variableOrder:
+          type: t.array
 }
 
 

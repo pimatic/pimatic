@@ -402,5 +402,18 @@ module.exports = (env) ->
     evaluateStringExpression: (tokens, varsInEvaluation = {}) ->
       return @evaluateExpression(tokens, varsInEvaluation)
 
+    updateVariableOrder: (variableOrder) ->
+      assert variableOrder? and Array.isArray variableOrder
+      @framework.config.variables = @variablesConfig = _.sortBy(
+        @variablesConfig,  
+        (variable) => 
+          index = variableOrder.indexOf variable.name
+          return if index is -1 then 99999 else index # push it to the end if not found
+      )
+      @framework.saveConfig()
+      @framework._emitVariableOrderChanged(variableOrder)
+      return variableOrder
+
+
 
   return exports = { VariableManager }

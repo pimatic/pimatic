@@ -118,16 +118,6 @@ module.exports = (env) ->
         createCallback
       }
 
-    updateRuleOrder: (ruleOrder) ->
-      assert ruleOrder? and Array.isArray ruleOrder
-      @config.rules = _.sortBy(@config.rules,  (rule) => 
-        index = ruleOrder.indexOf rule.id 
-        return if index is -1 then 99999 else index # push it to the end if not found
-      )
-      @saveConfig()
-      @_emitRuleOrderChanged(ruleOrder)
-      return ruleOrder
-
     updateDeviceOrder: (deviceOrder) ->
       assert deviceOrder? and Array.isArray deviceOrder
       @config.devices = _.sortBy(@config.devices,  (device) => 
@@ -137,18 +127,6 @@ module.exports = (env) ->
       @saveConfig()
       @_emitDeviceOrderChanged(deviceOrder)
       return deviceOrder
-
-    updateVariableOrder: (variableOrder) ->
-      assert variableOrder? and Array.isArray variableOrder
-      @config.variables = _.sortBy(@config.variables,  (variable) => 
-        index = variableOrder.indexOf variable.name
-        return if index is -1 then 99999 else index # push it to the end if not found
-      )
-      @saveConfig()
-      @_emitVariableOrderChanged(variableOrder)
-      return variableOrder
-
-
 
     setupExpressApp: () ->
       # Setup express

@@ -180,7 +180,7 @@ module.exports = (env) ->
 
     updateGroupOrder: (groupOrder) ->
       assert groupOrder? and Array.isArray groupOrder
-      @groups = _.sortBy(@groups,  (group) => 
+      @framework.config.groups = @groups = _.sortBy(@groups,  (group) => 
         index = groupOrder.indexOf group.id 
         return if index is -1 then 99999 else index # push it to the end if not found
       )

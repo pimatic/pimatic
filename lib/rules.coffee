@@ -1038,4 +1038,14 @@ module.exports = (env) ->
         return message
       )
 
+    updateRuleOrder: (ruleOrder) ->
+      assert ruleOrder? and Array.isArray ruleOrder
+      @framework.config.rules = _.sortBy(@framework.config.rules,  (rule) => 
+        index = ruleOrder.indexOf rule.id 
+        return if index is -1 then 99999 else index # push it to the end if not found
+      )
+      @framework.saveConfig()
+      @framework._emitRuleOrderChanged(ruleOrder)
+      return ruleOrder
+
   return exports = { RuleManager }
