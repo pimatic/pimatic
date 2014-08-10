@@ -15,11 +15,12 @@ https = require "https"
 semver = require "semver"
 events = require 'events'
 S = require 'string'
+declapi = require 'decl-api'
 
 module.exports = (env) ->
 
   class PluginManager extends events.EventEmitter
-
+    plugins: []
     updateProcessStatus: 'idle'
     updateProcessMessages: []
 
@@ -109,7 +110,7 @@ module.exports = (env) ->
         return pluginList = (
           for k, p of plugins 
             name = p.name.replace 'pimatic-', ''
-            loadedPlugin = @framework.getPlugin name
+            loadedPlugin = @framework.pluginManager.getPlugin name
             installed = @isInstalled p.name
             packageJson = (
               if installed then @getInstalledPackageInfo p.name
@@ -217,7 +218,7 @@ module.exports = (env) ->
           for name in plugins
             packageJson = @getInstalledPackageInfo name
             name = name.replace 'pimatic-', ''
-            loadedPlugin = @framework.getPlugin name
+            loadedPlugin = @framework.pluginManager.getPlugin name
             listEntry = {
               name: name
               active: loadedPlugin?
@@ -258,6 +259,95 @@ module.exports = (env) ->
               reject e.message
         ).on "error", reject
       )
+
+    loadPlugins: -> 
+      # Promise chain, begin with an empty promise
+      chain = Promise.resolve()
+
+      for pConf, i in @pluginsConfig
+        do (pConf, i) =>
+          assert pConf?
+          assert pConf instanceof Object
+          assert pConf.plugin? and typeof pConf.plugin is "string" 
+
+          chain = chain.then( () =>
+            fullPluginName = "pimatic-#{pConf.plugin}"
+            Promise.try( =>     
+              # If the plugin folder already exist
+              return promise = (
+                if @isInstalled(fullPluginName) then Promise.resolve()
+                else 
+                  env.logger.info("Installing: \"#{pConf.plugin}\"")
+                  @installPlugin(fullPluginName)
+              )
+            ).then( =>
+              return @loadPlugin(fullPluginName).then( ([plugin, packageInfo]) =>
+                # Check config
+                if packageInfo.configSchema?
+                  pathToSchema = path.resolve(
+                    @pathToPlugin(fullPluginName), 
+                    packageInfo.configSchema
+                  )
+                  configSchema = require(pathToSchema)
+                  @framework._validateConfig(pConf, configSchema, "config of #{fullPluginName}")
+                  pConf = declapi.enhanceJsonSchemaWithDefaults(configSchema, pConf)
+                else
+                  env.logger.warn(
+                    "package.json of \"#{fullPluginName}\" has no \"configSchema\" property. " +
+                    "Could not validate config."
+                  )
+                @registerPlugin(plugin, pConf, configSchema)
+              ).catch( (error) ->
+                # If an error occures log an ignore it.
+                env.logger.error error.message
+                env.logger.debug error.stack
+              )
+            )
+          )
+
+      return chain
+
+    initPlugins: ->
+      for plugin in @plugins
+        try
+          plugin.plugin.init(@framework.app, @framework, plugin.config)
+        catch err
+          env.logger.error(
+            "Could not initialize the plugin \"#{plugin.config.plugin}\": " +
+            err.message
+          )
+          env.logger.debug err.stack
+
+    registerPlugin: (plugin, config, packageInfo) ->
+      assert plugin? and plugin instanceof env.plugins.Plugin
+      assert config? and config instanceof Object
+
+      @plugins.push {plugin, config, packageInfo}
+      @emit "plugin", plugin
+
+    getPlugin: (name) ->
+      assert name?
+      assert typeof name is "string"
+
+      for p in @plugins
+        if p.config.plugin is name then return p.plugin
+      return null
+
+    addPluginsToConfig: (plugins) ->
+      Array.isArray pluginNames
+      pluginNames = (p.plugin for p in @pluginsConfig)
+      added = []
+      for p in plugins
+        unless p in pluginNames
+          @pluginsConfig.push {plugin: p}
+          added.push p
+      @framework.saveConfig()
+      return added
+
+    removePluginsFromConfig: (plugins) ->
+      removed = _.remove(@pluginsConfig, (p) -> p.plugin in plugins)
+      @framework.saveConfig()
+      return removed
 
 
   class Plugin extends require('events').EventEmitter

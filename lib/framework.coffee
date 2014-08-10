@@ -24,7 +24,6 @@ module.exports = (env) ->
 
   class Framework extends require('events').EventEmitter
     configFile: null
-    plugins: []
     app: null
     io: null
     ruleManager: null
@@ -51,14 +50,15 @@ module.exports = (env) ->
       )
       @packageJson = @pluginManager.getInstalledPackageInfo('pimatic')
       env.logger.info "Starting pimatic version #{@packageJson.version}"
-      @loadConfig()
+      @_loadConfig()
+      @pluginManager.pluginsConfig = @config.plugins
       @deviceManager = new env.devices.DeviceManager(this, @config.devices)
       @groupManager = new env.groups.GroupManager(this, @config.groups)
       @pageManager = new env.pages.PageManager(this, @config.pages)
       @variableManager = new env.variables.VariableManager(this, @config.variables)
       @ruleManager = new env.rules.RuleManager(this, @config.rules)
       @database = new env.database.Database(this, @config.settings.database)
-      @setupExpressApp()
+      @_setupExpressApp()
 
     _validateConfig: (config, schema, scope = "config") ->
       js = new JaySchema()
@@ -75,7 +75,7 @@ module.exports = (env) ->
             if e.testedValue? then errorMessage += ", was: #{e.testedValue}"
         throw new Error(errorMessage)
 
-    loadConfig: () ->
+    _loadConfig: () ->
       schema = require("../config-schema")
       contents = fs.readFileSync(@configFile).toString()
       instance = cjson.parse(RJSON.transform(contents))
@@ -95,7 +95,7 @@ module.exports = (env) ->
         defaultLocale: @config.settings.locale,
       })
 
-    setupExpressApp: () ->
+    _setupExpressApp: () ->
       # Setup express
       # -------------
       @app = express()
@@ -188,7 +188,7 @@ module.exports = (env) ->
       unless serverEnabled 
         env.logger.warn "You have no https and no http server enabled!"
 
-      @initRestApi()
+      @_initRestApi()
 
       socketIoPath = '/socket.io'
       engine = new engineIo.Server({path: socketIoPath})
@@ -308,73 +308,6 @@ module.exports = (env) ->
       Promise.all(listenPromises).then( =>
         @emit "server listen", "startup"
       )
-      
-
-    loadPlugins: -> 
-
-      checkPluginDependencies = (pConf, plugin) =>
-        if plugin.pluginDependencies?
-          pluginNames = (p.plugin for p in @config.plugins) 
-          for dep in plugin.pluginDependencies
-            unless dep in pluginNames
-              env.logger.error(
-                "Plugin \"#{pConf.plugin}\" depends on \"#{dep}\". " +
-                "Please add \"#{dep}\" to your config!"
-              )
-
-      # Promise chain, begin with an empty promise
-      chain = Promise.resolve()
-
-      for pConf, i in @config.plugins
-        do (pConf, i) =>
-          assert pConf?
-          assert pConf instanceof Object
-          assert pConf.plugin? and typeof pConf.plugin is "string" 
-
-          #legacy support
-          if pConf.plugin is "speak-api"
-            chain = chain.then =>
-              env.logger.info "removing deprecated plugin speak-api!"
-              @config.plugins.splice i, 1
-            return
-          
-          chain = chain.then( () =>
-            fullPluginName = "pimatic-#{pConf.plugin}"
-            Promise.try( =>     
-              # If the plugin folder already exist
-              return promise = (
-                if @pluginManager.isInstalled(fullPluginName) then Promise.resolve()
-                else 
-                  env.logger.info("Installing: \"#{pConf.plugin}\"")
-                  @pluginManager.installPlugin(fullPluginName)
-              )
-            ).then( =>
-              return @pluginManager.loadPlugin(fullPluginName).then( ([plugin, packageInfo]) =>
-                checkPluginDependencies(pConf, plugin)
-                # Check config
-                if packageInfo.configSchema?
-                  pathToSchema = path.resolve(
-                    @pluginManager.pathToPlugin(fullPluginName), 
-                    packageInfo.configSchema
-                  )
-                  configSchema = require(pathToSchema)
-                  @_validateConfig(pConf, configSchema, "config of #{fullPluginName}")
-                  pConf = declapi.enhanceJsonSchemaWithDefaults(configSchema, pConf)
-                else
-                  env.logger.warn(
-                    "package.json of \"#{fullPluginName}\" has no \"configSchema\" property. " +
-                    "Could not validate config."
-                  )
-                @registerPlugin(plugin, pConf, configSchema)
-              ).catch( (error) ->
-                # If an error occures log an ignore it.
-                env.logger.error error.message
-                env.logger.debug error.stack
-              )
-            )
-          )
-
-      return chain
 
     restart: () ->
       unless process.env['PIMATIC_DAEMONIZED']?
@@ -388,37 +321,6 @@ module.exports = (env) ->
         env.logger.info("restarting...")
         daemon.daemon process.argv[1], process.argv[2..]
         process.exit 0
-
-    registerPlugin: (plugin, config, packageInfo) ->
-      assert plugin? and plugin instanceof env.plugins.Plugin
-      assert config? and config instanceof Object
-
-      @plugins.push {plugin, config, packageInfo}
-      @emit "plugin", plugin
-
-    getPlugin: (name) ->
-      assert name?
-      assert typeof name is "string"
-
-      for p in @plugins
-        if p.config.plugin is name then return p.plugin
-      return null
-
-    addPluginsToConfig: (plugins) ->
-      Array.isArray pluginNames
-      pluginNames = (p.plugin for p in @config.plugins)
-      added = []
-      for p in plugins
-        unless p in pluginNames
-          @config.plugins.push {plugin: p}
-          added.push p
-      @saveConfig()
-      return added
-
-    removePluginsFromConfig: (plugins) ->
-      removed = _.remove(@config.plugins, (p) -> p.plugin in plugins)
-      @saveConfig()
-      return removed
 
     getGuiSetttings: () -> {
       config: @config.settings.gui
@@ -514,17 +416,6 @@ module.exports = (env) ->
       }) 
 
     init: ->
-
-      initPlugins = =>
-        for plugin in @plugins
-          try
-            plugin.plugin.init(@app, this, plugin.config)
-          catch err
-            env.logger.error(
-              "Could not initialize the plugin \"#{plugin.config.plugin}\": " +
-              err.message
-            )
-            env.logger.debug err.stack
 
       initVariables = =>
         @variableManager.init()
@@ -667,8 +558,8 @@ module.exports = (env) ->
         )
 
       return @database.init()
-        .then( => @loadPlugins())
-        .then(initPlugins)
+        .then( => @pluginManager.loadPlugins() )
+        .then( => @pluginManager.initPlugins() )
         .then( => @deviceManager.initDevices() )
         .then( => @deviceManager.loadDevices() )
         .then(initVariables)
@@ -689,7 +580,7 @@ module.exports = (env) ->
           Promise.all(context.waitFor).then => @listen()
         )
 
-    initRestApi: ->
+    _initRestApi: ->
       onError = (error) =>
         if error instanceof Error
           message = error.message

@@ -101,28 +101,6 @@ api.framework = {
             meta:
               type: t.object
   actions:
-    addPluginsToConfig:
-      description: "Add plugins to config"
-      rest:
-        type: "POST"
-        url: "/api/config/plugins"
-      params:
-        pluginNames:
-          type: t.array
-      result:
-        added:
-          type: t.array
-    removePluginsFromConfig:
-      description: "Remove plugins from config"
-      rest:
-        type: "DELETE"
-        url: "/api/config/plugins"
-      params:
-        pluginNames:
-          type: t.array
-      result:
-        removed:
-          type: t.array
     getGuiSetttings:
       description: "Get the gui config options"
       rest: 
@@ -838,6 +816,28 @@ api.plugins = {
       result:
         status:
           type: 'any'
+    addPluginsToConfig:
+      description: "Add plugins to config"
+      rest:
+        type: "POST"
+        url: "/api/config/plugins"
+      params:
+        pluginNames:
+          type: t.array
+      result:
+        added:
+          type: t.array
+    removePluginsFromConfig:
+      description: "Remove plugins from config"
+      rest:
+        type: "DELETE"
+        url: "/api/config/plugins"
+      params:
+        pluginNames:
+          type: t.array
+      result:
+        removed:
+          type: t.array
 }
 
 
