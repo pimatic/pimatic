@@ -767,7 +767,7 @@ api.variables = {
         name:
           type: t.string
       result: variableResult
-   updateVariableOrder:
+    updateVariableOrder:
       rest:
         type: "POST"
         url: "/api/variables"
