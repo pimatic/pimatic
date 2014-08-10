@@ -2,6 +2,7 @@ cassert = require "cassert"
 assert = require "assert"
 events = require "events"
 Promise = require 'bluebird'
+_ = require 'lodash'
 t = require('decl-api').types
 M = require '../lib/matcher'
 
@@ -16,7 +17,9 @@ createDummyParseContext = ->
 describe "PresencePredicateProvider", ->
 
   frameworkDummy = 
-    devices: {}
+    deviceManager:
+      devices: {}
+      getDevices: -> _.values(@devices)
 
   provider = null
   sensorDummy = null
@@ -32,7 +35,7 @@ describe "PresencePredicateProvider", ->
 
     sensorDummy = new PresenceDummySensor
 
-    frameworkDummy.devices =
+    frameworkDummy.deviceManager.devices =
       test: sensorDummy
 
   describe '#parsePredicate()', ->
@@ -114,7 +117,9 @@ describe "PresencePredicateProvider", ->
 describe "ContactPredicateProvider", ->
 
   frameworkDummy = 
-    devices: {}
+    deviceManager:
+      devices: {}
+      getDevices: -> _.values(@devices)
 
   provider = null
   sensorDummy = null
@@ -130,7 +135,7 @@ describe "ContactPredicateProvider", ->
 
     sensorDummy = new ContactDummySensor
 
-    frameworkDummy.devices =
+    frameworkDummy.deviceManager.devices =
       test: sensorDummy
 
   describe '#parsePredicate()', ->
@@ -211,7 +216,9 @@ describe "ContactPredicateProvider", ->
 describe "SwitchPredicateProvider", ->
 
   frameworkDummy = 
-    devices: {}
+    deviceManager:
+      devices: {}
+      getDevices: -> _.values(@devices)
 
   provider = null
   switchDummy = null
@@ -228,7 +235,7 @@ describe "SwitchPredicateProvider", ->
 
     switchDummy = new SwitchDummyDevice()
 
-    frameworkDummy.devices =
+    frameworkDummy.deviceManager.devices =
       test: switchDummy
 
 
@@ -307,7 +314,9 @@ describe "SwitchPredicateProvider", ->
 describe "DeviceAttributePredicateProvider", ->
 
   frameworkDummy = 
-    devices: {}
+    deviceManager:
+      devices: {}
+      getDevices: -> _.values(@devices)
 
   provider = null
   sensorDummy = null
@@ -330,7 +339,7 @@ describe "DeviceAttributePredicateProvider", ->
 
     sensorDummy = new DummySensor()
 
-    frameworkDummy.devices =
+    frameworkDummy.deviceManager.devices =
       test: sensorDummy
 
   describe '#parsePredicate()', ->

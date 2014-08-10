@@ -10,6 +10,7 @@ assert = require 'assert'
 Promise = require 'bluebird'
 _ = require 'lodash'
 t = require('decl-api').types
+declapi = require 'decl-api'
 
 module.exports = (env) ->
 
@@ -468,7 +469,177 @@ module.exports = (env) ->
       @_vars.cancelNotifyOnChange(cl) for cl in @_exprChangeListeners
       super()
 
+  class DeviceManager
+    devices: {}
+    deviceClasses: {}
+
+    constructor: (@framework, @devicesConfig) ->
+
+    registerDeviceClass: (className, {configDef, createCallback, prepareConfig}) ->
+      assert typeof className is "string"
+      assert typeof configDef is "object"
+      assert typeof createCallback is "function"
+      assert(if prepareConfig? then typeof prepareConfig is "function" else true)
+      assert typeof configDef.properties is "object"
+      configDef.properties.id = {
+        description: "the id for the device"
+        type: "string"
+      }
+      configDef.properties.name = {
+        description: "the name for the device"
+        type: "string"
+      }
+      configDef.properties.class = {
+        description: "the class to use for the device"
+        type: "string"
+      }
+
+      @deviceClasses[className] = {
+        prepareConfig
+        configDef
+        createCallback
+      }
+
+    updateDeviceOrder: (deviceOrder) ->
+      assert deviceOrder? and Array.isArray deviceOrder
+      @framework.config.devices = @devicesConfig = _.sortBy(@devicesConfig,  (device) => 
+        index = deviceOrder.indexOf device.id 
+        return if index is -1 then 99999 else index # push it to the end if not found
+      )
+      @framework.saveConfig()
+      @framework._emitDeviceOrderChanged(deviceOrder)
+      return deviceOrder
+
+    registerDevice: (device) ->
+      assert device?
+      assert device instanceof env.devices.Device
+      assert device._constructorCalled
+      if @devices[device.id]?
+        throw new assert.AssertionError("dublicate device id \"#{device.id}\"")
+      unless device.id.match /^[a-z0-9\-_]+$/i
+        env.logger.warn """
+          The id of #{device.id} contains a non alphanumeric letter or symbol.
+          This could lead to errors.
+        """
+      for reservedWord in ["and", "or", "then"]
+        if device.name.indexOf(" and ") isnt -1
+          env.logger.warn """
+            Name of device "#{device.id}" contains an "#{reservedWord}". 
+            This could lead to errors in rules.
+          """
+      env.logger.info "new device \"#{device.name}\"..."
+      @devices[device.id]=device
+
+      for attrName, attr of device.attributes
+        do (attrName, attr) =>
+          device.on(attrName, onChange = (value) => 
+            @framework._emitDeviceAttributeEvent(device, attrName, attr,  new Date(), value)
+          )
+      device.afterRegister()
+      @framework._emitDeviceAdded(device)
+      return device
+
+    _loadDevice: (deviceConfig) ->
+      classInfo = @deviceClasses[deviceConfig.class]
+      unless classInfo?
+        throw new Error("Unknown device class \"#{deviceConfig.class}\"")
+      warnings = []
+      classInfo.prepareConfig(deviceConfig) if classInfo.prepareConfig?
+      @framework._validateConfig(
+        deviceConfig, 
+        classInfo.configDef, 
+          "config of device #{deviceConfig.id}"
+      )
+      declapi.checkConfig(classInfo.configDef.properties, deviceConfig, warnings)
+      for w in warnings
+        env.logger.warn("Device configuration of #{deviceConfig.id}: #{w}")
+      deviceConfig = declapi.enhanceJsonSchemaWithDefaults(classInfo.configDef, deviceConfig)
+      device = classInfo.createCallback(deviceConfig)
+      assert deviceConfig is device.config
+      return @registerDevice(device)
+
+
+    loadDevices: ->
+      for deviceConfig in @devicesConfig
+        classInfo = @deviceClasses[deviceConfig.class]
+        if classInfo?
+          try
+            @_loadDevice(deviceConfig)
+          catch e
+            env.logger.error("Error loading device #{deviceConfig.id}: #{e.message}")
+            env.logger.debug(e)
+        else
+          env.logger.warn(
+            "no plugin found for device \"#{deviceConfig.id}\" of class \"#{deviceConfig.class}\"!"
+          )
+      return
+
+    getDeviceById: (id) -> @devices[id]
+
+    getDevices: -> (device for id, device of @devices)
+
+    getDeviceClasses: -> (className for className of @deviceClasses)
+
+    getDeviceConfigSchema: (className)-> @deviceClasses[className]?.configDef
+
+    addDeviceByConfig: (deviceConfig) ->
+      assert deviceConfig.id?
+      assert deviceConfig.class?
+      if @isDeviceInConfig(deviceConfig.id)
+        throw new Error(
+          "A device with the id \"#{deviceConfig.id}\" is already in the config."
+        )
+      device = @_loadDevice(deviceConfig)
+      @addDeviceToConfig(deviceConfig)
+      return device
+
+    updateDeviceByConfig: (deviceConfig) ->
+      throw new Error("The Operation isn't supported yet.")
+
+    removeDevice: (deviceId) ->
+      device = @getDeviceById(deviceId)
+      unless device? then return
+      @framework._emitDeviceRemoved(device)
+      device.emit 'remove'
+      _.remove(@devicesConfig, {deviceId: deviceId})
+      @framework.saveConfig()
+      device.destroy()
+      return device
+
+    addDeviceToConfig: (deviceConfig) ->
+      assert deviceConfig.id?
+      assert deviceConfig.class?
+
+      # Check if device is already in the deviceConfig:
+      present = @isDeviceInConfig deviceConfig.id
+      if present
+        message = "an device with the id #{deviceConfig.id} is already in the config" 
+        throw new Error message
+      @devicesConfig.push deviceConfig
+      @framework.saveConfig()
+
+    isDeviceInConfig: (id) ->
+      assert id?
+      for d in @devicesConfig
+        if d.id is id then return true
+      return false
+
+    initDevices: ->
+      deviceConfigDef = require("../device-config-schema")
+      defaultDevices = [
+        env.devices.ButtonsDevice
+        env.devices.VariablesDevice
+      ]
+      for deviceClass in defaultDevices
+        do (deviceClass) =>
+          @registerDeviceClass(deviceClass.name, {
+            configDef: deviceConfigDef[deviceClass.name], 
+            createCallback: (config) => 
+              return new deviceClass(config, this)
+          })
+
   return exports = {
+    DeviceManager
     Device
     Actuator
     SwitchActuator

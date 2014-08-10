@@ -3,6 +3,7 @@ Promise = require 'bluebird'
 i18n = require 'i18n'
 events = require 'events'
 M = require '../lib/matcher'
+_ = require 'lodash'
 
 i18n.configure(
   locales:['en', 'de']
@@ -20,7 +21,9 @@ createDummyParseContext = ->
 describe "SwitchActionHandler", ->
 
   frameworkDummy =
-    devices: {}
+    deviceManager:
+      devices: {}
+      getDevices: -> _.values(@devices)
 
   switchActionProvider = new env.actions.SwitchActionProvider frameworkDummy
 
@@ -29,7 +32,7 @@ describe "SwitchActionHandler", ->
     name: 'dummy switch'
 
   dummySwitch = new DummySwitch()
-  frameworkDummy.devices['dummy-switch-id'] = dummySwitch
+  frameworkDummy.deviceManager.devices['dummy-switch-id'] = dummySwitch
 
   describe "#parseAction()", ->
     turnOnCalled = false
@@ -112,7 +115,9 @@ describe "SwitchActionHandler", ->
 describe "ShutteActionHandler", ->
 
   frameworkDummy =
-    devices: {}
+    deviceManager:
+      devices: {}
+      getDevices: -> _.values(@devices)
 
   shutterActionProvider = new env.actions.ShutterActionProvider frameworkDummy
   stopShutterActionProvider = new env.actions.StopShutterActionProvider frameworkDummy
@@ -124,7 +129,7 @@ describe "ShutteActionHandler", ->
     moveToPosition: () -> Promise.resolve()
 
   shutterDevice = new Shutter()
-  frameworkDummy.devices['dummy-switch-id'] = shutterDevice
+  frameworkDummy.deviceManager.devices['dummy-switch-id'] = shutterDevice
 
   describe "#parseAction()", ->
     moveUpCalled = false
@@ -244,7 +249,10 @@ describe "DimmerActionHandler", ->
     logger: {}
 
   frameworkDummy = new events.EventEmitter()
-  frameworkDummy.devices = {}
+  frameworkDummy.deviceManager = {
+    devices: {}
+    getDevices: -> _.values(@devices)
+  }
   frameworkDummy.variableManager = new env.variables.VariableManager(frameworkDummy, [])
 
   dimmerActionProvider = new env.actions.DimmerActionProvider frameworkDummy
@@ -254,7 +262,7 @@ describe "DimmerActionHandler", ->
     name: 'dummy dimmer'
 
   dummyDimmer = new DimmerDevice()
-  frameworkDummy.devices['dummy-dimmer-id'] = dummyDimmer
+  frameworkDummy.deviceManager.devices['dummy-dimmer-id'] = dummyDimmer
 
   describe "#executeAction()", ->
     dimlevel = null
@@ -288,6 +296,10 @@ describe "LogActionProvider", ->
   envDummy =
     logger: {}
   frameworkDummy = new events.EventEmitter()
+  frameworkDummy.deviceManager = {
+    devices: {}
+    getDevices: -> _.values(@devices)
+  }
   frameworkDummy.variableManager = new env.variables.VariableManager(frameworkDummy, [])
 
   logActionProvider = new env.actions.LogActionProvider frameworkDummy

@@ -61,7 +61,7 @@ module.exports = (env) ->
     # ### parsePredicate()
     parsePredicate: (input, context) ->  
 
-      switchDevices = _(@framework.devices).values()
+      switchDevices = _(@framework.deviceManager.devices).values()
         .filter((device) => device.hasAttribute( 'state')).value()
 
       device = null
@@ -129,7 +129,7 @@ module.exports = (env) ->
 
     parsePredicate: (input, context) ->
 
-      presenceDevices = _(@framework.devices).values()
+      presenceDevices = _(@framework.deviceManager.devices).values()
         .filter((device) => device.hasAttribute( 'presence')).value()
 
       device = null
@@ -196,7 +196,7 @@ module.exports = (env) ->
 
     parsePredicate: (input, context) ->
 
-      contactDevices = _(@framework.devices).values()
+      contactDevices = _(@framework.deviceManager.devices).values()
         .filter((device) => device.hasAttribute( 'contact')).value()
 
       device = null
@@ -269,7 +269,8 @@ module.exports = (env) ->
     # ### parsePredicate()
     parsePredicate: (input, context) ->
 
-      allAttributes = _(@framework.devices).values().map((device) => _.keys(device.attributes))
+      allAttributes = _(@framework.deviceManager.getDevices())
+        .map((device) => _.keys(device.attributes))
         .flatten().uniq().value()
 
       result = null
@@ -285,7 +286,7 @@ module.exports = (env) ->
         }
 
         info.attributeName = attr
-        devices = _(@framework.devices).values()
+        devices = _(@framework.deviceManager.devices).values()
           .filter((device) => device.hasAttribute(attr)).value()
         m.match(' of ').matchDevice(devices, (m, device) =>
           info.device = device
@@ -412,7 +413,8 @@ module.exports = (env) ->
     # ### parsePredicate()
     parsePredicate: (input, context) ->
 
-      allAttributes = _(@framework.devices).values().map((device) => _.keys(device.attributes))
+      allAttributes = _(@framework.deviceManager.getDevices())
+        .map((device) => _.keys(device.attributes))
         .flatten().uniq().value()
 
       result = null
@@ -427,7 +429,7 @@ module.exports = (env) ->
         }
 
         info.attributeName = attr
-        devices = _(@framework.devices).values()
+        devices = _(@framework.deviceManager.devices).values()
           .filter( (device) => device.hasAttribute(attr) ).value()
         m.match(' of ').matchDevice(devices, (m, device) =>
           info.device = device
@@ -612,7 +614,7 @@ module.exports = (env) ->
 
       buttonsWithId = [] 
 
-      for id, d of @framework.devices
+      for id, d of @framework.deviceManager.devices
         continue unless d instanceof env.devices.ButtonsDevice
         for b in d.config.buttons
           buttonsWithId.push [{device: d, buttonId: b.id}, b.id]

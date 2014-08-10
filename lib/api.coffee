@@ -3,6 +3,7 @@ API-Defs
 =========
 ###
 
+assert = require 'assert'
 t = require('decl-api').types
 
 ###
@@ -100,30 +101,6 @@ api.framework = {
             meta:
               type: t.object
   actions:
-    getDevices:
-      description: "Lists all devices."
-      rest:
-        type: "GET"
-        url: "/api/devices"
-      params: {}
-      result:
-        devices:
-          description: "Array of all devices."
-          type: t.array
-          toJson: yes
-          items: 
-            device: device
-    updateDeviceOrder:
-      rest:
-        type: "POST"
-        url: "/api/devices"
-      description: "Update the Order of all devices"
-      params:
-        deviceOrder:
-          type: t.array
-      result:
-        deviceOrder:
-          type: t.array
     addPluginsToConfig:
       description: "Add plugins to config"
       rest:
@@ -166,6 +143,34 @@ api.framework = {
         url: "/api/restart"
       result:
         void: {}
+}
+
+api.devices = {
+  actions:
+    getDevices:
+      description: "Lists all devices."
+      rest:
+        type: "GET"
+        url: "/api/devices"
+      params: {}
+      result:
+        devices:
+          description: "Array of all devices."
+          type: t.array
+          toJson: yes
+          items: 
+            device: device
+    updateDeviceOrder:
+      rest:
+        type: "POST"
+        url: "/api/devices"
+      description: "Update the Order of all devices"
+      params:
+        deviceOrder:
+          type: t.array
+      result:
+        deviceOrder:
+          type: t.array
     getDeviceClasses:
       description: "List all registered device classes."
       rest:
@@ -1033,9 +1038,11 @@ apis = [
   api.database, 
   api.groups, 
   api.pages
+  api.devices
 ]
 for a in apis
   for actionName, action of a.actions
+    assert(not actions[actionName]?)
     actions[actionName] = action
 api.all = {actions}
 

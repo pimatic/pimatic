@@ -25,15 +25,16 @@ module.exports = (env) ->
   class Framework extends require('events').EventEmitter
     configFile: null
     plugins: []
-    devices: {}
     app: null
     io: null
     ruleManager: null
     pluginManager: null
     variableManager: null
+    deviceManager: null
+    groupManager: null
+    pageManager: null
     database: null
     config: null
-    deviceClasses: {}
 
     constructor: (@configFile) ->
       assert configFile?
@@ -51,6 +52,7 @@ module.exports = (env) ->
       @packageJson = @pluginManager.getInstalledPackageInfo('pimatic')
       env.logger.info "Starting pimatic version #{@packageJson.version}"
       @loadConfig()
+      @deviceManager = new env.devices.DeviceManager(this, @config.devices)
       @groupManager = new env.groups.GroupManager(this, @config.groups)
       @pageManager = new env.pages.PageManager(this, @config.pages)
       @variableManager = new env.variables.VariableManager(this, @config.variables)
@@ -92,41 +94,6 @@ module.exports = (env) ->
         directory: __dirname + '/../locales',
         defaultLocale: @config.settings.locale,
       })
-
-    registerDeviceClass: (className, {configDef, createCallback, prepareConfig}) ->
-      assert typeof className is "string"
-      assert typeof configDef is "object"
-      assert typeof createCallback is "function"
-      assert(if prepareConfig? then typeof prepareConfig is "function" else true)
-      assert typeof configDef.properties is "object"
-      configDef.properties.id = {
-        description: "the id for the device"
-        type: "string"
-      }
-      configDef.properties.name = {
-        description: "the name for the device"
-        type: "string"
-      }
-      configDef.properties.class = {
-        description: "the class to use for the device"
-        type: "string"
-      }
-
-      @deviceClasses[className] = {
-        prepareConfig
-        configDef
-        createCallback
-      }
-
-    updateDeviceOrder: (deviceOrder) ->
-      assert deviceOrder? and Array.isArray deviceOrder
-      @config.devices = _.sortBy(@config.devices,  (device) => 
-        index = deviceOrder.indexOf device.id 
-        return if index is -1 then 99999 else index # push it to the end if not found
-      )
-      @saveConfig()
-      @_emitDeviceOrderChanged(deviceOrder)
-      return deviceOrder
 
     setupExpressApp: () ->
       # Setup express
@@ -287,6 +254,7 @@ module.exports = (env) ->
         [env.api.database.actions, @database]
         [env.api.groups.actions, @groupManager]
         [env.api.pages.actions, @pageManager]
+        [env.api.devices.actions, @deviceManager]
       ]
 
       onError = (error) =>
@@ -295,7 +263,7 @@ module.exports = (env) ->
 
       @io.on('connection', (socket) =>
         declapi.createSocketIoApi(socket, actionsWithBindings, onError)
-        socket.emit('devices', (d.toJson() for d in @getDevices()) )
+        socket.emit('devices', (d.toJson() for d in @deviceManager.getDevices()) )
         socket.emit('rules', (r.toJson() for r in @ruleManager.getRules()) )
         socket.emit('variables', (v.toJson() for v in @variableManager.getVariables()) )
         socket.emit('pages',  @pageManager.getPages() )
@@ -544,117 +512,6 @@ module.exports = (env) ->
         message: message
         modules: info.modules
       }) 
-      
-    registerDevice: (device) ->
-      assert device?
-      assert device instanceof env.devices.Device
-      assert device._constructorCalled
-      if @devices[device.id]?
-        throw new assert.AssertionError("dublicate device id \"#{device.id}\"")
-      unless device.id.match /^[a-z0-9\-_]+$/i
-        env.logger.warn """
-          The id of #{device.id} contains a non alphanumeric letter or symbol.
-          This could lead to errors.
-        """
-      for reservedWord in ["and", "or", "then"]
-        if device.name.indexOf(" and ") isnt -1
-          env.logger.warn """
-            Name of device "#{device.id}" contains an "#{reservedWord}". 
-            This could lead to errors in rules.
-          """
-      env.logger.info "new device \"#{device.name}\"..."
-      @devices[device.id]=device
-
-      for attrName, attr of device.attributes
-        do (attrName, attr) =>
-          device.on(attrName, onChange = (value) => 
-            @_emitDeviceAttributeEvent(device, attrName, attr,  new Date(), value)
-          )
-      device.afterRegister()
-      @_emitDeviceAdded(device)
-      return device
-
-    _loadDevice: (deviceConfig) ->
-      classInfo = @deviceClasses[deviceConfig.class]
-      unless classInfo?
-        throw new Error("Unknown device class \"#{deviceConfig.class}\"")
-      warnings = []
-      classInfo.prepareConfig(deviceConfig) if classInfo.prepareConfig?
-      @_validateConfig(deviceConfig, classInfo.configDef, "config of device #{deviceConfig.id}")
-      declapi.checkConfig(classInfo.configDef.properties, deviceConfig, warnings)
-      for w in warnings
-        env.logger.warn("Device configuration of #{deviceConfig.id}: #{w}")
-      deviceConfig = declapi.enhanceJsonSchemaWithDefaults(classInfo.configDef, deviceConfig)
-      device = classInfo.createCallback(deviceConfig)
-      assert deviceConfig is device.config
-      return @registerDevice(device)
-
-
-    loadDevices: ->
-      for deviceConfig in @config.devices
-        classInfo = @deviceClasses[deviceConfig.class]
-        if classInfo?
-          try
-            @_loadDevice(deviceConfig)
-          catch e
-            env.logger.error("Error loading device #{deviceConfig.id}: #{e.message}")
-            env.logger.debug(e)
-        else
-          env.logger.warn(
-            "no plugin found for device \"#{deviceConfig.id}\" of class \"#{deviceConfig.class}\"!"
-          )
-      return
-
-    getDeviceById: (id) -> @devices[id]
-
-    getDevices: -> (device for id, device of @devices)
-
-    getDeviceClasses: -> (className for className of @deviceClasses)
-
-    getDeviceConfigSchema: (className)-> @deviceClasses[className]?.configDef
-
-    addDeviceByConfig: (deviceConfig) ->
-      assert deviceConfig.id?
-      assert deviceConfig.class?
-      if @isDeviceInConfig(deviceConfig.id)
-        throw new Error(
-          "A device with the id \"#{deviceConfig.id}\" is already in the config."
-        )
-      device = @_loadDevice(deviceConfig)
-      @addDeviceToConfig(deviceConfig)
-      return device
-
-    updateDeviceByConfig: (deviceConfig) ->
-      throw new Error("The Operation isn't supported yet.")
-
-    removeDevice: (deviceId) ->
-      device = @getDeviceById(deviceId)
-      unless device? then return
-      @_emitDeviceRemoved(device)
-      device.emit 'remove'
-      @config.devices = (d for d in @config.devices when d.id isnt deviceId)
-      @saveConfig()
-      device.destroy()
-      return device
-
-
-    addDeviceToConfig: (deviceConfig) ->
-      assert deviceConfig.id?
-      assert deviceConfig.class?
-
-      # Check if device is already in the deviceConfig:
-      present = @isDeviceInConfig deviceConfig.id
-      if present
-        message = "an device with the id #{deviceConfig.id} is already in the config" 
-        throw new Error message
-      @config.devices.push deviceConfig
-      @saveConfig()
-
-    isDeviceInConfig: (id) ->
-      assert id?
-      for d in @config.devices
-        if d.id is id then return true
-      return false
 
     init: ->
 
@@ -743,20 +600,6 @@ module.exports = (env) ->
           predProvInst = new predProv(this)
           @ruleManager.addPredicateProvider(predProvInst)
 
-      initDevices = =>
-        deviceConfigDef = require("../device-config-schema")
-        defaultDevices = [
-          env.devices.ButtonsDevice
-          env.devices.VariablesDevice
-        ]
-        for deviceClass in defaultDevices
-          do (deviceClass) =>
-            @registerDeviceClass(deviceClass.name, {
-              configDef: deviceConfigDef[deviceClass.name], 
-              createCallback: (config) => 
-                return new deviceClass(config, this)
-            })
-
       initRules = =>
 
         addRulePromises = (for rule in @config.rules
@@ -826,8 +669,8 @@ module.exports = (env) ->
       return @database.init()
         .then( => @loadPlugins())
         .then(initPlugins)
-        .then(initDevices)
-        .then( => @loadDevices())
+        .then( => @deviceManager.initDevices() )
+        .then( => @deviceManager.loadDevices() )
         .then(initVariables)
         .then(initActionProvider)
         .then(initPredicateProvider)
@@ -856,7 +699,7 @@ module.exports = (env) ->
       @app.get("/api/device/:deviceId/:actionName", (req, res, next) =>
         deviceId = req.params.deviceId
         actionName = req.params.actionName
-        device = @getDeviceById(deviceId)
+        device = @deviceManager.getDeviceById(deviceId)
         if device?
           if device.hasAction(actionName)
             action = device.actions[actionName]
@@ -876,7 +719,7 @@ module.exports = (env) ->
       declapi.createExpressRestApi(@app, env.api.database.actions, this.database, onError)
       declapi.createExpressRestApi(@app, env.api.groups.actions, this.groupManager, onError)
       declapi.createExpressRestApi(@app, env.api.pages.actions, this.pageManager, onError)
-
+      declapi.createExpressRestApi(@app, env.api.devices.actions, this.deviceManager, onError)
 
     saveConfig: ->
       assert @config?

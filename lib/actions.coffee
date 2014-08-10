@@ -195,7 +195,7 @@ module.exports = (env) ->
       # The result the function will return:
       retVar = null
 
-      switchDevices = _(@framework.devices).values().filter( 
+      switchDevices = _(@framework.deviceManager.devices).values().filter( 
         (device) => device.hasAction("turnOn") and device.hasAction("turnOff") 
       ).value()
 
@@ -294,7 +294,7 @@ module.exports = (env) ->
       # The result the function will return:
       retVar = null
 
-      switchDevices = _(@framework.devices).values().filter( 
+      switchDevices = _(@framework.deviceManager.devices).values().filter( 
         (device) => device.hasAction("toggle")
       ).value()
 
@@ -364,7 +364,7 @@ module.exports = (env) ->
     ###
     parseAction: (input, context) =>
 
-      shutterDevices = _(@framework.devices).values().filter( 
+      shutterDevices = _(@framework.deviceManager.devices).values().filter( 
         (device) => device.hasAction("moveUp") and device.hasAction("moveDown") 
       ).value()
 
@@ -448,7 +448,7 @@ module.exports = (env) ->
     ###
     parseAction: (input, context) =>
 
-      shutterDevices = _(@framework.devices).values().filter( 
+      shutterDevices = _(@framework.deviceManager.devices).values().filter( 
         (device) => device.hasAction("stop") 
       ).value()
 
@@ -516,7 +516,7 @@ module.exports = (env) ->
       # The result the function will return:
       retVar = null
 
-      dimmers = _(@framework.devices).values().filter( 
+      dimmers = _(@framework.deviceManager.devices).values().filter( 
         (device) => device.hasAction("changeDimlevelTo") 
       ).value()
 

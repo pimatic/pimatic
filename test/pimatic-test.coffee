@@ -71,13 +71,13 @@ describe "pimatic", ->
 
     it 'should add the actuator to the config', ->
 
-      framework.addDeviceToConfig deviceConfig
+      framework.deviceManager.addDeviceToConfig deviceConfig
       assert framework.config.devices.length is 1
       assert framework.config.devices[0].id is deviceConfig.id
 
     it 'should throw an error if the actuator exists', ->
       try
-        framework.addDeviceToConfig deviceConfig
+        framework.deviceManager.addDeviceToConfig deviceConfig
         assert false
       catch e
         assert e.message is "an device with the id #{deviceConfig.id} is already in the config"
@@ -85,7 +85,7 @@ describe "pimatic", ->
   describe '#isDeviceInConfig()', ->
 
     it 'should find actuator in config', ->
-      assert framework.isDeviceInConfig deviceConfig.id
+      assert framework.deviceManager.isDeviceInConfig deviceConfig.id
 
     it 'should not find antother actuator in config', ->
-      assert not framework.isDeviceInConfig 'a-not-present-id'
+      assert not framework.deviceManager.isDeviceInConfig 'a-not-present-id'

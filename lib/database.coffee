@@ -512,7 +512,7 @@ module.exports = (env) ->
       assert typeof deviceId is 'string' and deviceId.length > 0
       assert typeof attributeName is 'string' and attributeName.length > 0
 
-      device = @framework.getDeviceById(deviceId)
+      device = @framework.deviceManager.getDeviceById(deviceId)
       unless device? then throw new Error("#{deviceId} not found.")
       attribute = device.attributes[attributeName]
       unless attribute? then throw new Error("#{deviceId} has no attribute #{attributeName}.")
