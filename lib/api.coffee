@@ -113,309 +113,6 @@ api.framework = {
           toJson: yes
           items: 
             device: device
-    getDeviceById:
-      description: "Retrieve a device by a given id."
-      rest:
-        type: "GET"
-        url: "/api/devices/:deviceId"
-      params:
-        deviceId:
-          description: "The id of the device that should be returned."
-          type: t.string
-      result:
-        device:
-          description: "The requested device or null if the device was not found."
-          type: t.object
-          toJson: yes
-          properties: device.properties
-    getPages:
-      description: "Lists all pages."
-      rest:
-        type: "GET"
-        url: "/api/pages"
-      params: {}
-      result:
-        pages:
-          type: t.array
-          items:
-            page: page
-    getPageById:
-      description: "Get a page by id"
-      rest:
-        type: "GET"
-        url: "/api/pages/:pageId"
-      params:
-        pageId:
-          description: "The id of the page that should be returned."
-          type: t.string
-      result:
-        page:
-          description: "The requested page or null if the page was not found."
-          type: t.object
-          properties: page.properties
-    removePage:
-      description: "Remove a page."
-      rest:
-        type: "DELETE"
-        url: "/api/pages/:pageId"
-      params:
-        pageId:
-          description: "The id of the page that should be removed."
-          type: t.string
-      result:
-        removed:
-          description: "The removed page."
-          type: t.object
-          properties: page.properties
-    addPage:
-      rest:
-        type: "POST"
-        url: "/api/pages/:pageId"
-      description: "Add a page."
-      params:
-        pageId:
-          description: "The id of the page that should be added."
-          type: t.string
-        page:
-          description: "Object with id and name of the page to create."
-          type: t.object
-          properties:
-            name: 
-              description: "A user chosen string that should be used to display the page."
-              type: t.string
-      result:
-        page:
-          description: "The created page."
-          type: t.object
-          properties: page.properties
-    updatePage:
-      description: "Update a page name or device order."
-      rest:
-        type: "PATCH"
-        url: "/api/pages/:pageId"
-      params:
-        pageId:
-          description: "The id of the page to change."
-          type: t.string
-        page:
-          description: "An object with properties that should be updated."
-          type: t.object
-          properties:
-            name:
-              description: "The new name to set."
-              type: t.string
-              optional: yes
-            devicesOrder:
-              description: "Array of ordered deviceIds."
-              type: t.array
-              optional: yes
-              items:
-                deviceId:
-                  type: t.string
-      result:
-        page:
-          description: "The updated page."
-          type: t.object
-          properties: page.properties
-    addDeviceToPage:
-      rest:
-        type: "POST"
-        url: "/api/pages/:pageId/devices/:deviceId"
-      description: "Add a page"
-      params:
-        pageId:
-          type: t.string
-        deviceId:
-          type: t.string
-      result:
-        page:
-          type: t.object
-    removeDeviceFromPage:
-      rest:
-        type: "DELETE"
-        url: "/api/pages/:pageId/devices/:deviceId"
-      description: "Add a page"
-      params:
-        pageId:
-          type: t.string
-        deviceId:
-          type: t.string
-      result:
-        page:
-          type: t.object   
-    removeGroup:
-      description: "Remove group"
-      rest:
-        type: "DELETE"
-        url: "/api/groups/:groupId"
-      params:
-        groupId:
-          type: t.string
-      result:
-        removed:
-          type: t.object
-    addGroup:
-      rest:
-        type: "POST"
-        url: "/api/groups/:groupId"
-      description: "Add a group"
-      params:
-        groupId:
-          type: t.string
-        group:
-          type: t.object
-      result:
-        group:
-          type: t.object
-    updateGroup:
-      rest:
-        type: "PATCH"
-        url: "/api/groups/:groupId"
-      description: "Update a group"
-      params:
-        groupId:
-          type: t.string
-        group:
-          type: t.object
-          properties:
-            name:
-              type: t.name
-              optional: yes
-            devicesOrder:
-              type: t.array
-              optional: yes
-            variablesOrder:
-              type: t.array
-              optional: yes
-            rulesOrder:
-              type: t.array
-              optional: yes
-      result:
-        group:
-          type: t.object
-    addDeviceToGroup:
-      rest:
-        type: "POST"
-        url: "/api/groups/:groupId/devices/:deviceId"
-      description: "Add a device to a group"
-      params:
-        groupId:
-          type: t.string
-        deviceId:
-          type: t.string
-      result:
-        deviceItem:
-          type: t.object
-    removeDeviceFromGroup:
-      rest:
-        type: "DELETE"
-        url: "/api/groups/:groupId/devices/:deviceId"
-      description: "Removes a device from a group"
-      params:
-        groupId:
-          type: t.string
-        deviceId:
-          type: t.string
-      result:
-        group:
-          type: t.object  
-    addRuleToGroup:
-      rest:
-        type: "POST"
-        url: "/api/groups/:groupId/rules/:ruleId"
-      description: "Add a rule to a group"
-      params:
-        groupId:
-          type: t.string
-        ruleId:
-          type: t.string
-        position:
-          type: t.number
-          optional: yes
-      result:
-        group:
-          type: t.object
-    removeRuleFromGroup:
-      rest:
-        type: "DELETE"
-        url: "/api/groups/:groupId/rules/:ruleId"
-      description: "Removes a rule from a group"
-      params:
-        groupId:
-          type: t.string
-        ruleId:
-          type: t.string
-      result:
-        group:
-          type: t.object  
-    updateRuleGroupOrder:
-      rest:
-        type: "POST"
-        url: "/api/groups/:groupId/rules"
-      description: "Add a rule to a group"
-      params:
-        groupId:
-          type: t.string
-        ruleOrder:
-          type: t.array
-      result:
-        group:
-          type: t.object
-    addVariableToGroup:
-      rest:
-        type: "POST"
-        url: "/api/groups/:groupId/variables/:variableName"
-      description: "Add a variable to a group"
-      params:
-        groupId:
-          type: t.string
-        variableName:
-          type: t.string
-        position:
-          type: t.number
-          optional: yes
-      result:
-        group:
-          type: t.object
-    updateDeviceGroupOrder:
-      rest:
-        type: "POST"
-        url: "/api/groups/:groupId/devices"
-      description: "Update device order in group"
-      params:
-        groupId:
-          type: t.string
-        deviceOrder:
-          type: t.array
-      result:
-        group:
-          type: t.object
-    removeVariableFromGroup:
-      rest:
-        type: "DELETE"
-        url: "/api/groups/:groupId/variables/:variableName"
-      description: "Removes a variable from a group"
-      params:
-        groupId:
-          type: t.string
-        variableName:
-          type: t.string
-      result:
-        group:
-          type: t.object  
-    updateVariableGroupOrder:
-      rest:
-        type: "POST"
-        url: "/api/groups/:groupId/variables"
-      description: "Update variable order in group"
-      params:
-        groupId:
-          type: t.string
-        variableOrder:
-          type: t.array
-      result:
-        group:
-          type: t.object   
     updateRuleOrder:
       rest:
         type: "POST"
@@ -448,28 +145,6 @@ api.framework = {
           type: t.array
       result:
         variableOrder:
-          type: t.array
-    updateGroupOrder:
-      rest:
-        type: "POST"
-        url: "/api/groups"
-      description: "Update the Order of all Groups"
-      params:
-        groupOrder:
-          type: t.array
-      result:
-        groupOrder:
-          type: t.array
-    updatePageOrder:
-      rest:
-        type: "POST"
-        url: "/api/pages"
-      description: "Update the Order of all Pages"
-      params:
-        pageOrder:
-          type: t.array
-      result:
-        pageOrder:
           type: t.array
     addPluginsToConfig:
       description: "Add plugins to config"
@@ -703,6 +378,340 @@ api.rules = {
       result:
         message:
           type: t.string
+}
+
+
+api.pages = {
+  actions:
+    getDeviceById:
+      description: "Retrieve a device by a given id."
+      rest:
+        type: "GET"
+        url: "/api/devices/:deviceId"
+      params:
+        deviceId:
+          description: "The id of the device that should be returned."
+          type: t.string
+      result:
+        device:
+          description: "The requested device or null if the device was not found."
+          type: t.object
+          toJson: yes
+          properties: device.properties
+    getPages:
+      description: "Lists all pages."
+      rest:
+        type: "GET"
+        url: "/api/pages"
+      params: {}
+      result:
+        pages:
+          type: t.array
+          items:
+            page: page
+    getPageById:
+      description: "Get a page by id"
+      rest:
+        type: "GET"
+        url: "/api/pages/:pageId"
+      params:
+        pageId:
+          description: "The id of the page that should be returned."
+          type: t.string
+      result:
+        page:
+          description: "The requested page or null if the page was not found."
+          type: t.object
+          properties: page.properties
+    removePage:
+      description: "Remove a page."
+      rest:
+        type: "DELETE"
+        url: "/api/pages/:pageId"
+      params:
+        pageId:
+          description: "The id of the page that should be removed."
+          type: t.string
+      result:
+        removed:
+          description: "The removed page."
+          type: t.object
+          properties: page.properties
+    addPage:
+      rest:
+        type: "POST"
+        url: "/api/pages/:pageId"
+      description: "Add a page."
+      params:
+        pageId:
+          description: "The id of the page that should be added."
+          type: t.string
+        page:
+          description: "Object with id and name of the page to create."
+          type: t.object
+          properties:
+            name: 
+              description: "A user chosen string that should be used to display the page."
+              type: t.string
+      result:
+        page:
+          description: "The created page."
+          type: t.object
+          properties: page.properties
+    updatePage:
+      description: "Update a page name or device order."
+      rest:
+        type: "PATCH"
+        url: "/api/pages/:pageId"
+      params:
+        pageId:
+          description: "The id of the page to change."
+          type: t.string
+        page:
+          description: "An object with properties that should be updated."
+          type: t.object
+          properties:
+            name:
+              description: "The new name to set."
+              type: t.string
+              optional: yes
+            devicesOrder:
+              description: "Array of ordered deviceIds."
+              type: t.array
+              optional: yes
+              items:
+                deviceId:
+                  type: t.string
+      result:
+        page:
+          description: "The updated page."
+          type: t.object
+          properties: page.properties
+    addDeviceToPage:
+      rest:
+        type: "POST"
+        url: "/api/pages/:pageId/devices/:deviceId"
+      description: "Add a page"
+      params:
+        pageId:
+          type: t.string
+        deviceId:
+          type: t.string
+      result:
+        page:
+          type: t.object
+    removeDeviceFromPage:
+      rest:
+        type: "DELETE"
+        url: "/api/pages/:pageId/devices/:deviceId"
+      description: "Add a page"
+      params:
+        pageId:
+          type: t.string
+        deviceId:
+          type: t.string
+      result:
+        page:
+          type: t.object
+    updatePageOrder:
+      rest:
+        type: "POST"
+        url: "/api/pages"
+      description: "Update the Order of all Pages"
+      params:
+        pageOrder:
+          type: t.array
+      result:
+        pageOrder:
+          type: t.array
+}
+
+api.groups = {
+  actions:
+    removeGroup:
+      description: "Remove group"
+      rest:
+        type: "DELETE"
+        url: "/api/groups/:groupId"
+      params:
+        groupId:
+          type: t.string
+      result:
+        removed:
+          type: t.object
+    addGroup:
+      rest:
+        type: "POST"
+        url: "/api/groups/:groupId"
+      description: "Add a group"
+      params:
+        groupId:
+          type: t.string
+        group:
+          type: t.object
+      result:
+        group:
+          type: t.object
+    updateGroup:
+      rest:
+        type: "PATCH"
+        url: "/api/groups/:groupId"
+      description: "Update a group"
+      params:
+        groupId:
+          type: t.string
+        group:
+          type: t.object
+          properties:
+            name:
+              type: t.name
+              optional: yes
+            devicesOrder:
+              type: t.array
+              optional: yes
+            variablesOrder:
+              type: t.array
+              optional: yes
+            rulesOrder:
+              type: t.array
+              optional: yes
+      result:
+        group:
+          type: t.object
+    addDeviceToGroup:
+      rest:
+        type: "POST"
+        url: "/api/groups/:groupId/devices/:deviceId"
+      description: "Add a device to a group"
+      params:
+        groupId:
+          type: t.string
+        deviceId:
+          type: t.string
+      result:
+        deviceItem:
+          type: t.object
+    removeDeviceFromGroup:
+      rest:
+        type: "DELETE"
+        url: "/api/groups/:groupId/devices/:deviceId"
+      description: "Removes a device from a group"
+      params:
+        groupId:
+          type: t.string
+        deviceId:
+          type: t.string
+      result:
+        group:
+          type: t.object  
+    addRuleToGroup:
+      rest:
+        type: "POST"
+        url: "/api/groups/:groupId/rules/:ruleId"
+      description: "Add a rule to a group"
+      params:
+        groupId:
+          type: t.string
+        ruleId:
+          type: t.string
+        position:
+          type: t.number
+          optional: yes
+      result:
+        group:
+          type: t.object
+    removeRuleFromGroup:
+      rest:
+        type: "DELETE"
+        url: "/api/groups/:groupId/rules/:ruleId"
+      description: "Removes a rule from a group"
+      params:
+        groupId:
+          type: t.string
+        ruleId:
+          type: t.string
+      result:
+        group:
+          type: t.object  
+    updateRuleGroupOrder:
+      rest:
+        type: "POST"
+        url: "/api/groups/:groupId/rules"
+      description: "Add a rule to a group"
+      params:
+        groupId:
+          type: t.string
+        ruleOrder:
+          type: t.array
+      result:
+        group:
+          type: t.object
+    addVariableToGroup:
+      rest:
+        type: "POST"
+        url: "/api/groups/:groupId/variables/:variableName"
+      description: "Add a variable to a group"
+      params:
+        groupId:
+          type: t.string
+        variableName:
+          type: t.string
+        position:
+          type: t.number
+          optional: yes
+      result:
+        group:
+          type: t.object
+    updateDeviceGroupOrder:
+      rest:
+        type: "POST"
+        url: "/api/groups/:groupId/devices"
+      description: "Update device order in group"
+      params:
+        groupId:
+          type: t.string
+        deviceOrder:
+          type: t.array
+      result:
+        group:
+          type: t.object
+    removeVariableFromGroup:
+      rest:
+        type: "DELETE"
+        url: "/api/groups/:groupId/variables/:variableName"
+      description: "Removes a variable from a group"
+      params:
+        groupId:
+          type: t.string
+        variableName:
+          type: t.string
+      result:
+        group:
+          type: t.object  
+    updateVariableGroupOrder:
+      rest:
+        type: "POST"
+        url: "/api/groups/:groupId/variables"
+      description: "Update variable order in group"
+      params:
+        groupId:
+          type: t.string
+        variableOrder:
+          type: t.array
+      result:
+        group:
+          type: t.object 
+    updateGroupOrder:
+      rest:
+        type: "POST"
+        url: "/api/groups"
+      description: "Update the Order of all Groups"
+      params:
+        groupOrder:
+          type: t.array
+      result:
+        groupOrder:
+          type: t.array  
 }
 
 ###
@@ -1017,7 +1026,16 @@ api.database = {
 
 # all
 actions = {}
-for a in [api.framework, api.rules, api.variables, api.plugins, api.database]
+apis = [
+  api.framework, 
+  api.rules, 
+  api.variables, 
+  api.plugins, 
+  api.database, 
+  api.groups, 
+  api.pages
+]
+for a in apis
   for actionName, action of a.actions
     actions[actionName] = action
 api.all = {actions}

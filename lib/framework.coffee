@@ -51,6 +51,8 @@ module.exports = (env) ->
       @packageJson = @pluginManager.getInstalledPackageInfo('pimatic')
       env.logger.info "Starting pimatic version #{@packageJson.version}"
       @loadConfig()
+      @groupManager = new env.groups.GroupManager(this, @config.groups)
+      @pageManager = new env.pages.PageManager(this, @config.pages)
       @variableManager = new env.variables.VariableManager(this, @config.variables)
       @ruleManager = new env.rules.RuleManager(this, @config.rules)
       @database = new env.database.Database(this, @config.settings.database)
@@ -116,235 +118,6 @@ module.exports = (env) ->
         createCallback
       }
 
-    addPage: (id, page) ->
-      if _.findIndex(@config.pages, {id: id}) isnt -1
-        throw new Error('A page with this id already exists')
-      unless page.name?
-        throw new Error('No name given')
-      @config.pages.push( page = {
-        id: id
-        name: page.name
-        devices: []
-      })
-      @saveConfig()
-      @_emitPageAdded(page)
-      return page
-
-    updatePage: (id, page) ->
-      assert typeof id is "string"
-      assert typeof page is "object"
-      assert(if page.name? then typeof page.name is "string" else true)
-      assert(if page.devicesOrder? then Array.isArray page.devicesOrder else true)
-      thepage = @getPageById(id)
-      unless thepage?
-        throw new Error('Page not found')
-      thepage.name = page.name if page.name?
-      if page.devicesOrder?
-        thepage.devices = _.sortBy(thepage.devices,  (device) => 
-          index = page.devicesOrder.indexOf device.deviceId
-          # push it to the end if not found
-          return if index is -1 then 99999 else index 
-        )
-      @saveConfig()
-      @_emitPageChanged(thepage)
-      return thepage
-
-    getPageById: (id) -> _.find(@config.pages, {id: id})
-
-    addDeviceToPage: (pageId, deviceId) ->
-      page = @getPageById(pageId)
-      unless page?
-        throw new Error('Could not find the page')
-      page.devices.push({
-        deviceId: deviceId
-      })
-      @saveConfig()
-      @_emitPageChanged(page)
-      return page
-
-    removeDeviceFromPage: (pageId, deviceId) ->
-      page = @getPageById(pageId)
-      unless page?
-        throw new Error('Could not find the page')
-      _.remove(page.devices, {deviceId: deviceId})
-      @saveConfig()
-      @_emitPageChanged(page)
-      return page
-
-    removePage: (id, page) ->
-      removedPage = _.remove(@config.pages, {id: id})
-      @saveConfig() if removedPage.length > 0
-      @_emitPageRemoved(removedPage[0])
-      return removedPage
-
-    getPages: () ->
-      return @config.pages
-
-    addGroup: (id, group) ->
-      if _.findIndex(@config.groups, {id: id}) isnt -1
-        throw new Error('A group with this id already exists')
-      unless group.name?
-        throw new Error('No name given')
-      @config.groups.push( group = {
-        id: id
-        name: group.name
-        devices: []
-        rules: []
-        variables: []
-      })
-      @saveConfig()
-      @_emitGroupAdded(group)
-      return group
-
-    updateGroup: (id, patch) ->
-      index = _.findIndex(@config.groups, {id: id})
-      if index is -1
-        throw new Error('Group not found')
-      group = @config.groups[index]
-      
-      if patch.name?
-        group.name = patch.name 
-      if patch.devicesOrder?
-        group.devices = _.sortBy(group.devices, (deviceId) => 
-          index = patch.devicesOrder.indexOf deviceId 
-          return if index is -1 then 99999 else index # push it to the end if not found
-        )
-      if patch.rulesOrder?
-        group.rules = _.sortBy(group.rules, (ruleId) => 
-          index = patch.rulesOrder.indexOf ruleId 
-          return if index is -1 then 99999 else index # push it to the end if not found
-        )
-      if patch.variablesOrder
-        group.variables = _.sortBy(group.variables, (variableName) => 
-          index = patch.variablesOrder.indexOf variableName 
-          return if index is -1 then 99999 else index # push it to the end if not found
-        )
-      @saveConfig()
-      @_emitGroupChanged(group)
-      return group
-
-    getGroupById: (id) -> _.find(@config.groups, {id: id})
-
-    addDeviceToGroup: (groupId, deviceId, position) ->
-      assert(typeof deviceId is "string")
-      assert(typeof groupId is "string")
-      assert(if position? then typeof position is "number" else true)
-      group = @getGroupById(groupId)
-      unless group?
-        throw new Error('Could not find the group')
-      oldGroup = @getGroupOfDevice(deviceId)
-      if oldGroup?
-        #remove rule from all other groups
-        _.remove(oldGroup.devices, (id) => id is deviceId)
-        @_emitGroupChanged(oldGroup)
-      unless position? or position >= group.devices.length
-        group.devices.push(deviceId)
-      else
-        group.devices.splice(position, 0, deviceId)
-      @saveConfig()
-      @_emitGroupChanged(group)
-      return group
-
-    getGroupOfRule: (ruleId) ->
-      for g in @config.groups
-        index = _.indexOf(g.rules, ruleId)
-        if index isnt -1 then return g
-      return null
-
-    addRuleToGroup: (groupId, ruleId, position) ->
-      assert(typeof ruleId is "string")
-      assert(typeof groupId is "string")
-      assert(if position? then typeof position is "number" else true)
-      group = @getGroupById(groupId)
-      unless group?
-        throw new Error('Could not find the group')
-      oldGroup = @getGroupOfRule(ruleId)
-      if oldGroup?
-        #remove rule from all other groups
-        _.remove(oldGroup.rules, (id) => id is ruleId)
-        @_emitGroupChanged(oldGroup)
-      unless position? or position >= group.rules.length
-        group.rules.push(ruleId)
-      else
-        group.rules.splice(position, 0, ruleId)
-      @saveConfig()
-      @_emitGroupChanged(group)
-      return group
-
-    getGroupOfVariable: (variableName) ->
-      for g in @config.groups
-        index = _.indexOf(g.variables, variableName)
-        if index isnt -1 then return g
-      return null
-    
-    removeDeviceFromGroup: (groupId, deviceId) ->
-      group = @getGroupOfDevice(deviceId)
-      unless group?
-        throw new Error('Device is in no group')
-      if group.id isnt groupId
-        throw new Error("Device is not in group #{groupId}")
-      _.remove(group.devices, (id) => id is deviceId)
-      @saveConfig()
-      @_emitGroupChanged(group)      
-      return group
-
-    removeRuleFromGroup: (groupId, ruleId) ->
-      group = @getGroupOfRule(ruleId)
-      unless group?
-        throw new Error('Rule is in no group')
-      if group.id isnt groupId
-        throw new Error("Rule is not in group #{groupId}")
-      _.remove(group.rules, (id) => id is ruleId)
-      @saveConfig()
-      @_emitGroupChanged(group)      
-      return group
-
-    removeVariableFromGroup: (groupId, variableName) ->
-      group = @getGroupOfVariable(variableName)
-      unless group?
-        throw new Error('Variable is in no group')
-      if group.id isnt groupId
-        throw new Error("Variable is not in group #{groupId}")
-      _.remove(group.variables, (name) => name is variableName)
-      @saveConfig()
-      @_emitGroupChanged(group)      
-      return group
-
-    addVariableToGroup: (groupId, variableName, position) ->
-      assert(typeof variableName is "string")
-      assert(typeof groupId is "string")
-      assert(if position? then typeof position is "number" else true)
-      group = @getGroupById(groupId)
-      unless group?
-        throw new Error('Could not find the group')
-      oldGroup = @getGroupOfVariable(variableName)
-      if oldGroup?
-        #remove rule from all other groups
-        _.remove(oldGroup.variables, (name) => name is variableName)
-        @_emitGroupChanged(oldGroup)
-      unless position? or position >= group.variables.length
-        group.variables.push(variableName)
-      else
-        group.variables.splice(position, 0, variableName)
-      @saveConfig()
-      @_emitGroupChanged(group)
-      return group
-
-    removeGroup: (id, page) ->
-      removedGroup = _.remove(@config.groups, {id: id})
-      @saveConfig() if removedGroup.length > 0
-      @_emitGroupRemoved(removedGroup[0])
-      return removedGroup
-
-    getGroupOfDevice: (deviceId) ->
-      for g in @config.groups
-        index = _.indexOf(g.devices, deviceId)
-        if index isnt -1 then return g
-      return null
-
-    getGroups: () ->
-      return @config.groups
-
     updateRuleOrder: (ruleOrder) ->
       assert ruleOrder? and Array.isArray ruleOrder
       @config.rules = _.sortBy(@config.rules,  (rule) => 
@@ -375,25 +148,7 @@ module.exports = (env) ->
       @_emitVariableOrderChanged(variableOrder)
       return variableOrder
 
-    updateGroupOrder: (groupOrder) ->
-      assert groupOrder? and Array.isArray groupOrder
-      @config.groups = _.sortBy(@config.groups,  (group) => 
-        index = groupOrder.indexOf group.id 
-        return if index is -1 then 99999 else index # push it to the end if not found
-      )
-      @saveConfig()
-      @_emitGroupOrderChanged(groupOrder)
-      return groupOrder
 
-    updatePageOrder: (pageOrder) ->
-      assert pageOrder? and Array.isArray pageOrder
-      @config.pages = _.sortBy(@config.pages,  (page) => 
-        index = pageOrder.indexOf page.id 
-        return if index is -1 then 99999 else index # push it to the end if not found
-      )
-      @saveConfig()
-      @_emitPageOrderChanged(pageOrder)
-      return pageOrder
 
     setupExpressApp: () ->
       # Setup express
@@ -552,6 +307,8 @@ module.exports = (env) ->
         [env.api.variables.actions, @variableManager]
         [env.api.plugins.actions, @pluginManager]
         [env.api.database.actions, @database]
+        [env.api.groups.actions, @groupManager]
+        [env.api.pages.actions, @pageManager]
       ]
 
       onError = (error) =>
@@ -563,8 +320,8 @@ module.exports = (env) ->
         socket.emit('devices', (d.toJson() for d in @getDevices()) )
         socket.emit('rules', (r.toJson() for r in @ruleManager.getRules()) )
         socket.emit('variables', (v.toJson() for v in @variableManager.getVariables()) )
-        socket.emit('pages',  @getPages() )
-        socket.emit('groups',  @getGroups() )
+        socket.emit('pages',  @pageManager.getPages() )
+        socket.emit('groups',  @groupManager.getGroups() )
       )
 
     listen: () ->
@@ -1139,6 +896,9 @@ module.exports = (env) ->
       declapi.createExpressRestApi(@app, env.api.variables.actions, this.variableManager, onError)
       declapi.createExpressRestApi(@app, env.api.plugins.actions, this.pluginManager, onError)
       declapi.createExpressRestApi(@app, env.api.database.actions, this.database, onError)
+      declapi.createExpressRestApi(@app, env.api.groups.actions, this.groupManager, onError)
+      declapi.createExpressRestApi(@app, env.api.pages.actions, this.pageManager, onError)
+
 
     saveConfig: ->
       assert @config?

@@ -16,9 +16,9 @@ env.predicates = require('./lib/predicates') env
 env.rules = require('./lib/rules') env
 env.plugins = require('./lib/plugins') env
 env.database = require('./lib/database') env
+env.groups = require('./lib/groups') env
+env.pages = require('./lib/pages') env
 env.require = (args...) -> module.require args...
-
-
 
 startup = =>
   # set the config file to

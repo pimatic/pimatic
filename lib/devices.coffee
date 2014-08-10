@@ -66,7 +66,7 @@ module.exports = (env) ->
             value: null
             history: []
             update: (value) ->
-              timestamp = (new Date()).getTime();
+              timestamp = (new Date()).getTime()
               @value = value
               @lastUpdate = timestamp
               if @history.length is 30
