@@ -87,13 +87,14 @@ require.extensions['.coffee'] = function(module, filename) {
   if (!content) {
     try {
       // Read from disk and then compile
-      console.log(colors.italic(
+      process.stdout.write(colors.italic(
         "coffee-cache: compiling coffee-script file \""+path.relative(rootDir, filename)+"\"..."
       ));
       var compiled = coffee.compile(fs.readFileSync(filename, 'utf8'), {
         filename: filename,
         sourceMap: true
       });
+      process.stdout.write(colors.italic('Done\n'));
       content = compiled.js;
 
       // Since we don't know which version of CoffeeScript we have, make sure
