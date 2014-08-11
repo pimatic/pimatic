@@ -6,15 +6,22 @@ then
   mkdir pimatic-git
 fi
 cd pimatic-git
-echo "Will installing pimatic and pimatic plugins from git branch $BRANCH into $(pwd)"
-for name in pimatic pimatic-cron pimatic-filebrowser pimatic-gpio pimatic-log-reader pimatic-mobile-frontend pimatic-pilight pimatic-ping pimatic-redirect pimatic-rest-api pimatic-sispmctl pimatic-datalogger pimatic-shell-execute pimatic-pushover pimatic-sunrise pimatic-voice-recognition pimatic-mail
+DIR="$(pwd)"
+echo "Will installing pimatic and pimatic plugins from git branch $BRANCH into $DIR"
+if [ ! -d pimatic-git ]
+then
+  mkdir node_modules
+fi
+for name in pimatic pimatic-cron pimatic-filebrowser pimatic-gpio pimatic-log-reader pimatic-mobile-frontend pimatic-pilight pimatic-ping pimatic-redirect pimatic-sispmctl pimatic-datalogger pimatic-shell-execute pimatic-pushover pimatic-sunrise pimatic-voice-recognition pimatic-mail
 do
-  INSTALL="npm install git+https://github.com/pimatic/$name.git#$BRANCH"
+  cd "$DIR/node_modules"
   if [ -d $name ]
   then
+    INSTALL="cd $name && git pull && npm install"
     echo "Updating $name from git: $INSTALL"
   else
+    INSTALL="git clone https://github.com/pimatic/$name.git --depth 1 -b $BRANCH && cd $name && npm install"
     echo "Installing $name from git: $INSTALL"
   fi
-  $INSTALL
+  bash -c "$INSTALL"
 done
