@@ -148,7 +148,10 @@ module.exports = (env) ->
             type: "number"
           max:
             type: "number"
-        exec: (min, max) -> Math.floor((Math.random() * parseFloat(max)) + parseFloat(min))
+        exec: (min, max) -> 
+          minf = parseFloat(min)
+          maxf = parseFloat(max)
+          return Math.floor( Math.random() * (maxf+1-minf) ) + minf
       date:
         args:
           format:
