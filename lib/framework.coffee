@@ -99,10 +99,10 @@ module.exports = (env) ->
     _checkConfig: ()->
 
       logWarning = (type, id, name, collection = "group") ->
-          env.logger.warn(
-            """Could not find a #{type} with the id "#{id}" from """ + 
-            """#{collection} "#{name}" in #{type}s config section."""
-          )        
+        env.logger.warn(
+          """Could not find a #{type} with the id "#{id}" from """ + 
+          """#{collection} "#{name}" in #{type}s config section."""
+        )        
 
       for group in @config.groups
         for deviceId in group.devices
