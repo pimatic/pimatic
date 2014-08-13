@@ -428,10 +428,10 @@ module.exports = (env) ->
 
   class VariablesDevice extends Device
 
-    constructor: (@config, framework) ->
+    constructor: (@config, @framework) ->
       @id = config.id
       @name = config.name
-      @_vars = framework.variableManager
+      @_vars = @framework.variableManager
       @_exprChangeListeners = []
       @attributes = {}
       for variable in @config.variables
@@ -567,7 +567,7 @@ module.exports = (env) ->
             @_loadDevice(deviceConfig)
           catch e
             env.logger.error("Error loading device #{deviceConfig.id}: #{e.message}")
-            env.logger.debug(e)
+            env.logger.debug(e.stack)
         else
           env.logger.warn(
             "no plugin found for device \"#{deviceConfig.id}\" of class \"#{deviceConfig.class}\"!"
@@ -635,7 +635,7 @@ module.exports = (env) ->
           @registerDeviceClass(deviceClass.name, {
             configDef: deviceConfigDef[deviceClass.name], 
             createCallback: (config) => 
-              return new deviceClass(config, this)
+              return new deviceClass(config, @framework)
           })
 
   return exports = {

@@ -85,6 +85,7 @@ module.exports = (env) ->
       assert Array.isArray @config.devices
       assert Array.isArray @config.pages
       assert Array.isArray @config.groups
+      @_checkConfig()
 
       # * Set the log level
       env.logger.winston.transports.taggedConsoleLogger.level = @config.settings.logLevel
@@ -94,6 +95,34 @@ module.exports = (env) ->
         directory: __dirname + '/../locales',
         defaultLocale: @config.settings.locale,
       })
+
+    _checkConfig: ()->
+
+      logWarning = (type, id, name, collection = "group") ->
+          env.logger.warn(
+            """Could not find a #{type} with the id "#{id}" from """ + 
+            """#{collection} "#{name}" in #{type}s config section."""
+          )        
+
+      for group in @config.groups
+        for deviceId in group.devices
+          found = _.find(@config.devices, {id: deviceId})
+          unless found?
+            logWarning('device', deviceId, group.id)
+        for ruleId in group.rules
+          found = _.find(@config.rules, {id: ruleId})
+          unless found?
+            logWarning('rule', ruleId, group.id)
+        for variableName in group.variables
+          found = _.find(@config.variables, {name: variableName})
+          unless found?
+            logWarning('variable', variableName, group.id)
+
+      for page in @config.pages
+        for item in page.devices
+          found = _.find(@config.devices, {id: item.deviceId})
+          unless found?
+            logWarning('device', item.deviceId, page.id, 'page')
 
     _setupExpressApp: () ->
       # Setup express
