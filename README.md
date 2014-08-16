@@ -75,3 +75,24 @@ For plugin development take a look at the
 
 Feel free to ask development questions at the 
 [plugin template repository](https://github.com/sweetpi/pimatic-plugin-template/issues).
+
+
+Copyright / License
+-------------------
+
+    Copyright (C) 2014 Oliver Schneider <oliverschneider89+sweetpi@gmail.com>
+
+
+    pimatic is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.
+
+    pimatic is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with pimatic.  If not, see <http://www.gnu.org/licenses/>.
+
