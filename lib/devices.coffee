@@ -90,7 +90,12 @@ module.exports = (env) ->
           unless meta.value?
             @getUpdatedAttributeValue(attrName).then( (value) ->
               meta.update(value) unless meta.value?
-            ).done()
+            ).catch( (err) =>
+              env.logger.error(
+                "Could not get attribute value of #{@name}.#{attrName}: #{err.message}"
+              )
+              env.logger.debug(err.stack)
+            )
 
     # Checks if the actuator has a given action.
     hasAction: (name) -> @actions[name]?
