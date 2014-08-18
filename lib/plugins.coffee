@@ -148,7 +148,7 @@ module.exports = (env) ->
         return deferred.promise
       @npmRunning = yes
       output = ''
-      npm = spawn('npm', args, cwd: @modulesParentDir)
+      npm = spawn('npm', args, {cwd: @modulesParentDir, env: process.env})
       stdout = byline(npm.stdout)
       stdout.on "data", (line) => 
         line = line.toString()
