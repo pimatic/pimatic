@@ -58,7 +58,23 @@ module.exports = (env) ->
       @variableManager = new env.variables.VariableManager(this, @config.variables)
       @ruleManager = new env.rules.RuleManager(this, @config.rules)
       @database = new env.database.Database(this, @config.settings.database)
+      
+      @deviceManager.on('deviceRemoved', (device) =>
+        group = @groupManager.getGroupOfDevice(device.id)
+        @groupManager.removeDeviceFromGroup(group.id, device.id) if group?
+      )
+      @ruleManager.on('ruleRemoved', (rule) =>
+        group = @groupManager.getGroupOfRule(rule.id)
+        @groupManager.removeRuleFromGroup(group.id, rule.id) if group?
+      )
+      @variableManager.on('variableRemoved', (variable) =>
+        group = @groupManager.getGroupOfVariable(variable.name)
+        @groupManager.removeVariableFromGroup(group.id, variable.name) if group?
+      )
+
       @_setupExpressApp()
+
+
 
     _validateConfig: (config, schema, scope = "config") ->
       js = new JaySchema()

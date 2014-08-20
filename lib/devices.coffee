@@ -11,6 +11,7 @@ Promise = require 'bluebird'
 _ = require 'lodash'
 t = require('decl-api').types
 declapi = require 'decl-api'
+events = require 'events'
 
 module.exports = (env) ->
 
@@ -474,7 +475,7 @@ module.exports = (env) ->
       @_vars.cancelNotifyOnChange(cl) for cl in @_exprChangeListeners
       super()
 
-  class DeviceManager
+  class DeviceManager extends events.EventEmitter
     devices: {}
     deviceClasses: {}
 
@@ -607,6 +608,7 @@ module.exports = (env) ->
       @framework._emitDeviceRemoved(device)
       device.emit 'remove'
       _.remove(@devicesConfig, {deviceId: deviceId})
+      @emit 'deviceRemoved'
       @framework.saveConfig()
       device.destroy()
       return device
