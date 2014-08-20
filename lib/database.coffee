@@ -138,39 +138,22 @@ module.exports = (env) ->
             deviceAttribute(attributeName);
           """)
         ).then( =>
-          deleteExpiredDeviceAttributesCron = ( =>
-            env.logger.debug("deleteing expired device attributes")
-            return (
-              @_deleteExpiredDeviceAttributes()
-              .then( onSucces = ->
-                Promise
-                  .delay(deleteExpiredEntriesInterval)
-                  .then(deleteExpiredDeviceAttributesCron)
-              , onError = (error) ->
-                env.logger.error(error.message)
-                env.logger.debug(error)
-                Promise
-                  .delay(2 * deleteExpiredEntriesInterval)
-                  .then(deleteExpiredDeviceAttributesCron)
-              )
-            )
-          )
-          deleteExpiredDeviceAttributesCron().done()
+          setInterval( ( =>
+            env.logger.debug("deleteing expired device attributes") if @dbSettings.debug
+            @_deleteExpiredDeviceAttributes().catch( (error) =>
+              env.logger.error(error.message)
+              env.logger.debug(error.stack)
+            ).done()
+          ), deleteExpiredEntriesInterval)
 
-          deleteExpiredMessagesCron = ( =>
-            env.logger.debug("deleteing expired messages")
-            return (
-              @_deleteExpiredMessages()
-              .then( onSucces = ->
-                Promise.delay(deleteExpiredEntriesInterval).then(deleteExpiredMessagesCron)
-              , onError = (error) ->
-                env.logger.error(error.message)
-                env.logger.debug(error)
-                Promise.delay(2 * deleteExpiredEntriesInterval).then(deleteExpiredMessagesCron)
-              )
-            )
-          )
-          deleteExpiredMessagesCron().done()
+          setInterval( ( =>
+            env.logger.debug("deleteing expired messages") if @dbSettings.debug
+            @_deleteExpiredMessages().catch( (error) =>
+              env.logger.error(error.message)
+              env.logger.debug(error.stack)
+            ).done()
+          ), deleteExpiredEntriesInterval)
+          return
         )
       )
       return pending
@@ -406,11 +389,12 @@ module.exports = (env) ->
 
     queryDeviceAttributeEvents: (queryCriteria) ->
       query = @_buildQueryDeviceAttributeEvents(queryCriteria)
-      env.logger.debug "query:", query.toString()
+      env.logger.debug("query:", query.toString()) if @dbSettings.debug
       time = new Date().getTime()
       return Promise.resolve(query).then( (result) ->
         timeDiff = new Date().getTime()-time
-        env.logger.debug "quering #{result.length} events took #{timeDiff}ms."
+        if @dbSettings.debug
+          env.logger.debug("quering #{result.length} events took #{timeDiff}ms.")
         for r in result
           if r.type is "boolean" then r.value = !!r.value
         return result
@@ -474,11 +458,12 @@ module.exports = (env) ->
           query.groupByRaw("time/#{groupByTime}")
         if offset? then query.offset(offset)
         if limit? then query.limit(limit)
-        env.logger.debug "query:", query.toString()
+        env.logger.debug("query:", query.toString()) if @dbSettings.debug
         time = new Date().getTime()
         return Promise.resolve(query).then( (result) =>
           timeDiff = new Date().getTime()-time
-          env.logger.debug "quering #{result.length} events took #{timeDiff}ms."
+          if @dbSettings.debug
+            env.logger.debug("quering #{result.length} events took #{timeDiff}ms.")
           return result
         )
       )

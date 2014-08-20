@@ -145,6 +145,10 @@ module.exports = {
               default: [ 
                 { level: '*', tags: [], time: '7d' }
               ]
+            debug: 
+              description: "Enable to show database queries and some additional outputs"
+              type: "boolean"
+              default: false
         gui:
           type: "object"
           properties:
