@@ -78,7 +78,6 @@ module.exports = (env) ->
     searchForPlugins: ->
       plugins = [ 
         'pimatic-cron',
-        'pimatic-datalogger',
         'pimatic-filebrowser',
         'pimatic-gpio',
         'pimatic-log-reader',
@@ -86,7 +85,6 @@ module.exports = (env) ->
         'pimatic-pilight',
         'pimatic-ping',
         'pimatic-redirect',
-        'pimatic-rest-api',
         'pimatic-shell-execute',
         'pimatic-sispmctl',
         "pimatic-pushover",
@@ -184,7 +182,7 @@ module.exports = (env) ->
           return
         @npmRunning = yes
         output = ''
-        npm = spawn('npm', args, cwd: @modulesParentDir)
+        npm = spawn('npm', args, {cwd: @modulesParentDir, env: process.env})
         stdout = byline(npm.stdout)
         npmLogger = env.logger.createSublogger("npm")
         stdout.on "data", (line) => 
