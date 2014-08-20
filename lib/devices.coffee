@@ -61,13 +61,18 @@ module.exports = (env) ->
       @_checkAttributes()
       @_constructorCalled = yes
       @_attributesMeta = {}
-
-      for attrName of @attributes
-        do (attrName) =>
+      device = @
+      for attrName, attr of @attributes
+        do (attrName, attr) =>
           @_attributesMeta[attrName] = {
             value: null
             history: []
             update: (value) ->
+              if attr.type in ["number", "integer"] and typeof value is "string"
+                env.logger.error(
+                  "Got string value for attribute #{attrName} of #{device.constructor.name} but " + 
+                  "attribute type is #{attr.type}."
+                )
               timestamp = (new Date()).getTime()
               @value = value
               @lastUpdate = timestamp
