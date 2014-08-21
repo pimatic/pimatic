@@ -270,36 +270,36 @@ module.exports = (env) ->
 
           chain = chain.then( () =>
             fullPluginName = "pimatic-#{pConf.plugin}"
-            Promise.try( =>     
+            return Promise.try( =>     
               # If the plugin folder already exist
-              return promise = (
+              return (
                 if @isInstalled(fullPluginName) then Promise.resolve()
                 else 
                   env.logger.info("Installing: \"#{pConf.plugin}\"")
                   @installPlugin(fullPluginName)
+              ).then( =>
+                return @loadPlugin(fullPluginName).then( ([plugin, packageInfo]) =>
+                  # Check config
+                  if packageInfo.configSchema?
+                    pathToSchema = path.resolve(
+                      @pathToPlugin(fullPluginName), 
+                      packageInfo.configSchema
+                    )
+                    configSchema = require(pathToSchema)
+                    @framework._validateConfig(pConf, configSchema, "config of #{fullPluginName}")
+                    pConf = declapi.enhanceJsonSchemaWithDefaults(configSchema, pConf)
+                  else
+                    env.logger.warn(
+                      "package.json of \"#{fullPluginName}\" has no \"configSchema\" property. " +
+                      "Could not validate config."
+                    )
+                  @registerPlugin(plugin, pConf, configSchema)
+                )
               )
-            ).then( =>
-              return @loadPlugin(fullPluginName).then( ([plugin, packageInfo]) =>
-                # Check config
-                if packageInfo.configSchema?
-                  pathToSchema = path.resolve(
-                    @pathToPlugin(fullPluginName), 
-                    packageInfo.configSchema
-                  )
-                  configSchema = require(pathToSchema)
-                  @framework._validateConfig(pConf, configSchema, "config of #{fullPluginName}")
-                  pConf = declapi.enhanceJsonSchemaWithDefaults(configSchema, pConf)
-                else
-                  env.logger.warn(
-                    "package.json of \"#{fullPluginName}\" has no \"configSchema\" property. " +
-                    "Could not validate config."
-                  )
-                @registerPlugin(plugin, pConf, configSchema)
-              ).catch( (error) ->
-                # If an error occures log an ignore it.
-                env.logger.error error.message
-                env.logger.debug error.stack
-              )
+            ).catch( (error) ->
+              # If an error occures log an ignore it.
+              env.logger.error error.message
+              env.logger.debug error.stack
             )
           )
 
