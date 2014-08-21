@@ -391,7 +391,7 @@ module.exports = (env) ->
       query = @_buildQueryDeviceAttributeEvents(queryCriteria)
       env.logger.debug("query:", query.toString()) if @dbSettings.debug
       time = new Date().getTime()
-      return Promise.resolve(query).then( (result) ->
+      return Promise.resolve(query).then( (result) =>
         timeDiff = new Date().getTime()-time
         if @dbSettings.debug
           env.logger.debug("quering #{result.length} events took #{timeDiff}ms.")
