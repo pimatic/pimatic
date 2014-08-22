@@ -138,6 +138,21 @@ api.devices = {
           toJson: yes
           items: 
             device: device
+    getDeviceById:
+      description: "Retrieve a device by a given id."
+      rest:
+        type: "GET"
+        url: "/api/devices/:deviceId"
+      params:
+        deviceId:
+          description: "The id of the device that should be returned."
+          type: t.string
+      result:
+        device:
+          description: "The requested device or null if the device was not found."
+          type: t.object
+          toJson: yes
+          properties: device.properties
     updateDeviceOrder:
       rest:
         type: "POST"
@@ -355,21 +370,6 @@ api.rules = {
 
 api.pages = {
   actions:
-    getDeviceById:
-      description: "Retrieve a device by a given id."
-      rest:
-        type: "GET"
-        url: "/api/devices/:deviceId"
-      params:
-        deviceId:
-          description: "The id of the device that should be returned."
-          type: t.string
-      result:
-        device:
-          description: "The requested device or null if the device was not found."
-          type: t.object
-          toJson: yes
-          properties: device.properties
     getPages:
       description: "Lists all pages."
       rest:
@@ -476,7 +476,7 @@ api.pages = {
       rest:
         type: "DELETE"
         url: "/api/pages/:pageId/devices/:deviceId"
-      description: "Add a page"
+      description: "Remove a Device from a group."
       params:
         pageId:
           type: t.string
@@ -963,6 +963,7 @@ api.database = {
       rest:
         type: 'GET'
         url: '/api/database/device-attributes/devices'
+      description: "get logged values of all device attributes"
       params: {}
       result:
         devices:
