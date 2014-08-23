@@ -13,8 +13,8 @@ Read more at [pimatic.org](http://pimatic.org/).
 
 Version 0.8 is ready for testing
 --------------------------------
-pimatic version 0.8 is now available for installation in the npm-registry. <span style="color: red">Please do a complete
-reinstallation instead of a update from 0.7</span>. Read more about it <a href="https://github.com/pimatic/pimatic/issues/207">here</a>.
+pimatic version 0.8 is now available for installation in the npm-registry. __Please do a complete
+reinstallation instead of a update from 0.7.__ Read more about it [here](https://github.com/pimatic/pimatic/issues/207).
 
 [More information about the changes.](https://github.com/pimatic/pimatic/issues/186)
 
