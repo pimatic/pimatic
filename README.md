@@ -53,6 +53,11 @@ pimatics source files are annotated with
 You can [browse the self generated documentation](http://www.pimatic.org/docs/) with the 
 source code side by side.
 
+Get Involved
+-------------
+
+pimatic is your opportunity to [contribute to a growing OpenSource-Project](https://github.com/pimatic/pimatic/issues/223).
+
 Architecture Overview
 ---------------------
 
