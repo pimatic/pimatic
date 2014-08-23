@@ -98,7 +98,7 @@ module.exports = (env) ->
           waiting.push @getNpmInfo(p).then( (info) =>
             found[p] = info
           )
-      return Promise.allSettled(waiting).then( (results) =>
+      return Promise.settle(waiting).then( (results) =>
         env.logger.error(r.reason) for r in results when r.state is "rejected"
         return found
       ).catch( (e) => env.logger.error e )
