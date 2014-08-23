@@ -11,6 +11,14 @@ common extensible platform for home control and automation tasks.
 
 Read more at [pimatic.org](http://pimatic.org/).
 
+Version 0.8 is ready for testing
+--------------------------------
+pimatic version 0.8 is now available for installation in the npm-registry. <span style="color: red">Please do a complete
+reinstallation instead of a update from 0.7</span>. Read more about it <a href="https://github.com/pimatic/pimatic/issues/207">here</a>.
+
+[More information about the changes.](https://github.com/pimatic/pimatic/issues/186)
+
+
 Screenshots
 -----------
 [![Screenshot 1][screen1_thumb]](http://www.pimatic.org/screens/screen1.png) 
