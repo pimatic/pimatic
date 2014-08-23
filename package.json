@@ -19,7 +19,7 @@
     "plugins.md",
     "LICENSE"
   ],
-  "version": "0.8.0",
+  "version": "0.8.1",
   "homepage": "http://github.com/pimatic/pimatic",
   "repository": {
     "type": "git",
