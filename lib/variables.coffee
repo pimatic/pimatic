@@ -358,7 +358,7 @@ module.exports = (env) ->
         if variable.type is 'attribute'
           throw new Error("Can not delete a variable for a device attribute.")
         variable.destroy()
-        @variables[name] = null
+        delete @variables[name]
         @_emitVariableRemoved(variable)
 
     getVariables: () ->
