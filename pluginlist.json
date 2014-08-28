@@ -12,5 +12,6 @@
 "pimatic-pushover",
 "pimatic-sunrise",
 "pimatic-voice-recognition",
-"pimatic-athome"
+"pimatic-athome",
+"pimatic-mail"
 ]
