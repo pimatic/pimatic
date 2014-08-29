@@ -27,7 +27,11 @@
 
   ],
   "pages": [ 
-
+    {
+      "id": "Favourites",
+      "name": "favourite",
+      "devices": []
+    }
   ],
   "groups": [
 
