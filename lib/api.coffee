@@ -18,6 +18,7 @@ api = {}
 
 device = {
   type: t.object
+  toJson: yes
   properties:
     id:
       description: "A user chosen string, used to identify that device."

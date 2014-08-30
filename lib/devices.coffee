@@ -448,19 +448,19 @@ module.exports = (env) ->
       for variable in @config.variables
         do (variable) =>
           name = variable.name
-          info = @_vars.parseVariableExpression(variable.expression)
+          info = null
           @attributes[name] = {
             description: name
             label: "$#{name}"
-            type: (
-              switch info.datatype
-                when "string" then t.string
-                when "numeric" then t.number
-                else assert false 
-              )
+            type: variable.type or "string"
           }
           evaluate = ( => 
-            (
+            # wait till veraibelmanager is ready
+            return Promise.delay(1).then( =>
+              unless info?
+                info = @_vars.parseVariableExpression(variable.expression) 
+                @_vars.notifyOnChange(info.tokens, evaluate)
+                @_exprChangeListeners.push evaluate
               switch info.datatype
                 when "numeric" then @_vars.evaluateNumericExpression(info.tokens)
                 when "string" then @_vars.evaluateStringExpression(info.tokens)
@@ -472,8 +472,6 @@ module.exports = (env) ->
             )
           )
           @_createGetter(name, evaluate)
-          @_vars.notifyOnChange(info.tokens, evaluate)
-          @_exprChangeListeners.push evaluate
       super()
 
     destroy: ->

@@ -33,5 +33,10 @@ module.exports = {
               type: "string"
             expression:
               type: "string"
+            type:
+              type: "string"
+              default: "string"
+              enum: ["string", "number"]
+   
   }
 }
