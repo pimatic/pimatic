@@ -674,6 +674,44 @@ describe "RuleManager", ->
         finish()
       ).catch(finish).done()
 
+    it 'should decide trigger: predicate 1', (finish)->
+
+      rule =
+        id: "test1"
+        orgCondition: "predicate 1"
+        predicates: [
+          id: "test1,"
+          token: "trigger: predicate 1"
+          type: "state"
+          handler: predHandler1
+          for: null
+          justTrigger: yes
+        ]
+        tokens: [
+          "predicate"
+          "("
+          0
+          ")"
+        ]
+        action: "action 1"
+        string: "if trigger: predicate 1 then action 1"
+
+      predHandler1.getValue = => Promise.resolve true 
+      
+      rule.conditionExprTree = (new rulesAst.BoolExpressionTreeBuilder())
+        .build(rule.tokens, rule.predicates)
+      ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
+        cassert isTrue is false
+      ).then( ->
+        knownPredicates = {
+          test1: true
+        }
+        return ruleManager._doesRuleCondtionHold(rule, knownPredicates).then( (isTrue) ->
+          cassert isTrue is false
+          finish()
+        )
+      ).done()
+
     it 'should decide predicate 1 and predicate 2', (finish)->
 
       rule =
