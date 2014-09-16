@@ -556,6 +556,7 @@ module.exports = (env) ->
               name: rule.name, 
               ruleString: rule.rule, 
               active: rule.active
+              logging: rule.logging
             }, force = true).catch( (err) =>
               env.logger.error "Could not parse rule \"#{rule.rule}\": " + err.message 
               env.logger.debug err.stack
