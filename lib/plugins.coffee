@@ -55,20 +55,32 @@ module.exports = (env) ->
       @emit 'updateProcessStatus', status, info
 
     _emitUpdateProcessMessage: (message, info) ->
-      @emit 'updateProcessMessages', message, info
+      @emit 'updateProcessMessage', message, info
+
+    getUpdateProcessStatus: () ->
+      return {
+        status: @updateProcessStatus
+        messages: @updateProcessMessages
+      }
 
     update: (modules) -> 
-      @_emitUpdateProcessStatus('running', {modules})
+      info = {modules}
+      @_emitUpdateProcessStatus('running', info)
+      npmMessageListener = ( (line) => @_emitUpdateProcessMessage(line, info); )
+      @on 'npmMessage', npmMessageListener
 
-      return @spawnNpm(['update'].concat modules).then( onDone = ( =>
-        @_emitUpdateProcessStatus('done', {modules})
+      return @spawnNpm(['update'].concat modules).then( =>
+        @_emitUpdateProcessStatus('done', info)
+        @removeListener 'npmMessage', npmMessageListener
         return modules
-      ), onError = ( (error) =>
-        @_emitUpdateProcessStatus('error', {modules})
+      ).catch( (error) =>
+        @_emitUpdateProcessStatus('error', info)
+        @removeListener 'npmMessage', npmMessageListener
         throw error
-      ), onProgress = ( (message) =>
-        @_emitUpdateProcessMessage(message, {modules})
-      ))
+      )
+      # ), onProgress = ( (message) =>
+      #   @_emitUpdateProcessMessage(message, {modules})
+      # ))
 
     pathToPlugin: (name) ->
       assert name?
@@ -183,19 +195,21 @@ module.exports = (env) ->
           return
         @npmRunning = yes
         output = ''
-        npm = spawn('npm', args, {cwd: @modulesParentDir, env: process.env})
-        stdout = byline(npm.stdout)
-        npmLogger = env.logger.createSublogger("npm")
-        stdout.on "data", (line) => 
+        onLine = ( (line) => 
           line = line.toString()
           output += "#{line}\n"
           if line.indexOf('npm http 304') is 0 then return
-          npmLogger.info S(line).chompLeft('npm ').s
+          @emit "npmMessage", line
+          line = S(line).chompLeft('npm ').s
+          npmLogger.info line
+        )
+
+        npm = spawn('npm', args, {cwd: @modulesParentDir, env: process.env})
+        npmLogger = env.logger.createSublogger("npm")
+        stdout = byline(npm.stdout)
+        stdout.on "data", onLine
         stderr = byline(npm.stderr)
-        stderr.on "data", (line) => 
-          line = line.toString()
-          output += "#{line}\n"
-          npmLogger.info S(line).chompLeft('npm ').s
+        stderr.on "data", onLine
 
         npm.on "close", (code) =>
           @npmRunning = no
@@ -231,7 +245,7 @@ module.exports = (env) ->
     installUpdatesAsync: (modules) ->
       return new Promise( (resolve, reject) =>
         # resolve when complete
-        @update(modules).then(resolve)
+        @update(modules).then(resolve).catch(reject)
         # or after 10 seconds to prevent a timeout
         Promise.delay('still running', 10000).then(resolve)
       )

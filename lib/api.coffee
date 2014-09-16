@@ -847,6 +847,14 @@ api.plugins = {
       result:
         removed:
           type: t.array
+    getUpdateProcessStatus:
+      description: "Get update status"
+      rest: 
+        type: "GET"
+        url: "/api/update-process"
+      result:
+        info:
+          type: "object"
 }
 
 

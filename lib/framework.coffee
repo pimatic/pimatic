@@ -455,7 +455,7 @@ module.exports = (env) ->
 
     _emitUpdateProcessMessage: (message, info) ->
       @emit 'updateProcessMessages', message, info
-      @io?.emit("updateProcessMessages", {
+      @io?.emit("updateProcessMessage", {
         message: message
         modules: info.modules
       }) 
