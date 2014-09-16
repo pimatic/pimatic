@@ -279,6 +279,10 @@ api.rules = {
         url: "/api/rules"
       description: "Lists all rules"
       params: {}
+      result:
+        rules:
+          type: t.array
+          toJson: yes
     getRuleById:
       rest:
         type: "GET"
@@ -287,6 +291,10 @@ api.rules = {
       params: 
         ruleId:
           type: t.string
+      result:
+        rule:
+          type: "object"
+          toJson: yes
     getRuleActionsHints:
       rest:
         type: "POST"
