@@ -139,6 +139,9 @@ api.devices = {
           toJson: yes
           items: 
             device: device
+      permission:
+        scope: "devices"
+        access: "read"
     getDeviceById:
       description: "Retrieve a device by a given id."
       rest:
@@ -154,6 +157,9 @@ api.devices = {
           type: t.object
           toJson: yes
           properties: device.properties
+      permission:
+        scope: "devices"
+        access: "read"
     updateDeviceOrder:
       rest:
         type: "POST"
@@ -165,6 +171,9 @@ api.devices = {
       result:
         deviceOrder:
           type: t.array
+      permission:
+        scope: "devices"
+        access: "write"
     getDeviceClasses:
       description: "List all registered device classes."
       rest:
@@ -173,6 +182,9 @@ api.devices = {
       result:
         deviceClasses:
           type: t.array
+      permission:
+        scope: "devices"
+        access: "read"
     getDeviceConfigSchema:
       description: "Gets the config schema of a device class."
       rest:
@@ -184,6 +196,9 @@ api.devices = {
       result:
         configSchema:
           type: t.object
+      permission:
+        scope: "devices"
+        access: "read"
     addDeviceByConfig:
       description: "Add a device by config values"
       rest:
@@ -194,6 +209,9 @@ api.devices = {
           type: t.object
       result:
         device: device
+      permission:
+        scope: "devices"
+        access: "write"
     updateDeviceByConfig:
       description: "Update a device by config values"
       rest:
@@ -204,6 +222,9 @@ api.devices = {
           type: t.object
       result:
         device: device
+      permission:
+        scope: "devices"
+        access: "write"
     removeDevice:
       description: "Removes a device from the framework an config"
       rest:
@@ -214,6 +235,9 @@ api.devices = {
           type: t.string
       result:
         device: device
+      permission:
+        scope: "devices"
+        access: "write"
 }
 
 api.rules = {
@@ -223,7 +247,7 @@ api.rules = {
       rest:
         type: "POST"
         url: "/api/rules/:ruleId"
-      params: 
+      params:
         ruleId:
           type: t.string
         rule:
@@ -239,9 +263,12 @@ api.rules = {
             logging:
               type: t.boolean
               optional: yes
-        force: 
+        force:
           type: t.boolean
           optional: yes
+      permission:
+        scope: "rules"
+        access: "write"
     updateRuleByString:
       rest:
         type: "PATCH"
@@ -265,6 +292,9 @@ api.rules = {
             logging:
               type: t.boolean
               optional: yes
+      permission:
+        scope: "rules"
+        access: "write"
     removeRule:
       rest:
         type: "DELETE"
@@ -273,6 +303,9 @@ api.rules = {
       params:
         ruleId:
           type: t.string
+      permission:
+        scope: "rules"
+        access: "write"
     getRules:
       rest:
         type: "GET"
@@ -283,18 +316,24 @@ api.rules = {
         rules:
           type: t.array
           toJson: yes
+      permission:
+        scope: "rules"
+        access: "write"
     getRuleById:
       rest:
         type: "GET"
         url: "/api/rules/:ruleId"
       description: "Lists all rules"
-      params: 
+      params:
         ruleId:
           type: t.string
       result:
         rule:
           type: "object"
           toJson: yes
+      permission:
+        scope: "rules"
+        access: "read"
     getRuleActionsHints:
       rest:
         type: "POST"
@@ -319,6 +358,9 @@ api.rules = {
               type: t.array
             format:
               type: t.array
+      permission:
+        scope: "rules"
+        access: "read"
     getRuleConditionHints:
       rest:
         type: "POST"
@@ -343,13 +385,16 @@ api.rules = {
               type: t.array
             format:
               type: t.array
+      permission:
+        scope: "rules"
+        access: "read"
     executeAction:
       rest:
         type: "POST"
         url: "/api/execute-action"
       description: "Execute a rule action by a given string"
       params:
-        actionString: 
+        actionString:
           description: "The action to executed"
           type: t.string
         simulate:
@@ -363,6 +408,9 @@ api.rules = {
       result:
         message:
           type: t.string
+      permission:
+        scope: "rules"
+        access: "write"
     updateRuleOrder:
       rest:
         type: "POST"
@@ -374,6 +422,9 @@ api.rules = {
       result:
         ruleOrder:
           type: t.array
+      permission:
+        scope: "rules"
+        access: "write"
 }
 
 
@@ -390,6 +441,9 @@ api.pages = {
           type: t.array
           items:
             page: page
+      permission:
+        scope: "pages"
+        access: "read"
     getPageById:
       description: "Get a page by id"
       rest:
@@ -404,6 +458,9 @@ api.pages = {
           description: "The requested page or null if the page was not found."
           type: t.object
           properties: page.properties
+      permission:
+        scope: "pages"
+        access: "read"
     removePage:
       description: "Remove a page."
       rest:
@@ -418,6 +475,9 @@ api.pages = {
           description: "The removed page."
           type: t.object
           properties: page.properties
+      permission:
+        scope: "pages"
+        access: "write"
     addPage:
       rest:
         type: "POST"
@@ -439,6 +499,9 @@ api.pages = {
           description: "The created page."
           type: t.object
           properties: page.properties
+      permission:
+        scope: "pages"
+        access: "write"
     updatePage:
       description: "Update a page name or device order."
       rest:
@@ -468,6 +531,9 @@ api.pages = {
           description: "The updated page."
           type: t.object
           properties: page.properties
+      permission:
+        scope: "pages"
+        access: "write"
     addDeviceToPage:
       rest:
         type: "POST"
@@ -481,6 +547,9 @@ api.pages = {
       result:
         page:
           type: t.object
+      permission:
+        scope: "pages"
+        access: "write"
     removeDeviceFromPage:
       rest:
         type: "DELETE"
@@ -494,6 +563,9 @@ api.pages = {
       result:
         page:
           type: t.object
+      permission:
+        scope: "pages"
+        access: "write"
     updatePageOrder:
       rest:
         type: "POST"
@@ -505,6 +577,9 @@ api.pages = {
       result:
         pageOrder:
           type: t.array
+      permission:
+        scope: "pages"
+        access: "write"
 }
 
 api.groups = {
@@ -520,6 +595,9 @@ api.groups = {
       result:
         removed:
           type: t.object
+      permission:
+        scope: "groups"
+        access: "write"
     addGroup:
       rest:
         type: "POST"
@@ -533,6 +611,9 @@ api.groups = {
       result:
         group:
           type: t.object
+      permission:
+        scope: "groups"
+        access: "write"
     updateGroup:
       rest:
         type: "PATCH"
@@ -559,6 +640,9 @@ api.groups = {
       result:
         group:
           type: t.object
+      permission:
+        scope: "groups"
+        access: "write"
     addDeviceToGroup:
       rest:
         type: "POST"
@@ -572,6 +656,9 @@ api.groups = {
       result:
         deviceItem:
           type: t.object
+      permission:
+        scope: "groups"
+        access: "write"
     removeDeviceFromGroup:
       rest:
         type: "DELETE"
@@ -584,7 +671,10 @@ api.groups = {
           type: t.string
       result:
         group:
-          type: t.object  
+          type: t.object
+      permission:
+        scope: "groups"
+        access: "write"
     addRuleToGroup:
       rest:
         type: "POST"
@@ -601,6 +691,9 @@ api.groups = {
       result:
         group:
           type: t.object
+      permission:
+        scope: "rules"
+        access: "write"
     removeRuleFromGroup:
       rest:
         type: "DELETE"
@@ -613,7 +706,10 @@ api.groups = {
           type: t.string
       result:
         group:
-          type: t.object  
+          type: t.object
+      permission:
+        scope: "rules"
+        access: "write"
     updateRuleGroupOrder:
       rest:
         type: "POST"
@@ -627,6 +723,9 @@ api.groups = {
       result:
         group:
           type: t.object
+      permission:
+        scope: "rules"
+        access: "write"
     addVariableToGroup:
       rest:
         type: "POST"
@@ -643,6 +742,9 @@ api.groups = {
       result:
         group:
           type: t.object
+      permission:
+        scope: "variables"
+        access: "write"
     updateDeviceGroupOrder:
       rest:
         type: "POST"
@@ -656,6 +758,9 @@ api.groups = {
       result:
         group:
           type: t.object
+      permission:
+        scope: "devices"
+        access: "write"
     removeVariableFromGroup:
       rest:
         type: "DELETE"
@@ -668,7 +773,10 @@ api.groups = {
           type: t.string
       result:
         group:
-          type: t.object  
+          type: t.object
+      permission:
+        scope: "variables"
+        access: "write"
     updateVariableGroupOrder:
       rest:
         type: "POST"
@@ -681,7 +789,10 @@ api.groups = {
           type: t.array
       result:
         group:
-          type: t.object 
+          type: t.object
+      permission:
+        scope: "variables"
+        access: "write"
     updateGroupOrder:
       rest:
         type: "POST"
@@ -692,7 +803,10 @@ api.groups = {
           type: t.array
       result:
         groupOrder:
-          type: t.array 
+          type: t.array
+      permission:
+        scope: "groups"
+        access: "write"
 }
 
 ###
@@ -727,6 +841,9 @@ api.variables = {
         variables:
           type: t.array
           toJson: yes
+      permission:
+        scope: "variables"
+        access: "read"
     updateVariable:
       description: "Updates a variable value or expression"
       rest:
@@ -734,6 +851,9 @@ api.variables = {
         url: "/api/variables/:name"
       params: variableParams
       result: variableResult
+      permission:
+        scope: "variables"
+        access: "write"
     addVariable:
       description: "Adds a value or expression variable"
       rest:
@@ -741,6 +861,9 @@ api.variables = {
         url: "/api/variables/:name"
       params: variableParams
       result: variableResult
+      permission:
+        scope: "variables"
+        access: "write"
     getVariableByName:
       description: "Get infos about a variable"
       rest:
@@ -750,6 +873,9 @@ api.variables = {
         name:
           type: t.string
       result: variableResult
+      permission:
+        scope: "variables"
+        access: "read"
     removeVariable:
       description: "Remove a variable"
       rest:
@@ -758,6 +884,9 @@ api.variables = {
       params:
         name:
           type: t.string
+      permission:
+        scope: "variables"
+        access: "write"
       result: variableResult
     updateVariableOrder:
       rest:
@@ -770,6 +899,9 @@ api.variables = {
       result:
         variableOrder:
           type: t.array
+      permission:
+        scope: "variables"
+        access: "write"
 }
 
 
@@ -787,6 +919,9 @@ api.plugins = {
       result:
         plugins:
           type: t.array
+      permission:
+        scope: "plugins"
+        access: "read"
     searchForPluginsWithInfo:
       description: "Searches for available plugins"
       rest:
@@ -796,6 +931,9 @@ api.plugins = {
       result:
         plugins:
           type: t.array
+      permission:
+        scope: "plugins"
+        access: "read"
     getOutdatedPlugins:
       description: "Get outdated plugins"
       rest:
@@ -805,6 +943,9 @@ api.plugins = {
       result:
         outdatedPlugins:
           type: t.array
+      permission:
+        scope: "updates"
+        access: "read"
     isPimaticOutdated:
       description: "Is pimatic outdated"
       rest:
@@ -812,8 +953,11 @@ api.plugins = {
         url: "/api/outdated-pimatic"
       params: {}
       result:
-        outdated: 
+        outdated:
           tye: 'any'
+      permission:
+        scope: "updates"
+        access: "read"
     installUpdatesAsync:
       description: "Install Updates without awaiting result"
       rest:
@@ -825,6 +969,9 @@ api.plugins = {
       result:
         status:
           type: 'any'
+      permission:
+        scope: "updates"
+        access: "write"
     addPluginsToConfig:
       description: "Add plugins to config"
       rest:
@@ -836,6 +983,9 @@ api.plugins = {
       result:
         added:
           type: t.array
+      permission:
+        scope: "plugins"
+        access: "write"
     removePluginsFromConfig:
       description: "Remove plugins from config"
       rest:
@@ -847,14 +997,20 @@ api.plugins = {
       result:
         removed:
           type: t.array
+      permission:
+        scope: "plugins"
+        access: "write"
     getUpdateProcessStatus:
       description: "Get update status"
-      rest: 
+      rest:
         type: "GET"
         url: "/api/update-process"
       result:
         info:
           type: "object"
+      permission:
+        scope: "updates"
+        access: "none"
 }
 
 
@@ -1049,12 +1205,12 @@ api.database = {
 # all
 actions = {}
 apis = [
-  api.framework, 
-  api.rules, 
-  api.variables, 
-  api.plugins, 
-  api.database, 
-  api.groups, 
+  api.framework,
+  api.rules,
+  api.variables,
+  api.plugins,
+  api.database,
+  api.groups,
   api.pages
   api.devices
 ]

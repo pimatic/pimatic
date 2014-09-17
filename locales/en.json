@@ -168,5 +168,12 @@
 	"toggled state of %s": "toggled state of %s",
 	"Edit Pages": "Edit Pages",
 	"Drop here to remove page": "Drop here to remove page",
-	"Add a new page": "Add a new page"
+	"Add a new page": "Add a new page",
+	"Previous": "Previous",
+	"Next": "Next",
+	"I'm an empty page, add some items!": "I'm an empty page, add some items!",
+	"Rpicam": "Rpicam",
+	"Capture Image": "Capture Image",
+	"There was an error installing the updates, please check the log.": "There was an error installing the updates, please check the log.",
+	"Permission denied": "Permission denied"
 }

@@ -262,4 +262,92 @@ module.exports = {
                 type: "string"
           }
         ]
+    users:
+      description: "Array of users"
+      type: "array"
+      default: []
+      items:
+        type: "object"
+        properties:
+          username:
+            type: "string"
+          password:
+            type: "string"
+          role:
+            type: "string"
+    roles:
+      description: "Array of user roles"
+      type: "array"
+      default: [
+        {
+          name: "admin"
+          permissions:
+            pages: "write"
+            rules: "write"
+            variables: "write"
+            messages: "write"
+            events: "write"
+            devices: "write"
+            groups: "write"
+            plugins: "write"
+            updates: "write"
+        },
+        {
+          name: "resident"
+          permissions:
+            pages: "read"
+            rules: "read"
+            variables: "read"
+            messages: "read"
+            events: "read"
+            devices: "none"
+            groups: "none"
+            plugins: "none"
+            updates: "none"
+        }
+      ]   
+      items:
+        type: "object"
+        properties:
+          name:
+            type: "string"
+          permissions:
+            type: "object"
+            properties:
+              pages:
+                type: "string"
+                default: "none"
+                enum: ["none", "read", "write"]               
+              rules:
+                type: "string"
+                default: "none"
+                enum: ["none", "read", "write"]
+              variables:
+                type: "string"
+                default: "none"
+                enum: ["none", "read", "write"]
+              messages:
+                type: "string"
+                default: "none"
+                enum: ["none", "read", "write"]
+              events:
+                type: "string"
+                default: "none"
+                enum: ["none", "read", "write"]
+              devices:
+                type: "string"
+                default: "none"
+                enum: ["none", "read", "write"]
+              groups:
+                type: "string"
+                default: "none"
+                enum: ["none", "read", "write"]
+              plugins:
+                type: "string"
+                default: "none"
+                enum: ["none", "read", "write"]
+              updates:
+                type: "string"
+                default: "none"
+                enum: ["none", "read", "write"]
 }

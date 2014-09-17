@@ -52,6 +52,7 @@ module.exports = (env) ->
       env.logger.info "Starting pimatic version #{@packageJson.version}"
       @_loadConfig()
       @pluginManager.pluginsConfig = @config.plugins
+      @userManager = new env.users.UserManager(this, @config.users, @config.roles)
       @deviceManager = new env.devices.DeviceManager(this, @config.devices)
       @groupManager = new env.groups.GroupManager(this, @config.groups)
       @pageManager = new env.pages.PageManager(this, @config.pages)
@@ -195,7 +196,12 @@ module.exports = (env) ->
           return next()
 
         # if already logged in so just continue
-        if req.session.username is auth.username then return next()
+        loggedIn = (
+          req.session.username is auth.username or 
+          @userManager.getUserByUsername(req.session.username)
+        )
+        if loggedIn
+          return next()
         # not authorized yet
 
         ###
@@ -207,9 +213,21 @@ module.exports = (env) ->
 
         # else use authorization
         express.basicAuth( (user, pass) =>
-          valid = (user is auth.username and pass is auth.password)
+          if user is auth.username 
+            if pass is auth.password
+              role = "admin"
+              valid = yes
+          else 
+            if @userManager.checkLogin(user, pass)
+              role = @userManager.getUser(user).role
+              valid = yes
           # when valid then keep logged in
-          if valid then req.session.username = user 
+          if valid 
+            req.session.username = user
+            req.session.role = role
+          else
+            req.session.username = null
+            req.session.role = null
           return valid
         )(req, res, next)
       )
@@ -247,7 +265,14 @@ module.exports = (env) ->
           req.cookies = null
           ioCookieParser(req, null, =>
             sessionCookie = req.signedCookies?[@app.cookieSessionOptions.key]
-            if sessionCookie? and sessionCookie.username is auth.username
+            loggedIn = (
+              sessionCookie? and (
+                sessionCookie.username is auth.username or 
+                @userManager.getUserByUsername(sessionCookie.username)
+              )
+            )
+            if loggedIn
+              socket.username = sessionCookie.username
               return next()
             else 
               env.logger.debug "socket.io: Cookie is invalid."
@@ -308,6 +333,14 @@ module.exports = (env) ->
 
       @io.on('connection', (socket) =>
         declapi.createSocketIoApi(socket, actionsWithBindings, onError)
+        username = socket.username
+        role = @userManager.getUserByUsername(username).role
+        permissions = @userManager.getPermissionsByUsername(username)
+        socket.emit('hello', {
+          username
+          role
+          permissions
+        })
         socket.emit('devices', (d.toJson() for d in @deviceManager.getDevices()) )
         socket.emit('rules', (r.toJson() for r in @ruleManager.getRules()) )
         socket.emit('variables', (v.toJson() for v in @variableManager.getVariables()) )
@@ -649,6 +682,26 @@ module.exports = (env) ->
       @app.get("/api", (req, res, nest) => res.send(declapi.stringifyApi(env.api.all)) )
       @app.get("/api/decl-api-client.js", declapi.serveClient)
 
+      createPermissionCheck = (app, actions) =>
+        for actionName, action of actions
+          do (actionName, action) =>
+            if action.rest? and action.permission?
+              type = (action.rest.type or 'get').toLowerCase()
+              url = action.rest.url
+              app[type](url, (req, res, next) =>
+                username = req.session.username
+                hasPermission = @userManager.hasPermission(
+                  username, 
+                  action.permission.scope, 
+                  action.permission.access
+                )
+                if hasPermission is yes
+                  next()
+                else
+                  res.send(403)
+              )
+
+      createPermissionCheck(@app, env.api.rules.actions)
       declapi.createExpressRestApi(@app, env.api.framework.actions, this, onError)
       declapi.createExpressRestApi(@app, env.api.rules.actions, this.ruleManager, onError)
       declapi.createExpressRestApi(@app, env.api.variables.actions, this.variableManager, onError)
