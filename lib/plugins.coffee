@@ -195,6 +195,7 @@ module.exports = (env) ->
           return
         @npmRunning = yes
         output = ''
+        npmLogger = env.logger.createSublogger("npm")
         onLine = ( (line) => 
           line = line.toString()
           output += "#{line}\n"
@@ -203,9 +204,9 @@ module.exports = (env) ->
           line = S(line).chompLeft('npm ').s
           npmLogger.info line
         )
-
-        npm = spawn('npm', args, {cwd: @modulesParentDir, env: process.env})
-        npmLogger = env.logger.createSublogger("npm")
+        env = _.clone(process.env)
+        env['HOME'] = require('path').resolve @framework.maindir, '../..'
+        npm = spawn('npm', args, {cwd: @modulesParentDir, env})
         stdout = byline(npm.stdout)
         stdout.on "data", onLine
         stderr = byline(npm.stderr)
