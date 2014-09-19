@@ -219,7 +219,7 @@ module.exports = (env) ->
               valid = yes
           else 
             if @userManager.checkLogin(user, pass)
-              role = @userManager.getUser(user).role
+              role = @userManager.getUserByUsername(user).role
               valid = yes
           # when valid then keep logged in
           if valid 
@@ -244,6 +244,12 @@ module.exports = (env) ->
         return
       )
 
+      @app.get('/logout', (req, res) =>
+        req.session.username = null
+        req.session.role = null
+        res.send 401, "Yor are logged out"
+        return
+      )
       serverEnabled = (
         @config.settings.httpsServer?.enabled or @config.settings.httpServer?.enabled
       )
@@ -701,7 +707,14 @@ module.exports = (env) ->
                   res.send(403)
               )
 
+      createPermissionCheck(@app, env.api.framework.actions)
       createPermissionCheck(@app, env.api.rules.actions)
+      createPermissionCheck(@app, env.api.variables.actions)
+      createPermissionCheck(@app, env.api.plugins.actions)
+      createPermissionCheck(@app, env.api.database.actions)
+      createPermissionCheck(@app, env.api.groups.actions)
+      createPermissionCheck(@app, env.api.pages.actions)
+      createPermissionCheck(@app, env.api.devices.actions)
       declapi.createExpressRestApi(@app, env.api.framework.actions, this, onError)
       declapi.createExpressRestApi(@app, env.api.rules.actions, this.ruleManager, onError)
       declapi.createExpressRestApi(@app, env.api.variables.actions, this.variableManager, onError)
