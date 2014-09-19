@@ -204,9 +204,9 @@ module.exports = (env) ->
           line = S(line).chompLeft('npm ').s
           npmLogger.info line
         )
-        env = _.clone(process.env)
-        env['HOME'] = require('path').resolve @framework.maindir, '../..'
-        npm = spawn('npm', args, {cwd: @modulesParentDir, env})
+        npmEnv = _.clone(process.env)
+        npmEnv['HOME'] = require('path').resolve @framework.maindir, '../..'
+        npm = spawn('npm', args, {cwd: @modulesParentDir, npmEnv})
         stdout = byline(npm.stdout)
         stdout.on "data", onLine
         stderr = byline(npm.stderr)
