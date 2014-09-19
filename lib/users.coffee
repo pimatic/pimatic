@@ -1,10 +1,10 @@
 
-
 __ = require("i18n").__
 Promise = require 'bluebird'
 assert = require 'cassert'
-_ = require('lodash')
-S = require('string')
+_ = require 'lodash'
+S = require 'string'
+crypto = require 'crypto'
 
 module.exports = (env) ->
 
@@ -74,9 +74,8 @@ module.exports = (env) ->
 
     checkLogin: (username, password) ->
       assert typeof username is "string"
-      assert username.length > 0
       assert typeof password is "string"
-      assert password.length > 0
+      if username.length is 0 then return false
       user = @getUserByUsername(username)
       unless user?
         return false
@@ -94,6 +93,26 @@ module.exports = (env) ->
       role = @getRoleByName(user.role)
       unless role?
         throw new Error("No role with name #{user.role} found.")
-      return role.permissions    
+      return role.permissions
+
+    getLoginTokenForUsername: (secret, username) ->
+      assert typeof username is "string"
+      assert username.length > 0
+      assert typeof secret is "string"
+      assert secret.length >= 32
+
+      user = @getUserByUsername(username)
+      unless user?
+        throw new Error('User not found')
+      assert typeof user.password is "string"
+      assert user.password.length > 0
+      shasum = crypto.createHash('sha256')
+      shasum.update(secret, 'utf8')
+      shasum.update(user.password, 'utf8')
+      loginToken = shasum.digest('hex')
+      return loginToken
+
+    checkLoginToken: (secret, username, loginToken) ->
+      return loginToken is @getLoginTokenForUsername(secret, username)
 
   return exports = { UserManager }

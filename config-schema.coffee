@@ -20,18 +20,15 @@ module.exports = {
         authentication:
           type: "object"
           properties:
-            username:
-              description: "The Username for http-basic-authentication"
-              type: "string"
-              default: ""
-            password:
-              description: "The Password for http-basic-authentication"
-              type: "string"
-              default: ""
             enabled:
               description: "Disable http-basic-authentication"
               type: "boolean"
               default: true
+            secret:
+              description: """Secret string used for cookie signing. Should be kept secret. If it 
+              is not set, then a secret will be generate for you, at first start. The secret must
+              be at least 32 characters long.
+              """
             loginTime:
               description: """The time in milliseconds to keep the session cookie if rememberMe is 
               checked. If 0 then delete the cookie on browser close. """
@@ -265,15 +262,22 @@ module.exports = {
     users:
       description: "Array of users"
       type: "array"
-      default: []
+      default: [
+          username: "admin"
+          password: ""
+          role: "admin"
+      ]
       items:
         type: "object"
         properties:
           username:
+            description: "The loginname of the user"
             type: "string"
           password:
+            description: "The password of the user"
             type: "string"
           role:
+            description: "The role of the user"
             type: "string"
     roles:
       description: "Array of user roles"

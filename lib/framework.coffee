@@ -96,6 +96,22 @@ module.exports = (env) ->
       schema = require("../config-schema")
       contents = fs.readFileSync(@configFile).toString()
       instance = cjson.parse(RJSON.transform(contents))
+
+      # some legacy support for old single user
+      auth = instance.settings?.authentication
+      if auth?.username? and auth?.password? and (not instance.users?)
+        unless instance.users?
+          instance.users = [
+            {
+              username: auth.username,
+              password: auth.password,
+              role: "admin"
+            }
+          ]
+          delete auth.username
+          delete auth.password
+          env.logger.warn("Move user authentication setting to new users definition!")
+
       @_validateConfig(instance, schema)
       @config = declapi.enhanceJsonSchemaWithDefaults(schema, instance)
       assert Array.isArray @config.plugins
@@ -150,8 +166,17 @@ module.exports = (env) ->
       @app.use express.urlencoded(limit: '10mb')
       @app.use express.json(limit: '10mb')
       auth = @config.settings.authentication
+      validSecret = (
+        auth.secret? and typeof auth.secret is "string" and auth.secret.length >= 32
+      )
+      unless validSecret
+        auth.secret = require('crypto').randomBytes(64).toString('base64')
+
+      assert typeof auth.secret is "string"
+      assert auth.secret.length >= 32
+
       @app.cookieSessionOptions = {
-        secret: "pimatic-#{auth.username}-#{auth.password}"
+        secret:  auth.secret
         key: 'pimatic.sess'
         cookie: { maxAge: null }        
       }
@@ -163,19 +188,25 @@ module.exports = (env) ->
       assert auth.enabled in [yes, no]
 
       if auth.enabled is yes
-        #Check authentication.
-        unless auth.username? and typeof auth.username is "string" and auth.username.length isnt 0
-          throw new Error(
-            "Authentication is enabled, but no username is defined. Please define a " +
-            "username in the proper section of the config.json file."
+        for user in @config.users
+          #Check authentication.
+          validUsername = (
+            user.username? and typeof user.username is "string" and user.username.length isnt 0
           )
-
-        unless auth.password? and typeof auth.password is "string" and auth.password.length isnt 0
-          throw new Error(
-            "Authentication is enabled, but no password is defined. Please define a " +
-            "password in the proper section of the config.json file or disable authentication."
+          unless validUsername
+            throw new Error(
+              "Authentication is enabled, but no username is defined for a user. " +
+              "Please define a username in the user section of the config.json file."
+            )
+          validPassword = (
+            user.password? and typeof user.password is "string" and user.password.length isnt 0
           )
-
+          unless validPassword
+            throw new Error(
+              "Authentication is enabled, but no password is defined for the user " +
+              "\"#{user.username}\". Please define a password for \"#{user.username}\" " +
+              "in the users section of the config.json file or disable authentication."
+            )
         
       #req.path
       @app.use( (req, res, next) =>
@@ -197,8 +228,11 @@ module.exports = (env) ->
 
         # if already logged in so just continue
         loggedIn = (
-          req.session.username is auth.username or 
-          @userManager.getUserByUsername(req.session.username)
+          typeof req.session.username is "string" and 
+          typeof req.session.loginToken is "string" and 
+          req.session.username.length > 0 and
+          req.session.loginToken.length > 0 and
+          @userManager.checkLoginToken(auth.secret, req.session.username, req.session.loginToken)
         )
         if loggedIn
           return next()
@@ -213,22 +247,18 @@ module.exports = (env) ->
 
         # else use authorization
         express.basicAuth( (user, pass) =>
-          if user is auth.username 
-            if pass is auth.password
-              role = "admin"
-              valid = yes
-          else 
-            if @userManager.checkLogin(user, pass)
-              role = @userManager.getUserByUsername(user).role
-              valid = yes
-          # when valid then keep logged in
-          if valid 
+          if @userManager.checkLogin(user, pass)
+            role = @userManager.getUserByUsername(user).role
+            assert role? and typeof role is "string" and role.length > 0
             req.session.username = user
+            req.session.loginToken = @userManager.getLoginTokenForUsername(auth.secret, user)
             req.session.role = role
+            return true
           else
-            req.session.username = null
-            req.session.role = null
-          return valid
+            delete req.session.username
+            delete req.session.loginToken
+            delete req.session.role
+            return false
         )(req, res, next)
       )
 
@@ -245,8 +275,9 @@ module.exports = (env) ->
       )
 
       @app.get('/logout', (req, res) =>
-        req.session.username = null
-        req.session.role = null
+        delete req.session.username
+        delete req.session.loginToken
+        delete req.session.role
         res.send 401, "Yor are logged out"
         return
       )
@@ -273,8 +304,15 @@ module.exports = (env) ->
             sessionCookie = req.signedCookies?[@app.cookieSessionOptions.key]
             loggedIn = (
               sessionCookie? and (
-                sessionCookie.username is auth.username or 
-                @userManager.getUserByUsername(sessionCookie.username)
+                typeof sessionCookie.username is "string" and 
+                typeof sessionCookie.loginToken is "string" and 
+                sessionCookie.username.length > 0 and
+                sessionCookie.loginToken.length > 0 and
+                @userManager.checkLoginToken(
+                  auth.secret, 
+                  sessionCookie.username, 
+                  sessionCookie.loginToken
+                )
               )
             )
             if loggedIn
