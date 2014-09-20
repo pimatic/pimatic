@@ -375,8 +375,20 @@ module.exports = (env) ->
         env.logger.error(error.message)
         env.logger.debug(error)
 
+      checkPermissions = (socket, action) =>
+        hasPermission = no
+        if action.permission?
+          hasPermission = @userManager.hasPermission(
+            socket.username, 
+            action.permission.scope, 
+            action.permission.access
+          )
+        else
+          hasPermission = yes
+        return hasPermission
+
       @io.on('connection', (socket) =>
-        declapi.createSocketIoApi(socket, actionsWithBindings, onError)
+        declapi.createSocketIoApi(socket, actionsWithBindings, onError, checkPermissions)
         username = socket.username
         role = @userManager.getUserByUsername(username).role
         permissions = @userManager.getPermissionsByUsername(username)
@@ -385,11 +397,35 @@ module.exports = (env) ->
           role
           permissions
         })
-        socket.emit('devices', (d.toJson() for d in @deviceManager.getDevices()) )
-        socket.emit('rules', (r.toJson() for r in @ruleManager.getRules()) )
-        socket.emit('variables', (v.toJson() for v in @variableManager.getVariables()) )
-        socket.emit('pages',  @pageManager.getPages() )
-        socket.emit('groups',  @groupManager.getGroups() )
+        if (
+          @userManager.hasPermission(username, 'devices', 'read') or
+          @userManager.hasPermission(username, 'pages', 'read')  
+        )
+          socket.emit('devices', (d.toJson() for d in @deviceManager.getDevices()) )
+        else socket.emit('devices', [])
+
+        if @userManager.hasPermission(username, 'rules', 'read')      
+          socket.emit('rules', (r.toJson() for r in @ruleManager.getRules()) )
+        else socket.emit('rules', [])
+
+        if @userManager.hasPermission(username, 'rules', 'read')   
+          socket.emit('variables', (v.toJson() for v in @variableManager.getVariables()) )
+        else socket.emit('variables', [])
+
+        if @userManager.hasPermission(username, 'pages', 'read')  
+          socket.emit('pages',  @pageManager.getPages() )
+        else socket.emit('pages', [])
+
+        needsRules = (
+          @userManager.hasPermission(username, 'devices', 'read') or
+          @userManager.hasPermission(username, 'rules', 'read') or
+          @userManager.hasPermission(username, 'variables', 'read') or
+          @userManager.hasPermission(username, 'pages', 'read') or
+          @userManager.hasPermission(username, 'groups', 'read')
+        )
+        if needsRules
+          socket.emit('groups',  @groupManager.getGroups() )
+        else socket.emit('groups', [])
       )
 
     listen: () ->
