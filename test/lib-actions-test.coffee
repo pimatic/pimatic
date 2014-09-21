@@ -322,3 +322,59 @@ describe "LogActionProvider", ->
           assert message is "a test message"
           finish()
         ).done()
+
+
+describe "SetVariableActionProvider", ->
+
+  envDummy =
+    logger: {}
+  frameworkDummy = new events.EventEmitter()
+  frameworkDummy.deviceManager = {
+    devices: {}
+    getDevices: -> _.values(@devices)
+  }
+  frameworkDummy.variableManager = new env.variables.VariableManager(frameworkDummy, [{
+    name: "a"
+    type: "value"
+    value: "2"
+  }])
+  frameworkDummy.variableManager.variables = {}
+  frameworkDummy.variableManager.init()
+  setVarActionProvider = new env.actions.SetVariableActionProvider frameworkDummy
+  actionHandler1 = null
+  actionHandler2 = null
+
+  describe "#parseAction()", =>
+    it 'should parse: set $a to 1', ->
+
+      context = createDummyParseContext()
+      result = setVarActionProvider.parseAction('set $a to 1', context)
+      assert result?
+      assert result.token is 'set $a to 1'
+      assert result.nextInput is ''
+      assert result.actionHandler?
+      actionHandler1 = result.actionHandler
+
+    it 'should parse: set $a to "abc"', ->
+      context = createDummyParseContext()
+      result = setVarActionProvider.parseAction('set $a to "abc"', context)
+      assert result?
+      assert result.token is 'set $a to "abc"'
+      assert result.nextInput is ''
+      assert result.actionHandler?
+      actionHandler2 = result.actionHandler
+
+  describe "LogActionHandler", ->
+
+    describe "#executeAction()", =>
+      it 'should execute the action 1', (finish) ->
+        actionHandler1.executeAction(false).then( (message) ->
+          assert message is "set $a to 1"
+          finish()
+        ).done()
+
+      it 'should execute the action 2', (finish) ->
+        actionHandler2.executeAction(false).then( (message) ->
+          assert message is "set $a to abc"
+          finish()
+        ).done()

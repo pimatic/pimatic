@@ -115,7 +115,6 @@ module.exports = (env) ->
       @_validateConfig(instance, schema)
       @config = declapi.enhanceJsonSchemaWithDefaults(schema, instance)
       for role, i in @config.roles
-        console.log i, role
         @config.roles[i] = declapi.enhanceJsonSchemaWithDefaults(
           schema.properties.roles.items,
           role

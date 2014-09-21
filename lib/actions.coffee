@@ -121,16 +121,26 @@ module.exports = (env) ->
       result = null
 
       varsAndFunsWriteable =  @framework.variableManager.getVariablesAndFunctions(readonly: false)
-
       M(input, context)
         .match("set ", optional: yes)
         .matchVariable(varsAndFunsWriteable, (next, variableName) =>
           next.match([" to ", " := ", " = "], (next) =>
-            next.matchNumericExpression( (next, rightTokens) => 
-              match = next.getFullMatch()
-              variableName = variableName.substring(1)
-              result = { variableName, rightTokens, match }
-            )
+            next.or([
+              ( (next) =>
+                  return next.matchNumericExpression( (next, rightTokens) => 
+                    match = next.getFullMatch()
+                    variableName = variableName.substring(1)
+                    result = { variableName, rightTokens, match }
+                  )
+              ),
+              ( (next) =>
+                  return next.matchStringWithVars( (next, rightTokens) => 
+                    match = next.getFullMatch()
+                    variableName = variableName.substring(1)
+                    result = { variableName, rightTokens, match }
+                  )
+              )
+            ])
           )
         )
 
@@ -164,7 +174,7 @@ module.exports = (env) ->
           _(@rightTokens).reduce( (left, right) => "#{left} #{right}" )
         )
       else
-        return @framework.variableManager.evaluateNumericExpression(@rightTokens).then( (value) => 
+        @framework.variableManager.evaluateExpression(@rightTokens).then( (value) => 
           @framework.variableManager.setVariableToValue(@variableName, value)
           return Promise.resolve("set $#{@variableName} to #{value}")
         )
