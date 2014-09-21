@@ -157,6 +157,12 @@ module.exports = {
               description: "Dont show the text of rules on the rules page"
               type: "boolean"
               default: false
+            demo:
+              doc: """show edit pages also if the user has no permissions, 
+              like at demo.pimatic.org:8080
+              """
+              type: "boolean"
+              default: false
     pages:
       description: "Array of gui pages"
       type: "array"
