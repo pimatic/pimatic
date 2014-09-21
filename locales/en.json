@@ -175,5 +175,6 @@
 	"Rpicam": "Rpicam",
 	"Capture Image": "Capture Image",
 	"There was an error installing the updates, please check the log.": "There was an error installing the updates, please check the log.",
-	"Permission denied": "Permission denied"
+	"Permission denied": "Permission denied",
+	"Logout": "Logout"
 }

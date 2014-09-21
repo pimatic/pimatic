@@ -114,6 +114,12 @@ module.exports = (env) ->
 
       @_validateConfig(instance, schema)
       @config = declapi.enhanceJsonSchemaWithDefaults(schema, instance)
+      for role, i in @config.roles
+        console.log i, role
+        @config.roles[i] = declapi.enhanceJsonSchemaWithDefaults(
+          schema.properties.roles.items,
+          role
+        )
       assert Array.isArray @config.plugins
       assert Array.isArray @config.devices
       assert Array.isArray @config.pages
@@ -747,16 +753,24 @@ module.exports = (env) ->
           env.logger.debug error.stack
 
       @app.get("/api/device/:deviceId/:actionName", (req, res, next) =>
-        deviceId = req.params.deviceId
-        actionName = req.params.actionName
-        device = @deviceManager.getDeviceById(deviceId)
-        if device?
-          if device.hasAction(actionName)
-            action = device.actions[actionName]
-            declapi.callActionFromReqAndRespond(actionName, action, device, req, res)
-          else
-            declapi.sendErrorResponse(res, 'device hasn\'t that action')
-        else declapi.sendErrorResponse(res, 'device not found')
+        username = req.session.username
+        hasPermission = @userManager.hasPermissionBoolean(
+          username, 'controlDevices'
+        )
+
+        if hasPermission
+          deviceId = req.params.deviceId
+          actionName = req.params.actionName
+          device = @deviceManager.getDeviceById(deviceId)
+          if device?
+            if device.hasAction(actionName)
+              action = device.actions[actionName]
+              declapi.callActionFromReqAndRespond(actionName, action, device, req, res)
+            else
+              declapi.sendErrorResponse(res, 'device hasn\'t that action')
+          else declapi.sendErrorResponse(res, 'device not found')
+        else
+          res.send(403)
       )
 
       @app.get("/api", (req, res, nest) => res.send(declapi.stringifyApi(env.api.all)) )

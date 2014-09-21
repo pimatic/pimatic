@@ -72,6 +72,19 @@ module.exports = (env) ->
         else
           return no
 
+    hasPermissionBoolean: (username, scope) ->
+      user = @getUserByUsername(username)
+      unless user?
+        throw new Error('User not found')
+      assert typeof user.role is "string"
+      role = @getRoleByName(user.role)
+      unless role?
+        throw new Error("No role with name #{user.role} found.")
+      permission = role.permissions[scope]
+      unless permission?
+        throw new Error("No permissions for #{scope} of #{user.role} found.")
+      return (permission is true)
+
     checkLogin: (username, password) ->
       assert typeof username is "string"
       assert typeof password is "string"

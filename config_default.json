@@ -1,10 +1,6 @@
 {
   "//": "Please only change this file when pimatic is NOT running else pimatic will overwrite your changes.",
   "settings": {
-    "authentication": {
-      "username": "admin",
-      "password": ""
-    },
     "httpServer": {
       "enabled": true,
       "port": 80      
@@ -35,5 +31,29 @@
   ],
   "groups": [
 
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "password": "",
+      "role": "admin"  
+    }
+  ],
+  "roles": [
+    {
+      "name": "admin",
+      "permissions": {
+        "pages": "write",
+        "rules": "write",
+        "variables": "write",
+        "messages": "write",
+        "events": "write",
+        "devices": "write",
+        "groups": "write",
+        "plugins": "write",
+        "updates": "write",
+        "controlDevices": true
+      }
+    }
   ]
 }

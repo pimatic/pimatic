@@ -263,9 +263,11 @@ module.exports = {
       description: "Array of users"
       type: "array"
       default: [
+        {
           username: "admin"
           password: ""
-          role: "admin"
+          role: "admin"         
+        }
       ]
       items:
         type: "object"
@@ -295,6 +297,7 @@ module.exports = {
             groups: "write"
             plugins: "write"
             updates: "write"
+            controlDevices: true
         },
         {
           name: "resident"
@@ -308,6 +311,7 @@ module.exports = {
             groups: "none"
             plugins: "none"
             updates: "none"
+            controlDevices: true
         }
       ]   
       items:
@@ -319,39 +323,72 @@ module.exports = {
             type: "object"
             properties:
               pages:
+                description: """Allow to list all pages with its devices (read) or additional 
+                edit the pages (write)
+                """
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]               
               rules:
+                description: """
+                Allow to list all rules (read) or additional edit the rules (write)
+                """
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]
               variables:
+                description: """
+                Allow to list all variables (read) or additional edit the variables (write)
+                """
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]
               messages:
+                description: """
+                Allow to list all messages (read) or additional edit the messages (write)
+                """
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]
               events:
+                description: """
+                Allow to list all events (read) or additional edit the events (write)
+                """
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]
               devices:
+                description: """
+                Allow to list all devices (read) or additional edit the devices (write)
+                """
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]
               groups:
+                description: """
+                Allow to list all groups (read) or additional edit the groups (write)
+                """
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]
               plugins:
+                description: """
+                Allow to list all plugins (read) or additional edit the plugins (write)
+                """
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]
               updates:
+                description: """
+                Allow to show update or additional do updating
+                """
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]
+              controlDevices:
+                description: """
+                Allow to control devices (switches, buttons, ...)
+                """
+                type: "boolean"
+                default: false
 }
