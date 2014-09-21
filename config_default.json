@@ -24,8 +24,8 @@
   ],
   "pages": [ 
     {
-      "id": "Favourites",
-      "name": "favourite",
+      "id": "favourite",
+      "name": "Favourites",
       "devices": []
     }
   ],
