@@ -298,6 +298,7 @@ module.exports = {
             plugins: "write"
             updates: "write"
             controlDevices: true
+            restart: true
         },
         {
           name: "resident"
@@ -312,6 +313,7 @@ module.exports = {
             plugins: "none"
             updates: "none"
             controlDevices: true
+            restart: false
         }
       ]   
       items:
@@ -388,6 +390,12 @@ module.exports = {
               controlDevices:
                 description: """
                 Allow to control devices (switches, buttons, ...)
+                """
+                type: "boolean"
+                default: false
+              restart:
+                description: """
+                Allow to restart pimatic
                 """
                 type: "boolean"
                 default: false

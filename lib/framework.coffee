@@ -382,11 +382,16 @@ module.exports = (env) ->
 
       checkPermissions = (socket, action) =>
         hasPermission = no
-        if action.permission?
+        if action.permission? and action.permission.scope?
           hasPermission = @userManager.hasPermission(
             socket.username, 
             action.permission.scope, 
             action.permission.access
+          )
+        else if action.permission? and action.permission.action?
+          hasPermission = @userManager.hasPermissionBoolean(
+            socket.username,
+            action.permission.action
           )
         else
           hasPermission = yes
@@ -783,11 +788,19 @@ module.exports = (env) ->
               url = action.rest.url
               app[type](url, (req, res, next) =>
                 username = req.session.username
-                hasPermission = @userManager.hasPermission(
-                  username, 
-                  action.permission.scope, 
-                  action.permission.access
-                )
+                if action.permission.scope?
+                  hasPermission = @userManager.hasPermission(
+                    username, 
+                    action.permission.scope, 
+                    action.permission.access
+                  )
+                else if action.permission.action?
+                  hasPermission = @userManager.hasPermissionBoolean(
+                    username,
+                    action.permission.action
+                  )
+                else
+                  throw new Error("Unknown permission declaration for action #{action}")
                 if hasPermission is yes
                   next()
                 else

@@ -122,6 +122,8 @@ api.framework = {
         url: "/api/restart"
       result:
         void: {}
+      permission:
+        action: "restart"
 }
 
 api.devices = {
@@ -1081,12 +1083,18 @@ api.database = {
       result:
         messages:
           type: t.array
+      permission:
+        scope: "messages"
+        access: "read"
     deleteMessages:
       description: "delets messages older than the given date"
       rest:
         type: 'DELETE'
         url: '/api/database/messages'
       params: messageCriteria
+      permission:
+        scope: "messages"
+        access: "write"
     addDeviceAttributeLogging:
       description: "enable or disable logging for an device attribute"
       params:
@@ -1096,6 +1104,9 @@ api.database = {
           type: t.string
         time:
           type: t.any
+      permission:
+        scope: "events"
+        access: "read"
     queryMessagesTags:
       description: "lists all tags from the matching messages"
       rest:
@@ -1105,6 +1116,9 @@ api.database = {
       result:
         tags:
           type: t.array
+      permission:
+        scope: "messages"
+        access: "read"
     queryMessagesCount:
       description: "count of all matches matching the criteria"
       rest:
@@ -1114,6 +1128,9 @@ api.database = {
       result:
         count:
           type: t.number
+      permission:
+        scope: "messages"
+        access: "read"
     queryDeviceAttributeEvents:
       rest:
         type: 'GET'
@@ -1123,6 +1140,9 @@ api.database = {
       result:
         events:
           type: t.array
+      permission:
+        scope: "events"
+        access: "read"
     queryDeviceAttributeEventsCount:
       rest:
         type: 'GET'
@@ -1132,6 +1152,9 @@ api.database = {
       result:
         count:
           type: t.number
+      permission:
+        scope: "events"
+        access: "read"
     queryDeviceAttributeEventsDevices:
       rest:
         type: 'GET'
@@ -1141,6 +1164,9 @@ api.database = {
       result:
         devices:
           type: t.array
+      permission:
+        scope: "events"
+        access: "read"
     querySingleDeviceAttributeEvents:
       rest:
         type: 'GET'
@@ -1179,17 +1205,26 @@ api.database = {
       result:
         events:
           type: t.array
+      permission:
+        scope: "events"
+        access: "read"
     getDeviceAttributeLogging:
       description: "get device attribute logging times table"
       params: {}
       result:
         attributeLogging:
           type: t.array
+      permission:
+        scope: "events"
+        access: "read"
     setDeviceAttributeLogging:
       description: "set device attribute logging times table"
       params:
         attributeLogging:
           type: t.array
+      permission:
+        scope: "events"
+        access: "write"
     getDeviceAttributeLoggingTime:
       description: "get device attribute logging times table"
       params:
@@ -1200,6 +1235,9 @@ api.database = {
       result:
         timeInfo:
           type: t.object
+      permission:
+        scope: "events"
+        access: "read"
 }
 
 # all
