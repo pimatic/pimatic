@@ -174,7 +174,7 @@ module.exports = (env) ->
           _(@rightTokens).reduce( (left, right) => "#{left} #{right}" )
         )
       else
-        @framework.variableManager.evaluateExpression(@rightTokens).then( (value) => 
+        return @framework.variableManager.evaluateExpression(@rightTokens).then( (value) =>
           @framework.variableManager.setVariableToValue(@variableName, value)
           return Promise.resolve("set $#{@variableName} to #{value}")
         )
