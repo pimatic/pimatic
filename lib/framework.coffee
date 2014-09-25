@@ -34,6 +34,7 @@ module.exports = (env) ->
     pageManager: null
     database: null
     config: null
+    _publicPathes: {}
 
     constructor: (@configFile) ->
       assert configFile?
@@ -213,6 +214,26 @@ module.exports = (env) ->
               "in the users section of the config.json file or disable authentication."
             )
         
+      @app.post('/login', (req, res) =>
+        user = req.body.username
+        password = req.body.password
+        if @userManager.checkLogin(user, password)
+          role = @userManager.getUserByUsername(user).role
+          assert role? and typeof role is "string" and role.length > 0
+          req.session.username = user
+          req.session.loginToken = @userManager.getLoginTokenForUsername(auth.secret, user)
+          req.session.role = role
+          res.send({
+            username: user
+            role: role
+          })
+        else
+          delete req.session.username
+          delete req.session.loginToken
+          delete req.session.role
+          res.send(401)
+      )
+
       #req.path
       @app.use( (req, res, next) =>
         # set expire date if we should keep loggedin
@@ -243,12 +264,8 @@ module.exports = (env) ->
           return next()
         # not authorized yet
 
-        ###
-          if we don't should promp for a password, just fail.
-          This does not allow unauthorizied access, it just a workaround to let the browser
-          don't show the password prompt on certain ajax requests
-        ###
-        if req.query.noAuthPromp? then return res.send(401)
+        if @userManager.isPublicAccessAllowed(req)
+          return next()
 
         # else use authorization
         express.basicAuth( (user, pass) =>
@@ -258,13 +275,20 @@ module.exports = (env) ->
             req.session.username = user
             req.session.loginToken = @userManager.getLoginTokenForUsername(auth.secret, user)
             req.session.role = role
-            return true
           else
             delete req.session.username
             delete req.session.loginToken
             delete req.session.role
-            return false
-        )(req, res, next)
+          # return allwys true, so that the next callback below is called and we can awnser with
+          # 401 instead of show the auth dialog
+          return yes
+        )(req, res, ( ->
+          if req.session.username?
+            next()
+          else
+            res.send(401)
+          return
+        ))
       )
 
       @app.get('/remember', (req, res) =>

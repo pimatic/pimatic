@@ -10,6 +10,8 @@ module.exports = (env) ->
 
   class UserManager
 
+    _allowPublicAccessCallbacks: []
+
     constructor: (@framework, @users, @roles) -> #nop
 
     addUser: (username, user) ->
@@ -127,5 +129,16 @@ module.exports = (env) ->
 
     checkLoginToken: (secret, username, loginToken) ->
       return loginToken is @getLoginTokenForUsername(secret, username)
+
+    isPublicAccessAllowed: (req) ->
+      for allow in @_allowPublicAccessCallbacks
+        if allow(req) then return yes
+      return no
+
+    addAllowPublicAccessCallback: (callback) ->
+      @_allowPublicAccessCallbacks.push callback
+
+
+
 
   return exports = { UserManager }
