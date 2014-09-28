@@ -179,5 +179,7 @@
 	"Logout": "Logout",
 	"Login": "Login",
 	"Username": "Username",
-	"Password": "Password"
+	"Password": "Password",
+	"Wrong username or password": "Wrong username or password",
+	"Wrong username or password.": "Wrong username or password."
 }

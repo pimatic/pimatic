@@ -213,32 +213,16 @@ module.exports = (env) ->
               "\"#{user.username}\". Please define a password for \"#{user.username}\" " +
               "in the users section of the config.json file or disable authentication."
             )
-        
-      @app.post('/login', (req, res) =>
-        user = req.body.username
-        password = req.body.password
-        if @userManager.checkLogin(user, password)
-          role = @userManager.getUserByUsername(user).role
-          assert role? and typeof role is "string" and role.length > 0
-          req.session.username = user
-          req.session.loginToken = @userManager.getLoginTokenForUsername(auth.secret, user)
-          req.session.role = role
-          res.send({
-            username: user
-            role: role
-          })
-        else
-          delete req.session.username
-          delete req.session.loginToken
-          delete req.session.role
-          res.send(401)
-      )
 
       #req.path
       @app.use( (req, res, next) =>
+        if req.path is "/login" then return next()
+
         # set expire date if we should keep loggedin
-        if req.query.rememberMe is 'true' then req.session.rememberMe = yes
-        if req.query.rememberMe is 'false' then req.session.rememberMe = no
+        if req.query.rememberMe is 'true'  or req.query.rememberMe is true
+          req.session.rememberMe = yes
+        else if req.query.rememberMe is 'false' or req.query.rememberMe is false
+          req.session.rememberMe = no
 
         if req.session.rememberMe and auth.loginTime isnt 0
           req.session.cookie.maxAge = auth.loginTime
@@ -291,11 +275,37 @@ module.exports = (env) ->
         ))
       )
 
+        
+      @app.post('/login', (req, res) =>
+        user = req.body.username
+        password = req.body.password
+        if @userManager.checkLogin(user, password)
+          role = @userManager.getUserByUsername(user).role
+          assert role? and typeof role is "string" and role.length > 0
+          req.session.username = user
+          req.session.loginToken = @userManager.getLoginTokenForUsername(auth.secret, user)
+          req.session.role = role
+          res.send({
+            success: yes
+            username: user
+            role: role
+          })
+        else
+          delete req.session.username
+          delete req.session.loginToken
+          delete req.session.role
+          res.send(401, {
+            success: false
+            message: __("Wrong username or password.")
+          })
+      )
+
+
       @app.get('/remember', (req, res) =>
         rememberMe = req.query.rememberMe
         # rememberMe is handled by the framework, so see if it was picked up:
-        if rememberMe is 'true' then rememberMe = yes
-        if rememberMe is 'false' then rememberMe = no
+        if rememberMe is 'true' or rememberMe is true then rememberMe = yes
+        if rememberMe is 'false' or rememberMe is false then rememberMe = no
         if req.session.rememberMe is rememberMe
           res.send 200, { success: true,  message: 'done' }
         else 
@@ -307,7 +317,7 @@ module.exports = (env) ->
         delete req.session.username
         delete req.session.loginToken
         delete req.session.role
-        res.send 401, "Yor are logged out"
+        res.send 401, "Yor are now logged out."
         return
       )
       serverEnabled = (
