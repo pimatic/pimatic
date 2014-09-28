@@ -33,7 +33,7 @@ module.exports = {
               description: """The time in milliseconds to keep the session cookie if rememberMe is 
               checked. If 0 then delete the cookie on browser close. """
               type: "integer"
-              default: 30 * 24 * 60 * 60 * 1000 #thirty days
+              default: 10 * 365 * 24 * 60 * 60 * 1000 #ten years
         logLevel:
           description: "The log level: debug, info, warn, error" 
           type: "string"
