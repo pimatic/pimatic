@@ -181,5 +181,7 @@
 	"Username": "Username",
 	"Password": "Password",
 	"Wrong username or password": "Wrong username or password",
-	"Wrong username or password.": "Wrong username or password."
+	"Wrong username or password.": "Wrong username or password.",
+	"Keep logged in": "Keep logged in",
+	"Keep me logged in": "Keep me logged in"
 }

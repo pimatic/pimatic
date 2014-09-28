@@ -235,18 +235,6 @@ module.exports = (env) ->
           @userManager.checkLoginToken(auth.secret, req.session.username, req.session.loginToken)
         )
         if loggedIn
-          # set expire date if we should keep loggedin
-          if req.query.rememberMe is 'true'  or req.query.rememberMe is true
-            req.session.rememberMe = yes
-          else if req.query.rememberMe is 'false' or req.query.rememberMe is false
-            req.session.rememberMe = no
-
-          if req.session.rememberMe and auth.loginTime isnt 0
-            req.session.cookie.maxAge = auth.loginTime
-          else
-            req.session.cookie.maxAge = null
-          #touch session to set cookie
-          req.session.maxAge = auth.loginTime
           return next()
  
         # else use authorization
@@ -277,38 +265,37 @@ module.exports = (env) ->
       @app.post('/login', (req, res) =>
         user = req.body.username
         password = req.body.password
+        rememberMe = req.body.rememberMe
+        if rememberMe is 'true' then rememberMe = yes
+        if rememberMe is 'false' then rememberMe = no
+        rememberMe = !!rememberMe
+
         if @userManager.checkLogin(user, password)
           role = @userManager.getUserByUsername(user).role
           assert role? and typeof role is "string" and role.length > 0
           req.session.username = user
           req.session.loginToken = @userManager.getLoginTokenForUsername(auth.secret, user)
           req.session.role = role
+          req.session.rememberMe = rememberMe
+          if rememberMe and auth.loginTime isnt 0
+            req.session.cookie.maxAge = auth.loginTime
+          else
+            req.session.cookie.maxAge = null
           res.send({
             success: yes
             username: user
             role: role
+            rememberMe: rememberMe
           })
         else
           delete req.session.username
           delete req.session.loginToken
           delete req.session.role
+          delete req.session.rememberMe
           res.send(401, {
             success: false
             message: __("Wrong username or password.")
           })
-      )
-
-
-      @app.get('/remember', (req, res) =>
-        rememberMe = req.query.rememberMe
-        # rememberMe is handled by the framework, so see if it was picked up:
-        if rememberMe is 'true' or rememberMe is true then rememberMe = yes
-        if rememberMe is 'false' or rememberMe is false then rememberMe = no
-        if req.session.rememberMe is rememberMe
-          res.send 200, { success: true,  message: 'done' }
-        else 
-          res.send 200, {success: false, message: 'illegal param'}
-        return
       )
 
       @app.get('/logout', (req, res) =>
