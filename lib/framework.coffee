@@ -218,22 +218,12 @@ module.exports = (env) ->
       @app.use( (req, res, next) =>
         if req.path is "/login" then return next()
 
-        # set expire date if we should keep loggedin
-        if req.query.rememberMe is 'true'  or req.query.rememberMe is true
-          req.session.rememberMe = yes
-        else if req.query.rememberMe is 'false' or req.query.rememberMe is false
-          req.session.rememberMe = no
-
-        if req.session.rememberMe and auth.loginTime isnt 0
-          req.session.cookie.maxAge = auth.loginTime
-        else
-          req.session.cookie.maxAge = null
-        #touch session to set cookie
-        req.session.maxAge = auth.loginTime
-
         # auth is deactivated so we allways continue
         if auth.enabled is no
           req.session.username = ''
+          return next()
+
+        if @userManager.isPublicAccessAllowed(req)
           return next()
 
         # if already logged in so just continue
@@ -245,12 +235,20 @@ module.exports = (env) ->
           @userManager.checkLoginToken(auth.secret, req.session.username, req.session.loginToken)
         )
         if loggedIn
-          return next()
-        # not authorized yet
+          # set expire date if we should keep loggedin
+          if req.query.rememberMe is 'true'  or req.query.rememberMe is true
+            req.session.rememberMe = yes
+          else if req.query.rememberMe is 'false' or req.query.rememberMe is false
+            req.session.rememberMe = no
 
-        if @userManager.isPublicAccessAllowed(req)
+          if req.session.rememberMe and auth.loginTime isnt 0
+            req.session.cookie.maxAge = auth.loginTime
+          else
+            req.session.cookie.maxAge = null
+          #touch session to set cookie
+          req.session.maxAge = auth.loginTime
           return next()
-
+ 
         # else use authorization
         express.basicAuth( (user, pass) =>
           if @userManager.checkLogin(user, pass)
