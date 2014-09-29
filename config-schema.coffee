@@ -379,6 +379,13 @@ module.exports = {
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]
+              users:
+                description: """
+                Allow to list all users (read) or additional edit the users (write)
+                """
+                type: "string"
+                default: "none"
+                enum: ["none", "read", "write"]
               plugins:
                 description: """
                 Allow to list all plugins (read) or additional edit the plugins (write)
@@ -389,6 +396,13 @@ module.exports = {
               updates:
                 description: """
                 Allow to show update or additional do updating
+                """
+                type: "string"
+                default: "none"
+                enum: ["none", "read", "write"]
+              config:
+                description: """
+                Allow show the config (read) or additional edit the config (write)
                 """
                 type: "string"
                 default: "none"
