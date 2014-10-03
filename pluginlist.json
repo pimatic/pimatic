@@ -14,5 +14,7 @@
 "pimatic-voice-recognition",
 "pimatic-athome",
 "pimatic-mail",
-"pimatic-links"
+"pimatic-links",
+"pimatic-lcd",
+"pimatic-sysinfo"
 ]
