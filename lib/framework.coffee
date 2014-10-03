@@ -664,6 +664,7 @@ module.exports = (env) ->
           env.predicates.SwitchPredicateProvider
           env.predicates.DeviceAttributePredicateProvider
           env.predicates.VariablePredicateProvider
+          env.predicates.VariableUpdatedPredicateProvider
           env.predicates.ContactPredicateProvider
           env.predicates.ButtonPredicateProvider
           env.predicates.DeviceAttributeWatchdogProvider

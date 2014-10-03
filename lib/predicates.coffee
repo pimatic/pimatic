@@ -596,6 +596,55 @@ module.exports = (env) ->
         when '>=' then left >= right
         else throw new Error "Unknown comparator: #{@comparator}"
 
+
+  class VariableUpdatedPredicateProvider extends PredicateProvider
+
+    constructor: (@framework) ->
+
+    parsePredicate: (input, context) ->
+      variableName = null
+      mustChange = null
+
+      setVariableName = (next, name) => variableName = name.substring(1)
+      setMustChange = (next, match) => mustChange = (match.trim() is "changes")
+
+      m = M(input, context)
+        .matchVariable(setVariableName)
+        .match([" changes", "gets updated"], setMustChange)
+
+      if m.hadMatch()
+        match = m.getFullMatch()
+        assert typeof variableName is "string"
+        assert typeof mustChange is "boolean"
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          predicateHandler: new VariableUpdatedPredicateHandler(
+            @framework, variableName, mustChange
+          )
+        }
+      else
+        return null
+
+  class VariableUpdatedPredicateHandler extends PredicateHandler
+
+    constructor: (@framework, @variableName, @mustChange) ->
+
+    setup: ->
+      @lastValue = null
+      @changeListener = (variable, value) =>
+        unless variable.name is @variableName then return
+        if @mustChange and @lastValue is value then return
+        @lastValue = value
+        @emit 'change', "event"
+      @framework.variableManager.on("variableValueChanged", @changeListener)
+      super()
+    getValue: -> Promise.resolve(false)
+    destroy: ->
+      @framework.variableManager.removeListener("variableValueChanged", @changeListener)
+      super()
+    getType: -> 'event'
+
   class ButtonPredicateProvider extends PredicateProvider
 
     _listener: {}
@@ -663,6 +712,7 @@ module.exports = (env) ->
     SwitchPredicateProvider
     DeviceAttributePredicateProvider
     VariablePredicateProvider
+    VariableUpdatedPredicateProvider
     ContactPredicateProvider
     ButtonPredicateProvider
     DeviceAttributeWatchdogProvider
