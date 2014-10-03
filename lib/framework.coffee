@@ -252,13 +252,7 @@ module.exports = (env) ->
           # return allwys true, so that the next callback below is called and we can awnser with
           # 401 instead of show the auth dialog
           return yes
-        )(req, res, ( ->
-          if req.session.username?
-            next()
-          else
-            res.send(401)
-          return
-        ))
+        )(req, res, next)
       )
 
         
