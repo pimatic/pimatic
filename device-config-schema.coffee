@@ -36,7 +36,7 @@ module.exports = {
             expression:
               description: """
                 The expression to use to get the value. Can be just a variable name ($myVar), 
-                a calculation ($myVar + 10) or a string interpolation (\"Test: {$myVar}!\""
+                a calculation ($myVar + 10) or a string interpolation ("Test: {$myVar}!")
                 """
               type: "string"
             type:
