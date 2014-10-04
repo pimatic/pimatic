@@ -28,15 +28,27 @@ module.exports = {
         format: "table"
         items:
           type: "object"
+          required: ["name", "expression"]
           properties:
             name:
+              description: "Name for the corresponding attribute."
               type: "string"
             expression:
+              description: """
+                The expression to use to get the value. Can be just a variable name ($myVar), 
+                a calculation ($myVar + 10) or a string interpolation (\"Test: {$myVar}!\""
+                """
               type: "string"
             type:
+              description: "The type of the variable."
               type: "string"
               default: "string"
               enum: ["string", "number"]
-   
+            unit:
+              description: "The unit of the variable, only works if type is number."
+              type: "string"
+            label: 
+              description: "A custom label to use in ther frontend."
+              type: "string"
   }
 }
