@@ -449,11 +449,20 @@ module.exports = (env) ->
         do (variable) =>
           name = variable.name
           info = null
+
+          if @attributes[name]?
+            throw new Error(
+              "Two variables with the same name in VariablesDevice config \"#{name}\""
+            )
+
           @attributes[name] = {
             description: name
-            label: "$#{name}"
+            label: (if variable.label? then variable.label else "$#{name}")
             type: variable.type or "string"
           }
+          if variable.unit? and variable.unit.length > 0
+            @attributes[name].unit = variable.unit 
+
           evaluate = ( => 
             # wait till veraibelmanager is ready
             return Promise.delay(1).then( =>
