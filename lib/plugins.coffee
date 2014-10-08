@@ -207,7 +207,7 @@ module.exports = (env) ->
         npmEnv = _.clone(process.env)
         npmEnv['HOME'] = require('path').resolve @framework.maindir, '../..'
         npmEnv['NPM_CONFIG_UNSAFE_PERM'] = true
-        npm = spawn('npm', args, {cwd: @modulesParentDir, npmEnv})
+        npm = spawn('npm', args, {cwd: @modulesParentDir, env: npmEnv})
         stdout = byline(npm.stdout)
         stdout.on "data", onLine
         stderr = byline(npm.stderr)
