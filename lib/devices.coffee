@@ -573,7 +573,10 @@ module.exports = (env) ->
         env.logger.warn("Device configuration of #{deviceConfig.id}: #{w}")
       deviceConfig = declapi.enhanceJsonSchemaWithDefaults(classInfo.configDef, deviceConfig)
       device = classInfo.createCallback(deviceConfig)
-      assert deviceConfig is device.config
+      assert deviceConfig is device.config, """
+        You must assign the config to your device in the the constructor function of your device:
+        "@config = config"
+      """
       return @registerDevice(device)
 
 
