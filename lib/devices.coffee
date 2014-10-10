@@ -487,11 +487,85 @@ module.exports = (env) ->
       @_vars.cancelNotifyOnChange(cl) for cl in @_exprChangeListeners
       super()
 
+  class DeviceConfigExtension
+    extendConfigShema: (schema) ->
+      unless schema.extensions? then return
+      for name, def of @configSchema
+        if name in schema.extensions
+          schema.properties[name] = def
+
+    applicable: (schema) -> 
+      unless schema.extensions? then return
+      for name, def of @configSchema
+        if name in schema.extensions
+          return yes
+      return false
+
+
+  class ConfirmDeviceConfigExtention extends DeviceConfigExtension
+    configSchema:
+      xConfirm:
+        description: "Triggering an device action needs a confirmation"
+        type: "boolean"
+        required: no
+
+    apply: (config, device) -> #should be handled by the frontend
+
+  class LinkDeviceConfigExtention extends DeviceConfigExtension
+    configSchema:
+      xLink:
+        description: "Open this link if the device label is clicked on the frontend"
+        type: "string"
+        required: no
+
+    apply: (config, device) -> #should be handled by the frontend
+
+  class PresentLabelConfigExtension extends DeviceConfigExtension
+    configSchema:
+      xPresentLabel:
+        description: "The label for the present state"
+        type: "string"
+        required: no
+      xAbsentLabel:
+        description: "The label for the absent state"
+        type: "string"
+        required: no
+
+    apply: (config, device) -> 
+      if config.xPresentLabel? or config.xAbsentLabel?
+        device.attributes = _.cloneDeep(device.attributes)
+        device.attributes.presence.labels[0] = config.xPresentLabel if config.xPresentLabel? 
+        device.attributes.presence.labels[1] = config.xAbsentLabel if config.xAbsentLabel?
+        
+
+  class SwitchLabelConfigExtension extends DeviceConfigExtension
+    configSchema:
+      xOnLabel:
+        description: "The label for the on state"
+        type: "string"
+        required: no
+      xOffLabel:
+        description: "The label for the off state"
+        type: "string"
+        required: no
+
+    apply: (config, device) -> 
+      if config.xOnLabel? or config.xOffLabel?
+        device.attributes = _.cloneDeep(device.attributes)
+        device.attributes.state.labels[0] = config.xOnLabel if config.xOnLabel? 
+        device.attributes.state.labels[1] = config.xOffLabel if config.xOffLabel?
+        
+
   class DeviceManager extends events.EventEmitter
     devices: {}
     deviceClasses: {}
+    deviceConfigExtensions: []
 
     constructor: (@framework, @devicesConfig) ->
+      @deviceConfigExtensions.push(new ConfirmDeviceConfigExtention())
+      @deviceConfigExtensions.push(new LinkDeviceConfigExtention())
+      @deviceConfigExtensions.push(new PresentLabelConfigExtension())
+      @deviceConfigExtensions.push(new SwitchLabelConfigExtension())
 
     registerDeviceClass: (className, {configDef, createCallback, prepareConfig}) ->
       assert typeof className is "string"
@@ -511,6 +585,9 @@ module.exports = (env) ->
         description: "the class to use for the device"
         type: "string"
       }
+
+      for extension in @deviceConfigExtensions
+        extension.extendConfigShema(configDef)
 
       @deviceClasses[className] = {
         prepareConfig
@@ -546,6 +623,7 @@ module.exports = (env) ->
             This could lead to errors in rules.
           """
       env.logger.info "new device \"#{device.name}\"..."
+
       @devices[device.id]=device
 
       for attrName, attr of device.attributes
@@ -577,8 +655,12 @@ module.exports = (env) ->
         You must assign the config to your device in the the constructor function of your device:
         "@config = config"
       """
-      return @registerDevice(device)
 
+      for extension in @deviceConfigExtensions
+        if extension.applicable(classInfo.configDef)
+          extension.apply(device.config, device)
+
+      return @registerDevice(device)
 
     loadDevices: ->
       for deviceConfig in @devicesConfig
