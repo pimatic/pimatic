@@ -60,7 +60,6 @@ module.exports = (env) ->
       @variableManager = new env.variables.VariableManager(this, @config.variables)
       @ruleManager = new env.rules.RuleManager(this, @config.rules)
       @database = new env.database.Database(this, @config.settings.database)
-      
       @deviceManager.on('deviceRemoved', (device) =>
         group = @groupManager.getGroupOfDevice(device.id)
         @groupManager.removeDeviceFromGroup(group.id, device.id) if group?
@@ -75,7 +74,6 @@ module.exports = (env) ->
       )
 
       @_setupExpressApp()
-
 
 
     _validateConfig: (config, schema, scope = "config") ->
