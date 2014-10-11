@@ -45,19 +45,18 @@ try {
   return;
 }
 
+
 // Directory to store compiled source
 var cacheDir = process.env['COFFEE_CACHE_DIR'] || '.js';
 
 // Storing coffee's require extension for backup use
 var coffeeExtension = require.extensions['.coffee'];
 
-// Set up an extension map for .coffee files -- we are completely overriding
-// CoffeeScript's since it only returns the compiled module.
-require.extensions['.coffee'] = function(module, filename) {
+function getCachPaths(filename) {
   // First, convert the filename to something more digestible and use our cache
   // folder
-  var rootDir = ""
-  var insideCache = ""
+  var rootDir = "";
+  var insideCache = "";
   var match = filename.match(/^(.*\/node_modules\/[^\/]+)\/(.*)$/);
   if(match) {
     rootDir = match[1];
@@ -69,6 +68,41 @@ require.extensions['.coffee'] = function(module, filename) {
 
   var cachePath = path.resolve(rootDir, cacheDir, insideCache).replace(/\.coffee$/, '.js');
   var mapPath = path.resolve(cachePath.replace(/\.js$/, '.map'));
+  return {
+    cache: cachePath,
+    map: mapPath,
+    root: rootDir
+  };
+}
+
+require('source-map-support').install({
+  retrieveSourceMap: function(source) {
+    if(source.indexOf('.coffee', source.length - '.coffee'.length) === -1) {
+      return null;
+    }
+    var paths = getCachPaths(source);
+    try{
+      return {
+        url: path.basename(source),
+        map: fs.readFileSync(paths.map, 'utf8')
+      };
+    }catch(err) {
+      // if we can't read the source map, then we can't read the source map...
+      return null;
+    }
+    return null;
+  }
+});
+
+// Set up an extension map for .coffee files -- we are completely overriding
+// CoffeeScript's since it only returns the compiled module.
+require.extensions['.coffee'] = function(module, filename) {
+
+  var paths = getCachPaths(filename);
+  var cachePath = paths.cache;
+  var mapPath = paths.map;
+  var rootDir = paths.root;
+
   var content;
 
   // Try and stat the files for their last modified time
@@ -83,6 +117,7 @@ require.extensions['.coffee'] = function(module, filename) {
     // If the cached file was not created yet, this will fail, and that is okay
   }
 
+
   // If we don't have the content, we need to compile ourselves
   if (!content) {
     try {
@@ -92,7 +127,9 @@ require.extensions['.coffee'] = function(module, filename) {
       ));
       var compiled = coffee.compile(fs.readFileSync(filename, 'utf8'), {
         filename: filename,
-        sourceMap: true
+        sourceMap: true,
+        generatedFile: path.basename(cachePath),
+        sourceFiles: [path.basename(filename)]
       });
       process.stdout.write(colors.italic('Done\n'));
       content = compiled.js;
