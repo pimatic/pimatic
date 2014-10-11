@@ -3,6 +3,7 @@ module.exports = {
   ButtonsDevice: {
     title: "ButtonsDevice config"
     type: "object"
+    extensions: ["xLink"]
     properties:
       buttons:
         description: "Buttons to display"
@@ -20,6 +21,7 @@ module.exports = {
   VariablesDevice: {
     title: "VariablesDevice config"
     type: "object"
+    extensions: ["xLink"]
     properties:
       variables:
         description: "Variables to display"
@@ -51,4 +53,19 @@ module.exports = {
               description: "A custom label to use in ther frontend."
               type: "string"
   }
+  DummySwitch:
+    title: "DummySwitch config"
+    type: "object"
+    extensions: ["xLink", "xConfirm", "xOnLabel", "xOffLabel"]
+    properties: {}
+  DummyDimmer:
+    title: "DummyDimmer config"
+    type: "object"
+    extensions: ["xLink"]
+    properties: {}
+  DummyShutter:
+    title: "DummyShutter config"
+    type: "object"
+    extensions: ["xLink"]
+    properties: {}
 }

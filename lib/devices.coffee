@@ -325,7 +325,6 @@ module.exports = (env) ->
 
     # Returns a promise that will be fulfilled with the position
     getPosition: -> Promise.resolve(@_position)
-    getTime: -> Promise.resolve(@_time)
 
     _setPosition: (position) ->
       assert position in ['up', 'down', 'stopped']
@@ -487,6 +486,52 @@ module.exports = (env) ->
       @_vars.cancelNotifyOnChange(cl) for cl in @_exprChangeListeners
       super()
 
+  class DummySwitch extends SwitchActuator
+    
+    constructor: (@config) ->
+      @name = config.name
+      @id = config.id
+      @_state = off
+      super()
+        
+    changeStateTo: (state) ->
+      if @_state is state then return
+      @_setState(state)
+      return Promise.resolve()
+
+
+  class DummyDimmer extends DimmerActuator
+    
+    constructor: (@config) ->
+      @name = config.name
+      @id = config.id
+      @_dimlevel = 0
+      @_state = off
+      super()
+
+    # Retuns a promise that is fulfilled when done.
+    changeDimlevelTo: (level) ->
+      @_setDimlevel(level)
+      return Promise.resolve()
+
+  class DummyShutter extends ShutterController
+
+    constructor: (@config) ->
+      @name = config.name
+      @id = config.id
+      @_position = 'stopped'
+      super()
+
+    stop: ->
+      @_setPosition('stopped')
+      return Promise.resolve()
+
+    # Retuns a promise that is fulfilled when done.
+    moveToPosition: (position) ->
+      @_setPosition(position)
+      return Promise.resolve()
+
+
   class DeviceConfigExtension
     extendConfigShema: (schema) ->
       unless schema.extensions? then return
@@ -568,11 +613,13 @@ module.exports = (env) ->
       @deviceConfigExtensions.push(new SwitchLabelConfigExtension())
 
     registerDeviceClass: (className, {configDef, createCallback, prepareConfig}) ->
-      assert typeof className is "string"
-      assert typeof configDef is "object"
-      assert typeof createCallback is "function"
+      assert typeof className is "string", "className must be a string"
+      assert typeof configDef is "object", "configDef must be an object"
+      assert typeof createCallback is "function", "createCallback must be a function"
       assert(if prepareConfig? then typeof prepareConfig is "function" else true)
-      assert typeof configDef.properties is "object"
+      assert typeof configDef.properties is "object", """
+        configDef must have a property "properties"
+      """
       configDef.properties.id = {
         description: "the id for the device"
         type: "string"
@@ -733,6 +780,9 @@ module.exports = (env) ->
       defaultDevices = [
         env.devices.ButtonsDevice
         env.devices.VariablesDevice
+        env.devices.DummySwitch
+        env.devices.DummyDimmer
+        env.devices.DummyShutter
       ]
       for deviceClass in defaultDevices
         do (deviceClass) =>
@@ -756,4 +806,7 @@ module.exports = (env) ->
     ContactSensor
     ButtonsDevice
     VariablesDevice
+    DummySwitch
+    DummyDimmer
+    DummyShutter
   }
