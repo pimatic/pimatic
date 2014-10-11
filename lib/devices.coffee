@@ -705,9 +705,9 @@ module.exports = (env) ->
       @framework._emitDeviceRemoved(device)
       device.emit 'remove'
       _.remove(@devicesConfig, {deviceId: deviceId})
-      @emit 'deviceRemoved'
-      @framework.saveConfig()
+      @emit 'deviceRemoved', device
       device.destroy()
+      @framework.saveConfig()
       return device
 
     addDeviceToConfig: (deviceConfig) ->
