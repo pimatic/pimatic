@@ -49,8 +49,6 @@ try {
 // Directory to store compiled source
 var cacheDir = process.env['COFFEE_CACHE_DIR'] || '.js';
 
-// Storing coffee's require extension for backup use
-var coffeeExtension = require.extensions['.coffee'];
 
 function getCachPaths(filename) {
   // First, convert the filename to something more digestible and use our cache
@@ -81,6 +79,7 @@ require('source-map-support').install({
       return null;
     }
     var paths = getCachPaths(source);
+
     try{
       return {
         url: path.basename(source),
@@ -93,6 +92,10 @@ require('source-map-support').install({
     return null;
   }
 });
+
+
+// Storing coffee's require extension for backup use
+var coffeeExtension = require.extensions['.coffee'];
 
 // Set up an extension map for .coffee files -- we are completely overriding
 // CoffeeScript's since it only returns the compiled module.
