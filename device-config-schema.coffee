@@ -50,7 +50,7 @@ module.exports = {
               description: "The unit of the variable, only works if type is number."
               type: "string"
             label: 
-              description: "A custom label to use in ther frontend."
+              description: "A custom label to use in the frontend."
               type: "string"
   }
   DummySwitch:
