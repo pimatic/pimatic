@@ -748,7 +748,7 @@ module.exports = (env) ->
         throw new Error(
           "A device with the id \"#{deviceConfig.id}\" is already in the config."
         )
-      device = @_loadDevice(deviceConfig)
+      device = @_loadDevice(deviceConfig, {})
       @addDeviceToConfig(deviceConfig)
       return device
 
