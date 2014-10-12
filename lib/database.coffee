@@ -514,6 +514,41 @@ module.exports = (env) ->
       )
 
 
+    getLastDeviceState: (deviceId) ->
+      if @_lastDevicesStateCache?
+        return @_lastDevicesStateCache.then( (devices) -> devices[deviceId] )
+      
+      # query all devices for performance reason and cache the result
+      @_lastDevicesStateCache = @knex('deviceAttribute').select(
+        'deviceId', 'attributeName', 'type', 'lastUpdate', 'lastValue'
+      ).then( (result) =>
+        #group by device
+        devices = {}
+        convertValue = (value, type) ->
+          unless value? then return null
+          return (
+            switch type
+              when 'number' then parseFloat(value)
+              when 'boolean' then (value is '1')
+              else value
+          )
+        for r in result
+          d = devices[r.deviceId]
+          unless d? then d = devices[r.deviceId] = {}
+          d[r.attributeName] = {
+            time: r.lastUpdate
+            value: convertValue(r.lastValue, r.type)
+          }
+        # Clear cache after one minute
+        clearTimeout(@_lastDevicesStateCacheTimeout)
+        @_lastDevicesStateCacheTimeout = setTimeout( (=>
+          @_lastDevicesStateCache = null
+        ), 60*1000)
+        return devices
+      )
+      return @_lastDevicesStateCache.then( (devices) -> devices[deviceId] )
+
+
     _insertDeviceAttribute: (deviceId, attributeName) ->
       assert typeof deviceId is 'string' and deviceId.length > 0
       assert typeof attributeName is 'string' and attributeName.length > 0

@@ -438,7 +438,7 @@ module.exports = (env) ->
 
   class VariablesDevice extends Device
 
-    constructor: (@config, @framework) ->
+    constructor: (@config, lastState, @framework) ->
       @id = config.id
       @name = config.name
       @_vars = @framework.variableManager
@@ -488,10 +488,10 @@ module.exports = (env) ->
 
   class DummySwitch extends SwitchActuator
     
-    constructor: (@config) ->
+    constructor: (@config, lastState) ->
       @name = config.name
       @id = config.id
-      @_state = off
+      @_state = lastState.state?.value or off
       super()
         
     changeStateTo: (state) ->
@@ -501,11 +501,11 @@ module.exports = (env) ->
 
   class DummyDimmer extends DimmerActuator
     
-    constructor: (@config) ->
+    constructor: (@config, lastState) ->
       @name = config.name
       @id = config.id
-      @_dimlevel = 0
-      @_state = off
+      @_dimlevel = lastState.dimlevel?.value or 0
+      @_state = lastState.state?.value or off
       super()
 
     # Retuns a promise that is fulfilled when done.
@@ -515,10 +515,10 @@ module.exports = (env) ->
 
   class DummyShutter extends ShutterController
 
-    constructor: (@config) ->
+    constructor: (@config, lastState) ->
       @name = config.name
       @id = config.id
-      @_position = 'stopped'
+      @_position = lastState.position?.value or 'stopped'
       super()
 
     stop: ->
@@ -681,7 +681,7 @@ module.exports = (env) ->
       @framework._emitDeviceAdded(device)
       return device
 
-    _loadDevice: (deviceConfig) ->
+    _loadDevice: (deviceConfig, lastDeviceState) ->
       classInfo = @deviceClasses[deviceConfig.class]
       unless classInfo?
         throw new Error("Unknown device class \"#{deviceConfig.class}\"")
@@ -696,11 +696,17 @@ module.exports = (env) ->
       for w in warnings
         env.logger.warn("Device configuration of #{deviceConfig.id}: #{w}")
       deviceConfig = declapi.enhanceJsonSchemaWithDefaults(classInfo.configDef, deviceConfig)
-      device = classInfo.createCallback(deviceConfig)
+      device = classInfo.createCallback(deviceConfig, lastDeviceState)
       assert deviceConfig is device.config, """
         You must assign the config to your device in the the constructor function of your device:
         "@config = config"
       """
+      for name, valueAndTime of lastDeviceState
+        if device.attributes[name]?
+          meta = device._attributesMeta[name]
+          unless meta? then continue
+          meta.value = valueAndTime.value
+          meta.history = [t:valueAndTime.time, v: valueAndTime.value]
 
       for extension in @deviceConfigExtensions
         if extension.applicable(classInfo.configDef)
@@ -709,19 +715,23 @@ module.exports = (env) ->
       return @registerDevice(device)
 
     loadDevices: ->
-      for deviceConfig in @devicesConfig
-        classInfo = @deviceClasses[deviceConfig.class]
-        if classInfo?
-          try
-            @_loadDevice(deviceConfig)
-          catch e
-            env.logger.error("Error loading device #{deviceConfig.id}: #{e.message}")
-            env.logger.debug(e.stack)
-        else
-          env.logger.warn(
-            "no plugin found for device \"#{deviceConfig.id}\" of class \"#{deviceConfig.class}\"!"
-          )
-      return
+      #.done()
+      return Promise.each(@devicesConfig, (deviceConfig) =>
+        @framework.database.getLastDeviceState(deviceConfig.id).then( (lastDeviceState) =>
+          classInfo = @deviceClasses[deviceConfig.class]
+          if classInfo?
+            try
+              @_loadDevice(deviceConfig, lastDeviceState)
+            catch e
+              env.logger.error("Error loading device #{deviceConfig.id}: #{e.message}")
+              env.logger.debug(e.stack)
+          else
+            env.logger.warn("""
+              no plugin found for device "#{deviceConfig.id}" of class "#{deviceConfig.class}"!
+            """)
+        )
+      )
+      
 
     getDeviceById: (id) -> @devices[id]
 
@@ -787,8 +797,8 @@ module.exports = (env) ->
         do (deviceClass) =>
           @registerDeviceClass(deviceClass.name, {
             configDef: deviceConfigDef[deviceClass.name], 
-            createCallback: (config) => 
-              return new deviceClass(config, @framework)
+            createCallback: (config, lastState) => 
+              return new deviceClass(config, lastState, @framework)
           })
 
   return exports = {
