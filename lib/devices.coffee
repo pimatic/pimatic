@@ -495,7 +495,6 @@ module.exports = (env) ->
       super()
         
     changeStateTo: (state) ->
-      if @_state is state then return
       @_setState(state)
       return Promise.resolve()
 
