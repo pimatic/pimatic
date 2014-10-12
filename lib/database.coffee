@@ -92,6 +92,17 @@ module.exports = (env) ->
           table.string('deviceId')
           table.string('attributeName')
           table.string('type')
+          table.timestamp('lastUpdate').nullable()
+          table.string('lastValue').nullable()
+        )
+
+        # add to old deviceAttribute table 
+        pending.push @knex.schema.table('deviceAttribute', (table) =>
+          table.timestamp('lastUpdate').nullable()
+          table.string('lastValue').nullable()
+        ).catch( (error) -> 
+          if error.errno is 1 then return #ignore
+          throw error
         )
 
         for tableName, tableInfo of dbMapping.attributeValueTables
@@ -475,13 +486,23 @@ module.exports = (env) ->
       @emit 'device-attribute-save', {deviceId, attributeName, time, value}
 
       return @_getDeviceAttributeInfo(deviceId, attributeName).then( (info) =>
+        # insert into value table
         tableName = dbMapping.typeToAttributeTable(info.type)
-        insert = @knex(tableName).insert(
+        insert1 = @knex(tableName).insert(
           time: time
           deviceAttributeId: info.id
           value: value
         )
-        return Promise.resolve(insert)
+        # and update lastValue in attributeInfo
+        insert2 = @knex('deviceAttribute')
+          .where(
+            id: info.id
+          )
+          .update(
+            lastUpdate: time
+            lastValue: value
+          )
+        return Promise.all([insert1, insert2])
       )
 
     _getDeviceAttributeInfo: (deviceId, attributeName) ->
