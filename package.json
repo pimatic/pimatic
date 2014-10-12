@@ -79,7 +79,8 @@
     "decl-api",
     "jayschema",
     "relaxed-json",
-    "cjson"
+    "cjson",
+    "source-map-support"
   ],
   "devDependencies": {
     "grunt-cli": "0.1.11",
