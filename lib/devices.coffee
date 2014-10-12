@@ -715,7 +715,6 @@ module.exports = (env) ->
       return @registerDevice(device)
 
     loadDevices: ->
-      #.done()
       return Promise.each(@devicesConfig, (deviceConfig) =>
         @framework.database.getLastDeviceState(deviceConfig.id).then( (lastDeviceState) =>
           classInfo = @deviceClasses[deviceConfig.class]
