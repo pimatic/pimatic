@@ -491,7 +491,7 @@ module.exports = (env) ->
     constructor: (@config, lastState) ->
       @name = config.name
       @id = config.id
-      @_state = lastState.state?.value or off
+      @_state = lastState?.state?.value or off
       super()
         
     changeStateTo: (state) ->
@@ -504,8 +504,8 @@ module.exports = (env) ->
     constructor: (@config, lastState) ->
       @name = config.name
       @id = config.id
-      @_dimlevel = lastState.dimlevel?.value or 0
-      @_state = lastState.state?.value or off
+      @_dimlevel = lastState?.dimlevel?.value or 0
+      @_state = lastState?.state?.value or off
       super()
 
     # Retuns a promise that is fulfilled when done.
@@ -518,7 +518,7 @@ module.exports = (env) ->
     constructor: (@config, lastState) ->
       @name = config.name
       @id = config.id
-      @_position = lastState.position?.value or 'stopped'
+      @_position = lastState?.position?.value or 'stopped'
       super()
 
     stop: ->
