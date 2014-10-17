@@ -129,6 +129,10 @@ api.framework = {
       rest:
         type: "GET"
         url: '/api/config'
+      result:
+        config:
+          description: "the config"
+          type: t.object
       permission:
         scope: "config"
         access: "read"        

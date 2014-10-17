@@ -870,7 +870,8 @@ module.exports = (env) ->
               for e in obj
                 blankSecrets schema.items, e
       schema = require("../config-schema") 
-      configCopy = _.cloneDeep(@config)     
+      configCopy = _.cloneDeep(@config)
+      delete configCopy['//']     
       blankSecrets schema, configCopy
       return configCopy
 
