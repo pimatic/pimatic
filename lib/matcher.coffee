@@ -370,9 +370,11 @@ class Matcher
 
     next = @match('"')
     while next.hadMatch() and (not last?)
-      next.match(/^([^"\$\{]*)(.*?)$/, (m, strPart) =>
+      # match unescapted ", $ or {
+      next.match(/((?:(?:\\\\)*(?:\\.|[^"\$\{]))*)(.*?)$/, (m, strPart) =>
         # strPart is string till first var or ending quote
         # Check for end:
+        strPart = strPart.replace(/([\\]?)\\/g, '$1')
         tokens.push('"' + strPart + '"')
 
         end = m.match('"')

@@ -250,6 +250,44 @@ describe "Matcher", ->
         finish()
       )
 
+    it "should handle escaped quotes \"some \\\" quote\"", (finish) ->
+      M('"some \\" quote"').matchStringWithVars(varsAndFuns, (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['"some " quote"'])
+        finish()
+      )
+
+    it "should handle escaped sollar sign \"some \\$abc dollar\"", (finish) ->
+      M('"some \\$abc dollar"').matchStringWithVars(varsAndFuns, (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['"some $abc dollar"'])
+        finish()
+      )
+
+    it "should handle escaped backslash \"some \\\\ back\"", (finish) ->
+      M('"some \\\\ back"').matchStringWithVars(varsAndFuns, (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['"some \\ back"'])
+        finish()
+      )
+
+    it "should handle escaped backslash at end \"some \\\\\"", (finish) ->
+      M('"some \\\\"').matchStringWithVars(varsAndFuns, (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['"some \\"'])
+        finish()
+      )
+
+
+    it "should handle escaped backslash at end \"some \\\\\"", (finish) ->
+      M('"echo \\"abc\\" | mailx -s \\"def\\""').matchStringWithVars(varsAndFuns, (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['"echo "abc" | mailx -s "def""'])
+        finish()
+      )
+
+
+
   describe '#matchString()', ->
 
     it "should match \"foo\"", (finish) ->
