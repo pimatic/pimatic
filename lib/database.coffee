@@ -407,7 +407,9 @@ module.exports = (env) ->
         if @dbSettings.debug
           env.logger.debug("quering #{result.length} events took #{timeDiff}ms.")
         for r in result
-          if r.type is "boolean" then r.value = !!r.value
+          if r.type is "boolean"
+            # convert numeric or string value from db to boolean
+            r.value = not (r.value is "0" or r.value is 0)
         return result
       )
 
