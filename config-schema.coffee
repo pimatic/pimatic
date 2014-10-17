@@ -29,6 +29,7 @@ module.exports = {
               is not set, then a secret will be generate for you, at first start. The secret must
               be at least 32 characters long.
               """
+              secret: yes
             loginTime:
               description: """The time in milliseconds to keep the session cookie if rememberMe is 
               checked. If 0 then delete the cookie on browser close. """
@@ -284,6 +285,7 @@ module.exports = {
           password:
             description: "The password of the user"
             type: "string"
+            secret: yes
           role:
             description: "The role of the user"
             type: "string"

@@ -855,6 +855,25 @@ module.exports = (env) ->
       declapi.createExpressRestApi(@app, env.api.pages.actions, this.pageManager, onError)
       declapi.createExpressRestApi(@app, env.api.devices.actions, this.deviceManager, onError)
 
+    getConfig: ->
+      #blank passwords
+      blankSecrets = (schema, obj) ->
+        switch schema.type
+          when "object"
+            if schema.properties?
+              for n, p of schema.properties
+                if p.secret and obj[n]?
+                  obj[n] = 'xxxxxxxxxx'
+                blankSecrets(p, obj[n]) if obj[n]?
+          when "array"
+            if schema.items? and obj?
+              for e in obj
+                blankSecrets schema.items, e
+      schema = require("../config-schema") 
+      configCopy = _.cloneDeep(@config)     
+      blankSecrets schema, configCopy
+      return configCopy
+
     saveConfig: ->
       assert @config?
       try

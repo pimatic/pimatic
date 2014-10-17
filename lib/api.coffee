@@ -124,6 +124,14 @@ api.framework = {
         void: {}
       permission:
         action: "restart"
+    getConfig:
+      description: "Get the config"
+      rest:
+        type: "GET"
+        url: '/api/config'
+      permission:
+        scope: "config"
+        access: "read"        
 }
 
 api.devices = {

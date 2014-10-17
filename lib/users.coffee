@@ -50,7 +50,7 @@ module.exports = (env) ->
 
     hasPermission: (username, scope, access) ->
       assert scope in [
-        "pages", "rules", "variables", "messages", 
+        "pages", "rules", "variables", "messages", "config"
         "events", "devices", "groups", "plugins", "updates"
       ]
       assert access in ["read", "write", "none"]
