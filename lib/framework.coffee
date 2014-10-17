@@ -122,7 +122,7 @@ module.exports = (env) ->
       assert Array.isArray @config.devices
       assert Array.isArray @config.pages
       assert Array.isArray @config.groups
-      @_checkConfig()
+      @_checkConfig(@config)
 
       # * Set the log level
       env.logger.winston.transports.taggedConsoleLogger.level = @config.settings.logLevel
@@ -133,31 +133,50 @@ module.exports = (env) ->
         defaultLocale: @config.settings.locale,
       })
 
-    _checkConfig: ()->
 
+    _checkConfig: (config)->
+
+      checkForDublicate = (type, collection, idProperty) =>
+        ids = {}
+        for e in collection
+          id = e[idProperty]
+          if ids[id]?
+            throw new Error(
+              "Dublicate #{type} #{id} in config."
+            )
+          ids[id] = yes
+
+      checkForDublicate("plugin", config.plugins, 'plugin')
+      checkForDublicate("device", config.devices, 'id')
+      checkForDublicate("rules", config.rules, 'id')
+      checkForDublicate("variables", config.variables, 'name')
+      checkForDublicate("groups", config.groups, 'id')
+      checkForDublicate("pages", config.pages, 'id')
+
+      # Check groups, rules, variables, pages integrity
       logWarning = (type, id, name, collection = "group") ->
         env.logger.warn(
           """Could not find a #{type} with the id "#{id}" from """ + 
           """#{collection} "#{name}" in #{type}s config section."""
         )        
 
-      for group in @config.groups
+      for group in config.groups
         for deviceId in group.devices
-          found = _.find(@config.devices, {id: deviceId})
+          found = _.find(config.devices, {id: deviceId})
           unless found?
             logWarning('device', deviceId, group.id)
         for ruleId in group.rules
-          found = _.find(@config.rules, {id: ruleId})
+          found = _.find(config.rules, {id: ruleId})
           unless found?
             logWarning('rule', ruleId, group.id)
         for variableName in group.variables
-          found = _.find(@config.variables, {name: variableName})
+          found = _.find(config.variables, {name: variableName})
           unless found?
             logWarning('variable', variableName, group.id)
 
-      for page in @config.pages
+      for page in config.pages
         for item in page.devices
-          found = _.find(@config.devices, {id: item.deviceId})
+          found = _.find(config.devices, {id: item.deviceId})
           unless found?
             logWarning('device', item.deviceId, page.id, 'page')
 

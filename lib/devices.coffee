@@ -656,7 +656,7 @@ module.exports = (env) ->
       assert device instanceof env.devices.Device
       assert device._constructorCalled
       if @devices[device.id]?
-        throw new assert.AssertionError("dublicate device id \"#{device.id}\"")
+        throw new Error("dublicate device id \"#{device.id}\"")
       unless device.id.match /^[a-z0-9\-_]+$/i
         env.logger.warn """
           The id of #{device.id} contains a non alphanumeric letter or symbol.
@@ -772,8 +772,9 @@ module.exports = (env) ->
       # Check if device is already in the deviceConfig:
       present = @isDeviceInConfig deviceConfig.id
       if present
-        message = "an device with the id #{deviceConfig.id} is already in the config" 
-        throw new Error message
+        throw new Error(
+          "an device with the id #{deviceConfig.id} is already in the config" 
+        )
       @devicesConfig.push deviceConfig
       @framework.saveConfig()
 
