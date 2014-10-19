@@ -94,7 +94,7 @@ require('source-map-support').install({
 });
 
 // See: https://github.com/evanw/node-source-map-support/issues/34
-prepareStackTrace = Error.prepareStackTrace;
+var prepareStackTrace = Error.prepareStackTrace;
 Error.__defineGetter__('prepareStackTrace', function(){
     return prepareStackTrace;
 });
@@ -107,18 +107,14 @@ Error.__defineSetter__('prepareStackTrace', function(arg){
   prepareStackTrace = arg;
 });
 
-// Storing coffee's require extension for backup use
-var coffeeExtension = require.extensions['.coffee'];
-
 // Set up an extension map for .coffee files -- we are completely overriding
 // CoffeeScript's since it only returns the compiled module.
-require.extensions['.coffee'] = function(module, filename) {
-
+var coffeeExtension = require.extensions['.coffee'];
+var compile = function(module, filename) {
   var paths = getCachPaths(filename);
   var cachePath = paths.cache;
   var mapPath = paths.map;
   var rootDir = paths.root;
-
   var content;
 
   // Try and stat the files for their last modified time
@@ -158,6 +154,7 @@ require.extensions['.coffee'] = function(module, filename) {
 
       // Try writing to cache
       fs.mkdirs(path.dirname(cachePath));
+
       fs.writeFileSync(cachePath, content, 'utf8');
       if (mapPath)
         fs.writeFileSync(mapPath, compiled.v3SourceMap, 'utf8');
@@ -171,3 +168,8 @@ require.extensions['.coffee'] = function(module, filename) {
   return module._compile(content, filename);
 };
 
+// overwrite require.extensions['.coffee'] the hard way:
+// This prevents coffee-script to redefine it with coffee-script/register
+require.extensions.__defineGetter__('.coffee', function(){
+  return compile;
+});
