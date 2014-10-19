@@ -93,6 +93,19 @@ require('source-map-support').install({
   }
 });
 
+// See: https://github.com/evanw/node-source-map-support/issues/34
+prepareStackTrace = Error.prepareStackTrace;
+Error.__defineGetter__('prepareStackTrace', function(){
+    return prepareStackTrace;
+});
+
+Error.__defineSetter__('prepareStackTrace', function(arg){
+  if(arg && arg.toString().indexOf("getSourceMapping") != -1) {
+    //ignore changes to stack trace from coffeescript
+    return;
+  }
+  prepareStackTrace = arg;
+});
 
 // Storing coffee's require extension for backup use
 var coffeeExtension = require.extensions['.coffee'];
@@ -131,6 +144,7 @@ require.extensions['.coffee'] = function(module, filename) {
       var compiled = coffee.compile(fs.readFileSync(filename, 'utf8'), {
         filename: filename,
         sourceMap: true,
+        bare: true,
         generatedFile: path.basename(cachePath),
         sourceFiles: [path.basename(filename)]
       });
