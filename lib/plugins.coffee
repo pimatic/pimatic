@@ -52,9 +52,11 @@ module.exports = (env) ->
       return @spawnNpm(['install', name])
 
     _emitUpdateProcessStatus: (status, info) ->
+      @updateProcessStatus = status
       @emit 'updateProcessStatus', status, info
 
     _emitUpdateProcessMessage: (message, info) ->
+      @updateProcessMessages.push message
       @emit 'updateProcessMessage', message, info
 
     getUpdateProcessStatus: () ->
@@ -78,9 +80,6 @@ module.exports = (env) ->
         @removeListener 'npmMessage', npmMessageListener
         throw error
       )
-      # ), onProgress = ( (message) =>
-      #   @_emitUpdateProcessMessage(message, {modules})
-      # ))
 
     pathToPlugin: (name) ->
       assert name?
