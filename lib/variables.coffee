@@ -19,8 +19,9 @@ module.exports = (env) ->
     value: null
     type: 'value'
     readonly: no
+    unit: null
 
-    constructor: (@_vars, @name, @type, @readonly) ->
+    constructor: (@_vars, @name, @type, @unit, @readonly) ->
       assert @_vars?
       assert @_vars instanceof VariableManager
       assert typeof @name is "string"
@@ -40,11 +41,18 @@ module.exports = (env) ->
       readonly: @readonly
       type: @type
       value: @value
+      unit: @unit or ''
     }
 
   class DeviceAttributeVariable extends Variable
     constructor: (vars, @_device, @_attrName) ->
-      super(vars, "#{@_device.id}.#{_attrName}", 'attribute', yes)
+      super(
+        vars, 
+        "#{@_device.id}.#{_attrName}", 
+        'attribute', 
+        @_device.attributes[@_attrName].unit, 
+        yes
+      )
       @_device.on(@_attrName, @_attrListener = (value) => @_setValue(value) )
     getUpdatedValue: -> 
       return @_device.getUpdatedAttributeValue(@_attrName)
@@ -54,30 +62,32 @@ module.exports = (env) ->
 
 
   class ExpressionValueVariable extends Variable
-    constructor: (vars, name, type, valueOrExpr = null) ->
-      super(vars, name, type, no)
+    constructor: (vars, name, type, unit, valueOrExpr = null) ->
+      super(vars, name, type, unit, no)
       assert type in ['value', 'expression']
       if valueOrExpr?
         switch type
-          when 'value' then @setToValue(valueOrExpr)
-          when 'expression' then @setToExpression(valueOrExpr)
+          when 'value' then @setToValue(valueOrExpr, unit)
+          when 'expression' then @setToExpression(valueOrExpr, unit)
           else assert false
 
-    setToValue: (value) ->
+    setToValue: (value, unit) ->
       @_removeListener()
       @type = "value"
       @_datatype = null
       @exprInputStr = null
       @exprTokens = null
+      @unit = unit
       return @_setValue(value)
 
-    setToExpression: (expression) ->
+    setToExpression: (expression, unit) ->
       {tokens, datatype} = @_vars.parseVariableExpression(expression)
       @exprInputStr = expression
       @exprTokens = tokens
       @_datatype = datatype
       @_removeListener()
       @type = "expression"
+      @unit = unit
       variablesInExpr = (t.substring(1) for t in tokens when @_vars.isAVariable(t))
       doUpdate = ( =>
         @getUpdatedValue().then( (value) => 
@@ -158,6 +168,23 @@ module.exports = (env) ->
             type: "string"
             optional: yes
         exec: (format) -> (new Date()).format(if format? then format else 'YYYY-MM-DD hh:mm:ss')
+      formatNumber:
+        args:
+          number:
+            type: "number"
+          decimals:
+            type: "number"
+            optional: yes
+          unit:
+            type: "string"
+            optional: yes
+        exec: (number, decimals, unit) ->
+          unless decimals?
+            decimals = 2
+          unless unit?
+            unit = this.units[0] or ""
+          formated = Number(number).toFixed(decimals)
+          return "#{formated}#{unit}"
     }
 
     constructor: (@framework, @variablesConfig) ->
@@ -181,8 +208,9 @@ module.exports = (env) ->
             try
               exprVar = new ExpressionValueVariable(
                 this, 
-                variable.name, 
-                'expression'
+                variable.name,
+                'expression',
+                variable.unit
               )
               # We first add the variable, but parse the expression later, because it could
               # contain other variables, added later
@@ -207,7 +235,8 @@ module.exports = (env) ->
               new ExpressionValueVariable(
                 this, 
                 variable.name, 
-                'value', 
+                'value',
+                variable.unit,
                 variable.value
               )
             )
@@ -264,19 +293,19 @@ module.exports = (env) ->
       return {tokens, datatype}
 
 
-    setVariableToExpr: (name, inputStr) ->
+    setVariableToExpr: (name, inputStr, unit) ->
       assert name? and typeof name is "string"
       assert typeof inputStr is "string" and inputStr.length > 0
 
       unless @variables[name]?
         @_addVariable(
-          variable = new ExpressionValueVariable(this, name, 'expression', inputStr)
+          variable = new ExpressionValueVariable(this, name, 'expression', unit, inputStr)
         )
       else
         variable = @variables[name]
         unless variable.type in ["expression", "value"]
           throw new Error("Can not set a non expression or value var to an expression")
-        variable.setToExpression(inputStr)
+        variable.setToExpression(inputStr, unit)
         @_emitVariableChanged(variable)
       return variable
     
@@ -288,44 +317,44 @@ module.exports = (env) ->
           "variable name must only contain alpha numerical symbols, \"-\" and  \"_\""
         )
 
-    setVariableToValue: (name, value) ->
+    setVariableToValue: (name, value, unit) ->
       assert name? and typeof name is "string"
       @_checkVariableName(name)
 
       unless @variables[name]?
         @_addVariable(
-          variable = new ExpressionValueVariable(this, name, 'value', value)
+          variable = new ExpressionValueVariable(this, name, 'value', unit, value)
         )
       else
         variable = @variables[name]
         unless variable.type in ["expression", "value"]
           throw new Error("Can not set a non expression or value var to an expression")
         if variable.type is "expression"
-          variable.setToValue(value)
+          variable.setToValue(value, unit)
           @_emitVariableChanged(variable)
         else if variable.type is "value"
-          variable.setToValue(value)
+          variable.setToValue(value, unit)
       return variable
 
 
-    updateVariable: (name, type, valueOrExpr) ->
+    updateVariable: (name, type, valueOrExpr, unit) ->
       assert type in ["value", "expression"]
       unless @isVariableDefined(name)
         throw new Error("No variable with the name \"#{name}\" found.")
       return (
         switch type
-          when "value" then @setVariableToValue(name, valueOrExpr)
-          when "expression" then @setVariableToExpr(name, valueOrExpr)
+          when "value" then @setVariableToValue(name, valueOrExpr, unit)
+          when "expression" then @setVariableToExpr(name, valueOrExpr, unit)
       )
 
-    addVariable: (name, type, valueOrExpr) ->
+    addVariable: (name, type, valueOrExpr, unit) ->
       assert type in ["value", "expression"]
       if @isVariableDefined(name)
         throw new Error("There is already a variable with the name \"#{name}\"")
       return (
         switch type
-          when "value" then @setVariableToValue(name, valueOrExpr)
-          when "expression" then @setVariableToExpr(name, valueOrExpr)
+          when "value" then @setVariableToValue(name, valueOrExpr, unit)
+          when "expression" then @setVariableToExpr(name, valueOrExpr, unit)
       )
 
     isVariableDefined: (name) ->
@@ -397,6 +426,16 @@ module.exports = (env) ->
       return Promise.resolve().then( =>
         expr = builder.build(tokens)
         return expr.evaluate(varsInEvaluation)
+      )
+
+    evaluateExpressionWithUnits: (tokens, varsInEvaluation = {}) ->
+      builder = new varsAst.ExpressionTreeBuilder(@variables, @functions)
+      # do building async
+      return Promise.resolve().then( =>
+        expr = builder.build(tokens)
+        return expr.evaluate(varsInEvaluation).then( (value) =>
+          return { value: value, unit: expr.getUnit() }
+        )
       )
 
     evaluateNumericExpression: (tokens, varsInEvaluation = {}) ->

@@ -256,6 +256,8 @@ module.exports = {
                 type: "string"
               value:
                 type: "string"
+              unit:
+                type: "string"
           }, 
           {
             type: "object"
@@ -263,6 +265,8 @@ module.exports = {
               name:
                 type: "string"
               expression:
+                type: "string"
+              unit:
                 type: "string"
           }
         ]
