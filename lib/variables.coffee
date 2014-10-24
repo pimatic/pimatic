@@ -338,6 +338,7 @@ module.exports = (env) ->
 
 
     updateVariable: (name, type, valueOrExpr, unit) ->
+      console.log unit
       assert type in ["value", "expression"]
       unless @isVariableDefined(name)
         throw new Error("No variable with the name \"#{name}\" found.")
@@ -348,6 +349,7 @@ module.exports = (env) ->
       )
 
     addVariable: (name, type, valueOrExpr, unit) ->
+      console.log unit
       assert type in ["value", "expression"]
       if @isVariableDefined(name)
         throw new Error("There is already a variable with the name \"#{name}\"")

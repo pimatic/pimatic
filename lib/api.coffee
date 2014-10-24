@@ -835,6 +835,9 @@ variableParams = {
     enum: ["expression", "value"]
   valueOrExpression:
     type: t.string
+  unit:
+    type: t.string
+    optional: yes
 }
 
 variableResult = {
