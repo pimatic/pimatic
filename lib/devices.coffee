@@ -459,8 +459,9 @@ module.exports = (env) ->
             label: (if variable.label? then variable.label else "$#{name}")
             type: variable.type or "string"
           }
+
           if variable.unit? and variable.unit.length > 0
-            @attributes[name].unit = variable.unit 
+            @attributes[name].unit = variable.unit
 
           evaluate = ( => 
             # wait till veraibelmanager is ready
@@ -469,6 +470,9 @@ module.exports = (env) ->
                 info = @_vars.parseVariableExpression(variable.expression) 
                 @_vars.notifyOnChange(info.tokens, evaluate)
                 @_exprChangeListeners.push evaluate
+              if @attributes[name].type is "number"
+                unless @attributes[name].unit? and @attributes[name].unit.length > 0
+                  @attributes[name].unit = @_vars.inferUnitOfExpression(info.tokens)
               switch info.datatype
                 when "numeric" then @_vars.evaluateNumericExpression(info.tokens)
                 when "string" then @_vars.evaluateStringExpression(info.tokens)

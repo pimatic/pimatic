@@ -440,6 +440,11 @@ module.exports = (env) ->
         )
       )
 
+    inferUnitOfExpression: (tokens) ->
+      builder = new varsAst.ExpressionTreeBuilder(@variables, @functions)
+      expr = builder.build(tokens)
+      return expr.getUnit()
+
     evaluateNumericExpression: (tokens, varsInEvaluation = {}) ->
       return @evaluateExpression(tokens, varsInEvaluation)
 
