@@ -831,7 +831,9 @@ module.exports = (env) ->
                 else
                   throw new Error("Unknown permission declaration for action #{action}")
                 if hasPermission is yes
+                  @userManager.requestUsername = username
                   next()
+                  @userManager.requestUsername = null
                 else
                   res.send(403)
               )
@@ -853,7 +855,7 @@ module.exports = (env) ->
       declapi.createExpressRestApi(@app, env.api.pages.actions, this.pageManager, onError)
       declapi.createExpressRestApi(@app, env.api.devices.actions, this.deviceManager, onError)
 
-    getConfig: ->
+    getConfig: (password) ->
       #blank passwords
       blankSecrets = (schema, obj) ->
         switch schema.type
@@ -869,11 +871,28 @@ module.exports = (env) ->
                 blankSecrets schema.items, e
       schema = require("../config-schema") 
       configCopy = _.cloneDeep(@config)
-      delete configCopy['//']     
-      blankSecrets schema, configCopy
+      delete configCopy['//']
+      assert @userManager.requestUsername
+      if password?
+        unless typeof password is "string"
+          throw new Error("Password is not a string")
+        unless @userManager.checkLogin(@userManager.requestUsername, password)
+          throw new Error("Invalid Password")
+      else
+        blankSecrets schema, configCopy
       return configCopy
 
     updateConfig: (config) ->
+      schema = require("../config-schema")
+      @_validateConfig(config, schema)
+      assert Array.isArray @config.plugins
+      assert Array.isArray @config.devices
+      assert Array.isArray @config.pages
+      assert Array.isArray @config.groups
+      @_checkConfig(@config)
+      @config = config
+      @saveConfig()
+      @restart()
       return
 
 

@@ -125,10 +125,14 @@ api.framework = {
       permission:
         action: "restart"
     getConfig:
-      description: "Get the config"
+      description: "Get the config, if no password is provided password fields will be blanked"
       rest:
         type: "GET"
         url: '/api/config'
+      params:
+        password:
+          type: t.string
+          optional: yes
       result:
         config:
           description: "the config"
