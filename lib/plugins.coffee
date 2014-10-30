@@ -280,11 +280,11 @@ module.exports = (env) ->
 
       for pConf, i in @pluginsConfig
         do (pConf, i) =>
-          assert pConf?
-          assert pConf instanceof Object
-          assert pConf.plugin? and typeof pConf.plugin is "string" 
-
           chain = chain.then( () =>
+            assert pConf?
+            assert pConf instanceof Object
+            assert pConf.plugin? and typeof pConf.plugin is "string" 
+
             fullPluginName = "pimatic-#{pConf.plugin}"
             return Promise.try( =>     
               # If the plugin folder already exist
@@ -312,11 +312,11 @@ module.exports = (env) ->
                   @registerPlugin(plugin, pConf, configSchema)
                 )
               )
-            ).catch( (error) ->
-              # If an error occures log an ignore it.
-              env.logger.error error.message
-              env.logger.debug error.stack
             )
+          ).catch( (error) ->
+            # If an error occures log an ignore it.
+            env.logger.error error.message
+            env.logger.debug error.stack
           )
 
       return chain
