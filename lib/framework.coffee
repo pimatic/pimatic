@@ -475,11 +475,9 @@ module.exports = (env) ->
           switch err.code 
             when "EACCES" then msg += "Are you root?."
             when "EADDRINUSE" then msg += "Is a server already running?"
-            else msg = null
-          if msg?
-            env.logger.error msg
-            env.logger.debug err.stack
-            err.silent = yes  
+          env.logger.error msg
+          env.logger.debug err.stack
+          err.silent = yes  
           throw err
 
       listenPromises = []
@@ -874,6 +872,10 @@ module.exports = (env) ->
       delete configCopy['//']     
       blankSecrets schema, configCopy
       return configCopy
+
+    updateConfig: (config) ->
+      return
+
 
     saveConfig: ->
       assert @config?

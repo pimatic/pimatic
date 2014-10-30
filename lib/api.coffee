@@ -135,7 +135,18 @@ api.framework = {
           type: t.object
       permission:
         scope: "config"
-        access: "read"        
+        access: "read"
+    updateConfig:
+      description: "Update the config"
+      rest:
+        type: "POST"
+        url: '/api/config'
+      params:
+        config:
+          type: t.object
+      permission:
+        scope: "config"
+        access: "write"        
 }
 
 api.devices = {
