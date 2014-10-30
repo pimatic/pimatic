@@ -885,11 +885,44 @@ module.exports = (env) ->
     updateConfig: (config) ->
       schema = require("../config-schema")
       @_validateConfig(config, schema)
-      assert Array.isArray @config.plugins
-      assert Array.isArray @config.devices
-      assert Array.isArray @config.pages
-      assert Array.isArray @config.groups
-      @_checkConfig(@config)
+      assert Array.isArray config.plugins
+      assert Array.isArray config.devices
+      assert Array.isArray config.pages
+      assert Array.isArray config.groups
+      @_checkConfig(config)
+
+      for pConf in config.plugins
+        fullPluginName = "pimatic-#{pConf.plugin}"
+        packageInfo = @pluginManager.getInstalledPackageInfo(fullPluginName)
+        if packageInfo?.configSchema?
+          pathToSchema = path.resolve(
+            @pluginManager.pathToPlugin(fullPluginName), 
+            packageInfo.configSchema
+          )
+          pluginConfigSchema = require(pathToSchema)
+          @_validateConfig(pConf, pluginConfigSchema, "config of #{fullPluginName}")
+        else
+          env.logger.warn(
+            "package.json of \"#{fullPluginName}\" has no \"configSchema\" property. " +
+            "Could not validate config."
+          )
+
+      for deviceConfig in config.devices
+        classInfo = @deviceManager.deviceClasses[deviceConfig.class]
+        unless classInfo?
+          env.logger.debug("Unknown device class \"#{deviceConfig.class}\"")
+          continue
+        warnings = []
+        classInfo.prepareConfig(deviceConfig) if classInfo.prepareConfig?
+        @_validateConfig(
+          deviceConfig, 
+          classInfo.configDef, 
+            "config of device #{deviceConfig.id}"
+        )
+        declapi.checkConfig(classInfo.configDef.properties, deviceConfig, warnings)
+        for w in warnings
+          env.logger.warn("Device configuration of #{deviceConfig.id}: #{w}")
+
       @config = config
       @saveConfig()
       @restart()
