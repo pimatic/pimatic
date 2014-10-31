@@ -662,8 +662,8 @@ module.exports = (env) ->
           The id of #{device.id} contains a non alphanumeric letter or symbol.
           This could lead to errors.
         """
-      for reservedWord in ["and", "or", "then"]
-        if device.name.indexOf(" and ") isnt -1
+      for reservedWord in [" and ", " or ", " then ", " is ", " turn ", " on ", " off "]
+        if device.name.indexOf(reservedWord) isnt -1
           env.logger.warn """
             Name of device "#{device.id}" contains an "#{reservedWord}". 
             This could lead to errors in rules.
