@@ -666,7 +666,7 @@ module.exports = (env) ->
           The id of #{device.id} contains a non alphanumeric letter or symbol.
           This could lead to errors.
         """
-      for reservedWord in [" and ", " or ", " then ", " is ", " turn ", " on ", " off "]
+      for reservedWord in [" and ", " or "]
         if device.name.indexOf(reservedWord) isnt -1
           env.logger.warn """
             Name of device "#{device.id}" contains an "#{reservedWord}". 
