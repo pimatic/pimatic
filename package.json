@@ -45,6 +45,7 @@
     "decl-api": "0.0.15",
     "express": "3.4.7",
     "fs.extra": "1.2.1",
+    "human-format": "^0.2.0",
     "i18n": "0.4.*",
     "jayschema": "~0.2.7",
     "knex": "git+https://github.com/tgriesser/knex.git#07b2f8c41f4732f5098c3d2c81ea5bcedb5bfe4a",
@@ -80,7 +81,8 @@
     "jayschema",
     "relaxed-json",
     "cjson",
-    "source-map-support"
+    "source-map-support",
+    "human-format"
   ],
   "devDependencies": {
     "grunt-cli": "0.1.11",

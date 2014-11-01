@@ -9,6 +9,7 @@ Promise = require 'bluebird'
 _ = require 'lodash'
 S = require 'string'
 M = require './matcher'
+humanFormat = require 'human-format'
 
 varsAst = require './variables-ast-builder'
 
@@ -179,12 +180,15 @@ module.exports = (env) ->
             type: "string"
             optional: yes
         exec: (number, decimals, unit) ->
-          unless decimals?
-            decimals = 2
           unless unit?
-            unit = this.units[0] or ""
-          formated = Number(number).toFixed(decimals)
-          return "#{formated}#{unit}"
+            info = humanFormat.raw(number, unit: this.units[0] )
+            formated = (if decimals? then Number(info.num) else info.num)
+            return "#{formated}#{info.prefix}#{info.unit}"
+          else
+            unless decimals?
+              decimals = 2
+            formated = Number(number).toFixed(decimals)
+            return "#{formated}#{unit}"
     }
 
     constructor: (@framework, @variablesConfig) ->

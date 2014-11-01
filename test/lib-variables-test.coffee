@@ -164,8 +164,15 @@ describe "VariableManager", ->
 
     it 'should format the value', (finish) ->
       varManager.evaluateExpressionWithUnits(["formatNumber", "(", "$a", ")"]).then( (result) =>
-        assert result.value is '1.00V'
+        assert result.value is '1V'
         assert result.unit is ''
         finish()
       ).catch(finish)
 
+    it 'should format the value with prefix', (finish) ->
+      varManager.setVariableToValue('a', 1000, 'V')
+      varManager.evaluateExpressionWithUnits(["formatNumber", "(", "$a", ")"]).then( (result) =>
+        assert result.value is '1kV'
+        assert result.unit is ''
+        finish()
+      ).catch(finish)
