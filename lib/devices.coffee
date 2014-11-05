@@ -709,7 +709,8 @@ module.exports = (env) ->
         if device.attributes[name]?
           meta = device._attributesMeta[name]
           unless meta? then continue
-          meta.value = valueAndTime.value
+          # Do not set `meta.value` here, because internal state and meta could be divergent
+          # Should be better handled in a new pimatic "major" version
           meta.history = [t:valueAndTime.time, v: valueAndTime.value]
 
       for extension in @deviceConfigExtensions
