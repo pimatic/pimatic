@@ -493,10 +493,6 @@ module.exports = (env) ->
   The Variable Predicate Provider
   ----------------
   Handles comparision of variables
-
-  * _device_ is present
-  * _device_ is not present
-  * _device_ is absent
   ####
   class VariablePredicateProvider extends PredicateProvider
 
@@ -506,9 +502,9 @@ module.exports = (env) ->
       result = null
 
       M(input, context)
-        .matchNumericExpression( (next, leftTokens) =>
+        .matchAnyExpression( (next, leftTokens) =>
           next.matchComparator('number', (next, comparator) =>
-            next.matchNumericExpression( (next, rightTokens) =>
+            next.matchAnyExpression( (next, rightTokens) =>
               result = {
                 leftTokens
                 rightTokens
@@ -575,12 +571,11 @@ module.exports = (env) ->
     getType: -> 'state'
 
     _evaluate: ->
-      leftPromise = @framework.variableManager.evaluateNumericExpression(@leftTokens)
-      rightPromise = @framework.variableManager.evaluateNumericExpression(@rightTokens)
+      leftPromise = @framework.variableManager.evaluateExpression(@leftTokens)
+      rightPromise = @framework.variableManager.evaluateExpression(@rightTokens)
       return Promise.all([leftPromise, rightPromise]).then( ([leftValue, rightValue]) =>
         return state = @_compareValues(leftValue, rightValue)
       )
-
 
     # ### _compareValues()
     ###
