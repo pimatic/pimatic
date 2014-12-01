@@ -700,6 +700,35 @@ module.exports = (env) ->
       super()
     getType: -> 'event'
 
+
+  class StartupPredicateProvider extends PredicateProvider
+
+    constructor: (@framework) ->
+
+    parsePredicate: (input, context) ->
+      m = M(input, context).match(["pimatic is starting"])
+
+      if m.hadMatch()
+        match = m.getFullMatch()
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          predicateHandler: new StartupPredicateHandler(@framework)
+        }
+      else
+        return null
+
+  class StartupPredicateHandler extends PredicateHandler
+
+    constructor: (@framework) ->
+
+    setup: ->
+      @framework.once "after init", =>
+        @emit 'change', "event"
+      super()
+    getValue: -> Promise.resolve(false)
+    getType: -> 'event'
+
   return exports = {
     PredicateProvider
     PredicateHandler
@@ -711,4 +740,5 @@ module.exports = (env) ->
     ContactPredicateProvider
     ButtonPredicateProvider
     DeviceAttributeWatchdogProvider
+    StartupPredicateProvider
   }
