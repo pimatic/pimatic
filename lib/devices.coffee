@@ -52,6 +52,8 @@ module.exports = (env) ->
       # If it is a Boolean it must have labels
       if attr.type is t.boolean and not attr.labels then attr.labels = ["true", "false"]
       unless attr.label then attr.label = upperCaseFirst(attrName)
+      unless attr.discrete?
+        attr.discrete = (if type is "number" then no else yes)
 
     constructor: ->
       assert @id?, "the device has no id"
