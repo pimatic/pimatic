@@ -21,7 +21,7 @@ module.exports = (env) ->
         throw new Error('No username given')
       unless user.role?
         throw new Error('No role given')
-      @pages.push( user = {
+      @users.push( user = {
         username: username
         password: user.password
         role: user.role

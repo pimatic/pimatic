@@ -410,7 +410,10 @@ module.exports = (env) ->
         env.logger.error(error.message)
         env.logger.debug(error)
 
+
+
       checkPermissions = (socket, action) =>
+        if auth.enabled is no then return true
         hasPermission = no
         if action.permission? and action.permission.scope?
           hasPermission = @userManager.hasPermission(
@@ -429,34 +432,53 @@ module.exports = (env) ->
 
       @io.on('connection', (socket) =>
         declapi.createSocketIoApi(socket, actionsWithBindings, onError, checkPermissions)
-        username = socket.username
-        role = @userManager.getUserByUsername(username).role
-        permissions = @userManager.getPermissionsByUsername(username)
+        if auth.enabled is yes
+          username = socket.username
+          role = @userManager.getUserByUsername(username).role
+          permissions = @userManager.getPermissionsByUsername(username)
+        else
+          username = 'nobody'
+          role = 'no'
+          permissions = {
+            pages: "write"
+            rules: "write"
+            variables: "write"
+            messages: "write"
+            events: "write"
+            devices: "write"
+            groups: "write"
+            plugins: "write"
+            updates: "write"
+            controlDevices: true
+            restart: true
+          }
         socket.emit('hello', {
           username
           role
           permissions
         })
         if (
+          auth.enabled is no or
           @userManager.hasPermission(username, 'devices', 'read') or
           @userManager.hasPermission(username, 'pages', 'read')  
         )
           socket.emit('devices', (d.toJson() for d in @deviceManager.getDevices()) )
         else socket.emit('devices', [])
 
-        if @userManager.hasPermission(username, 'rules', 'read')      
+        if auth.enabled is no or @userManager.hasPermission(username, 'rules', 'read')      
           socket.emit('rules', (r.toJson() for r in @ruleManager.getRules()) )
         else socket.emit('rules', [])
 
-        if @userManager.hasPermission(username, 'rules', 'read')   
+        if auth.enabled is no or @userManager.hasPermission(username, 'rules', 'read')   
           socket.emit('variables', (v.toJson() for v in @variableManager.getVariables()) )
         else socket.emit('variables', [])
 
-        if @userManager.hasPermission(username, 'pages', 'read')  
+        if auth.enabled is no or @userManager.hasPermission(username, 'pages', 'read')  
           socket.emit('pages',  @pageManager.getPages() )
         else socket.emit('pages', [])
 
         needsRules = (
+          auth.enabled is no or 
           @userManager.hasPermission(username, 'devices', 'read') or
           @userManager.hasPermission(username, 'rules', 'read') or
           @userManager.hasPermission(username, 'variables', 'read') or
@@ -780,6 +802,8 @@ module.exports = (env) ->
         )
 
     _initRestApi: ->
+      auth = @config.settings.authentication
+
       onError = (error) =>
         if error instanceof Error
           message = error.message
@@ -787,10 +811,14 @@ module.exports = (env) ->
           env.logger.debug error.stack
 
       @app.get("/api/device/:deviceId/:actionName", (req, res, next) =>
-        username = req.session.username
-        hasPermission = @userManager.hasPermissionBoolean(
-          username, 'controlDevices'
-        )
+        if auth.enabled is yes
+          username = req.session.username
+          hasPermission = @userManager.hasPermissionBoolean(
+            username, 'controlDevices'
+          )
+        else
+          hasPermission = true
+          username = "nobody"
 
         if hasPermission
           deviceId = req.params.deviceId
@@ -817,20 +845,24 @@ module.exports = (env) ->
               type = (action.rest.type or 'get').toLowerCase()
               url = action.rest.url
               app[type](url, (req, res, next) =>
-                username = req.session.username
-                if action.permission.scope?
-                  hasPermission = @userManager.hasPermission(
-                    username, 
-                    action.permission.scope, 
-                    action.permission.access
-                  )
-                else if action.permission.action?
-                  hasPermission = @userManager.hasPermissionBoolean(
-                    username,
-                    action.permission.action
-                  )
+                if auth.enabled is yes
+                  username = req.session.username
+                  if action.permission.scope?
+                    hasPermission = @userManager.hasPermission(
+                      username, 
+                      action.permission.scope, 
+                      action.permission.access
+                    )
+                  else if action.permission.action?
+                    hasPermission = @userManager.hasPermissionBoolean(
+                      username,
+                      action.permission.action
+                    )
+                  else
+                    throw new Error("Unknown permission declaration for action #{action}")
                 else
-                  throw new Error("Unknown permission declaration for action #{action}")
+                  username = "nobody"
+                  hasPermission = yes
                 if hasPermission is yes
                   @userManager.requestUsername = username
                   next()
