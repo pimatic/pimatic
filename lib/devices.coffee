@@ -536,6 +536,87 @@ module.exports = (env) ->
       @_setPosition(position)
       return Promise.resolve()
 
+  class HeatingThermostat extends Device
+
+    attributes:
+      temperatureSetpoint:
+        label: "Temperature Setpoint"
+        description: "the temp that should be set"
+        type: "number"
+        discrete: true
+        unit: "°C"
+      valve:
+        description: "position of the valve"
+        type: "number"
+        discrete: true
+        unit: "%"
+      mode:
+        description: "the current mode"
+        type: "string"
+        enum: ["auto", "manu", "boost"]
+      battery:
+        description: "battery status"
+        type: "string"
+        enum: ["ok", "low"]
+      synced:
+        description: "pimatic and thermostat in sync"
+        type: "boolean"
+
+    actions:
+      changeModeTo:
+        params: 
+          mode: 
+            type: "string"
+      changeTemperatureTo:
+        params: 
+          temperatureSetpoint: 
+            type: "number"
+
+    template: "thermostat"
+
+    _mode: null
+    _temperatureSetpoint: null
+    _valve: null
+    _battery: null
+    _synced: false
+
+    getMode: () -> Promise.resolve(@_mode)
+    getTemperatureSetpoint: () -> Promise.resolve(@_temperatureSetpoint)
+    getValve: () -> Promise.resolve(@_valve)
+    getBattery: () -> Promise.resolve(@_battery)
+    getSynced: () -> Promise.resolve(@_synced)
+
+    _setMode: (mode) ->
+      if mode is @_mode then return
+      @_mode = mode
+      @emit "mode", @_mode
+
+    _setSynced: (synced) ->
+      if synced is @_synced then return
+      @_synced = synced
+      @emit "synced", @_synced
+
+    _setSetpoint: (temperatureSetpoint) ->
+      if temperatureSetpoint is @_temperatureSetpoint then return
+      @_temperatureSetpoint = temperatureSetpoint
+      @emit "temperatureSetpoint", @_temperatureSetpoint
+
+    _setValve: (valve) ->
+      if valve is @_valve then return
+      @_valve= valve
+      @emit "valve", @_valve
+
+    _setBattery: (battery) ->
+      if battery is @_battery then return
+      @_battery = battery
+      @emit "battery", @_battery
+
+    changeModeTo: (mode) ->
+      throw new Error("changeModeTo must be implemented by subclass")
+        
+    changeTemperatureTo: (temperatureSetpoint) ->
+      throw new Error("changeTemperatureTo must be implemented by subclass")
+
 
   class DeviceConfigExtension
     extendConfigShema: (schema) ->
@@ -825,4 +906,5 @@ module.exports = (env) ->
     DummySwitch
     DummyDimmer
     DummyShutter
+    HeatingThermostat
   }
