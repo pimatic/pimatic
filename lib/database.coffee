@@ -80,6 +80,9 @@ module.exports = (env) ->
 
         pending = []
 
+        if @dbSettings.client is "sqlite3"
+          pending.push @knex.raw("PRAGMA auto_vacuum=FULL;")
+
         pending.push createTableIfNotExists('message', (table) =>
           table.increments('id').primary()
           table.timestamp('time').index()
@@ -430,6 +433,8 @@ module.exports = (env) ->
         'attributeName', 
         'type'
       )
+
+    runVacuum: -> @knex.raw('VACUUM;')
 
 
     # queryDeviceAttributeEventsStream: (queryCriteria) ->

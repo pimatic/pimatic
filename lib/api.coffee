@@ -1268,6 +1268,15 @@ api.database = {
       permission:
         scope: "events"
         access: "read"
+    runVacuum:
+      description: "Run the sqlite3 vacuum pragma"
+      params: {}
+      rest:
+        type: 'GET'
+        url: '/api/database/vacuum'
+      permission:
+        scope: "config"
+        access: "write"
 }
 
 # all
