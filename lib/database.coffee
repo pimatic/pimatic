@@ -437,13 +437,41 @@ module.exports = (env) ->
     runVacuum: -> @knex.raw('VACUUM;')
 
 
-    # queryDeviceAttributeEventsStream: (queryCriteria) ->
-    #   query = @_queryDeviceAttributeEvents(queryCriteria)
-    #   query.stream( (stream)  =>
-    #     stream.on("data", (data) => console.log "data:", data )
-    #   ).then( =>
-    #     console.log "finished"
-    #   ).done()
+    checkDatabase: () ->
+      @knex('deviceAttribute').select(
+        'id'
+        'deviceId', 
+        'attributeName', 
+        'type'
+      ).then( (results) =>
+        problems = []
+        for result in results
+          device = @framework.deviceManager.getDeviceById(result.deviceId)
+          unless device?
+            problems.push {
+              id: result.id
+              reason: "No device with the id \"#{result.deviceId}\" found."
+              action: "delete"
+            }
+          else
+            unless device.hasAttribute(result.attributeName)
+              problems.push {
+                id: result.id
+                reason: "Device \"#{result.deviceId}\" has no attribute with the name " +
+                        "\"#{result.attributeName}\" found."
+                action: "delete"
+              }
+            else
+              attribute = device.attributes[result.attributeName]
+              if attribute.type isnt result.type
+                problems.push {
+                  id: result.id
+                  reason: "Attribute \"#{result.attributeName}\" of  \"#{result.deviceId}\" has " +
+                          "the wrong type"
+                  action: "delete"
+                }
+        return problems
+      )
 
     querySingleDeviceAttributeEvents: (deviceId, attributeName, queryCriteria = {}) ->
       {

@@ -1277,6 +1277,18 @@ api.database = {
       permission:
         scope: "config"
         access: "write"
+    checkDatabase: 
+      description: "Check database and config integrity"
+      params: {}
+      rest:
+        type: 'GET'
+        url: '/api/database/check'
+      result:
+        problems:
+          type: t.array
+      permission:
+        scope: "config"
+        access: "write"  
 }
 
 # all
