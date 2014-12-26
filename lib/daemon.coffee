@@ -27,6 +27,7 @@ THE SOFTWARE.
 
 fs = require 'fs'
 daemon = require 'daemon'
+stream = require 'logrotate-stream'
 
 exports.printStatus = (st) ->
   if st.pid
@@ -73,9 +74,8 @@ exports.start = ({ pidfile, logfile, run, success, failure }) ->
   start = (err) ->
     return failure(err) if err
     if process.env['PIMATIC_DAEMONIZED']? 
-      
       # pipe strams to lofile:
-      logStream = fs.createWriteStream(logfile, flags: "a")
+      logStream = stream(file: logfile, size: '1m', keep: 3)
       process.stdout.write = ((write) ->
         (string, encoding, fd) ->
           logStream.write string
