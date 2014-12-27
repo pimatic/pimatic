@@ -690,6 +690,8 @@ module.exports = (env) ->
           env.actions.ShutterActionProvider
           env.actions.StopShutterActionProvider
           env.actions.ToggleActionProvider
+          env.actions.HeatingThermostatModeActionProvider
+          env.actions.HeatingThermostatSetpointActionProvider
         ]
         for actProv in defaultActionProvider
           actProvInst = new actProv(this)

@@ -609,6 +609,191 @@ module.exports = (env) ->
     # ### executeRestoreAction()
     executeRestoreAction: (simulate) => Promise.resolve(@_doExecuteAction(simulate, @lastValue))
 
+
+  class HeatingThermostatModeActionProvider extends ActionProvider
+
+    constructor: (@framework) ->
+
+    # ### parseAction()
+    ###
+    Parses the above actions.
+    ###
+    parseAction: (input, context) =>
+      # The result the function will return:
+      retVar = null
+
+      thermostats = _(@framework.deviceManager.devices).values().filter( 
+        (device) => device.hasAction("changeModeTo") 
+      ).value()
+
+      if thermostats.length is 0 then return
+
+      device = null
+      valueTokens = null
+      match = null
+
+      # Try to match the input string with:
+      M(input, context)
+        .match('set mode of ')
+        .matchDevice(thermostats, (next, d) =>
+          next.match(' to ')
+            .matchStringWithVars( (next, ts) =>
+              m = next.match(' mode', optional: yes)
+              if device? and device.id isnt d.id
+                context?.addError(""""#{input.trim()}" is ambiguous.""")
+                return
+              device = d
+              valueTokens = ts
+              match = m.getFullMatch()
+            )
+        )
+
+      if match?
+        if valueTokens.length is 1 and not isNaN(valueTokens[0])
+          value = valueTokens[0] 
+          assert(not isNaN(value))
+          modes = ["eco", "boost", "auto", "manu", "comfy"] 
+          # TODO: Implement eco & comfy in changeModeTo method!
+          if modes.indexOf(value) < -1
+            context?.addError("Allowed modes: eco,boost,auto,manu,comfy")
+            return
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new HeatingThermostatModeActionHandler(@framework, device, valueTokens)
+        }
+      else 
+        return null
+
+
+  class HeatingThermostatModeActionHandler extends ActionHandler
+
+    constructor: (@framework, @device, @valueTokens) ->
+      assert @device?
+      assert @valueTokens?
+
+    ###
+    Handles the above actions.
+    ###
+    _doExecuteAction: (simulate, value) =>
+      return (
+        if simulate
+          __("would set mode %s to %s", @device.name, value)
+        else
+          @device.changeModeTo(value).then( => __("set mode %s to %s", @device.name, value) )
+      )
+
+    # ### executeAction()
+    executeAction: (simulate) => 
+      @framework.variableManager.evaluateStringExpression(@valueTokens).then( (value) =>
+        @lastValue = value
+        return @_doExecuteAction(simulate, value)
+      )
+
+    # ### hasRestoreAction()
+    hasRestoreAction: -> yes
+    # ### executeRestoreAction()
+    executeRestoreAction: (simulate) => Promise.resolve(@_doExecuteAction(simulate, @lastValue))
+
+
+
+  class HeatingThermostatSetpointActionProvider extends ActionProvider
+
+    constructor: (@framework) ->
+
+    # ### parseAction()
+    ###
+    Parses the above actions.
+    ###
+    parseAction: (input, context) =>
+      # The result the function will return:
+      retVar = null
+
+      thermostats = _(@framework.deviceManager.devices).values().filter( 
+        (device) => device.hasAction("changeTemperatureTo") 
+      ).value()
+
+      if thermostats.length is 0 then return
+
+      device = null
+      valueTokens = null
+      match = null
+
+      # Try to match the input string with:
+      M(input, context)
+        .match('set temp of ')
+        .matchDevice(thermostats, (next, d) =>
+          next.match(' to ')
+            .matchNumericExpression( (next, ts) =>
+              m = next.match('°C', optional: yes)
+              if device? and device.id isnt d.id
+                context?.addError(""""#{input.trim()}" is ambiguous.""")
+                return
+              device = d
+              valueTokens = ts
+              match = m.getFullMatch()
+            )
+        )
+
+      if match?
+        if valueTokens.length is 1 and not isNaN(valueTokens[0])
+          value = valueTokens[0] 
+          assert(not isNaN(value))
+          value = parseFloat(value)
+          if value < 0.0
+            context?.addError("Can't set temp to a negativ value.")
+            return
+          if value > 32.0
+            context?.addError("Can't set temp higher than 32°C.")
+            return
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new HeatingThermostatSetpointActionHandler(@framework, device, valueTokens)
+        }
+      else 
+        return null
+
+  class HeatingThermostatSetpointActionHandler extends ActionHandler
+
+    constructor: (@framework, @device, @valueTokens) ->
+      assert @device?
+      assert @valueTokens?
+
+    # _clampVal: (value) ->
+    #   assert(not isNaN(value))
+    #   return (switch
+    #     when value > 32 then 32
+    #     when value < 0 then 0
+    #     else value
+    #   )
+
+    ###
+    Handles the above actions.
+    ###
+    _doExecuteAction: (simulate, value) =>
+      return (
+        if simulate
+          __("would set temp of %s to %s°C", @device.name, value)
+        else
+          @device.changeTemperatureTo(value).then( => 
+            __("set temp of %s to %s°C", @device.name, value) 
+          )
+      )
+
+    # ### executeAction()
+    executeAction: (simulate) => 
+      @framework.variableManager.evaluateNumericExpression(@valueTokens).then( (value) =>
+        # value = @_clampVal value
+        @lastValue = value
+        return @_doExecuteAction(simulate, value)
+      )
+
+    # ### hasRestoreAction()
+    hasRestoreAction: -> yes
+    # ### executeRestoreAction()
+    executeRestoreAction: (simulate) => Promise.resolve(@_doExecuteAction(simulate, @lastValue))
+
   # Export the classes so that they can be accessed by the framework
   return exports = {
     ActionHandler
