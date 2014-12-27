@@ -805,4 +805,6 @@ module.exports = (env) ->
     ShutterActionProvider
     StopShutterActionProvider
     ToggleActionProvider
+    HeatingThermostatModeActionProvider
+    HeatingThermostatSetpointActionProvider
   }
