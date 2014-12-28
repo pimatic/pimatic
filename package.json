@@ -89,8 +89,6 @@
     "grunt-cli": "0.1.11",
     "grunt": "0.4.2",
     "grunt-coffeelint": "0.0.8",
-    "grunt-groc": "0.4.0",
-    "grunt-ftp-deploy": "0.0.10",
     "grunt-mocha-test": "0.8.1",
     "blanket": "1.1.5",
     "coffee-errors": "0.8.4",
