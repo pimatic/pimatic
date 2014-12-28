@@ -629,8 +629,13 @@ module.exports = (env) ->
       @_synced = true
       super()
 
-    changeModeTo: (mode) -> @_setMode(mode)
-    changeTemperatureTo: (temperatureSetpoint) -> @_setSetpoint(temperatureSetpoint)
+    changeModeTo: (mode) -> 
+      @_setMode(mode)
+      return Promise.resolve()
+      
+    changeTemperatureTo: (temperatureSetpoint) -> 
+      @_setSetpoint(temperatureSetpoint)
+      return Promise.resolve()
 
 
   class DeviceConfigExtension
