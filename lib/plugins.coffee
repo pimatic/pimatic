@@ -101,7 +101,13 @@ module.exports = (env) ->
         "pimatic-pushover",
         "pimatic-sunrise",
         "pimatic-voice-recognition",
-        "pimatic-mail"
+        "pimatic-mail",
+        "pimatic-ds18b20",
+        "pimatic-homeduino",
+        "pimatic-lcd",
+        "pimatic-max",
+        "pimatic-fritz",
+        "pimatic-mpd"
       ]
       waiting = []
       found = {}
