@@ -42,7 +42,7 @@
     "cross-spawn": "^0.2.3",
     "daemon": "1.1.0",
     "date-format-lite": "0.5.0",
-    "decl-api": "0.0.16",
+    "decl-api": "0.0.17",
     "express": "3.4.7",
     "fs.extra": "1.2.1",
     "human-format": "^0.2.0",
