@@ -598,24 +598,28 @@ module.exports = (env) ->
 
     parsePredicate: (input, context) ->
       variableName = null
-      mustChange = null
+      mode = null
 
       setVariableName = (next, name) => variableName = name.substring(1)
-      setMustChange = (next, match) => mustChange = (match.trim() is "changes")
+      setMode = (next, match) => mode = match.trim()
 
       m = M(input, context)
         .matchVariable(setVariableName)
-        .match([" changes", "gets updated"], setMustChange)
+        .match([
+          " changes", " gets updated", 
+          " increased", " decreased", 
+          " is increasing", " is decreasing"
+        ], setMode)
 
       if m.hadMatch()
         match = m.getFullMatch()
         assert typeof variableName is "string"
-        assert typeof mustChange is "boolean"
+        assert mode?
         return {
           token: match
           nextInput: input.substring(match.length)
           predicateHandler: new VariableUpdatedPredicateHandler(
-            @framework, variableName, mustChange
+            @framework, variableName, mode
           )
         }
       else
@@ -623,22 +627,55 @@ module.exports = (env) ->
 
   class VariableUpdatedPredicateHandler extends PredicateHandler
 
-    constructor: (@framework, @variableName, @mustChange) ->
+    constructor: (@framework, @variableName, @mode) ->
 
     setup: ->
       @lastValue = null
+      @state = false
       @changeListener = (variable, value) =>
         unless variable.name is @variableName then return
-        if @mustChange and @lastValue is value then return
+        switch @mode
+          when 'changes'
+            if @lastValue isnt value
+              @emit 'change', "event"
+          when 'gets updated'
+            @emit 'change', "event"
+          when 'increased'
+            if value > @lastValue
+              @emit 'change', "event"
+          when 'decreased'
+            if value < @lastValue
+              @emit 'change', "event"
+          when 'is increasing'
+            if value > @lastValue
+              if not @state
+                @state = true
+                @emit 'change', true
+            else
+              if @state
+                @state = false
+                @emit 'change', false
+          when 'is decreasing'
+            if value < @lastValue
+              if not @state
+                @state = true
+                @emit 'change', true
+            else
+              if @state
+                @state = false
+                @emit 'change', false
         @lastValue = value
-        @emit 'change', "event"
+       
       @framework.variableManager.on("variableValueChanged", @changeListener)
       super()
-    getValue: -> Promise.resolve(false)
+    getValue: -> Promise.resolve(@state)
     destroy: ->
       @framework.variableManager.removeListener("variableValueChanged", @changeListener)
       super()
-    getType: -> 'event'
+    getType: -> 
+      switch @mode
+        when 'is increasing', 'is decreasing' then return 'state'
+        else return 'event'
 
   class ButtonPredicateProvider extends PredicateProvider
 
