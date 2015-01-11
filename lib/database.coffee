@@ -460,14 +460,18 @@ module.exports = (env) ->
           unless device?
             problems.push {
               id: result.id
-              reason: "No device with the id \"#{result.deviceId}\" found."
+              deviceId: result.deviceId
+              attribute: result.attributeName
+              description: "No device with the id \"#{result.deviceId}\" found."
               action: "delete"
             }
           else
             unless device.hasAttribute(result.attributeName)
               problems.push {
                 id: result.id
-                reason: "Device \"#{result.deviceId}\" has no attribute with the name " +
+                deviceId: result.deviceId
+                attribute: result.attributeName
+                description: "Device \"#{result.deviceId}\" has no attribute with the name " +
                         "\"#{result.attributeName}\" found."
                 action: "delete"
               }
@@ -476,12 +480,19 @@ module.exports = (env) ->
               if attribute.type isnt result.type
                 problems.push {
                   id: result.id
-                  reason: "Attribute \"#{result.attributeName}\" of  \"#{result.deviceId}\" has " +
-                          "the wrong type"
+                  deviceId: result.deviceId
+                  attribute: result.attributeName
+                  description: "Attribute \"#{result.attributeName}\" of  \"#{result.deviceId}\" " +
+                           "has the wrong type"
                   action: "delete"
                 }
         return problems
       )
+
+    deleteDeviceAttribute: (id) ->
+      return @knex('deviceAttribute')
+        .where('id', id)
+        .del()
 
     querySingleDeviceAttributeEvents: (deviceId, attributeName, queryCriteria = {}) ->
       {

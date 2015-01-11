@@ -51,7 +51,8 @@ module.exports = (env) ->
     hasPermission: (username, scope, access) ->
       assert scope in [
         "pages", "rules", "variables", "messages", "config"
-        "events", "devices", "groups", "plugins", "updates"
+        "events", "devices", "groups", "plugins", "updates",
+        "database"
       ]
       assert access in ["read", "write", "none"]
       user = @getUserByUsername(username)

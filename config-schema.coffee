@@ -309,6 +309,7 @@ module.exports = {
             groups: "write"
             plugins: "write"
             updates: "write"
+            config: "write"
             controlDevices: true
             restart: true
         },
@@ -324,6 +325,7 @@ module.exports = {
             groups: "none"
             plugins: "none"
             updates: "none"
+            config: "none"
             controlDevices: true
             restart: false
         }

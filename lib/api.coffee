@@ -1275,7 +1275,7 @@ api.database = {
         type: 'GET'
         url: '/api/database/vacuum'
       permission:
-        scope: "config"
+        scope: "database"
         access: "write"
     checkDatabase: 
       description: "Check database and config integrity"
@@ -1287,8 +1287,19 @@ api.database = {
         problems:
           type: t.array
       permission:
-        scope: "config"
-        access: "write"  
+        scope: "database"
+        access: "write"
+    deleteDeviceAttribute:
+      description: "Deletes a device attribute from the database"
+      rest:
+        type: 'DELETE'
+        url: '/api/database/device-attribue/by-id'
+      params:
+        id:
+          type: "number"
+      permission:
+        scope: "database"
+        access: "write"
 }
 
 # all

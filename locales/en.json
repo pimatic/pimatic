@@ -186,5 +186,8 @@
 	"Keep me logged in": "Keep me logged in",
 	"Link": "Link",
 	"Config": "Config",
-	"Unit": "Unit"
+	"Unit": "Unit",
+	"Database": "Database",
+	"Problems": "Problems",
+	"No problems found.": "No problems found."
 }
