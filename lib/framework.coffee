@@ -505,7 +505,7 @@ module.exports = (env) ->
       listenPromises = []
       if @app.httpsServer?
         httpsServerConfig = @config.settings.httpsServer
-        @app.httpsServer.on 'error', genErrFunc(@config.settings.httpsServer)
+        @app.httpsServer.on 'error', genErrFunc(httpsServerConfig)
         awaiting = Promise.promisify(@app.httpsServer.listen, @app.httpsServer)(
           httpsServerConfig.port, httpsServerConfig.hostname
         )

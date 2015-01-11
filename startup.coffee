@@ -32,7 +32,7 @@ startup = =>
 
   # Setup the framework
   env.framework = (require './lib/framework') env 
-  Promise.try( =>
+  return Promise.try( =>
     framework = new env.framework.Framework configFile
     promise = framework.init()
     return promise.then( => framework )

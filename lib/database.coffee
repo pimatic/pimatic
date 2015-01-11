@@ -59,71 +59,22 @@ module.exports = (env) ->
         require.resolve(dbPackageToInstall)
       catch e
         unless e.code is 'MODULE_NOT_FOUND' then throw e
-        env.logger.info("Installing database package #{dbPackageToInstall}")
+        env.logger.info(
+          "Installing database package #{dbPackageToInstall}, this can take some minutes"
+        )
         pending = @framework.pluginManager.spawnNpm(['install', dbPackageToInstall])
 
-      pending = pending.then( =>
+      return pending.then( =>
         @knex = Knex.initialize(
           client: @dbSettings.client
           connection: connection
         )
         @knex.subquery = (query) -> this.raw("(#{query.toString()})")
-        createTableIfNotExists = (tableName, cb) =>
-          @knex.schema.hasTable(tableName).then( (exists) =>
-            if not exists        
-              return @knex.schema.createTable(tableName, cb).then(( =>
-                env.logger.info("#{tableName} table created!")
-              ), (error) =>
-                env.logger.error(error) 
-              )
-          )
-
-        pending = []
-
         if @dbSettings.client is "sqlite3"
-          pending.push @knex.raw("PRAGMA auto_vacuum=FULL;")
-
-        pending.push createTableIfNotExists('message', (table) =>
-          table.increments('id').primary()
-          table.timestamp('time').index()
-          table.integer('level')
-          table.text('tags')
-          table.text('text')
-        )
-        pending.push createTableIfNotExists('deviceAttribute', (table) =>
-          table.increments('id').primary()
-          table.string('deviceId')
-          table.string('attributeName')
-          table.string('type')
-          table.timestamp('lastUpdate').nullable()
-          table.string('lastValue').nullable()
-        )
-
-        # add to old deviceAttribute table 
-        pending.push @knex.schema.table('deviceAttribute', (table) =>
-          table.timestamp('lastUpdate').nullable()
-          table.string('lastValue').nullable()
-        ).catch( (error) -> 
-          if error.errno is 1 then return #ignore
-          throw error
-        )
-
-        for tableName, tableInfo of dbMapping.attributeValueTables
-          pending.push createTableIfNotExists(tableName, (table) =>
-            table.increments('id').primary()
-            table.timestamp('time').index() 
-            table.integer('deviceAttributeId')
-              .references('id')
-              .inTable('deviceAttribute')
-            table[tableInfo.valueColumnType]('value')
-          ).then( =>
-            return @knex.raw("""
-              CREATE INDEX IF NOT EXISTS
-              deviceAttributeIdTime 
-              ON #{tableName} (deviceAttributeId, time);
-            """)
-          )
-
+          return @knex.raw("PRAGMA auto_vacuum=FULL;")
+      ).then( =>         
+        @_createTables()
+      ).then( =>     
         # Save log-messages
         @framework.on("messageLogged", ({level, msg, meta}) =>
           @saveMessageEvent(meta.timestamp, level, meta.tags, msg).done()
@@ -139,38 +90,97 @@ module.exports = (env) ->
 
         deleteExpiredEntriesInterval = 30 * 60 * 1000#ms
 
-        return Promise.all(pending).then( =>
-          return @knex.raw("""
-            CREATE INDEX IF NOT EXISTS
-            deviceAttributeDeviceIdAttributeName ON 
-            deviceAttribute(deviceId, attributeName);
-            CREATE INDEX IF NOT EXISTS
-            deviceAttributeDeviceId ON 
-            deviceAttribute(deviceId);
-            CREATE INDEX IF NOT EXISTS
-            deviceAttributeAttributeName ON 
-            deviceAttribute(attributeName);
-          """)
-        ).then( =>
-          setInterval( ( =>
-            env.logger.debug("deleteing expired device attributes") if @dbSettings.debug
-            @_deleteExpiredDeviceAttributes().catch( (error) =>
-              env.logger.error(error.message)
-              env.logger.debug(error.stack)
-            ).done()
-          ), deleteExpiredEntriesInterval)
+        setInterval( ( =>
+          env.logger.debug("deleteing expired device attributes") if @dbSettings.debug
+          @_deleteExpiredDeviceAttributes().catch( (error) =>
+            env.logger.error(error.message)
+            env.logger.debug(error.stack)
+          ).done()
+        ), deleteExpiredEntriesInterval)
 
-          setInterval( ( =>
-            env.logger.debug("deleteing expired messages") if @dbSettings.debug
-            @_deleteExpiredMessages().catch( (error) =>
-              env.logger.error(error.message)
+        setInterval( ( =>
+          env.logger.debug("deleteing expired messages") if @dbSettings.debug
+          @_deleteExpiredMessages().catch( (error) =>
+            env.logger.error(error.message)
+            env.logger.debug(error.stack)
+          ).done()
+        ), deleteExpiredEntriesInterval)
+
+        return
+      )
+
+      
+
+    _createTables: ->
+      pending = []
+
+      createTableIfNotExists = ( (tableName, cb) =>
+        @knex.schema.hasTable(tableName).then( (exists) =>
+          if not exists        
+            return @knex.schema.createTable(tableName, cb).then(( =>
+              env.logger.info("#{tableName} table created!")
+            ), (error) =>
+              env.logger.error(error)
               env.logger.debug(error.stack)
-            ).done()
-          ), deleteExpiredEntriesInterval)
-          return
+            )
+          else return
         )
       )
-      return pending
+
+      pending.push createTableIfNotExists('message', (table) =>
+        table.increments('id').primary()
+        table.timestamp('time').index()
+        table.integer('level')
+        table.text('tags')
+        table.text('text')
+      )
+      pending.push createTableIfNotExists('deviceAttribute', (table) =>
+        table.increments('id').primary()
+        table.string('deviceId')
+        table.string('attributeName')
+        table.string('type')
+        table.timestamp('lastUpdate').nullable()
+        table.string('lastValue').nullable()
+      )
+
+      # add to old deviceAttribute table 
+      pending.push @knex.schema.table('deviceAttribute', (table) =>
+        table.timestamp('lastUpdate').nullable()
+        table.string('lastValue').nullable()
+      ).catch( (error) -> 
+        if error.errno is 1 then return #ignore
+        throw error
+      )
+
+      for tableName, tableInfo of dbMapping.attributeValueTables
+        pending.push createTableIfNotExists(tableName, (table) =>
+          table.increments('id').primary()
+          table.timestamp('time').index() 
+          table.integer('deviceAttributeId')
+            .references('id')
+            .inTable('deviceAttribute')
+          table[tableInfo.valueColumnType]('value')
+        ).then( =>
+          return @knex.raw("""
+            CREATE INDEX IF NOT EXISTS
+            deviceAttributeIdTime 
+            ON #{tableName} (deviceAttributeId, time);
+          """)
+        )
+
+      return Promise.all(pending).then( =>
+        return @knex.raw("""
+          CREATE INDEX IF NOT EXISTS
+          deviceAttributeDeviceIdAttributeName ON 
+          deviceAttribute(deviceId, attributeName);
+          CREATE INDEX IF NOT EXISTS
+          deviceAttributeDeviceId ON 
+          deviceAttribute(deviceId);
+          CREATE INDEX IF NOT EXISTS
+          deviceAttributeAttributeName ON 
+          deviceAttribute(attributeName);
+        """)
+      )
 
     getDeviceAttributeLogging: () ->
       return _.clone(@dbSettings.deviceAttributeLogging)
