@@ -417,6 +417,36 @@ api.rules = {
       permission:
         scope: "rules"
         access: "read"
+    getPredicateDefaults:
+      rest:
+        type: "GET"
+        url: "/api/rules-parser/get-predicate-defaults"
+      description: "Get predicates the user can choose from"
+      params: {}
+      result:
+        defaults:
+          type: "object"
+       permission:
+        scope: "rules"
+        access: "read"
+    getPredicateInfo:
+      rest:
+        type: "GET"
+        url: "/api/rules-parser/get-predicate-info"
+      description: "Get predicates info"
+      params: {
+        input:
+          type: "string"
+        predicateProviderClass:
+          type: "string"
+          optional: yes
+      }
+      result:
+        elements:
+          type: "array"
+       permission:
+        scope: "rules"
+        access: "read"
     executeAction:
       rest:
         type: "POST"

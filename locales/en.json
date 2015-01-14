@@ -189,5 +189,10 @@
 	"Unit": "Unit",
 	"Database": "Database",
 	"Problems": "Problems",
-	"No problems found.": "No problems found."
+	"No problems found.": "No problems found.",
+	"Condition": "Condition",
+	"And": "And",
+	"Or": "Or",
+	"and": "and",
+	"or": "or"
 }

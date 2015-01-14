@@ -47,7 +47,7 @@ class Matcher
 
   # ###constructor()
   # Create a matcher for the input string, with the given parse context
-  constructor: (@input, @context = null, @prevInput = "") ->
+  constructor: (@input, @context = null, @prevInput = "", @elements = []) ->
 
   
   # ###match()
@@ -126,21 +126,28 @@ class Matcher
     nextInput = null
     match = null
     prevInputAndMatch = ""
+    elements = []
     if matches.length > 0
       longestMatch = _(matches).sortBy( (m) => m.match.length ).last()
       nextInput = longestMatch.nextToken
       match = longestMatch.match
       prevInputAndMatch = @prevInput + match
+      element = {
+        match: match
+        param: options.param
+        options: patterns
+      }
+      elements = @elements.concat element
       if callback?
         callback(
-          M(nextInput, @context, prevInputAndMatch), 
+          M(nextInput, @context, prevInputAndMatch, elements), 
           longestMatch.matchId
         )
     else if options.optional
       nextInput = @input
       prevInputAndMatch = @prevInput
 
-    return M(nextInput, @context, prevInputAndMatch)
+    return M(nextInput, @context, prevInputAndMatch, elements)
 
   # ###matchNumber()
   ###

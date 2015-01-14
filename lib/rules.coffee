@@ -304,7 +304,7 @@ module.exports = (env) ->
         tokens: tokens
       }
 
-    _parsePredicate: (predId, nextInput, context) =>
+    _parsePredicate: (predId, nextInput, context, predicateProviderClass) =>
       assert typeof predId is "string" and predId.length isnt 0
       assert typeof nextInput is "string"
       assert context?
@@ -331,6 +331,8 @@ module.exports = (env) ->
       # find a prdicate provider for that can parse and decide the predicate:
       parseResults = []
       for predProvider in @predicateProviders
+        if predicateProviderClass?
+          continue if predProvider.constructor.name isnt predicateProviderClass
         parseResult = predProvider.parsePredicate(nextInput, context)
         if parseResult?
           assert parseResult.token? and parseResult.token.length > 0
@@ -366,19 +368,19 @@ module.exports = (env) ->
 
           if predicate.justTrigger and predicate.for?
             context.addError(
-              "\"#{token}\" is markes as trigger, it can't be true for \"#{redicate.token}\"."
+              "\"#{token}\" is markes as trigger, it can't be true for \"#{predicate.token}\"."
             )
 
           if predicate.handler.getType() is 'event' and predicate.for?
             context.addError(
-              "\"#{token}\" is an event it can't be true for \"#{redicate.token}\"."
+              "\"#{token}\" is an event it can't be true for \"#{predicate.token}\"."
             )
 
         else
           context.addError(
             """Next predicate of "#{nextInput}" is ambiguous."""
           )
-      return { predicate, token, nextInput }
+      return { predicate, token, nextInput, elements: parseResult?.elements }
 
     _parseTimePart: (nextInput, prefixToken, context, options = null) ->
       # Parse the for-Suffix:
@@ -1018,14 +1020,34 @@ module.exports = (env) ->
       for p in result.predicates
         delete p.handler
 
+      tree = (new rulesAst.BoolExpressionTreeBuilder())
+        .build(result.tokens, result.predicates)
+
       return {
         tokens: result.tokens
         predicates: result.predicates
+        tree: tree
         autocomplete: context.autocomplete
         errors: context.errors
         format: context.format
         warnings: context.warnings
       }
+
+    getPredicateDefaults: () ->
+      defaults = []
+      for p in @predicateProviders
+        if p.defaults?
+          for d in p.defaults
+            d.predicateProviderClass = p.constructor.name
+            defaults.push d
+      return defaults
+
+
+    getPredicateInfo: (input, predicateProviderClass) ->
+      context = @_createParseContext()
+      #console.log current, start
+      result = @_parsePredicate("id", input, context, predicateProviderClass)
+      return result?.elements
 
     executeAction: (actionString, simulate = false, logging = yes) =>
       context = @_createParseContext()
