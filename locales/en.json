@@ -194,5 +194,16 @@
 	"And": "And",
 	"Or": "Or",
 	"and": "and",
-	"or": "or"
+	"or": "or",
+	"all": "all",
+	"OK": "OK",
+	"Predicate": "Predicate",
+	"Select Event": "Select Event",
+	"Available Events": "Available Events",
+	"Event": "Event",
+	"switch to text input": "switch to text input",
+	"switch to text input mode": "switch to text input mode",
+	"switch to text mode": "switch to text mode",
+	"switch to gui mode": "switch to gui mode",
+	"Duration": "Duration"
 }

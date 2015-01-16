@@ -298,7 +298,10 @@ module.exports = (env) ->
               token = m.getFullMatch()
               assert S(nextInput.toLowerCase()).startsWith(token.toLowerCase())
               nextInput = nextInput.substring(token.length)
-
+      if tokens.length > 0
+        lastToken = tokens[tokens.length-1]
+        if lastToken in ["and", "or"]
+          context.addError("""Expected a new predicate after last "#{lastToken}".""")
       return {
         predicates: predicates
         tokens: tokens
@@ -333,12 +336,14 @@ module.exports = (env) ->
       for predProvider in @predicateProviders
         if predicateProviderClass?
           continue if predProvider.constructor.name isnt predicateProviderClass
+        context.elements = {}
         parseResult = predProvider.parsePredicate(nextInput, context)
         if parseResult?
           assert parseResult.token? and parseResult.token.length > 0
           assert parseResult.nextInput? and typeof parseResult.nextInput is "string"
           assert parseResult.predicateHandler?
           assert parseResult.predicateHandler instanceof env.predicates.PredicateHandler
+          parseResult.elements = context.elements[parseResult.token]
           parseResults.push parseResult
 
       switch parseResults.length
@@ -351,11 +356,11 @@ module.exports = (env) ->
           parseResult = parseResults[0]
           token += parseResult.token
           assert parseResult.token?
-          assert S(nextInput.toLowerCase()).startsWith(parseResult.token.toLowerCase())
+          #assert S(nextInput.toLowerCase()).startsWith(parseResult.token.toLowerCase())
           predicate.token = parseResult.token
           nextInput = parseResult.nextInput
           predicate.handler = parseResult.predicateHandler
-
+          context.elements = {}
           timeParseResult = @_parseTimePart(nextInput, " for ", context)
           if timeParseResult?
             token += timeParseResult.token
@@ -380,7 +385,11 @@ module.exports = (env) ->
           context.addError(
             """Next predicate of "#{nextInput}" is ambiguous."""
           )
-      return { predicate, token, nextInput, elements: parseResult?.elements }
+      return { 
+        predicate, token, nextInput, 
+        elements: parseResult?.elements 
+        forElements: timeParseResult?.elements
+      }
 
     _parseTimePart: (nextInput, prefixToken, context, options = null) ->
       # Parse the for-Suffix:
@@ -400,7 +409,8 @@ module.exports = (env) ->
         assert S(nextInput).startsWith(token)
         timeToken = S(token).chompLeft(prefixToken).s
         nextInput = nextInput.substring(token.length)
-        return {token, nextInput, timeToken, timeExprTokens, unit}
+        elements = m.elements
+        return {token, nextInput, timeToken, timeExprTokens, unit, elements}
       else
         return null
 
@@ -1020,8 +1030,10 @@ module.exports = (env) ->
       for p in result.predicates
         delete p.handler
 
-      tree = (new rulesAst.BoolExpressionTreeBuilder())
-        .build(result.tokens, result.predicates)
+      tree = null
+      if context.errors.length is 0
+        tree = (new rulesAst.BoolExpressionTreeBuilder())
+          .build(result.tokens, result.predicates)
 
       return {
         tokens: result.tokens
@@ -1033,21 +1045,28 @@ module.exports = (env) ->
         warnings: context.warnings
       }
 
-    getPredicateDefaults: () ->
-      defaults = []
+    getPredicatePresets: () ->
+      presets = []
       for p in @predicateProviders
-        if p.defaults?
-          for d in p.defaults
+        if p.presets?
+          for d in p.presets
             d.predicateProviderClass = p.constructor.name
-            defaults.push d
-      return defaults
+            presets.push d
+      return presets
 
 
     getPredicateInfo: (input, predicateProviderClass) ->
       context = @_createParseContext()
-      #console.log current, start
       result = @_parsePredicate("id", input, context, predicateProviderClass)
-      return result?.elements
+      if result?.predicate?
+        unless result.predicate.justTrigger or result.predicate.handler?.getType() is "event"
+          unless result.forElements?
+            timeParseResult = @_parseTimePart(" for 5 minutes", " for ", context)
+            result.forElements = timeParseResult.elements
+        delete result.predicate.handler
+      context.finalize()
+      result.errors = context.errors
+      return result
 
     executeAction: (actionString, simulate = false, logging = yes) =>
       context = @_createParseContext()

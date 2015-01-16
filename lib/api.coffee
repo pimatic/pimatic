@@ -417,15 +417,15 @@ api.rules = {
       permission:
         scope: "rules"
         access: "read"
-    getPredicateDefaults:
+    getPredicatePresets:
       rest:
         type: "GET"
-        url: "/api/rules-parser/get-predicate-defaults"
+        url: "/api/rules-parser/get-predicate-presets"
       description: "Get predicates the user can choose from"
       params: {}
       result:
-        defaults:
-          type: "object"
+        presets:
+          type: "array"
        permission:
         scope: "rules"
         access: "read"
@@ -442,7 +442,7 @@ api.rules = {
           optional: yes
       }
       result:
-        elements:
+        result:
           type: "array"
        permission:
         scope: "rules"
