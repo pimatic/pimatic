@@ -47,7 +47,7 @@ class Matcher
 
   # ###constructor()
   # Create a matcher for the input string, with the given parse context
-  constructor: (@input, @context = null, @prevInput = "") ->
+  constructor: (@input, @context = null, @prevInput = "", @elements = []) ->
 
   
   # ###match()
@@ -66,7 +66,6 @@ class Matcher
       options = {}
 
     matches = []
-
     for p, j in patterns
       # If pattern is a array then assume that first element is an id that should be returned
       # on match
@@ -91,20 +90,26 @@ class Matcher
             @context?.addHint(autocomplete: p)
 
       # Now try to match the pattern against the input string
+      wildcardMatch = false
       doesMatch = false
       match = null
       nextToken = null
+
+      if options.wildcard?
+        wildcardMatch = S(inputT).startsWith(options.wildcard)
       switch 
         # do a normal string match
-        when typeof p is "string" 
-          doesMatch = S(inputT).startsWith(pT)
+        when typeof p is "string"
+          doesMatch =  S(inputT).startsWith(pT)
           if doesMatch 
             match = p
             nextToken = @input.substring(p.length)
         # do a regax match
         when p instanceof RegExp
           if options.ignoreCase?
-            throw new new Error("ignoreCase option can't be used with regexp")
+            throw new Error("ignoreCase option can't be used with regexp")
+          if options.wildcard?
+            throw new Error("wildcard option can't be used with regexp")     
           regexpMatch = @input.match(p)
           if regexpMatch?
             doesMatch = yes
@@ -112,7 +117,10 @@ class Matcher
             nextToken = regexpMatch[2]
         else throw new Error("Illegal object in patterns")
 
-      if doesMatch
+      if wildcardMatch or doesMatch
+        if wildcardMatch
+          match = p
+          nextToken = @input.substring(options.wildcard.length)
         assert match?
         assert nextToken?
         # If no matchId was provided then use the matching string itself
@@ -122,32 +130,67 @@ class Matcher
           match
           nextToken
         }
+        if wildcardMatch then break
       
     nextInput = null
     match = null
     prevInputAndMatch = ""
+    elements = []
     if matches.length > 0
       longestMatch = _(matches).sortBy( (m) => m.match.length ).last()
       nextInput = longestMatch.nextToken
       match = longestMatch.match
       prevInputAndMatch = @prevInput + match
+      element = {
+        match: match
+        param: options.param
+        options: _.map(patterns, (p) => if Array.isArray p then p[1] else p)
+        type: options.type
+        wildcard: options.wildcard
+        wildcardMatch: wildcardMatch
+      }
+      if p instanceof RegExp
+        element.options = null
+        unless element.type?
+          element.type = "text"
+      else
+        unless element.type?
+          if element.options.length is 1
+            element.type = "static"
+          else
+            element.type = "select" 
+      elements = @elements.concat element
+      if wildcardMatch and element.options?
+        element.options.unshift options.wildcard
       if callback?
         callback(
-          M(nextInput, @context, prevInputAndMatch), 
+          M(nextInput, @context, prevInputAndMatch, elements), 
           longestMatch.matchId
         )
+
+      @context?.addElements(prevInputAndMatch, elements)
     else if options.optional
       nextInput = @input
       prevInputAndMatch = @prevInput
+      elements = _.clone(@elements)
 
-    return M(nextInput, @context, prevInputAndMatch)
+
+
+    return M(nextInput, @context, prevInputAndMatch, elements)
 
   # ###matchNumber()
   ###
   Matches any Number.
   ###
-  matchNumber: (callback) -> 
+  matchNumber: (options, callback) -> 
     unless @input? then return @
+    if typeof options is "function"
+      callback = options
+      options = {}
+
+    if options.wildcard? and S(@input).startsWith(options.wildcard)
+      return @match("0", options, callback)
+
     next = @match /^(-?[0-9]+\.?[0-9]*)(.*?)$/, callback
 
 
@@ -177,8 +220,17 @@ class Matcher
       callback(next, match)
     return next
 
-  matchString: (callback) -> 
+  matchString: (options, callback) -> 
     unless @input? then return @
+
+    if typeof options is "function"
+      callback = options
+      options = {}
+
+    if options.wildcard? and S(@input).startsWith(options.wildcard)
+      options.type = "text" unless options.type 
+      return @match("\"\"", options, callback)
+
     ret = M(null, @context)
     @match('"').match(/^([^"]*)(.*?)$/, (m, str) =>
       ret = m.match('"', (m) => 
@@ -463,11 +515,14 @@ class Matcher
     onIdMatch = (m, d) => matchingDevices[d.id] = {m, d}
     onNameMatch = (m, d) => matchingDevices[d.id] = {m, d}
 
-    next = @match('the ', optional: true).or([
+    next = @match('the ', optional: true, type: "static").or([
        # first try to match by id
-      (m) => m.match(devicesWithId, onIdMatch)
+      (m) => m.match(devicesWithId, wildcard: "{device}", type: "select", onIdMatch)
       # then to try match names
-      (m) => m.match(devicesWithNames, ignoreCase: yes, onNameMatch)
+      (m) => m.match(
+        devicesWithNames, 
+        wildcard: "{device}", type: "select", ignoreCase: yes, 
+        onNameMatch)
     ])
     for id, {m, d} of matchingDevices
       callback(m, d)
@@ -513,7 +568,7 @@ class Matcher
     unless @input? then return @
     if typeof options is 'function'
       callback = options
-      options = null
+      options = {}
 
     # Parse the for-Suffix:
     timeUnits = [
@@ -529,7 +584,7 @@ class Matcher
     onTimeMatch = (m, n) => time = parseFloat(n)
     onMatchUnit = (m, u) => unit = u
 
-    m = @matchNumber(onTimeMatch).match(
+    m = @matchNumber(options, onTimeMatch).match(
       _(timeUnits).map((u) => [" #{u}", u]).flatten().valueOf()
     , {acFilter: (u) => u[0] is ' '}, onMatchUnit
     )
@@ -616,6 +671,7 @@ M.createParseContext = (variables, functions)->
     format: []
     errors: []
     warnings: []
+    elements: {}
     variables,
     functions
     addHint: ({autocomplete: a, format: f}) ->
@@ -631,6 +687,7 @@ M.createParseContext = (variables, functions)->
     addWarning: (message) -> @warnings.push message
     hasErrors: -> (@errors.length > 0)
     getErrorsAsString: -> _(@errors).reduce((ms, m) => "#{ms}, #{m}")
+    addElements: (input, elements) -> @elements[input] = elements
     finalize: () -> 
       @autocomplete = _(@autocomplete).uniq().sortBy((s)=>s.toLowerCase()).value()
       @format = _(@format).uniq().sortBy((s)=>s.toLowerCase()).value()

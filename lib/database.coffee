@@ -490,9 +490,12 @@ module.exports = (env) ->
       )
 
     deleteDeviceAttribute: (id) ->
-      return @knex('deviceAttribute')
-        .where('id', id)
-        .del()
+      awaiting = []
+      awaiting.push @knex('deviceAttribute').where('id', id).del()
+
+      for tableName, tableInfo of dbMapping.attributeValueTables
+        awaiting.push @knex(tableName).where('deviceAttributeId', id).del()
+      return Promise.all(awaiting)
 
     querySingleDeviceAttributeEvents: (deviceId, attributeName, queryCriteria = {}) ->
       {
