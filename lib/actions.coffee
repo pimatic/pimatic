@@ -353,6 +353,83 @@ module.exports = (env) ->
           @device.toggle().then( => __("toggled state of %s", @device.name) )
       )
 
+ ###
+  The Button Action Provider
+  -------------
+  Provides the ability to press the button of a buttonsdevices. Currently it handles the following actions:
+
+  * press [the] _device_
+
+  where _device_ is the name or id of a the button not the buttons device and "the" is optional.
+  ###
+  class ButtonActionProvider extends ActionProvider
+
+    constructor: (@framework) ->
+
+    # ### parseAction()
+    ###
+    Parses the above actions.
+    ###
+    parseAction: (input, context) =>
+      # The result the function will return:
+      retVar = null
+
+      buttonsDevices = _(@framework.deviceManager.devices).values().filter( 
+        (device) => device.hasAction("buttonPressed")
+      ).value()
+
+      device = null
+      match = null
+
+      # Try to match the input string with: press ->
+      m = M(input, context).match(['press '])
+
+      # device name -> on|off
+      m.matchDevice(buttonsDevices, (m, d) ->
+        m.match([' on', ' off'], (m, s) ->
+          # Already had a match with another device?
+          if device? and device.id isnt d.id
+            context?.addError(""""#{input.trim()}" is ambiguous.""")
+            return
+          device = d
+          state = s.trim()
+          match = m.getFullMatch()
+        )
+      )
+
+      if match?
+        assert device?
+        assert typeof match is "string"
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new ButtonActionHandler(device, state)
+        }
+      else
+        return null
+
+  class ButtonActionHandler extends ActionHandler
+
+    constructor: (@device, @buttonID) ->
+
+    ###
+    Handles the above actions.
+    ###
+    _doExectuteAction: (simulate, buttonID) =>
+      return (
+        if simulate
+          Promise.resolve __("would press button %s of device %s", buttonID, @device.name)
+        else
+          @device.buttonPressed(buttonID).then( => __("pressed button %s", buttonID) )
+      )
+
+    # ### executeAction()
+    executeAction: (simulate) => @_doExectuteAction(simulate, @buttonID)
+    # ### hasRestoreAction()
+    hasRestoreAction: -> yes
+    # ### executeRestoreAction()
+    executeRestoreAction: (simulate) => @_doExectuteAction(simulate, (not @state))
+
   ###
   The Shutter Action Provider
   -------------
