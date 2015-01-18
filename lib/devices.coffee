@@ -720,8 +720,8 @@ module.exports = (env) ->
     apply: (config, device) -> 
       if config.xOpenedLabel? or config.xClosedLabel?
         device.attributes = _.cloneDeep(device.attributes)
-        device.attributes.contact.labels[0] = config.xOpenedLabel if config.xOpenedLabel? 
-        device.attributes.contact.labels[1] = config.xClosedLabel if config.xClosedLabel?
+        device.attributes.contact.labels[0] = config.xClosedLabel if config.xClosedLabel? 
+        device.attributes.contact.labels[1] = config.xOpenedLabel if config.xOpenedLabel?
 
   class DeviceManager extends events.EventEmitter
     devices: {}
