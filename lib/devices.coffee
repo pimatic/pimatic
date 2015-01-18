@@ -705,7 +705,23 @@ module.exports = (env) ->
         device.attributes = _.cloneDeep(device.attributes)
         device.attributes.state.labels[0] = config.xOnLabel if config.xOnLabel? 
         device.attributes.state.labels[1] = config.xOffLabel if config.xOffLabel?
-        
+
+  class ContactLabelConfigExtension extends DeviceConfigExtension
+    configSchema:
+      xClosedLabel:
+        description: "The label for the closed state"
+        type: "string"
+        required: no
+      xOpenedLabel:
+        description: "The label for the opened state"
+        type: "string"
+        required: no
+
+    apply: (config, device) -> 
+      if config.xOpenedLabel? or config.xClosedLabel?
+        device.attributes = _.cloneDeep(device.attributes)
+        device.attributes.contact.labels[0] = config.xOpenedLabel if config.xOpenedLabel? 
+        device.attributes.contact.labels[1] = config.xClosedLabel if config.xClosedLabel?
 
   class DeviceManager extends events.EventEmitter
     devices: {}
@@ -717,6 +733,7 @@ module.exports = (env) ->
       @deviceConfigExtensions.push(new LinkDeviceConfigExtention())
       @deviceConfigExtensions.push(new PresentLabelConfigExtension())
       @deviceConfigExtensions.push(new SwitchLabelConfigExtension())
+      @deviceConfigExtensions.push(new ContactLabelConfigExtension())
 
     registerDeviceClass: (className, {configDef, createCallback, prepareConfig}) ->
       assert typeof className is "string", "className must be a string"
