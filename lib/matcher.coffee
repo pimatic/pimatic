@@ -188,6 +188,8 @@ class Matcher
       callback = options
       options = {}
 
+    options.type = "number" unless options.type?
+
     if options.wildcard? and S(@input).startsWith(options.wildcard)
       return @match("0", options, callback)
 
@@ -227,8 +229,9 @@ class Matcher
       callback = options
       options = {}
 
-    if options.wildcard? and S(@input).startsWith(options.wildcard)
-      options.type = "text" unless options.type 
+    options.type = "text" unless options.type 
+
+    if options.wildcard? and S(@input).startsWith(options.wildcard)  
       return @match("\"\"", options, callback)
 
     ret = M(null, @context)
