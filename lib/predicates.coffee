@@ -542,6 +542,13 @@ module.exports = (env) ->
   ####
   class VariablePredicateProvider extends PredicateProvider
 
+    presets: [
+        {
+          name: "Variable comparison"
+          input: "{expr} = {expr}"
+        }
+      ]
+
     constructor: (@framework) ->
 
     parsePredicate: (input, context) ->
@@ -640,6 +647,17 @@ module.exports = (env) ->
 
   class VariableUpdatedPredicateProvider extends PredicateProvider
 
+    presets: [
+        {
+          name: "Variable changes"
+          input: "{variable} changes"
+        }
+        {
+          name: "Variable increased/decreased"
+          input: "{variable} increased"
+        }
+      ]
+
     constructor: (@framework) ->
 
     parsePredicate: (input, context) ->
@@ -725,7 +743,12 @@ module.exports = (env) ->
 
   class ButtonPredicateProvider extends PredicateProvider
 
-    _listener: {}
+    presets: [
+        {
+          name: "Button pressed"
+          input: "{button} is pressed"
+        }
+      ]
 
     constructor: (@framework) ->
 
@@ -749,7 +772,11 @@ module.exports = (env) ->
 
       m = M(input, context)
         .match('the ', optional: true)
-        .match(buttonsWithId, onButtonMatch)
+        .match(
+          buttonsWithId, 
+          wildcard: "{button}"
+          onButtonMatch
+        )
         .match(' button', optional: true)
         .match(' is', optional: true)
         .match(' pressed')
@@ -785,6 +812,13 @@ module.exports = (env) ->
 
 
   class StartupPredicateProvider extends PredicateProvider
+
+    presets: [
+        {
+          name: "pimatic is starting"
+          input: "pimatic is starting"
+        }
+      ]
 
     constructor: (@framework) ->
 

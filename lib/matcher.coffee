@@ -84,7 +84,7 @@ class Matcher
 
       # if pattern is an string, then we can add an autocomplete for it
       if typeof p is "string" and @context
-        showAc = (if options.acFilter? then options.acFilter(p, j) else true) 
+        showAc = (if options.acFilter? then options.acFilter(p) else true) 
         if showAc
           if S(pT).startsWith(inputT) and @input.length < p.length
             @context?.addHint(autocomplete: p)
@@ -144,7 +144,10 @@ class Matcher
       element = {
         match: match
         param: options.param
-        options: _.map(patterns, (p) => if Array.isArray p then p[1] else p)
+        options: _.filter(
+          _.map(patterns, (p) => if Array.isArray p then p[1] else p),
+          (p) => p is match or (if options?.acFilter? then options.acFilter(p) else true)
+        )
         type: options.type
         wildcard: options.wildcard
         wildcardMatch: wildcardMatch
@@ -214,9 +217,14 @@ class Matcher
     assert variables? and typeof variables is "object"
     assert typeof callback is "function"
 
+    options = {
+      wildcard: "{variable}"
+      type: "select"
+    }
+
     varsWithDollar = _(variables).keys().map( (v) => "$#{v}" ).valueOf()
     matches = []
-    next = @match(varsWithDollar, (m, match) => matches.push([m, match]) )
+    next = @match(varsWithDollar, options, (m, match) => matches.push([m, match]) )
     if matches.length > 0
       [next, match] = _(matches).sortBy( ([m, s]) => s.length ).last()
       callback(next, match)
@@ -373,6 +381,13 @@ class Matcher
     assert variables? and typeof variables is "object"
     assert functions? and typeof functions is "object"
 
+    options = {
+      wildcard: "{expr}"
+      type: "text"
+    }
+
+    if options.wildcard? and S(@input).startsWith(options.wildcard)
+      return @match([[[0], "0"]], options, callback)
 
     binarOps = ['+','-','*', '/']
     binarOpsFull = _(binarOps).map( (op)=>[op, " #{op} ", " #{op}", "#{op} "] ).flatten().valueOf()
@@ -404,6 +419,7 @@ class Matcher
     )
 
     if last?
+      last.reduceElementsFrom(this, options)
       callback(last, tokens)
       return last
     else return M(null, @context)
@@ -419,6 +435,14 @@ class Matcher
     assert variables? and typeof variables is "object"
     assert functions? and typeof functions is "object"
     assert typeof callback is "function"
+
+    options = {
+      wildcard: "{expr}"
+      type: "text"
+    }
+
+    if options.wildcard? and S(@input).startsWith(options.wildcard)
+      return @match([[["\"\""], "\"\""]], options, callback)
 
     last = null
     tokens = []
@@ -458,9 +482,20 @@ class Matcher
       )
       
     if last?
+      last.reduceElementsFrom(this, options)
       callback(last, tokens)
       return last
     else return M(null, @context)
+
+  reduceElementsFrom: (matcher, options) ->
+    fullMatch = @getFullMatch()
+    @elements = matcher.elements.concat {
+      type: "text"
+      match: fullMatch.substring(matcher.getFullMatch().length)
+      wildcard: options.wildcard
+    }
+    @context?.addElements(fullMatch, @elements)
+
 
   matchAnyExpression: (varsAndFuns, callback) ->
     unless @input? then return @
