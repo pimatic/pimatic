@@ -334,7 +334,7 @@ module.exports = (env) ->
           return next()
         req = socket.request 
         if req.query.username? and req.query.password?
-          if @userManager.checkLogin(user, password)
+          if @userManager.checkLogin(req.query.username, req.query.password)
             socket.username = req.query.username
             return next()
           else
