@@ -333,7 +333,11 @@ module.exports = (env) ->
         if auth.enabled is no
           return next()
         req = socket.request 
-        if req.headers.cookie?
+        if req.query.username? and req.query.password?
+          if @userManager.checkLogin(user, password)
+            socket.username = req.query.username
+            return next()
+        else if req.headers.cookie?
           req.cookies = null
           ioCookieParser(req, null, =>
             sessionCookie = req.signedCookies?[@app.cookieSessionOptions.key]
