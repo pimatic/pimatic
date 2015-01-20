@@ -337,6 +337,8 @@ module.exports = (env) ->
           if @userManager.checkLogin(user, password)
             socket.username = req.query.username
             return next()
+          else
+            return next(new Error('unauthorizied'))
         else if req.headers.cookie?
           req.cookies = null
           ioCookieParser(req, null, =>
