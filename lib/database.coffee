@@ -278,7 +278,9 @@ module.exports = (env) ->
 
      getDeviceAttributeLoggingTime: (deviceId, attributeName, type) ->
       expireMs = 0
+      expire = "0"
       intervalMs = 0
+      interval = "0"
       for entry in @dbSettings.deviceAttributeLogging
         matches = (
           (entry.deviceId is '*' or entry.deviceId is deviceId) and
@@ -288,9 +290,11 @@ module.exports = (env) ->
         if matches
           if entry.expire?
             expireMs = entry.expireInfo.expireMs
+            expire = entry.expire
           if entry.interval?
             intervalMs = entry.expireInfo.interval
-      return {expireMs, intervalMs}
+            interval = entry.interval
+      return {expireMs, intervalMs, expire, interval}
 
     getMessageLoggingTime: (time, level, tags, text) ->
       time = null
@@ -470,9 +474,21 @@ module.exports = (env) ->
 
     queryDeviceAttributeEventsDevices: () ->
       return @knex('deviceAttribute').select(
+        'id',
         'deviceId', 
         'attributeName', 
         'type'
+      ).then( (results) =>
+        for result in results
+          info = @getDeviceAttributeLoggingTime(result.deviceId, result.attributeName, result.type)
+          result.interval = info.interval
+          result.expire = info.expire
+        return results
+      ).map( (result) =>
+        @knex(dbMapping.typeMap[result.type])
+          .count('*')
+          .where('deviceAttributeId', result.id)
+          .then( (count) => result.count = count[0]["count(*)"]; return result )
       )
 
     runVacuum: -> @knex.raw('VACUUM;')
@@ -482,7 +498,8 @@ module.exports = (env) ->
         'id'
         'deviceId', 
         'attributeName', 
-        'type'
+        'type',
+        'count(*) '
       ).then( (results) =>
         problems = []
         for result in results
