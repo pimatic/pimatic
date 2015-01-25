@@ -332,7 +332,7 @@ module.exports = (env) ->
       @io.use( (socket, next) =>
         if auth.enabled is no
           return next()
-        req = socket.request 
+        req = socket.request
         if req.query.username? and req.query.password?
           if @userManager.checkLogin(req.query.username, req.query.password)
             socket.username = req.query.username

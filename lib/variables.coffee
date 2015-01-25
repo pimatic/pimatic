@@ -54,11 +54,33 @@ module.exports = (env) ->
         @_device.attributes[@_attrName].unit, 
         yes
       )
+      @_addListener()
+
+    _addListener: () ->
       @_device.on(@_attrName, @_attrListener = (value) => @_setValue(value) )
+      @_device.on('change', @_deviceChangeListener = (newDevice) =>
+        if newDevice.hasAttribute(@_attrName)
+          @unit = newDevice.attributes[@_attrName].unit
+          @_removeListener()
+          @_device = newDevice
+          @_addListener()
+        else
+          @_vars._removeDeviceAttributeVariable(@name)
+      )
+      @_device.on('destroy', @_deviceDestroyListener = =>
+        @_vars._removeDeviceAttributeVariable(@name)
+      )
+
+    _removeListener: () ->
+      @_device.removeListener(@_attrName, @_attrListener)
+      @_device.removeListener("change", @_deviceChangeListener)
+      @_device.removeListener("destroy", @_deviceDestroyListener)
+      
     getUpdatedValue: -> 
       return @_device.getUpdatedAttributeValue(@_attrName)
-    destroy: => 
-      @_device.removeListener(@_attrName, @_attrListener)
+
+    destroy: =>
+      @_removeListener()
       return
 
 
@@ -288,7 +310,6 @@ module.exports = (env) ->
 
     parseVariableExpression: (expression) ->
       tokens = null
-      varsAndFuns = @getVariablesAndFunctions()
       context = M.createParseContext(@variables, @functions)
       m = M(expression, context).matchAnyExpression( (m, ts) => tokens = ts)
       unless m.hadMatch() and m.getFullMatch() is expression
@@ -390,6 +411,16 @@ module.exports = (env) ->
       if variable?
         if variable.type is 'attribute'
           throw new Error("Can not delete a variable for a device attribute.")
+        variable.destroy()
+        delete @variables[name]
+        @_emitVariableRemoved(variable)
+
+    _removeDeviceAttributeVariable: (name) ->
+      assert name? and typeof name is "string"
+      variable = @variables[name]
+      if variable?
+        if variable.type isnt 'attribute'
+          throw new Error("Not an device attribute.")
         variable.destroy()
         delete @variables[name]
         @_emitVariableRemoved(variable)
