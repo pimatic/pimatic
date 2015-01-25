@@ -133,15 +133,17 @@ module.exports = {
               description: "time to keep logged device attributes values in database"
               type: "array"
               default: [ 
-                { deviceId: '*', attributeName: '*', time: '7d' }
-                { deviceId: '*', attributeName: 'temperature', time: '1y' },
-                { deviceId: '*', attributeName: 'humidity', time: '1y' } 
+                { deviceId: '*', attributeName: '*', type: "*", interval: "0", time: '7d' }
+                { deviceId: '*', attributeName: '*', type: "number", interval: "5min", time: '7d' }
+                { deviceId: '*', attributeName: 'temperature', type: "number", time: '1y' }
+                { deviceId: '*', attributeName: 'humidity', type: "number", time: '1y' } 
               ]
             messageLogging:
               description: "time to keep logged messages in database"
               type: "array"
               default: [ 
                 { level: '*', tags: [], time: '7d' }
+                { level: 'debug', tags: [], time: '0' }
               ]
             debug: 
               description: "Enable to show database queries and some additional outputs"

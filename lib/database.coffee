@@ -192,11 +192,25 @@ module.exports = (env) ->
       return
 
     _updateDeviceAttributeExpireInfos: ->
+      for info in dbMapping.deviceAttributeCache
+        info.expireMs = null
+        info.intervalMs = null
       entries = @dbSettings.deviceAttributeLogging
       i = entries.length - 1
       sqlNot = ""
+      possibleTypes = ["number", "string", "boolean", "date", "*"]
       while i >= 0
         entry = entries[i]
+        #legazy support
+        if entry.time?
+          entry.expire = entry.time
+          delete entry.time
+        unless entry.type?
+          entry.type = "*"
+
+        unless entry.type in possibleTypes
+          throw new Error("type option in database config must be one of #{possibleTypes}")
+
         # Get expire info from entry or create it
         expireInfo = entry.expireInfo
         unless expireInfo?
@@ -213,14 +227,24 @@ module.exports = (env) ->
           ownWhere += " AND deviceId='#{entry.deviceId}'"
         if entry.attributeName isnt '*'
           ownWhere += " AND attributeName='#{entry.attributeName}'"
+        if entry.type isnt '*'
+          ownWhere += " AND type='#{entry.type}'"
+
         expireInfo.whereSQL = "(#{ownWhere})#{sqlNot}"
         sqlNot = " AND NOT (#{ownWhere})#{sqlNot}"
         # Set expire date
-        timeMs = null
-        M(entry.time).matchTimeDuration((m, info) => timeMs = info.timeMs)
-        unless timeMs? then throw new Error("Can not parse database expire time #{entry.time}")
-        expireInfo.expireMs = timeMs  
+        expireInfo.expireMs = @_parseTime(entry.expire) if entry.expire?
+        expireInfo.interval = @_parseTime(entry.interval) if entry.interval?
         i--
+
+    _parseTime: (time) ->
+      if time is "0" then return 0
+      else
+        timeMs = null
+        M(time).matchTimeDuration((m, info) => timeMs = info.timeMs)
+        unless timeMs?
+          throw new Error("Can not parse time in database config: #{time}")
+        return timeMs
 
     _updateMessageseExpireInfos: ->
       entries = @dbSettings.messageLogging
@@ -248,21 +272,25 @@ module.exports = (env) ->
         expireInfo.whereSQL = "(#{ownWhere})#{sqlNot}"
         sqlNot = " AND NOT (#{ownWhere})#{sqlNot}"
         # Set expire date
-        timeMs = null
-        M(entry.time).matchTimeDuration((m, info) => timeMs = info.timeMs)
-        unless timeMs? then throw new Error("Can not parse database expire time #{entry.time}")
-        expireInfo.expireMs = timeMs
+        expireInfo.expireMs = @_parseTime(entry.expire) if entry.expire?
         i--
 
-    getDeviceAttributeLoggingTime: (deviceId, attributeName) ->
-      time = null
+
+     getDeviceAttributeLoggingTime: (deviceId, attributeName, type) ->
+      expireMs = 0
+      intervalMs = 0
       for entry in @dbSettings.deviceAttributeLogging
-        if (
-          (entry.deviceId is "*" or entry.deviceId is deviceId) and 
-          (entry.attributeName is "*" or entry.attributeName is attributeName)
+        matches = (
+          (entry.deviceId is '*' or entry.deviceId is deviceId) and
+          (entry.attributeName is '*' or entry.attributeName is attributeName) and
+          (entry.type is '*' or entry.type is type)
         )
-          time = entry.expireInfo.expireMs
-      return time
+        if matches
+          if entry.expire?
+            expireMs = entry.expireInfo.expireMs
+          if entry.interval?
+            intervalMs = entry.expireInfo.interval
+      return {expireMs, intervalMs}
 
     getMessageLoggingTime: (time, level, tags, text) ->
       time = null
@@ -305,6 +333,11 @@ module.exports = (env) ->
       assert Array.isArray(tags)
       assert typeof level is 'string'
       assert level in _.keys(dbMapping.logLevelToInt) 
+
+      expireMs = @getMessageLoggingTime(time, level, tags, text)
+      if expireMs is 0
+        return Promise.resolve()
+
       insert = @knex('message').insert(
         time: time
         level: dbMapping.logLevelToInt[level]
@@ -347,7 +380,6 @@ module.exports = (env) ->
         _(tags).map((r)=>JSON.parse(r.tags)).flatten().uniq().valueOf()
       )
 
-
     queryMessages: (criteria = {}) ->
       query = @knex('message').select('time', 'level', 'tags', 'text')
       @_buildMessageWhere(query, criteria)
@@ -362,7 +394,6 @@ module.exports = (env) ->
       query = @knex('message')
       @_buildMessageWhere(query, criteria)
       return Promise.resolve((query).del()) 
-
 
     _buildQueryDeviceAttributeEvents: (queryCriteria = {}) ->
       {
@@ -445,7 +476,6 @@ module.exports = (env) ->
       )
 
     runVacuum: -> @knex.raw('VACUUM;')
-
 
     checkDatabase: () ->
       @knex('deviceAttribute').select(
@@ -547,11 +577,25 @@ module.exports = (env) ->
       return @_getDeviceAttributeInfo(deviceId, attributeName).then( (info) =>
         # insert into value table
         tableName = dbMapping.typeToAttributeTable(info.type)
-        insert1 = @knex(tableName).insert(
-          time: time
-          deviceAttributeId: info.id
-          value: value
-        )
+        timestamp = time.getTime()
+        if info.expireMs is 0
+          # value expires immediatly
+          doInsert = false
+        else
+          if info.intervalMs is 0 or timestamp - info.lastInsertTime > info.intervalMs 
+            doInsert = true
+          else
+            doInsert = false
+
+        if doInsert
+          info.lastInsertTime = timestamp
+          insert1 = @knex(tableName).insert(
+            time: time
+            deviceAttributeId: info.id
+            value: value
+          )
+        else
+          insert1 = Promise.resolve()
         # and update lastValue in attributeInfo
         insert2 = @knex('deviceAttribute')
           .where(
@@ -568,7 +612,13 @@ module.exports = (env) ->
       fullQualifier = "#{deviceId}.#{attributeName}"
       info = dbMapping.deviceAttributeCache[fullQualifier]
       return (
-        if info? then Promise.resolve(info)
+        if info? 
+          unless info.expireMs?
+            expireInfo = @getDeviceAttributeLoggingTime(deviceId, attributeName, info.type)
+            info.expireMs = expireInfo.expireMs
+            info.intervalMs = expireInfo.intervalMs
+            info.lastInsertTime = 0
+          Promise.resolve(info)
         else @_insertDeviceAttribute(deviceId, attributeName)
       )
 
@@ -617,9 +667,14 @@ module.exports = (env) ->
       attribute = device.attributes[attributeName]
       unless attribute? then throw new Error("#{deviceId} has no attribute #{attributeName}.")
 
+      expireInfo = @getDeviceAttributeLoggingTime(deviceId, attributeName, attribute.type)
+
       info = {
         id: null
         type: attribute.type
+        expireMs: expireInfo.expireMs
+        intervalMs: expireInfo.intervalMs
+        lastInsertTime: 0
       }
 
       ###
