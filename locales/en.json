@@ -205,5 +205,9 @@
 	"switch to text input mode": "switch to text input mode",
 	"switch to text mode": "switch to text mode",
 	"switch to gui mode": "switch to gui mode",
-	"Duration": "Duration"
+	"Duration": "Duration",
+	"Attribute Info": "Attribute Info",
+	"Interval": "Interval",
+	"Expire": "Expire",
+	"Count": "Count"
 }

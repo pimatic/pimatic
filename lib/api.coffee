@@ -1218,6 +1218,18 @@ api.database = {
     queryDeviceAttributeEventsDevices:
       rest:
         type: 'GET'
+        url: '/api/database/device-attributes/devices'
+      description: "get all device attribute infos in database"
+      params: {}
+      result:
+        devices:
+          type: t.array
+      permission:
+        scope: "events"
+        access: "read"
+    queryDeviceAttributeEventsInfo:
+      rest:
+        type: 'GET'
         url: '/api/database/device-attributes-info'
       description: "get all device attribute infos in database"
       params: {}

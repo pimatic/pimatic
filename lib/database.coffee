@@ -478,6 +478,14 @@ module.exports = (env) ->
         'deviceId', 
         'attributeName', 
         'type'
+      )
+
+    queryDeviceAttributeEventsInfo: () ->
+      return @knex('deviceAttribute').select(
+        'id',
+        'deviceId', 
+        'attributeName', 
+        'type'
       ).then( (results) =>
         for result in results
           info = @getDeviceAttributeLoggingTime(result.deviceId, result.attributeName, result.type)
