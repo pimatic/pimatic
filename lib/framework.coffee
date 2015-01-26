@@ -75,7 +75,6 @@ module.exports = (env) ->
 
       @_setupExpressApp()
 
-
     _validateConfig: (config, schema, scope = "config") ->
       js = new JaySchema()
       errors = js.validate(config, schema)
@@ -969,6 +968,14 @@ module.exports = (env) ->
       @restart()
       return
 
+    destroy: ->
+      context = 
+        waitFor: []
+        waitForIt: (promise) -> @waitFor.push promise
+
+      @emit "destroy", context
+      @saveConfig()
+      return Promise.all(context.waitFor)
 
     saveConfig: ->
       assert @config?
