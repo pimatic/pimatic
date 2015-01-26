@@ -492,12 +492,14 @@ module.exports = (env) ->
           result.interval = info.interval
           result.expire = info.expire
         return results
-      ).map( (result) =>
-        @knex(dbMapping.typeMap[result.type])
-          .count('*')
-          .where('deviceAttributeId', result.id)
-          .then( (count) => result.count = count[0]["count(*)"]; return result )
       )
+      # to slow...
+      # .map( (result) =>
+      #   @knex(dbMapping.typeMap[result.type])
+      #     .count('*')
+      #     .where('deviceAttributeId', result.id)
+      #     .then( (count) => result.count = count[0]["count(*)"]; return result )
+      # )
 
     runVacuum: -> @knex.raw('VACUUM;')
 
