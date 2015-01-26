@@ -1215,6 +1215,18 @@ api.database = {
       permission:
         scope: "events"
         access: "read"
+    queryDeviceAttributeEventsCounts:
+      rest:
+        type: 'GET'
+        url: '/api/database/device-attributes/counts'
+      description: "Get count of saved device attributes per atrtibute"
+      params: {}
+      result:
+        counts:
+          type: t.array
+      permission:
+        scope: "events"
+        access: "read"
     queryDeviceAttributeEventsDevices:
       rest:
         type: 'GET'

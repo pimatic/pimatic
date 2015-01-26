@@ -492,23 +492,22 @@ module.exports = (env) ->
           result.interval = info.interval
           result.expire = info.expire
         return results
-      ).then ( (results) =>
-        return @knex(dbMapping.typeMap["number"])
-          .select('deviceAttributeId').count('id')
-          .groupBy('deviceAttributeId')
-          .then( (count) => 
-            #esult.count = count[0]["count(*)"]; return result 
-            console.log count
-            return results
-          )
       )
-      # to slow...
-      # .map( (result) =>
-      #   @knex(dbMapping.typeMap[result.type])
-      #     .count('*')
-      #     .where('deviceAttributeId', result.id)
-      #     .then( (count) => result.count = count[0]["count(*)"]; return result )
-      # )
+
+    queryDeviceAttributeEventsCounts: () ->
+      queries = []
+      for tableName in _.keys(dbMapping.attributeValueTables)
+        queries.push(
+          @knex(tableName)
+            .select('deviceAttributeId').count('id')
+            .groupBy('deviceAttributeId')
+        )
+      return Promise
+        .reduce(queries, (all, result) => all.concat result)
+        .each( (entry) => 
+          entry.count = entry['count("id")'] 
+          entry['count("id")'] = undefined
+        )
 
     runVacuum: -> @knex.raw('VACUUM;')
 
