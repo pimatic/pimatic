@@ -118,7 +118,6 @@ module.exports = (env) ->
 
     loggingTransaction: (callback) ->
       unless @_loggingTransaction?
-        console.log "creating transaction"
         @_loggingTransaction = new Promise( (resolve, reject) =>
           @knex.transaction(resolve).catch(reject)
         )
@@ -127,7 +126,6 @@ module.exports = (env) ->
     commitLoggingTransaction: ->
       promise = Promise.resolve()
       if @_loggingTransaction?
-        console.log "commiting"
         promise = @_loggingTransaction.then( (trx) => trx.commit() )
         @_loggingTransaction = null
       return promise    
