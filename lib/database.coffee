@@ -492,6 +492,15 @@ module.exports = (env) ->
           result.interval = info.interval
           result.expire = info.expire
         return results
+      ).then ( (results) =>
+        return @knex(dbMapping.typeMap["number"])
+          .select('deviceAttributeId').count('id')
+          .groupBy('deviceAttributeId')
+          .then( (count) => 
+            #esult.count = count[0]["count(*)"]; return result 
+            console.log count
+            return results
+          )
       )
       # to slow...
       # .map( (result) =>
@@ -508,8 +517,7 @@ module.exports = (env) ->
         'id'
         'deviceId', 
         'attributeName', 
-        'type',
-        'count(*) '
+        'type'
       ).then( (results) =>
         problems = []
         for result in results
