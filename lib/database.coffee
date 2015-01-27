@@ -70,6 +70,8 @@ module.exports = (env) ->
           connection: connection
         )
         @framework.on('destroy', (context) =>
+          @framework.removeListener("messageLogged", @messageLoggedListener)
+          @framework.removeListener('deviceAttributeChanged', @deviceAttributeChangedListener)
           env.logger.info("Flusing database to disk, please wait.")
           context.waitForIt(
             @commitLoggingTransaction().then( =>
@@ -93,13 +95,14 @@ module.exports = (env) ->
         @_createTables()
       ).then( =>     
         # Save log-messages
-        @framework.on("messageLogged", ({level, msg, meta}) =>
+        @framework.on("messageLogged", @messageLoggedListener = ({level, msg, meta}) =>
           @saveMessageEvent(meta.timestamp, level, meta.tags, msg).done()
         )
 
         # Save device attribute changes
-        @framework.on('deviceAttributeChanged', ({device, attributeName, time, value}) =>
-          @saveDeviceAttributeEvent(device.id, attributeName, time, value).done()
+        @framework.on('deviceAttributeChanged', 
+          @deviceAttributeChangedListener = ({device, attributeName, time, value}) =>
+            @saveDeviceAttributeEvent(device.id, attributeName, time, value).done()
         )
 
         @_updateDeviceAttributeExpireInfos()
@@ -147,12 +150,12 @@ module.exports = (env) ->
     commitLoggingTransaction: ->
       promise = Promise.resolve()
       if @_loggingTransaction?
-        console.log "commit requested"
-        promise = @_loggingTransaction.then( ({trx, actions}) => 
+        promise = @_loggingTransaction.then( ({trx, actions}) =>
+          env.logger.debug("commiting") if @dbSettings.debug
           return Promise.all(actions).then( => trx.commit() ).catch( (error) =>
             env.logger.error(error.message)
             env.logger.debug(error.stack)
-          ).then( => console.log "commited" )
+          )
         )
         @_loggingTransaction = null
       return promise.catch( (error) =>
@@ -360,7 +363,7 @@ module.exports = (env) ->
       return expireMs
 
     _deleteExpiredDeviceAttributes: ->
-      return @doInLoggingTransaction( (trx) ->
+      return @doInLoggingTransaction( (trx) =>
         awaiting = []
         for entry in  @dbSettings.deviceAttributeLogging
           subquery = @knex('deviceAttribute').transacting(trx)
@@ -378,7 +381,7 @@ module.exports = (env) ->
 
 
     _deleteExpiredMessages: ->
-      return @doInLoggingTransaction( (trx) ->
+      return @doInLoggingTransaction( (trx) =>
         awaiting = []
         for entry in  @dbSettings.messageLogging
           del = @knex('message').transacting(trx)
