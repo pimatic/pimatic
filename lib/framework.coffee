@@ -969,13 +969,15 @@ module.exports = (env) ->
       return
 
     destroy: ->
+      if @_destroying then return @_destroying
+
       context = 
         waitFor: []
         waitForIt: (promise) -> @waitFor.push promise
 
       @emit "destroy", context
       @saveConfig()
-      return Promise.all(context.waitFor)
+      return @_destroying = Promise.all(context.waitFor)
 
     saveConfig: ->
       assert @config?
