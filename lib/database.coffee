@@ -76,7 +76,17 @@ module.exports = (env) ->
           env.logger.info("Flusing database to disk, please wait...")
           context.waitForIt(
             @commitLoggingTransaction().then( () =>
-              env.logger.info("Done.")
+              return new Promise( (resolve) =>
+                destroy = =>
+                  console.log "trying to destroy"
+                  if  @knex.client.pool.genericPool.availableObjects.length isnt 0
+                    @knex.destroy(resolve)
+                  else
+                    setTimeout(destroy, 100)
+                destroy()
+              ).then( =>
+                env.logger.info("Done.")
+              )
             )
           )
         )
