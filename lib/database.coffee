@@ -70,7 +70,16 @@ module.exports = (env) ->
           connection: connection
         )
         @framework.on('destroy', (context) =>
-          @commitLoggingTransaction()
+          env.logger.info("Flusing database to disk, please wait.")
+          context.waitForIt(
+            @commitLoggingTransaction().then( =>
+              @knex.destroy().catch( (err) =>
+                env.logger.debug("ignoring pool error: #{err.message}")
+              ).then( =>
+                env.logger.info("Done.")
+              )
+            )
+          )
         )
         @knex.subquery = (query) -> this.raw("(#{query.toString()})")
         if @dbSettings.client is "sqlite3"
@@ -116,19 +125,40 @@ module.exports = (env) ->
         return
       )
 
-    loggingTransaction: (callback) ->
+    loggingTransaction: ->
       unless @_loggingTransaction?
         @_loggingTransaction = new Promise( (resolve, reject) =>
-          @knex.transaction(resolve).catch(reject)
+          @knex.transaction( (trx) => resolve({trx, actions: []})).catch(reject)
         )
       return @_loggingTransaction
+
+    doInLoggingTransaction: (callback) ->
+      return new Promise(  (resolve, reject) =>
+        @_loggingTransaction = @loggingTransaction().then( ({trx, actions}) =>
+          action = callback(trx)
+          # must return a promise
+          assert action.then?
+          actions.push action
+          resolve(action)
+          return {trx, actions}
+        ).catch(reject)
+      )
 
     commitLoggingTransaction: ->
       promise = Promise.resolve()
       if @_loggingTransaction?
-        promise = @_loggingTransaction.then( (trx) => trx.commit() )
+        console.log "commit requested"
+        promise = @_loggingTransaction.then( ({trx, actions}) => 
+          return Promise.all(actions).then( => trx.commit() ).catch( (error) =>
+            env.logger.error(error.message)
+            env.logger.debug(error.stack)
+          ).then( => console.log "commited" )
+        )
         @_loggingTransaction = null
-      return promise    
+      return promise.catch( (error) =>
+        env.logger.error(error.message)
+        env.logger.debug(error.stack)
+      )    
 
     _createTables: ->
       pending = []
@@ -271,6 +301,10 @@ module.exports = (env) ->
       sqlNot = ""
       while i >= 0
         entry = entries[i]
+        #legazy support
+        if entry.time?
+          entry.expire = entry.time
+          delete entry.time
         # Get expire info from entry or create it
         expireInfo = entry.expireInfo
         unless expireInfo?
@@ -316,39 +350,44 @@ module.exports = (env) ->
       return {expireMs, intervalMs, expire, interval}
 
     getMessageLoggingTime: (time, level, tags, text) ->
-      time = null
+      expireMs = null
       for entry in @dbSettings.messageLogging
         if (
           (entry.level is "*" or entry.level is level) and 
           (entry.tags.length is 0 or (t for t in entry.tags when t in tags).length > 0)
         )
-          time = entry.expireInfo.expireMs
-      return time
+          expireMs = entry.expireInfo.expireMs
+      return expireMs
 
     _deleteExpiredDeviceAttributes: ->
-      awaiting = []
-      for entry in  @dbSettings.deviceAttributeLogging
-        subquery = @knex('deviceAttribute')
-          .select('id')
-        subquery.whereRaw(entry.expireInfo.whereSQL)
-        subqueryRaw = "deviceAttributeId in (#{subquery.toString()})"
-        for tableName in _.keys(dbMapping.attributeValueTables)
-          del = @knex(tableName)
-          del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
-          del.whereRaw(subqueryRaw)
-          del.del()
-          awaiting.push del
-      return Promise.all(awaiting)
+      return @doInLoggingTransaction( (trx) ->
+        awaiting = []
+        for entry in  @dbSettings.deviceAttributeLogging
+          subquery = @knex('deviceAttribute').transacting(trx)
+            .select('id')
+          subquery.whereRaw(entry.expireInfo.whereSQL)
+          subqueryRaw = "deviceAttributeId in (#{subquery.toString()})"
+          for tableName in _.keys(dbMapping.attributeValueTables)
+            del = @knex(tableName)
+            del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
+            del.whereRaw(subqueryRaw)
+            del.del()
+            awaiting.push del
+        return Promise.all(awaiting)
+      )
+
 
     _deleteExpiredMessages: ->
-      awaiting = []
-      for entry in  @dbSettings.messageLogging
-        del = @knex('message')
-        del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
-        del.whereRaw(entry.expireInfo.whereSQL)
-        del.del()
-        awaiting.push del
-      return Promise.all(awaiting)
+      return @doInLoggingTransaction( (trx) ->
+        awaiting = []
+        for entry in  @dbSettings.messageLogging
+          del = @knex('message').transacting(trx)
+          del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
+          del.whereRaw(entry.expireInfo.whereSQL)
+          del.del()
+          awaiting.push del
+        return Promise.all(awaiting)
+      )
 
     saveMessageEvent: (time, level, tags, text) ->
       @emit 'log', {time, level, tags, text}
@@ -361,7 +400,7 @@ module.exports = (env) ->
       if expireMs is 0
         return Promise.resolve()
 
-      return @loggingTransaction().then( (trx) =>
+      return @doInLoggingTransaction( (trx) =>
         return @knex('message').transacting(trx).insert(
           time: time
           level: dbMapping.logLevelToInt[level]
@@ -394,35 +433,38 @@ module.exports = (env) ->
         query.limit(limit)
 
     queryMessagesCount: (criteria = {})->
-      @commitLoggingTransaction()
-      query = @knex('message').count('*')
-      @_buildMessageWhere(query, criteria)
-      return Promise.resolve(query).then( (result) => result[0]["count(*)"] )
-
-    queryMessagesTags: (criteria = {})->
-      @commitLoggingTransaction()
-      query = @knex('message').distinct('tags').select()
-      @_buildMessageWhere(query, criteria)
-      return Promise.resolve(query).then( (tags) =>
-        _(tags).map((r)=>JSON.parse(r.tags)).flatten().uniq().valueOf()
+      return @doInLoggingTransaction( (trx) =>
+        query = @knex('message').transacting(trx).count('*')
+        @_buildMessageWhere(query, criteria)
+        return Promise.resolve(query).then( (result) => result[0]["count(*)"] )
       )
 
+    queryMessagesTags: (criteria = {})->
+      return @doInLoggingTransaction( (trx) =>
+        query = @knex('message').transacting(trx).distinct('tags').select()
+        @_buildMessageWhere(query, criteria)
+        return Promise.resolve(query).then( (tags) =>
+          _(tags).map((r)=>JSON.parse(r.tags)).flatten().uniq().valueOf()
+        )
+      )
     queryMessages: (criteria = {}) ->
-      @commitLoggingTransaction()
-      query = @knex('message').select('time', 'level', 'tags', 'text')
-      @_buildMessageWhere(query, criteria)
-      return Promise.resolve(query).then( (msgs) =>
-        for m in msgs
-          m.tags = JSON.parse(m.tags)
-          m.level = dbMapping.logIntToLevel[m.level]
-        return msgs 
+      return @doInLoggingTransaction( (trx) =>
+        query = @knex('message').transacting(trx).select('time', 'level', 'tags', 'text')
+        @_buildMessageWhere(query, criteria)
+        return Promise.resolve(query).then( (msgs) =>
+          for m in msgs
+            m.tags = JSON.parse(m.tags)
+            m.level = dbMapping.logIntToLevel[m.level]
+          return msgs 
+        )
       )
 
     deleteMessages: (criteria = {}) ->
-      @commitLoggingTransaction()
-      query = @knex('message')
-      @_buildMessageWhere(query, criteria)
-      return Promise.resolve((query).del()) 
+      return @doInLoggingTransaction( (trx) =>
+        query = @knex('message').transacting(trx)
+        @_buildMessageWhere(query, criteria)
+        return Promise.resolve((query).del()) 
+      )
 
     _buildQueryDeviceAttributeEvents: (queryCriteria = {}) ->
       {
@@ -472,128 +514,141 @@ module.exports = (env) ->
       return query
 
     queryDeviceAttributeEvents: (queryCriteria) ->
-      @commitLoggingTransaction()
-      query = @_buildQueryDeviceAttributeEvents(queryCriteria)
-      env.logger.debug("query:", query.toString()) if @dbSettings.debug
-      time = new Date().getTime()
-      return Promise.resolve(query).then( (result) =>
-        timeDiff = new Date().getTime()-time
-        if @dbSettings.debug
-          env.logger.debug("quering #{result.length} events took #{timeDiff}ms.")
-        for r in result
-          if r.type is "boolean"
-            # convert numeric or string value from db to boolean
-            r.value = not (r.value is "0" or r.value is 0)
-        return result
+      @doInLoggingTransaction( (trx) =>
+        query = @_buildQueryDeviceAttributeEvents(queryCriteria).transacting(trx)
+        env.logger.debug("query:", query.toString()) if @dbSettings.debug
+        time = new Date().getTime()
+        return Promise.resolve(query).then( (result) =>
+          timeDiff = new Date().getTime()-time
+          if @dbSettings.debug
+            env.logger.debug("quering #{result.length} events took #{timeDiff}ms.")
+          for r in result
+            if r.type is "boolean"
+              # convert numeric or string value from db to boolean
+              r.value = not (r.value is "0" or r.value is 0)
+          return result
+        )
       )
 
     queryDeviceAttributeEventsCount: () ->
-      @commitLoggingTransaction()
-      pending = []
-      for tableName in _.keys(dbMapping.attributeValueTables)
-        pending.push @knex(tableName).count('* AS count')
-      return Promise.all(pending).then( (counts) =>
-        count = 0
-        for c in counts
-          count += c[0].count
-        return count
+      @doInLoggingTransaction( (trx) =>
+        pending = []
+        for tableName in _.keys(dbMapping.attributeValueTables)
+          pending.push @knex(tableName).transacting(trx).count('* AS count')
+        return Promise.all(pending).then( (counts) =>
+          count = 0
+          for c in counts
+            count += c[0].count
+          return count
+        )
       )
 
     queryDeviceAttributeEventsDevices: () ->
-      @commitLoggingTransaction()
-      return @knex('deviceAttribute').select(
-        'id',
-        'deviceId', 
-        'attributeName', 
-        'type'
+      @doInLoggingTransaction( (trx) =>
+        return @knex('deviceAttribute').transacting(trx).select(
+          'id',
+          'deviceId', 
+          'attributeName', 
+          'type'
+        )
       )
 
     queryDeviceAttributeEventsInfo: () ->
-      @commitLoggingTransaction()
-      return @knex('deviceAttribute').select(
-        'id',
-        'deviceId', 
-        'attributeName', 
-        'type'
-      ).then( (results) =>
-        for result in results
-          info = @getDeviceAttributeLoggingTime(result.deviceId, result.attributeName, result.type)
-          result.interval = info.interval
-          result.expire = info.expire
-        return results
+      @doInLoggingTransaction( (trx) =>
+        return @knex('deviceAttribute').transacting(trx).select(
+          'id',
+          'deviceId', 
+          'attributeName', 
+          'type'
+        ).then( (results) =>
+          for result in results
+            info = @getDeviceAttributeLoggingTime(
+              result.deviceId, result.attributeName, result.type
+            )
+            result.interval = info.interval
+            result.expire = info.expire
+          return results
+        )
       )
 
     queryDeviceAttributeEventsCounts: () ->
-      @commitLoggingTransaction()
-      queries = []
-      for tableName in _.keys(dbMapping.attributeValueTables)
-        queries.push(
-          @knex(tableName)
-            .select('deviceAttributeId').count('id')
-            .groupBy('deviceAttributeId')
-        )
-      return Promise
-        .reduce(queries, (all, result) => all.concat result)
-        .each( (entry) => 
-          entry.count = entry['count("id")'] 
-          entry['count("id")'] = undefined
-        )
+      @doInLoggingTransaction( (trx) =>
+        queries = []
+        for tableName in _.keys(dbMapping.attributeValueTables)
+          queries.push(
+            @knex(tableName).transacting(trx)
+              .select('deviceAttributeId').count('id')
+              .groupBy('deviceAttributeId')
+          )
+        return Promise
+          .reduce(queries, (all, result) => all.concat result)
+          .each( (entry) => 
+            entry.count = entry['count("id")'] 
+            entry['count("id")'] = undefined
+          )
+      )
 
     runVacuum: -> 
-      @commitLoggingTransaction()
-      @knex.raw('VACUUM;')
+      @commitLoggingTransaction().then( =>
+        return @knex.raw('VACUUM;')
+      )
+
 
     checkDatabase: () ->
-      @commitLoggingTransaction()
-      @knex('deviceAttribute').select(
+      query = @knex('deviceAttribute').select(
         'id'
         'deviceId', 
         'attributeName', 
         'type'
-      ).then( (results) =>
-        problems = []
-        for result in results
-          device = @framework.deviceManager.getDeviceById(result.deviceId)
-          unless device?
-            problems.push {
-              id: result.id
-              deviceId: result.deviceId
-              attribute: result.attributeName
-              description: "No device with the id \"#{result.deviceId}\" found."
-              action: "delete"
-            }
-          else
-            unless device.hasAttribute(result.attributeName)
+      ).then( (result) => result )
+
+      return @commitLoggingTransaction().then( =>
+        return query.then( (results) =>
+          problems = []
+          for result in results
+            device = @framework.deviceManager.getDeviceById(result.deviceId)
+            unless device?
               problems.push {
                 id: result.id
                 deviceId: result.deviceId
                 attribute: result.attributeName
-                description: "Device \"#{result.deviceId}\" has no attribute with the name " +
-                        "\"#{result.attributeName}\" found."
+                description: "No device with the id \"#{result.deviceId}\" found."
                 action: "delete"
               }
             else
-              attribute = device.attributes[result.attributeName]
-              if attribute.type isnt result.type
+              unless device.hasAttribute(result.attributeName)
                 problems.push {
                   id: result.id
                   deviceId: result.deviceId
                   attribute: result.attributeName
-                  description: "Attribute \"#{result.attributeName}\" of  \"#{result.deviceId}\" " +
-                           "has the wrong type"
+                  description: "Device \"#{result.deviceId}\" has no attribute with the name " +
+                          "\"#{result.attributeName}\" found."
                   action: "delete"
                 }
-        return problems
+              else
+                attribute = device.attributes[result.attributeName]
+                if attribute.type isnt result.type
+                  problems.push {
+                    id: result.id
+                    deviceId: result.deviceId
+                    attribute: result.attributeName
+                    description: "Attribute \"#{result.attributeName}\" of  " +
+                             "\"#{result.deviceId}\" has the wrong type"
+                    action: "delete"
+                  }
+          return problems
+        )
       )
 
     deleteDeviceAttribute: (id) ->
-      @commitLoggingTransaction()
-      awaiting = []
-      awaiting.push @knex('deviceAttribute').where('id', id).del()
+      @doInLoggingTransaction( (trx) =>
+        awaiting = []
+        awaiting.push @knex('deviceAttribute').transacting(trx).where('id', id).del()
 
-      for tableName, tableInfo of dbMapping.attributeValueTables
-        awaiting.push @knex(tableName).where('deviceAttributeId', id).del()
-      return Promise.all(awaiting)
+        for tableName, tableInfo of dbMapping.attributeValueTables
+          awaiting.push @knex(tableName).where('deviceAttributeId', id).del()
+        return Promise.all(awaiting)
+      )
 
     querySingleDeviceAttributeEvents: (deviceId, attributeName, queryCriteria = {}) ->
       {
@@ -605,35 +660,36 @@ module.exports = (env) ->
         limit,
         groupByTime
       } = queryCriteria
-      @commitLoggingTransaction()
       unless order?
         order = "time"
         orderDirection = "asc"
       return @_getDeviceAttributeInfo(deviceId, attributeName).then( (info) =>
-        query = @knex(dbMapping.typeToAttributeTable(info.type))
-        unless groupByTime?
-          query.select('time', 'value')
-        else
-          query.select(@knex.raw('MIN(time) AS time'), @knex.raw('AVG(value) AS value'))
-        query.where('deviceAttributeId', info.id)
-        if after?
-          query.where('time', '>=', parseFloat(after))
-        if before?
-          query.where('time', '<=', parseFloat(before))
-        if order?
-          query.orderBy(order, orderDirection)
-        if groupByTime?
-          groupByTime = parseFloat(groupByTime)
-          query.groupByRaw("time/#{groupByTime}")
-        if offset? then query.offset(offset)
-        if limit? then query.limit(limit)
-        env.logger.debug("query:", query.toString()) if @dbSettings.debug
-        time = new Date().getTime()
-        return Promise.resolve(query).then( (result) =>
-          timeDiff = new Date().getTime()-time
-          if @dbSettings.debug
-            env.logger.debug("quering #{result.length} events took #{timeDiff}ms.")
-          return result
+        return @doInLoggingTransaction( (trx) =>
+          query = @knex(dbMapping.typeToAttributeTable(info.type)).transacting(trx)
+          unless groupByTime?
+            query.select('time', 'value')
+          else
+            query.select(@knex.raw('MIN(time) AS time'), @knex.raw('AVG(value) AS value'))
+          query.where('deviceAttributeId', info.id)
+          if after?
+            query.where('time', '>=', parseFloat(after))
+          if before?
+            query.where('time', '<=', parseFloat(before))
+          if order?
+            query.orderBy(order, orderDirection)
+          if groupByTime?
+            groupByTime = parseFloat(groupByTime)
+            query.groupByRaw("time/#{groupByTime}")
+          if offset? then query.offset(offset)
+          if limit? then query.limit(limit)
+          env.logger.debug("query:", query.toString()) if @dbSettings.debug
+          time = new Date().getTime()
+          return Promise.resolve(query).then( (result) =>
+            timeDiff = new Date().getTime()-time
+            if @dbSettings.debug
+              env.logger.debug("quering #{result.length} events took #{timeDiff}ms.")
+            return result
+          )
         )
       )
 
@@ -644,7 +700,7 @@ module.exports = (env) ->
       @emit 'device-attribute-save', {deviceId, attributeName, time, value}
 
       return @_getDeviceAttributeInfo(deviceId, attributeName).then( (info) =>
-        return @loggingTransaction().then( (trx) =>
+        return @doInLoggingTransaction( (trx) =>
           # insert into value table
           tableName = dbMapping.typeToAttributeTable(info.type)
           timestamp = time.getTime()
@@ -656,7 +712,6 @@ module.exports = (env) ->
               doInsert = true
             else
               doInsert = false
-
           if doInsert
             info.lastInsertTime = timestamp
             insert1 = @knex(tableName).transacting(trx).insert(
@@ -697,36 +752,37 @@ module.exports = (env) ->
     getLastDeviceState: (deviceId) ->
       if @_lastDevicesStateCache?
         return @_lastDevicesStateCache.then( (devices) -> devices[deviceId] )
-      @commitLoggingTransaction()
-      # query all devices for performance reason and cache the result
-      @_lastDevicesStateCache = @knex('deviceAttribute').select(
-        'deviceId', 'attributeName', 'type', 'lastUpdate', 'lastValue'
-      ).then( (result) =>
-        #group by device
-        devices = {}
-        convertValue = (value, type) ->
-          unless value? then return null
-          return (
-            switch type
-              when 'number' then parseFloat(value)
-              when 'boolean' then (value is '1')
-              else value
-          )
-        for r in result
-          d = devices[r.deviceId]
-          unless d? then d = devices[r.deviceId] = {}
-          d[r.attributeName] = {
-            time: r.lastUpdate
-            value: convertValue(r.lastValue, r.type)
-          }
-        # Clear cache after one minute
-        clearTimeout(@_lastDevicesStateCacheTimeout)
-        @_lastDevicesStateCacheTimeout = setTimeout( (=>
-          @_lastDevicesStateCache = null
-        ), 60*1000)
-        return devices
+      return @doInLoggingTransaction( (trx) =>
+        # query all devices for performance reason and cache the result
+        @_lastDevicesStateCache = @knex('deviceAttribute').transacting(trx).select(
+          'deviceId', 'attributeName', 'type', 'lastUpdate', 'lastValue'
+        ).then( (result) =>
+          #group by device
+          devices = {}
+          convertValue = (value, type) ->
+            unless value? then return null
+            return (
+              switch type
+                when 'number' then parseFloat(value)
+                when 'boolean' then (value is '1')
+                else value
+            )
+          for r in result
+            d = devices[r.deviceId]
+            unless d? then d = devices[r.deviceId] = {}
+            d[r.attributeName] = {
+              time: r.lastUpdate
+              value: convertValue(r.lastValue, r.type)
+            }
+          # Clear cache after one minute
+          clearTimeout(@_lastDevicesStateCacheTimeout)
+          @_lastDevicesStateCacheTimeout = setTimeout( (=>
+            @_lastDevicesStateCache = null
+          ), 60*1000)
+          return devices
+        )
+        return @_lastDevicesStateCache.then( (devices) -> devices[deviceId] )
       )
-      return @_lastDevicesStateCache.then( (devices) -> devices[deviceId] )
 
 
     _insertDeviceAttribute: (deviceId, attributeName) ->
@@ -752,26 +808,28 @@ module.exports = (env) ->
         Don't create a new entry for the device if an entry with the attributeName and deviceId
         already exists.
       ###
-      return @knex.raw("""
-        INSERT INTO deviceAttribute(deviceId, attributeName, type)
-        SELECT
-          '#{deviceId}' AS deviceId,
-          '#{attributeName}' AS attributeName,
-          '#{info.type}' as type
-        WHERE 0 = (
-          SELECT COUNT(*)
-          FROM deviceAttribute
-          WHERE deviceId = '#{deviceId}' and attributeName = '#{attributeName}'
-        );
-        """).then( => 
-        @knex('deviceAttribute').select('id').where(
-          deviceId: deviceId
-          attributeName: attributeName
-        ).then( ([result]) =>
-          info.id = result.id
-          assert info.id? and typeof info.id is "number"
-          fullQualifier = "#{deviceId}.#{attributeName}"
-          return (dbMapping.deviceAttributeCache[fullQualifier] = info)
+      return @doInLoggingTransaction( (trx) =>
+        return @knex.raw("""
+          INSERT INTO deviceAttribute(deviceId, attributeName, type)
+          SELECT
+            '#{deviceId}' AS deviceId,
+            '#{attributeName}' AS attributeName,
+            '#{info.type}' as type
+          WHERE 0 = (
+            SELECT COUNT(*)
+            FROM deviceAttribute
+            WHERE deviceId = '#{deviceId}' and attributeName = '#{attributeName}'
+          );
+          """).transacting(trx).then( => 
+          @knex('deviceAttribute').transacting(trx).select('id').where(
+            deviceId: deviceId
+            attributeName: attributeName
+          ).then( ([result]) =>
+            info.id = result.id
+            assert info.id? and typeof info.id is "number"
+            fullQualifier = "#{deviceId}.#{attributeName}"
+            return (dbMapping.deviceAttributeCache[fullQualifier] = info)
+          )
         )
       )
 
