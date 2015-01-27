@@ -68,25 +68,33 @@ module.exports = (env) ->
         @knex = Knex.initialize(
           client: @dbSettings.client
           connection: connection
+          pool:
+            destroy: (connection) => 
+              connection.close( (err) =>
+                @emit "close", err
+              )
         )
         
         @framework.on('destroy', (context) =>
           @framework.removeListener("messageLogged", @messageLoggedListener)
           @framework.removeListener('deviceAttributeChanged', @deviceAttributeChangedListener)
-          env.logger.info("Flusing database to disk, please wait...")
+          process.stdout.write("Flusing database to disk, please wait...")
           context.waitForIt(
             @commitLoggingTransaction().then( () =>
-              return new Promise( (resolve) =>
+              return new Promise( (resolve, reject) =>
                 destroy = =>
                   if  @knex.client.pool.genericPool.availableObjects.length isnt 0
+                    @once('close', (err) =>
+                      if err? then reject(err)
+                      else resolve()
+                    )
                     @knex.destroy()
-                    resolve()
                   else
                     process.stdout.write "."
                     setTimeout(destroy, 100)
                 destroy()
               ).then( =>
-                env.logger.info("Done.")
+                process.stdout.write("Done.\n")
               )
             )
           )
