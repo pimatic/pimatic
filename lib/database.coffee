@@ -69,17 +69,14 @@ module.exports = (env) ->
           client: @dbSettings.client
           connection: connection
         )
+        
         @framework.on('destroy', (context) =>
           @framework.removeListener("messageLogged", @messageLoggedListener)
           @framework.removeListener('deviceAttributeChanged', @deviceAttributeChangedListener)
-          env.logger.info("Flusing database to disk, please wait.")
+          env.logger.info("Flusing database to disk, please wait...")
           context.waitForIt(
-            @commitLoggingTransaction().then( =>
-              @knex.destroy().catch( (err) =>
-                env.logger.debug("ignoring pool error: #{err.message}")
-              ).then( =>
-                env.logger.info("Done.")
-              )
+            @commitLoggingTransaction().then( () =>
+              env.logger.info("Done.")
             )
           )
         )
@@ -88,7 +85,7 @@ module.exports = (env) ->
           return Promise.all([
             @knex.raw("PRAGMA auto_vacuum=FULL;")
             @knex.raw("PRAGMA journal_mode=MEMORY;")
-            @knex.raw("PRAGMA synchronous=NORMAL;")
+            @knex.raw("PRAGMA synchronous=FULL;")
           ])
 
       ).then( =>         

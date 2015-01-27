@@ -977,7 +977,12 @@ module.exports = (env) ->
 
       @emit "destroy", context
       @saveConfig()
-      return @_destroying = Promise.all(context.waitFor)
+      return @_destroying = Promise.settle(context.waitFor).each( (r) => 
+        if r.isRejected()
+          err = r.reason()
+          env.logger.error err.message
+          env.logger.debug err.stack
+      )
 
     saveConfig: ->
       assert @config?
