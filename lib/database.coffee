@@ -78,10 +78,11 @@ module.exports = (env) ->
             @commitLoggingTransaction().then( () =>
               return new Promise( (resolve) =>
                 destroy = =>
-                  console.log "trying to destroy"
                   if  @knex.client.pool.genericPool.availableObjects.length isnt 0
-                    @knex.destroy(resolve)
+                    @knex.destroy()
+                    resolve()
                   else
+                    process.stdout.write "."
                     setTimeout(destroy, 100)
                 destroy()
               ).then( =>
