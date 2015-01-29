@@ -78,6 +78,7 @@ module.exports = (env) ->
         @framework.on('destroy', (context) =>
           @framework.removeListener("messageLogged", @messageLoggedListener)
           @framework.removeListener('deviceAttributeChanged', @deviceAttributeChangedListener)
+          clearInterval(@deleteExpiredInterval)
           process.stdout.write("Flusing database to disk, please wait...")
           context.waitForIt(
             @commitLoggingTransaction().then( () =>
@@ -102,11 +103,15 @@ module.exports = (env) ->
         @knex.subquery = (query) -> this.raw("(#{query.toString()})")
         if @dbSettings.client is "sqlite3"
           return Promise.all([
+            # Prevents a shm file to be created for wal index:
             @knex.raw("PRAGMA locking_mode=EXCLUSIVE")
             @knex.raw("PRAGMA synchronous=NORMAL;")
             @knex.raw("PRAGMA auto_vacuum=FULL;")
+            # Don't write data to disk inside one transaction, this reduces disk writes
             @knex.raw("PRAGMA cache_spill=false;")
+            # Increase the cache size to around 20MB (pagesize=1024B)
             @knex.raw("PRAGMA cache_size=20000;")
+            # WAL mode to prevents disk corruption and minimize disk writes
             @knex.raw("PRAGMA journal_mode=WAL;")
           ])
 
@@ -127,22 +132,24 @@ module.exports = (env) ->
         @_updateDeviceAttributeExpireInfos()
         @_updateMessageseExpireInfos()
 
-        deleteExpiredEntriesInterval = 30 * 60 * 1000#ms
+        deleteExpiredEntriesInterval = 10 * 60 * 1000#ms
 
-        setInterval( ( =>
-          env.logger.debug("deleteing expired device attributes") if @dbSettings.debug
-          @_deleteExpiredDeviceAttributes().catch( (error) =>
+        @deleteExpiredInterval = setInterval( ( =>
+          env.logger.info("deleteing expired logged values") #if @dbSettings.debug
+          Promise.all([
+            @_deleteExpiredDeviceAttributes()
+            @_deleteExpiredMessages()
+          ])
+          .then( => 
+            env.logger.info("done -> flushing to disk") #if @dbSettings.debug
+            @commitLoggingTransaction() )
+          .then( =>
+            env.logger.info("done.") #if @dbSettings.debug
+          ).catch( (error) =>
             env.logger.error(error.message)
             env.logger.debug(error.stack)
           ).done()
-        ), deleteExpiredEntriesInterval)
 
-        setInterval( ( =>
-          env.logger.debug("deleteing expired messages") if @dbSettings.debug
-          @_deleteExpiredMessages().catch( (error) =>
-            env.logger.error(error.message)
-            env.logger.debug(error.stack)
-          ).done()
         ), deleteExpiredEntriesInterval)
         return
       )
@@ -390,12 +397,12 @@ module.exports = (env) ->
       return @doInLoggingTransaction( (trx) =>
         awaiting = []
         for entry in  @dbSettings.deviceAttributeLogging
-          subquery = @knex('deviceAttribute').transacting(trx)
+          subquery = @knex('deviceAttribute')
             .select('id')
           subquery.whereRaw(entry.expireInfo.whereSQL)
           subqueryRaw = "deviceAttributeId in (#{subquery.toString()})"
           for tableName in _.keys(dbMapping.attributeValueTables)
-            del = @knex(tableName)
+            del = @knex(tableName).transacting(trx)
             del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
             del.whereRaw(subqueryRaw)
             del.del()
@@ -622,15 +629,13 @@ module.exports = (env) ->
 
 
     checkDatabase: () ->
-      query = @knex('deviceAttribute').select(
-        'id'
-        'deviceId', 
-        'attributeName', 
-        'type'
-      ).then( (result) => result )
-
-      return @commitLoggingTransaction().then( =>
-        return query.then( (results) =>
+      return @doInLoggingTransaction( (trx) =>
+        return @knex('deviceAttribute').transacting(trx).select(
+          'id'
+          'deviceId', 
+          'attributeName', 
+          'type'
+        ).then( (results) =>
           problems = []
           for result in results
             device = @framework.deviceManager.getDeviceById(result.deviceId)
@@ -673,7 +678,7 @@ module.exports = (env) ->
         awaiting.push @knex('deviceAttribute').transacting(trx).where('id', id).del()
 
         for tableName, tableInfo of dbMapping.attributeValueTables
-          awaiting.push @knex(tableName).where('deviceAttributeId', id).del()
+          awaiting.push @knex(tableName).transacting(trx).where('deviceAttributeId', id).del()
         return Promise.all(awaiting)
       )
 
