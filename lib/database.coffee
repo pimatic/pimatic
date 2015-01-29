@@ -235,7 +235,7 @@ module.exports = (env) ->
       return _.clone(@dbSettings.deviceAttributeLogging)
 
     setDeviceAttributeLogging: (deviceAttributeLogging) ->
-      @dbSettings.deviceAttributeLogging = deviceAttributeLogging
+      dbSettings.deviceAttributeLogging = deviceAttributeLogging
       @_updateDeviceAttributeExpireInfos()
       @framework.saveConfig()
       return
