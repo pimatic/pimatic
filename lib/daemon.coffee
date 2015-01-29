@@ -147,7 +147,7 @@ exports.softKiller = (timeout = 2000) ->
         cb(sig == 0)
     tryKill()
 
-exports.stop = (pidfile, cb = exports.stopped, killer = exports.hardKiller(10000)) ->
+exports.stop = (pidfile, cb = exports.stopped, killer = exports.hardKiller(2000)) ->
   exports.status pidfile, ({pid}) ->
     if pid
       killer pid, (killed) ->

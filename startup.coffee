@@ -35,9 +35,7 @@ startup = =>
   return Promise.try( =>
     framework = new env.framework.Framework configFile
     promise = framework.init()
-    onKill = -> framework.destroy().then( -> process.exit() )
-    process.on('SIGTERM',  onKill)
-    process.on('SIGINT',  onKill)
+    process.on('SIGINT', -> framework.destroy().then( -> process.exit() ) )
     return promise.then( => framework )
   ).catch( (e) =>
     env.logger.error e.message
