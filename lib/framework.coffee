@@ -538,12 +538,12 @@ module.exports = (env) ->
           'Can not restart self, when not daemonized. ' +
           'Please run pimatic with: "node ' + process.argv[1] + ' start" to use this feature.'
         )
-      @destroy().then( =>
+      # monitor will auto restart script
+      process.nextTick -> 
         daemon = require 'daemon'
         env.logger.info("restarting...")
         daemon.daemon process.argv[1], process.argv[2..]
         process.exit 0
-      )
 
     getGuiSetttings: () -> {
       config: @config.settings.gui
