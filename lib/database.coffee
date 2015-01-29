@@ -102,9 +102,12 @@ module.exports = (env) ->
         @knex.subquery = (query) -> this.raw("(#{query.toString()})")
         if @dbSettings.client is "sqlite3"
           return Promise.all([
+            @knex.raw("PRAGMA locking_mode=EXCLUSIVE")
+            @knex.raw("PRAGMA synchronous=NORMAL;")
             @knex.raw("PRAGMA auto_vacuum=FULL;")
+            @knex.raw("PRAGMA cache_spill=false;")
+            @knex.raw("PRAGMA cache_size=20000;")
             @knex.raw("PRAGMA journal_mode=WAL;")
-            @knex.raw("PRAGMA synchronous=FULL;")
           ])
 
       ).then( =>         
@@ -159,7 +162,7 @@ module.exports = (env) ->
           assert action.then?
           actions.push action
           action.then( ->
-            index = actions.indexOf action
+            index = actions.indexOf action 
             if index isnt -1
               actions.splice(index, 1)
           )
