@@ -48,7 +48,7 @@
     "human-format": "^0.2.0",
     "i18n": "0.4.*",
     "jayschema": "~0.2.7",
-    "knex": "git+https://github.com/tgriesser/knex.git#07b2f8c41f4732f5098c3d2c81ea5bcedb5bfe4a",
+    "knex": "~0.7.3",
     "lodash": "2.4.1",
     "logrotate-stream": "^0.2.3",
     "moment": "~2.6.0",
