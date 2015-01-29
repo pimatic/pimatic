@@ -103,7 +103,7 @@ module.exports = (env) ->
         if @dbSettings.client is "sqlite3"
           return Promise.all([
             @knex.raw("PRAGMA auto_vacuum=FULL;")
-            @knex.raw("PRAGMA journal_mode=MEMORY;")
+            @knex.raw("PRAGMA journal_mode=WAL;")
             @knex.raw("PRAGMA synchronous=FULL;")
           ])
 
@@ -158,6 +158,11 @@ module.exports = (env) ->
           # must return a promise
           assert action.then?
           actions.push action
+          action.then( ->
+            index = actions.indexOf action
+            if index isnt -1
+              actions.splice(index, 1)
+          )
           resolve(action)
           return {trx, actions}
         ).catch(reject)
