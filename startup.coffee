@@ -35,7 +35,7 @@ startup = =>
   return Promise.try( =>
     framework = new env.framework.Framework configFile
     promise = framework.init()
-    onKill = -> framework.destroy().then( -> process.exit(0) )
+    onKill = -> framework.destroy().then( -> process.exit() )
     process.on('SIGTERM',  onKill)
     process.on('SIGINT',  onKill)
     return promise.then( => framework )
