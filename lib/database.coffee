@@ -79,7 +79,7 @@ module.exports = (env) ->
           @framework.removeListener("messageLogged", @messageLoggedListener)
           @framework.removeListener('deviceAttributeChanged', @deviceAttributeChangedListener)
           clearInterval(@deleteExpiredInterval)
-          process.stdout.write("Flusing database to disk, please wait...")
+          env.logger.info("Flusing database to disk, please wait...")
           context.waitForIt(
             @commitLoggingTransaction().then( () =>
               return new Promise( (resolve, reject) =>
@@ -91,11 +91,10 @@ module.exports = (env) ->
                     )
                     @knex.destroy()
                   else
-                    process.stdout.write "."
                     setTimeout(destroy, 100)
                 destroy()
               ).then( =>
-                process.stdout.write("Done.\n")
+                process.stdout.write("...Done.\n")
               )
             )
           )
@@ -132,19 +131,19 @@ module.exports = (env) ->
         @_updateDeviceAttributeExpireInfos()
         @_updateMessageseExpireInfos()
 
-        deleteExpiredEntriesInterval = 10 * 60 * 1000#ms
+        deleteExpiredEntriesInterval = 2 * 60 * 1000#ms
 
         @deleteExpiredInterval = setInterval( ( =>
-          env.logger.info("deleteing expired logged values") #if @dbSettings.debug
+          env.logger.debug("deleteing expired logged values") if @dbSettings.debug
           Promise.all([
             @_deleteExpiredDeviceAttributes()
             @_deleteExpiredMessages()
           ])
           .then( => 
-            env.logger.info("done -> flushing to disk") #if @dbSettings.debug
+            env.logger.debug("done -> flushing to disk") if @dbSettings.debug
             @commitLoggingTransaction() )
           .then( =>
-            env.logger.info("done.") #if @dbSettings.debug
+            env.logger.debug("-> done.") if @dbSettings.debug
           ).catch( (error) =>
             env.logger.error(error.message)
             env.logger.debug(error.stack)
