@@ -223,9 +223,9 @@ module.exports = (env) ->
       while i >= 0
         entry = entries[i]
         #legazy support
-        if entry.time?
-          entry.expire = entry.time
-          delete entry.time
+        if entry.expire?
+          entry.expire = entry.expire
+          delete entry.expire
         unless entry.type?
           entry.type = "*"
 
