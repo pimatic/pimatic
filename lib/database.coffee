@@ -131,7 +131,7 @@ module.exports = (env) ->
         @_updateDeviceAttributeExpireInfos()
         @_updateMessageseExpireInfos()
 
-        deleteExpiredEntriesInterval = 2 * 60 * 1000#ms
+        deleteExpiredEntriesInterval = 2 * 60 * 60 * 1000#ms
 
         @deleteExpiredInterval = setInterval( ( =>
           env.logger.debug("deleteing expired logged values") if @dbSettings.debug
