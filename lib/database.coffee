@@ -131,25 +131,35 @@ module.exports = (env) ->
         @_updateDeviceAttributeExpireInfos()
         @_updateMessageseExpireInfos()
 
-        deleteExpiredEntriesInterval = 2 * 60 * 60 * 1000#ms
+        deleteExpiredInterval = @_parseTime(@dbSettings.deleteExpiredInterval)
+        diskSyncInterval = @_parseTime(@dbSettings.diskSyncInterval)
 
+        minExpireInterval = 5 * 60 * 1000
+        if deleteExpiredInterval < minExpireInterval
+          env.logger.warn("deleteExpiredInterval can't be less then 5min")
+          deleteExpiredInterval = minExpireInterval;
+
+        syncAllNo = Math.min(diskSyncInterval/deleteExpiredInterval, diskSyncInterval)
+        deleteNo = 0
         @deleteExpiredInterval = setInterval( ( =>
           env.logger.debug("deleteing expired logged values") if @dbSettings.debug
+          deleteNo++
           Promise.all([
             @_deleteExpiredDeviceAttributes()
             @_deleteExpiredMessages()
           ])
           .then( => 
-            env.logger.debug("done -> flushing to disk") if @dbSettings.debug
-            @commitLoggingTransaction() )
-          .then( =>
-            env.logger.debug("-> done.") if @dbSettings.debug
+            if deleteNo % syncAllNo is 0
+              env.logger.debug("done -> flushing to disk") if @dbSettings.debug
+              return @commitLoggingTransaction().then( =>
+                env.logger.debug("-> done.") if @dbSettings.debug
+              )
           ).catch( (error) =>
             env.logger.error(error.message)
             env.logger.debug(error.stack)
           ).done()
 
-        ), deleteExpiredEntriesInterval)
+        ), deleteExpiredInterval)
         return
       )
 
@@ -221,14 +231,14 @@ module.exports = (env) ->
         table.string('deviceId')
         table.string('attributeName')
         table.string('type')
+        table.string('type')
         table.timestamp('lastUpdate').nullable()
         table.string('lastValue').nullable()
       )
 
       # add to old deviceAttribute table 
       pending.push @knex.schema.table('deviceAttribute', (table) =>
-        table.timestamp('lastUpdate').nullable()
-        table.string('lastValue').nullable()
+        table.boolean('discrete').nullable()
       ).catch( (error) -> 
         if error.errno is 1 then return #ignore
         throw error
@@ -280,7 +290,7 @@ module.exports = (env) ->
       entries = @dbSettings.deviceAttributeLogging
       i = entries.length - 1
       sqlNot = ""
-      possibleTypes = ["number", "string", "boolean", "date", "*"]
+      possibleTypes = ["number", "string", "boolean", "date", "discrete", "continuous", "*"]
       while i >= 0
         entry = entries[i]
         #legazy support
@@ -310,7 +320,12 @@ module.exports = (env) ->
         if entry.attributeName isnt '*'
           ownWhere += " AND attributeName='#{entry.attributeName}'"
         if entry.type isnt '*'
-          ownWhere += " AND type='#{entry.type}'"
+          if entry.type is "continuous"
+            ownWhere += " AND discrete=0"
+          else if entry.type is "discrete"
+            ownWhere += " AND discrete=1"
+          else
+            ownWhere += " AND type='#{entry.type}'"
 
         expireInfo.whereSQL = "(#{ownWhere})#{sqlNot}"
         sqlNot = " AND NOT (#{ownWhere})#{sqlNot}"
@@ -362,7 +377,7 @@ module.exports = (env) ->
         i--
 
 
-     getDeviceAttributeLoggingTime: (deviceId, attributeName, type) ->
+     getDeviceAttributeLoggingTime: (deviceId, attributeName, type, discrete) ->
       expireMs = 0
       expire = "0"
       intervalMs = 0
@@ -371,7 +386,13 @@ module.exports = (env) ->
         matches = (
           (entry.deviceId is '*' or entry.deviceId is deviceId) and
           (entry.attributeName is '*' or entry.attributeName is attributeName) and
-          (entry.type is '*' or entry.type is type)
+          (
+            switch entry.type
+              when '*' then true
+              when "discrete" then discrete
+              when "continuous" then !discrete
+              else  entry.type is type
+            )
         )
         if matches
           if entry.expire?
@@ -591,15 +612,22 @@ module.exports = (env) ->
         return @knex('deviceAttribute').transacting(trx).select(
           'id',
           'deviceId', 
-          'attributeName', 
-          'type'
+          'attributeName',
+          'type',
+          'discrete'
         ).then( (results) =>
           for result in results
             info = @getDeviceAttributeLoggingTime(
-              result.deviceId, result.attributeName, result.type
+              result.deviceId, result.attributeName, result.type, (result.discrete is '1')
             )
             result.interval = info.interval
             result.expire = info.expire
+            # device = @framework.deviceManager.getDeviceById(result.deviceId)
+            # if device?
+            #   attribute = device.attributes[result.attributeName]
+            #   if attribute?
+            #     if attribute.discrete
+            #       result.interval = 'all'
           return results
         )
       )
@@ -771,7 +799,9 @@ module.exports = (env) ->
       return (
         if info? 
           unless info.expireMs?
-            expireInfo = @getDeviceAttributeLoggingTime(deviceId, attributeName, info.type)
+            expireInfo = @getDeviceAttributeLoggingTime(
+              deviceId, attributeName, info.type, info.discrete
+            )
             info.expireMs = expireInfo.expireMs
             info.intervalMs = expireInfo.intervalMs
             info.lastInsertTime = 0
@@ -825,11 +855,14 @@ module.exports = (env) ->
       attribute = device.attributes[attributeName]
       unless attribute? then throw new Error("#{deviceId} has no attribute #{attributeName}.")
 
-      expireInfo = @getDeviceAttributeLoggingTime(deviceId, attributeName, attribute.type)
+      expireInfo = @getDeviceAttributeLoggingTime(
+        deviceId, attributeName, attribute.type, attribute.discrete
+      )
 
       info = {
         id: null
         type: attribute.type
+        discrete: attribute.discrete
         expireMs: expireInfo.expireMs
         intervalMs: expireInfo.intervalMs
         lastInsertTime: 0
@@ -841,11 +874,12 @@ module.exports = (env) ->
       ###
       return @doInLoggingTransaction( (trx) =>
         return @knex.raw("""
-          INSERT INTO deviceAttribute(deviceId, attributeName, type)
+          INSERT INTO deviceAttribute(deviceId, attributeName, type, discrete)
           SELECT
             '#{deviceId}' AS deviceId,
             '#{attributeName}' AS attributeName,
-            '#{info.type}' as type
+            '#{info.type}' as type,
+            #{if info.discrete then 1 else 0} as discrete
           WHERE 0 = (
             SELECT COUNT(*)
             FROM deviceAttribute
@@ -858,8 +892,15 @@ module.exports = (env) ->
           ).then( ([result]) =>
             info.id = result.id
             assert info.id? and typeof info.id is "number"
+            update = Promise.resolve()
+            if (not info.discrete) or (info.discrete is "1") is attribute.discrete
+              update = @knex('deviceAttribute').transacting(trx)
+                .where(id: info.id).update(
+                  discrete: attribute.discrete
+                )
+            info.discrete = attribute.discrete
             fullQualifier = "#{deviceId}.#{attributeName}"
-            return (dbMapping.deviceAttributeCache[fullQualifier] = info)
+            return update.then( => (dbMapping.deviceAttributeCache[fullQualifier] = info) )
           )
         )
       )
