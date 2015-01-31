@@ -539,11 +539,12 @@ module.exports = (env) ->
           'Please run pimatic with: "node ' + process.argv[1] + ' start" to use this feature.'
         )
       # monitor will auto restart script
-      process.nextTick -> 
+      env.logger.info("restarting...")
+      @destroy().then( =>
         daemon = require 'daemon'
-        env.logger.info("restarting...")
         daemon.daemon process.argv[1], process.argv[2..]
         process.exit 0
+      )
 
     getGuiSetttings: () -> {
       config: @config.settings.gui
