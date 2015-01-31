@@ -95,7 +95,7 @@ module.exports = (env) ->
                     setTimeout(destroy, 100)
                 destroy()
               ).then( =>
-                process.stdout.write("...Done.\n")
+                env.logger.info("Flusing database to disk, please wait...Done.")
               )
             )
           )
