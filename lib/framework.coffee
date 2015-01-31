@@ -970,13 +970,17 @@ module.exports = (env) ->
       return
 
     destroy: ->
-      context = 
-        waitFor: []
-        waitForIt: (promise) -> @waitFor.push promise
+      if @_destroying? then return @_destroying
+      return @_destroying = Promise.resolve().then( =>
+        context = 
+          waitFor: []
+          waitForIt: (promise) -> @waitFor.push promise
 
-      @emit "destroy", context
-      @saveConfig()
-      return Promise.all(context.waitFor)
+        @emit "destroy", context
+        @saveConfig()
+        return Promise.all(context.waitFor)
+      )
+
 
     saveConfig: ->
       assert @config?

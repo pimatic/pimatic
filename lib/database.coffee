@@ -707,11 +707,13 @@ module.exports = (env) ->
         return @knex('deviceAttribute').transacting(trx).select(
           'id'
           'deviceId', 
-          'attributeName', 
-          'type'
+          'attributeName',
+          'type',
+          'discrete'
         ).then( (results) =>
           problems = []
           for result in results
+            result.discrete = dbMapping.fromDBBool(result.discrete)
             device = @framework.deviceManager.getDeviceById(result.deviceId)
             unless device?
               problems.push {
@@ -742,18 +744,56 @@ module.exports = (env) ->
                              "\"#{result.deviceId}\" has the wrong type"
                     action: "delete"
                   }
+                else if attribute.discrete isnt result.discrete
+                  problems.push {
+                    id: result.id
+                    deviceId: result.deviceId
+                    attribute: result.attributeName
+                    description: "Attribute \"#{result.attributeName}\" of" +
+                             "\"#{result.deviceId}\" discrete flag is wrong."
+                    action: "update"
+                  }
           return problems
         )
       )
 
     deleteDeviceAttribute: (id) ->
+      assert typeof id is "number"
       @doInLoggingTransaction( (trx) =>
-        awaiting = []
-        awaiting.push @knex('deviceAttribute').transacting(trx).where('id', id).del()
+        return @knex('deviceAttribute').transacting(trx).where('id', id).del().then( () =>
+          for key, entry of dbMapping.deviceAttributeCache
+            if entry.id is id
+              delete dbMapping.deviceAttributeCache[key]
+          awaiting = []
+          for tableName, tableInfo of dbMapping.attributeValueTables
+            awaiting.push @knex(tableName).transacting(trx).where('deviceAttributeId', id).del()
+          return Promise.all(awaiting)
+        )
+      )
 
-        for tableName, tableInfo of dbMapping.attributeValueTables
-          awaiting.push @knex(tableName).transacting(trx).where('deviceAttributeId', id).del()
-        return Promise.all(awaiting)
+    updateDeviceAttribute: (id) ->
+      assert typeof id is "number"
+      return @doInLoggingTransaction( (trx) =>
+        @knex('deviceAttribute').transacting(trx)
+          .select('deviceId', 'attributeName')
+          .where(id: id).then( (results) =>
+            if results.length is 1
+              result = results[0]
+              fullQualifier = "#{result.deviceId}.#{result.attributeName}"
+              device = @framework.deviceManager.getDeviceById(result.deviceId)
+              unless device? then throw new Error("#{result.deviceId} not found.")
+              attribute = device.attributes[result.attributeName]
+              unless attribute? 
+                new Error("#{result.deviceId} has no attribute #{result.attributeName}.")
+              info = dbMapping.deviceAttributeCache[fullQualifier]
+              info.discrete = attribute.discrete if info?
+              return update = @knex('deviceAttribute').transacting(trx)
+                .where(id: id).update(
+                  discrete: dbMapping.toDBBool(attribute.discrete)
+                ).return()
+            else
+              return
+        )
       )
 
     querySingleDeviceAttributeEvents: (deviceId, attributeName, queryCriteria = {}) ->

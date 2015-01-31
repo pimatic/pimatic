@@ -1354,6 +1354,17 @@ api.database = {
       permission:
         scope: "database"
         access: "write"
+    updateDeviceAttribute:
+      description: "Updates a device attribute info in database"
+      rest:
+        type: 'PATCH'
+        url: '/api/database/device-attribue/by-id'
+      params:
+        id:
+          type: "number"
+      permission:
+        scope: "database"
+        access: "write"
 }
 
 # all
