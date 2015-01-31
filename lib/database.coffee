@@ -178,11 +178,12 @@ module.exports = (env) ->
           # must return a promise
           assert action.then?
           actions.push action
-          action.then( ->
+          removeFromActions = =>
             index = actions.indexOf action 
             if index isnt -1
               actions.splice(index, 1)
-          )
+          # remove when action finished
+          action.then(removeFromActions, removeFromActions)
           resolve(action)
           return {trx, actions}
         ).catch(reject)
@@ -193,7 +194,7 @@ module.exports = (env) ->
       if @_loggingTransaction?
         promise = @_loggingTransaction.then( ({trx, actions}) =>
           env.logger.debug("commiting") if @dbSettings.debug
-          return Promise.all(actions).then( => trx.commit() ).catch( (error) =>
+          return Promise.settle(actions).then( => trx.commit() ).catch( (error) =>
             env.logger.error(error.message)
             env.logger.debug(error.stack)
           )
