@@ -625,7 +625,7 @@ module.exports = (env) ->
           for r in result
             if r.type is "boolean"
               # convert numeric or string value from db to boolean
-              r.value = dbMappint.fromDBBool(r.value)
+              r.value = dbMapping.fromDBBool(r.value)
           return result
         )
       )
