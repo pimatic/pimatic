@@ -32,7 +32,8 @@ module.exports = (env) ->
       "attributeValueString": {
         valueColumnType: "string"
       }
-
+    toDBBool: (v) => if v then 1 else 0
+    fromDBBool: (v) => v == 1 
     deviceAttributeCache: {}
     typeToAttributeTable: (type) -> @typeMap[type]
   }
@@ -231,7 +232,7 @@ module.exports = (env) ->
         table.string('deviceId')
         table.string('attributeName')
         table.string('type')
-        table.string('type')
+        table.boolean('discrete')
         table.timestamp('lastUpdate').nullable()
         table.string('lastValue').nullable()
       )
@@ -308,27 +309,30 @@ module.exports = (env) ->
         unless expireInfo?
           expireInfo = {
             expireMs: 0
+            interval: 0
             whereSQL: ""
           }
           info = {expireInfo}
           info.__proto__ = entry.__proto__
           entry.__proto__ = info
         # Generate sql where to use on deletion
-        ownWhere = "1=1"
-        if entry.deviceId isnt '*'
-          ownWhere += " AND deviceId='#{entry.deviceId}'"
-        if entry.attributeName isnt '*'
-          ownWhere += " AND attributeName='#{entry.attributeName}'"
-        if entry.type isnt '*'
-          if entry.type is "continuous"
-            ownWhere += " AND discrete=0"
-          else if entry.type is "discrete"
-            ownWhere += " AND discrete=1"
-          else
-            ownWhere += " AND type='#{entry.type}'"
-
-        expireInfo.whereSQL = "(#{ownWhere})#{sqlNot}"
-        sqlNot = " AND NOT (#{ownWhere})#{sqlNot}"
+        ownWhere = ["1=1"]
+        if entry.expire?
+          if entry.deviceId isnt '*'
+            ownWhere.push "deviceId='#{entry.deviceId}'"
+          if entry.attributeName isnt '*'
+            ownWhere.push "attributeName='#{entry.attributeName}'"
+          if entry.type isnt '*'
+            if entry.type is "continuous"
+              ownWhere.push "discrete=0"
+            else if entry.type is "discrete"
+              ownWhere.push "discrete=1"
+            else
+              ownWhere.push "type='#{entry.type}'"
+        if entry.expire?
+          ownWhere = ownWhere.join(" and ")
+          expireInfo.whereSQL = "(#{ownWhere})#{sqlNot}"
+          sqlNot = " AND NOT (#{ownWhere})#{sqlNot}"
         # Set expire date
         expireInfo.expireMs = @_parseTime(entry.expire) if entry.expire?
         expireInfo.interval = @_parseTime(entry.interval) if entry.interval?
@@ -390,7 +394,7 @@ module.exports = (env) ->
             switch entry.type
               when '*' then true
               when "discrete" then discrete
-              when "continuous" then !discrete
+              when "continuous" then not discrete
               else  entry.type is type
             )
         )
@@ -417,16 +421,17 @@ module.exports = (env) ->
       return @doInLoggingTransaction( (trx) =>
         awaiting = []
         for entry in  @dbSettings.deviceAttributeLogging
-          subquery = @knex('deviceAttribute')
-            .select('id')
-          subquery.whereRaw(entry.expireInfo.whereSQL)
-          subqueryRaw = "deviceAttributeId in (#{subquery.toString()})"
-          for tableName in _.keys(dbMapping.attributeValueTables)
-            del = @knex(tableName).transacting(trx)
-            del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
-            del.whereRaw(subqueryRaw)
-            del.del()
-            awaiting.push del
+          if entry.expire?
+            subquery = @knex('deviceAttribute')
+              .select('id')
+            subquery.whereRaw(entry.expireInfo.whereSQL)
+            subqueryRaw = "deviceAttributeId in (#{subquery.toString()})"
+            for tableName in _.keys(dbMapping.attributeValueTables)
+              del = @knex(tableName).transacting(trx)
+              del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
+              del.whereRaw(subqueryRaw)
+              del.del()
+              awaiting.push del
         return Promise.all(awaiting)
       )
 
@@ -460,6 +465,47 @@ module.exports = (env) ->
           level: dbMapping.logLevelToInt[level]
           tags: JSON.stringify(tags)
           text: text
+        ).return()
+      )
+
+    saveDeviceAttributeEvent: (deviceId, attributeName, time, value) ->
+      assert typeof deviceId is 'string' and deviceId.length > 0
+      assert typeof attributeName is 'string' and attributeName.length > 0
+
+      @emit 'device-attribute-save', {deviceId, attributeName, time, value}
+
+      return @_getDeviceAttributeInfo(deviceId, attributeName).then( (info) =>
+        return @doInLoggingTransaction( (trx) =>
+          # insert into value table
+          tableName = dbMapping.typeToAttributeTable(info.type)
+          timestamp = time.getTime()
+          if info.expireMs is 0
+            # value expires immediatly
+            doInsert = false
+          else
+            if info.intervalMs is 0 or timestamp - info.lastInsertTime > info.intervalMs 
+              doInsert = true
+            else
+              doInsert = false
+          if doInsert
+            info.lastInsertTime = timestamp
+            insert1 = @knex(tableName).transacting(trx).insert(
+              time: time
+              deviceAttributeId: info.id
+              value: value
+            )
+          else
+            insert1 = Promise.resolve()
+          # and update lastValue in attributeInfo
+          insert2 = @knex('deviceAttribute').transacting(trx)
+            .where(
+              id: info.id
+            )
+            .update(
+              lastUpdate: time
+              lastValue: value
+            )
+          return Promise.all([insert1, insert2])
         )
       )
 
@@ -618,7 +664,8 @@ module.exports = (env) ->
         ).then( (results) =>
           for result in results
             info = @getDeviceAttributeLoggingTime(
-              result.deviceId, result.attributeName, result.type, (result.discrete is '1')
+              result.deviceId, result.attributeName, result.type, 
+              dbMapping.fromDBBool(result.discrete)
             )
             result.interval = info.interval
             result.expire = info.expire
@@ -752,47 +799,6 @@ module.exports = (env) ->
         )
       )
 
-    saveDeviceAttributeEvent: (deviceId, attributeName, time, value) ->
-      assert typeof deviceId is 'string' and deviceId.length > 0
-      assert typeof attributeName is 'string' and attributeName.length > 0
-
-      @emit 'device-attribute-save', {deviceId, attributeName, time, value}
-
-      return @_getDeviceAttributeInfo(deviceId, attributeName).then( (info) =>
-        return @doInLoggingTransaction( (trx) =>
-          # insert into value table
-          tableName = dbMapping.typeToAttributeTable(info.type)
-          timestamp = time.getTime()
-          if info.expireMs is 0
-            # value expires immediatly
-            doInsert = false
-          else
-            if info.intervalMs is 0 or timestamp - info.lastInsertTime > info.intervalMs 
-              doInsert = true
-            else
-              doInsert = false
-          if doInsert
-            info.lastInsertTime = timestamp
-            insert1 = @knex(tableName).transacting(trx).insert(
-              time: time
-              deviceAttributeId: info.id
-              value: value
-            )
-          else
-            insert1 = Promise.resolve()
-          # and update lastValue in attributeInfo
-          insert2 = @knex('deviceAttribute').transacting(trx)
-            .where(
-              id: info.id
-            )
-            .update(
-              lastUpdate: time
-              lastValue: value
-            )
-          return Promise.all([insert1, insert2])
-        )
-      )
-
     _getDeviceAttributeInfo: (deviceId, attributeName) ->
       fullQualifier = "#{deviceId}.#{attributeName}"
       info = dbMapping.deviceAttributeCache[fullQualifier]
@@ -825,7 +831,7 @@ module.exports = (env) ->
             return (
               switch type
                 when 'number' then parseFloat(value)
-                when 'boolean' then (value is '1')
+                when 'boolean' then dbMapping.fromDBBool(value)
                 else value
             )
           for r in result
@@ -893,10 +899,10 @@ module.exports = (env) ->
             info.id = result.id
             assert info.id? and typeof info.id is "number"
             update = Promise.resolve()
-            if (not info.discrete) or (info.discrete is "1") is attribute.discrete
+            if (not info.discrete) or dbMapping.fromDBBool(info.discrete) is attribute.discrete
               update = @knex('deviceAttribute').transacting(trx)
                 .where(id: info.id).update(
-                  discrete: attribute.discrete
+                  discrete: dbMapping.toDBBool(attribute.discrete)
                 )
             info.discrete = attribute.discrete
             fullQualifier = "#{deviceId}.#{attributeName}"
