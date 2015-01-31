@@ -891,7 +891,8 @@ module.exports = (env) ->
             FROM deviceAttribute
             WHERE deviceId = '#{deviceId}' and attributeName = '#{attributeName}'
           );
-          """).transacting(trx).then( => 
+          """
+        ).transacting(trx).then( => 
           @knex('deviceAttribute').transacting(trx).select('id').where(
             deviceId: deviceId
             attributeName: attributeName
@@ -899,7 +900,7 @@ module.exports = (env) ->
             info.id = result.id
             assert info.id? and typeof info.id is "number"
             update = Promise.resolve()
-            if (not info.discrete?) or dbMapping.fromDBBool(info.discrete) is attribute.discrete
+            if (not info.discrete?) or dbMapping.fromDBBool(info.discrete) isnt attribute.discrete
               update = @knex('deviceAttribute').transacting(trx)
                 .where(id: info.id).update(
                   discrete: dbMapping.toDBBool(attribute.discrete)
