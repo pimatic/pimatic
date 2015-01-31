@@ -337,6 +337,7 @@ module.exports = (env) ->
             socket.username = req.query.username
             return next()
           else
+            console.log "not logged in"
             return next(new Error('unauthorizied'))
         else if req.headers.cookie?
           req.cookies = null
@@ -360,6 +361,7 @@ module.exports = (env) ->
               return next()
             else 
               env.logger.debug "socket.io: Cookie is invalid."
+              console.log "not logged in"
               return next(new Error('Authentication error'))
           )
         else

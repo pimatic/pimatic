@@ -625,7 +625,7 @@ module.exports = (env) ->
           for r in result
             if r.type is "boolean"
               # convert numeric or string value from db to boolean
-              r.value = not (r.value is "0" or r.value is 0)
+              r.value = dbMappint.fromDBBool(r.value)
           return result
         )
       )
@@ -663,9 +663,9 @@ module.exports = (env) ->
           'discrete'
         ).then( (results) =>
           for result in results
+            result.discrete = dbMapping.fromDBBool(result.discrete)
             info = @getDeviceAttributeLoggingTime(
-              result.deviceId, result.attributeName, result.type, 
-              dbMapping.fromDBBool(result.discrete)
+              result.deviceId, result.attributeName, result.type, result.discrete
             )
             result.interval = info.interval
             result.expire = info.expire
@@ -885,7 +885,7 @@ module.exports = (env) ->
             '#{deviceId}' AS deviceId,
             '#{attributeName}' AS attributeName,
             '#{info.type}' as type,
-            #{if info.discrete then 1 else 0} as discrete
+            #{dbMapping.toDBBool(info.discrete)} as discrete
           WHERE 0 = (
             SELECT COUNT(*)
             FROM deviceAttribute
@@ -899,7 +899,7 @@ module.exports = (env) ->
             info.id = result.id
             assert info.id? and typeof info.id is "number"
             update = Promise.resolve()
-            if (not info.discrete) or dbMapping.fromDBBool(info.discrete) is attribute.discrete
+            if (not info.discrete?) or dbMapping.fromDBBool(info.discrete) is attribute.discrete
               update = @knex('deviceAttribute').transacting(trx)
                 .where(id: info.id).update(
                   discrete: dbMapping.toDBBool(attribute.discrete)
