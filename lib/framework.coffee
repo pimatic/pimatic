@@ -75,7 +75,6 @@ module.exports = (env) ->
 
       @_setupExpressApp()
 
-
     _validateConfig: (config, schema, scope = "config") ->
       js = new JaySchema()
       errors = js.validate(config, schema)
@@ -332,8 +331,14 @@ module.exports = (env) ->
       @io.use( (socket, next) =>
         if auth.enabled is no
           return next()
-        req = socket.request 
-        if req.headers.cookie?
+        req = socket.request
+        if req.query.username? and req.query.password?
+          if @userManager.checkLogin(req.query.username, req.query.password)
+            socket.username = req.query.username
+            return next()
+          else
+            return next(new Error('unauthorizied'))
+        else if req.headers.cookie?
           req.cookies = null
           ioCookieParser(req, null, =>
             sessionCookie = req.signedCookies?[@app.cookieSessionOptions.key]
@@ -534,11 +539,12 @@ module.exports = (env) ->
           'Please run pimatic with: "node ' + process.argv[1] + ' start" to use this feature.'
         )
       # monitor will auto restart script
-      process.nextTick -> 
+      env.logger.info("restarting...")
+      @destroy().then( =>
         daemon = require 'daemon'
-        env.logger.info("restarting...")
         daemon.daemon process.argv[1], process.argv[2..]
         process.exit 0
+      )
 
     getGuiSetttings: () -> {
       config: @config.settings.gui
@@ -962,6 +968,18 @@ module.exports = (env) ->
       @saveConfig()
       @restart()
       return
+
+    destroy: ->
+      if @_destroying? then return @_destroying
+      return @_destroying = Promise.resolve().then( =>
+        context = 
+          waitFor: []
+          waitForIt: (promise) -> @waitFor.push promise
+
+        @emit "destroy", context
+        @saveConfig()
+        return Promise.all(context.waitFor)
+      )
 
 
     saveConfig: ->

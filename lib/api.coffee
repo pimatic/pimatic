@@ -417,6 +417,36 @@ api.rules = {
       permission:
         scope: "rules"
         access: "read"
+    getPredicatePresets:
+      rest:
+        type: "GET"
+        url: "/api/rules-parser/get-predicate-presets"
+      description: "Get predicates the user can choose from"
+      params: {}
+      result:
+        presets:
+          type: "array"
+       permission:
+        scope: "rules"
+        access: "read"
+    getPredicateInfo:
+      rest:
+        type: "GET"
+        url: "/api/rules-parser/get-predicate-info"
+      description: "Get predicates info"
+      params: {
+        input:
+          type: "string"
+        predicateProviderClass:
+          type: "string"
+          optional: yes
+      }
+      result:
+        result:
+          type: "array"
+       permission:
+        scope: "rules"
+        access: "read"
     executeAction:
       rest:
         type: "POST"
@@ -1185,14 +1215,38 @@ api.database = {
       permission:
         scope: "events"
         access: "read"
+    queryDeviceAttributeEventsCounts:
+      rest:
+        type: 'GET'
+        url: '/api/database/device-attributes/counts'
+      description: "Get count of saved device attributes per atrtibute"
+      params: {}
+      result:
+        counts:
+          type: t.array
+      permission:
+        scope: "events"
+        access: "read"
     queryDeviceAttributeEventsDevices:
       rest:
         type: 'GET'
         url: '/api/database/device-attributes/devices'
-      description: "get logged values of all device attributes"
+      description: "get all device attribute infos in database"
       params: {}
       result:
         devices:
+          type: t.array
+      permission:
+        scope: "events"
+        access: "read"
+    queryDeviceAttributeEventsInfo:
+      rest:
+        type: 'GET'
+        url: '/api/database/device-attributes-info'
+      description: "get all device attribute infos in database"
+      params: {}
+      result:
+        deviceAttributes:
           type: t.array
       permission:
         scope: "events"
@@ -1293,6 +1347,17 @@ api.database = {
       description: "Deletes a device attribute from the database"
       rest:
         type: 'DELETE'
+        url: '/api/database/device-attribue/by-id'
+      params:
+        id:
+          type: "number"
+      permission:
+        scope: "database"
+        access: "write"
+    updateDeviceAttribute:
+      description: "Updates a device attribute info in database"
+      rest:
+        type: 'PATCH'
         url: '/api/database/device-attribue/by-id'
       params:
         id:

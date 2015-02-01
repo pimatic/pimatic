@@ -64,25 +64,29 @@ module.exports = (env) ->
       @_constructorCalled = yes
       @_attributesMeta = {}
       device = @
-      for attrName, attr of @attributes
-        do (attrName, attr) =>
-          @_attributesMeta[attrName] = {
-            value: null
-            history: []
-            update: (value) ->
-              if attr.type in ["number", "integer"] and typeof value is "string"
-                env.logger.error(
-                  "Got string value for attribute #{attrName} of #{device.constructor.name} but " + 
-                  "attribute type is #{attr.type}."
-                )
-              timestamp = (new Date()).getTime()
-              @value = value
-              @lastUpdate = timestamp
-              if @history.length is 30
-                @history.shift()
-              @history.push {t:timestamp, v:value}
-          }
-          @on(attrName, (value) => @_attributesMeta[attrName].update(value) )
+      @_initAttributeMeta(attrName, attr) for attrName, attr of @attributes
+
+
+    _initAttributeMeta: (attrName, attr) ->
+      @_attributesMeta[attrName] = {
+        value: null
+        history: []
+        update: (value) ->
+          if attr.type in ["number", "integer"] and typeof value is "string"
+            env.logger.error(
+              "Got string value for attribute #{attrName} of #{device.constructor.name} but " + 
+              "attribute type is #{attr.type}."
+            )
+          timestamp = (new Date()).getTime()
+          @value = value
+          @lastUpdate = timestamp
+          if @history.length is 30
+            @history.shift()
+          @history.push {t:timestamp, v:value}
+      }
+      attrListener = (value) => @_attributesMeta[attrName].update(value)
+      @_attributesMeta[attrName].attrListener = attrListener
+      @on(attrName, attrListener)
 
     destroy: ->
       @emit('destroy', @)
@@ -113,6 +117,17 @@ module.exports = (env) ->
 
     getLastAttributeValue: (attrName) ->
       return @_attributesMeta[attrName].value
+
+    addAttribute: (name, attribute) ->
+      assert (not @_constructorCalled), "attributes can only be added in the constructor"
+      if @attributes is @constructor.prototype.attributes
+        @attributes = _.clone(@attributes)
+      @attributes[name] = attribute
+
+    updateName: (name) ->
+      if name is @name then return
+      @name = name
+      @emit "nameChanged", this
 
     getUpdatedAttributeValue: (attrName) ->
       getter = 'get' + upperCaseFirst(attrName)
@@ -775,11 +790,12 @@ module.exports = (env) ->
       @framework._emitDeviceOrderChanged(deviceOrder)
       return deviceOrder
 
-    registerDevice: (device) ->
+    registerDevice: (device, isNew = true) ->
       assert device?
       assert device instanceof env.devices.Device
       assert device._constructorCalled
-      if @devices[device.id]?
+
+      if isNew and @devices[device.id]?
         throw new Error("dublicate device id \"#{device.id}\"")
       unless device.id.match /^[a-z0-9\-_]+$/i
         env.logger.warn """
@@ -792,7 +808,11 @@ module.exports = (env) ->
             Name of device "#{device.id}" contains an "#{reservedWord}". 
             This could lead to errors in rules.
           """
-      env.logger.info "new device \"#{device.name}\"..."
+
+      if isNew
+        env.logger.info "new device \"#{device.name}\"..." 
+      else
+        env.logger.info "recreating \"#{device.name}\"..." 
 
       @devices[device.id]=device
 
@@ -802,10 +822,10 @@ module.exports = (env) ->
             @framework._emitDeviceAttributeEvent(device, attrName, attr,  new Date(), value)
           )
       device.afterRegister()
-      @framework._emitDeviceAdded(device)
+      @framework._emitDeviceAdded(device) if isNew
       return device
 
-    _loadDevice: (deviceConfig, lastDeviceState) ->
+    _loadDevice: (deviceConfig, lastDeviceState, isNew = true) ->
       classInfo = @deviceClasses[deviceConfig.class]
       unless classInfo?
         throw new Error("Unknown device class \"#{deviceConfig.class}\"")
@@ -837,7 +857,7 @@ module.exports = (env) ->
         if extension.applicable(classInfo.configDef)
           extension.apply(device.config, device)
 
-      return @registerDevice(device)
+      return @registerDevice(device, isNew)
 
     loadDevices: ->
       return Promise.each(@devicesConfig, (deviceConfig) =>
@@ -845,7 +865,7 @@ module.exports = (env) ->
           classInfo = @deviceClasses[deviceConfig.class]
           if classInfo?
             try
-              @_loadDevice(deviceConfig, lastDeviceState)
+              @_loadDevice(deviceConfig, lastDeviceState, true)
             catch e
               env.logger.error("Error loading device #{deviceConfig.id}: #{e.message}")
               env.logger.debug(e.stack)
@@ -875,6 +895,17 @@ module.exports = (env) ->
       device = @_loadDevice(deviceConfig, {})
       @addDeviceToConfig(deviceConfig)
       return device
+
+    recreateDevice: (device) ->
+      return @framework.database.getLastDeviceState(device.id).then( (lastDeviceState) =>
+        newDevice =  @_loadDevice(device.config, lastDeviceState, false)
+        @framework._emitDeviceChanged(newDevice)
+        device.emit 'change', newDevice
+        @emit 'deviceChanged', newDevice
+        @framework.saveConfig()
+        device.destroy()    
+      )
+ 
 
     updateDeviceByConfig: (deviceConfig) ->
       throw new Error("The Operation isn't supported yet.")

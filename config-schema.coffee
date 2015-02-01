@@ -133,16 +133,42 @@ module.exports = {
               description: "time to keep logged device attributes values in database"
               type: "array"
               default: [ 
-                { deviceId: '*', attributeName: '*', time: '7d' }
-                { deviceId: '*', attributeName: 'temperature', time: '1y' },
-                { deviceId: '*', attributeName: 'humidity', time: '1y' } 
+                { 
+                  deviceId: '*', attributeName: '*', type: "*", 
+                  interval: "0", expire: '7d' 
+                }
+                { 
+                  deviceId: '*', attributeName: '*', type: "continuous", 
+                  interval: "5min", expire: '7d'
+                }
+                { 
+                  deviceId: '*', attributeName: 'temperature', type: "number", 
+                  expire: '1y' 
+                }
+                { 
+                  deviceId: '*', attributeName: 'humidity', type: "number", 
+                  expire: '1y' 
+                } 
               ]
             messageLogging:
               description: "time to keep logged messages in database"
               type: "array"
               default: [ 
-                { level: '*', tags: [], time: '7d' }
+                { level: '*', tags: [], expire: '7d' }
+                { level: 'debug', tags: [], expire: '0' }
               ]
+            deleteExpiredInterval:
+              description: "interval for deleting expired entries from the database"
+              type: "string"
+              default: "2h"
+            diskSyncInterval:
+              description: "
+                interval for writing logged entries to disk. If this value is smaller then 
+                the deleteExpiredInterval setting then the value of it is used 
+                instead. Should be a multiple of deleteExpiredInterval.
+                "
+              type: "string"
+              default: "4h"
             debug: 
               description: "Enable to show database queries and some additional outputs"
               type: "boolean"
