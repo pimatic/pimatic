@@ -143,7 +143,7 @@ module.exports = (env) ->
         if (diskSyncInterval/deleteExpiredInterval % 1) isnt 0
           env.logger.warn("diskSyncInterval should be a multipe of deleteExpiredInterval.")
 
-        syncAllNo = Math.min(Math.ceil(diskSyncInterval/deleteExpiredInterval), 1)
+        syncAllNo = Math.max(Math.ceil(diskSyncInterval/deleteExpiredInterval), 1)
         deleteNo = 0
         @deleteExpiredInterval = setInterval( ( =>
           env.logger.debug("deleteing expired logged values") if @dbSettings.debug
