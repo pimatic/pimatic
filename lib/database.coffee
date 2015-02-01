@@ -135,12 +135,15 @@ module.exports = (env) ->
         deleteExpiredInterval = @_parseTime(@dbSettings.deleteExpiredInterval)
         diskSyncInterval = @_parseTime(@dbSettings.diskSyncInterval)
 
-        minExpireInterval = 5 * 60 * 1000
+        minExpireInterval = 1 * 60 * 1000
         if deleteExpiredInterval < minExpireInterval
-          env.logger.warn("deleteExpiredInterval can't be less then 5min")
-          deleteExpiredInterval = minExpireInterval;
+          env.logger.warn("deleteExpiredInterval can't be less then 1min, setting it to 1min.")
+          deleteExpiredInterval = minExpireInterval
 
-        syncAllNo = Math.min(diskSyncInterval/deleteExpiredInterval, diskSyncInterval)
+        if (diskSyncInterval/deleteExpiredInterval % 1) isnt 0
+          env.logger.warn("diskSyncInterval should be a multipe of deleteExpiredInterval.")
+
+        syncAllNo = Math.min(Math.ceil(diskSyncInterval/deleteExpiredInterval), 1)
         deleteNo = 0
         @deleteExpiredInterval = setInterval( ( =>
           env.logger.debug("deleteing expired logged values") if @dbSettings.debug
