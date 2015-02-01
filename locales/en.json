@@ -210,5 +210,6 @@
 	"Interval": "Interval",
 	"Expire": "Expire",
 	"Count": "Count",
-	"Attribute logging info": "Attribute logging info"
+	"Attribute logging info": "Attribute logging info",
+	"Remove": "Remove"
 }
