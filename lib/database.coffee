@@ -80,7 +80,7 @@ module.exports = (env) ->
           @framework.removeListener("messageLogged", @messageLoggedListener)
           @framework.removeListener('deviceAttributeChanged', @deviceAttributeChangedListener)
           clearInterval(@deleteExpiredInterval)
-          env.logger.info("Flusing database to disk, please wait...")
+          env.logger.info("Flushing database to disk, please wait...")
           context.waitForIt(
             @commitLoggingTransaction().then( () =>
               return new Promise( (resolve, reject) =>
@@ -95,7 +95,7 @@ module.exports = (env) ->
                     setTimeout(destroy, 100)
                 destroy()
               ).then( =>
-                env.logger.info("Flusing database to disk, please wait...Done.")
+                env.logger.info("Flushing database to disk, please wait...Done.")
               )
             )
           )
