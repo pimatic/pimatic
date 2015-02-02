@@ -33,7 +33,7 @@ module.exports = (env) ->
         valueColumnType: "string"
       }
     toDBBool: (v) => if v then 1 else 0
-    fromDBBool: (v) => v == 1 
+    fromDBBool: (v) => (v == 1 or v is "1") 
     deviceAttributeCache: {}
     typeToAttributeTable: (type) -> @typeMap[type]
   }
