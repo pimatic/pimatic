@@ -77,7 +77,6 @@
     "knex",
     "moment",
     "colors",
-    "coffee-cache",
     "decl-api",
     "jayschema",
     "relaxed-json",
