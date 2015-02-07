@@ -79,7 +79,8 @@ module.exports = (env) ->
         @framework.on('destroy', (context) =>
           @framework.removeListener("messageLogged", @messageLoggedListener)
           @framework.removeListener('deviceAttributeChanged', @deviceAttributeChangedListener)
-          clearInterval(@deleteExpiredInterval)
+          clearTimeout(@deleteExpiredTimeout)
+          @_isDestroying = true
           env.logger.info("Flushing database to disk, please wait...")
           context.waitForIt(
             @commitLoggingTransaction().then( () =>
@@ -145,25 +146,36 @@ module.exports = (env) ->
 
         syncAllNo = Math.max(Math.ceil(diskSyncInterval/deleteExpiredInterval), 1)
         deleteNo = 0
-        @deleteExpiredInterval = setInterval( ( =>
+
+        doDeleteExpired = ( =>
           env.logger.debug("deleteing expired logged values") if @dbSettings.debug
           deleteNo++
-          Promise.all([
-            @_deleteExpiredDeviceAttributes()
-            @_deleteExpiredMessages()
-          ])
+          Promise.resolve().then( =>
+            env.logger.debug("deleteing expired events") if @dbSettings.debug
+            return @_deleteExpiredDeviceAttributes().then( =>
+              env.logger.debug("deleteing expired events...Done") if @dbSettings.debug
+            )
+          )
+          .then( =>
+            env.logger.debug("deleteing expired message") if @dbSettings.debug
+            return @_deleteExpiredMessages().then( =>
+              env.logger.debug("deleteing expired message...Done") if @dbSettings.debug
+            )
+          )
           .then( => 
             if deleteNo % syncAllNo is 0
               env.logger.debug("done -> flushing to disk") if @dbSettings.debug
               return @commitLoggingTransaction().then( =>
                 env.logger.debug("-> done.") if @dbSettings.debug
               )
+            @deleteExpiredTimeout = setTimeout(doDeleteExpired, deleteExpiredInterval)
           ).catch( (error) =>
             env.logger.error(error.message)
             env.logger.debug(error.stack)
           ).done()
+        )
 
-        ), deleteExpiredInterval)
+        @deleteExpiredTimeout = setTimeout(doDeleteExpired, deleteExpiredInterval)
         return
       )
 
@@ -423,33 +435,34 @@ module.exports = (env) ->
 
     _deleteExpiredDeviceAttributes: ->
       return @doInLoggingTransaction( (trx) =>
-        awaiting = []
-        for entry in  @dbSettings.deviceAttributeLogging
+        return Promise.each(@dbSettings.deviceAttributeLogging, (entry) =>
           if entry.expire?
-            subquery = @knex('deviceAttribute')
-              .select('id')
+            subquery = @knex('deviceAttribute').select('id')
             subquery.whereRaw(entry.expireInfo.whereSQL)
             subqueryRaw = "deviceAttributeId in (#{subquery.toString()})"
-            for tableName in _.keys(dbMapping.attributeValueTables)
+            return Promise.each(_.keys(dbMapping.attributeValueTables), (tableName) =>
+              if @_isDestroying then return
               del = @knex(tableName).transacting(trx)
               del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
               del.whereRaw(subqueryRaw)
-              del.del()
-              awaiting.push del
-        return Promise.all(awaiting)
+              query = del.del()
+              env.logger.debug("query:", query.toString()) if @dbSettings.debug
+              return query
+            )
+        )
       )
-
 
     _deleteExpiredMessages: ->
       return @doInLoggingTransaction( (trx) =>
-        awaiting = []
-        for entry in  @dbSettings.messageLogging
+        return Promise.each(@dbSettings.messageLogging, (entry) =>
+          if @_isDestroying then return
           del = @knex('message').transacting(trx)
           del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
           del.whereRaw(entry.expireInfo.whereSQL)
-          del.del()
-          awaiting.push del
-        return Promise.all(awaiting)
+          query = del.del()
+          env.logger.debug("query:", query.toString()) if @dbSettings.debug
+          return query
+        )
       )
 
     saveMessageEvent: (time, level, tags, text) ->
@@ -475,7 +488,6 @@ module.exports = (env) ->
     saveDeviceAttributeEvent: (deviceId, attributeName, time, value) ->
       assert typeof deviceId is 'string' and deviceId.length > 0
       assert typeof attributeName is 'string' and attributeName.length > 0
-
       @emit 'device-attribute-save', {deviceId, attributeName, time, value}
 
       return @_getDeviceAttributeInfo(deviceId, attributeName).then( (info) =>
