@@ -1,18 +1,18 @@
 ## Help needed? Ask at the right place:
 
-#### Found a bug and want to report it?
+##### Found a bug and want to report it?
 
 The github issue section is the right place, but please use the search first.
 
-#####  Trouble with configuration, setup?
+##### Trouble with configuration or setup?
 
 Please ask in the [forum](http://forum.pimatic.org), but please use the search first.
 
-####  You have a cool feature request or want to share your experience?
+##### You have a cool feature request or want to share your experience?
 
 Please post in the [forum](http://forum.pimatic.org), but use the search first.
 
-#### You need assistence with plugin-develeopment?
+##### You need assistence with plugin-develeopment?
 
 Make sure that you code is available online (on github) and open a new issue here.
 
