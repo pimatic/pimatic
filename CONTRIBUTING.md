@@ -1,4 +1,4 @@
-## Help needed? ask at the right place:
+## Help needed? Ask at the right place:
 
 #### Found a bug and want to report it?
 
