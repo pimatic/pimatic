@@ -18,7 +18,7 @@ Make sure that you code is available online (on github) and open a new issue her
 
 --------------------------------------
 
-**In any place. If you want to post code or log files, please use [fenced code blocks](https://help.github.com/articles/github-flavored-markdown/#fenced-code-blocks)**
+**In any case: If you want to post code or log files, please use [fenced code blocks](https://help.github.com/articles/github-flavored-markdown/#fenced-code-blocks)**
 
 Here's an example:
 
