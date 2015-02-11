@@ -19,10 +19,10 @@ Screenshots
 [![Screenshot 3][screen3_thumb]](http://www.pimatic.org/screens/screen3.png) 
 [![Screenshot 4][screen4_thumb]](http://www.pimatic.org/screens/screen4.png)
 
-[screen1_thumb]: http://www.pimatic.org/screens/screen1_thumb.png
-[screen2_thumb]: http://www.pimatic.org/screens/screen2_thumb.png
-[screen3_thumb]: http://www.pimatic.org/screens/screen3_thumb.png
-[screen4_thumb]: http://www.pimatic.org/screens/screen4_thumb.png
+[screen1_thumb]: http://www.pimatic.org/screens/screen1_thumb.png?v=1
+[screen2_thumb]: http://www.pimatic.org/screens/screen2_thumb.png?v=1
+[screen3_thumb]: http://www.pimatic.org/screens/screen3_thumb.png?v=1
+[screen4_thumb]: http://www.pimatic.org/screens/screen4_thumb.png?v=1
 
 Motivation - Why Node.js?
 ------------
