@@ -65,7 +65,6 @@ exports.startFailed = (err) ->
   console.log err
   process.exit 1
 
-
 exports.start = ({ pidfile, logfile, run, success, failure }) ->
   success or= exports.startSucceeded
   failure or= exports.startFailed
@@ -76,21 +75,11 @@ exports.start = ({ pidfile, logfile, run, success, failure }) ->
     if process.env['PIMATIC_DAEMONIZED']? 
       # pipe strams to lofile:
       logStream = stream(file: logfile, size: '1m', keep: 3)
-      process.stdout.write = ((write) ->
-        (string, encoding, fd) ->
-          logStream.write string
-      )(process.stdout.write)
-      process.stderr.write = ((write) ->
-        (string, encoding, fd) ->
-          logStream.write string
-      )(process.stderr.write)
-
-      process.on 'uncaughtException', (err) =>
-        if err.silent is yes
-          console.log('pimatic is still running...')
-        else
-          console.log('a uncaught exception occured: ', err.stack)
-          console.log('keeping pimatic alive but could be in an undefined state...')
+      process.stdout.writeOut = process.stdout.write
+      process.stderr.writeOut = process.stderr.write
+      process.stdout.write = (string) -> logStream.write string
+      process.stderr.write = (string) -> logStream.write string
+      process.logStream = logStream
 
       # write the pidfile
       fs.writeFile pidfile, process.pid, (err) ->

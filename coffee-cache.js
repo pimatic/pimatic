@@ -74,6 +74,7 @@ function getCachPaths(filename) {
 }
 
 require('source-map-support').install({
+  handleUncaughtExceptions: false,
   retrieveSourceMap: function(source) {
     if(source.indexOf('.coffee', source.length - '.coffee'.length) === -1) {
       return null;

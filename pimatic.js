@@ -12,18 +12,11 @@ if(semver.lt(process.version, '0.10.0')) {
 }
 
 run = function () {
-  require('./startup').startup().catch(function(e){/*error gets already handled by startup*/});
+  require('./startup').startup().done();
 };
 
 var command = process.argv[2];
 if(!command || command === "run") {
-/*  process.on('uncaughtException', function (err){
-    if(!err.silent) {
-      console.log('a uncaught exception occured: ', err.stack);
-    }
-    console.log('exiting...');
-    process.exit(1);
-  });*/
   run();
 } else {
   logFile = path.resolve(__dirname, '../../pimatic-daemon.log');

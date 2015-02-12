@@ -306,6 +306,9 @@ module.exports = (env) ->
             assert pConf instanceof Object
             assert pConf.plugin? and typeof pConf.plugin is "string" 
 
+            if pConf.active is false
+              return Promise.resolve()
+
             fullPluginName = "pimatic-#{pConf.plugin}"
             return Promise.try( =>     
               # If the plugin folder already exist
