@@ -4,13 +4,11 @@ pimatic
 [![Build Status](https://travis-ci.org/pimatic/pimatic.png?branch=master)](https://travis-ci.org/pimatic/pimatic)
 [![NPM version](https://badge.fury.io/js/pimatic.png)](http://badge.fury.io/js/pimatic)
 [![Ready](https://badge.waffle.io/pimatic/pimatic.png?label=ready&title=Ready)](https://waffle.io/pimatic/pimatic)
-[![Gittip donate button](http://img.shields.io/gittip/sweetpi.png)](https://www.gittip.com/sweetpi/ "Donate weekly to this project using Gittip")
-[![PayPal donate button](http://img.shields.io/paypal/donate.png?color=blue)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=KCVVRY4243JS6 "Donate once-off to this project using Paypal")
 
 pimatic is a home automation framework that runs on [node.js](http://nodejs.org). It provides a 
 common extensible platform for home control and automation tasks.  
 
-Read more at [pimatic.org](http://pimatic.org/).
+Read more at [pimatic.org](http://pimatic.org/) or visit the [forum](http://forum.pimatic.org).
 
 Screenshots
 -----------
@@ -24,19 +22,19 @@ Screenshots
 [screen3_thumb]: http://www.pimatic.org/screens/screen3_thumb.png?v=1
 [screen4_thumb]: http://www.pimatic.org/screens/screen4_thumb.png?v=1
 
-Motivation - Why Node.js?
-------------
-__Why not just using php with apache, nginx or C++?__  
-Because Node.js is fancy and cool and javaScript is the language of the internet of things. No, to be seriously: Because Node.js with its event loop, asynchronously and non-blocking programming model is well suited for home automation tasks. Have you ever tryed implementing a cron like job in php? In addition there are tons of easy to use [packages and libs](https://npmjs.org/).
-
-__But the Raspberry Pi ist not very powerful, won't JavaScript be very slow?__  
-Yes and No, JavaScript is surely slower than C, but its getting faster and faster and runs very well on arm devices. Because disk access and network latency should be the real bottleneck of the pi, Node.js could perform well better than c++ because of its non blocking nature.
-
 Getting Started
 ------------
 
 [Install instuction](http://pimatic.org/guide/getting-started/installation/) can be found 
-on [pimatic.org](http://pimatic.org/).
+on [pimatic.org](http://pimatic.org/). If you need any help, [ask at the forum][http://forum.pimatic.org]).
+
+Donation
+--------
+
+Happy with pimatic and using it everyday? Consider a donation to support developlment and keeping the website and forum up: [![Gittip donate button](http://img.shields.io/gittip/sweetpi.png)](https://www.gittip.com/sweetpi/ "Donate weekly to this project using Gittip")
+[![PayPal donate button](http://img.shields.io/paypal/donate.png?color=blue)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=KCVVRY4243JS6 "Donate once-off to this project using Paypal")
+
+We promise, that pimatic will always be free to use and its code be open sourced.
 
 Get Involved
 -------------
@@ -47,8 +45,8 @@ Architecture Overview
 ---------------------
 
     +-------------------------------------------+
-    | mobile-  | rest- | cron | pilight   | ... |  Plugins (Views, Device-/Preidcates-
-    | frontend | api   |      | (adapter) |     |  Action-Provider, Services)
+    | mobile-  | rest- | cron | homeduino | ... |  Plugins (Views, Device-/Preidcates-
+    | frontend | api   |      |           |     |  Action-Provider, Services)
     |-------------------------------------------|
     | pimatic (framework)                       |  Framework
     |-------------------------------------------|
