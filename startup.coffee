@@ -38,7 +38,7 @@ startup = =>
       process.stderr.write = process.stderr.writeOut
       process.logStream.writer.on 'finish', ->
         process.exit(code)
-      process.logStream.writer.end()
+      process.logStream.end()
     else
       process.exit(code)
 
@@ -54,12 +54,12 @@ startup = =>
       uncaughtException = (err) ->
         unless err.silent
           env.logger.error(
-            "a uncaught exception occured: #{err.stack}\n
-             This is most probably a bug in pimatic or an module, please report it!"
+            "A uncaught exception occured: #{err.stack}\n
+             This is most probably a bug in pimatic or in a module, please report it!"
           )
         if process.env['PIMATIC_DAEMONIZED']
           env.logger.warn(
-            "keeping pimatic alive, but could be in an undefined state, 
+            "Keeping pimatic alive, but could be in an undefined state, 
              please restart pimatic so soon as possible!"
           )
         else
