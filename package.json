@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "bluebird": "~2.9.9",
-    "byline": "~4.1.1",
+    "byline": "~4.2.1",
     "cassert": "0.1.*",
     "cjson": "~0.3.0",
     "coffee-script": "1.8.0",
