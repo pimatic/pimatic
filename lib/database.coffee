@@ -182,37 +182,49 @@ module.exports = (env) ->
     loggingTransaction: ->
       unless @_loggingTransaction?
         @_loggingTransaction = new Promise( (resolve, reject) =>
-          @knex.transaction( (trx) => resolve({trx, actions: []})).catch(reject)
+          @knex.transaction( (trx) => 
+            transactionInfo = {
+              trx, 
+              count: 0,
+              resolve: null
+            }
+            resolve(transactionInfo)
+          ).catch(reject)
         )
       return @_loggingTransaction
 
     doInLoggingTransaction: (callback) ->
       return new Promise(  (resolve, reject) =>
-        @_loggingTransaction = @loggingTransaction().then( ({trx, actions}) =>
-          action = callback(trx)
+        @_loggingTransaction = @loggingTransaction().then( (transactionInfo) =>
+          action = callback(transactionInfo.trx)
           # must return a promise
-          assert action.then?
-          actions.push action
-          removeFromActions = =>
-            index = actions.indexOf action 
-            if index isnt -1
-              actions.splice(index, 1)
+          transactionInfo.count++
+          actionCompleted = -> 
+            transactionInfo.count--
+            if transactionInfo.count is 0 and transactionInfo.resolve?
+              transactionInfo.resolve()
           # remove when action finished
-          action.then(removeFromActions, removeFromActions)
+          action.then(actionCompleted, actionCompleted)
           resolve(action)
-          return {trx, actions}
+          return transactionInfo
         ).catch(reject)
       )
 
     commitLoggingTransaction: ->
       promise = Promise.resolve()
       if @_loggingTransaction?
-        promise = @_loggingTransaction.then( ({trx, actions}) =>
+        promise = @_loggingTransaction.then( (transactionInfo) =>
           env.logger.debug("commiting") if @dbSettings.debug
-          return Promise.settle(actions).then( => trx.commit() ).catch( (error) =>
-            env.logger.error(error.message)
-            env.logger.debug(error.stack)
-          )
+          doCommit = => 
+            return transactionInfo.trx.commit()
+          if transactionInfo.count is 0
+            return doCommit()
+          else
+            return new Promise( (resolve) -> 
+              transactionInfo.resolve = -> 
+                doCommit()
+                resolve()
+            )
         )
         @_loggingTransaction = null
       return promise.catch( (error) =>
