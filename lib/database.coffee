@@ -862,6 +862,10 @@ module.exports = (env) ->
             timeDiff = new Date().getTime()-time
             if @dbSettings.debug
               env.logger.debug("quering #{result.length} events took #{timeDiff}ms.")
+            if info.type is "boolean"
+              for r in result
+                # convert numeric or string value from db to boolean
+                r.value = dbMapping.fromDBBool(r.value)
             return result
           )
         )
