@@ -211,5 +211,6 @@
 	"Expire": "Expira",
 	"Count": "Contador",
 	"Attribute logging info": "Información de conexión",
-	"Remove": "Borrar"
+	"Remove": "Borrar",
+	"Stop": "Stop"
 }
