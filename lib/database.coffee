@@ -654,6 +654,9 @@ module.exports = (env) ->
             if r.type is "boolean"
               # convert numeric or string value from db to boolean
               r.value = dbMapping.fromDBBool(r.value)
+            else if r.type is "number"
+              # convert string values to number
+              r.value = parseFloat(r.value)
           return result
         )
       )
