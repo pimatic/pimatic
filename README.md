@@ -25,7 +25,7 @@ Screenshots
 Getting Started
 ------------
 
-[Install instuction](http://pimatic.org/guide/getting-started/installation/) can be found 
+[Install instruction](http://pimatic.org/guide/getting-started/installation/) can be found 
 on [pimatic.org](http://pimatic.org/). If you need any help, [ask at the forum](http://forum.pimatic.org).
 
 Donation
