@@ -312,7 +312,7 @@ module.exports = (env) ->
         delete req.session.username
         delete req.session.loginToken
         delete req.session.role
-        res.send 401, "Yor are now logged out."
+        res.send 401, "You are now logged out."
         return
       )
       serverEnabled = (
