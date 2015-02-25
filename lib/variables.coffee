@@ -256,7 +256,6 @@ module.exports = (env) ->
               )
               env.logger.debug e.stack
           else
-            assert variable.value?
             @_addVariable(
               new ExpressionValueVariable(
                 this, 
