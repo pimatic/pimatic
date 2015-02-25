@@ -11,7 +11,7 @@ module.exports = {
         locale:
           description: "The default language"
           type: "string"
-          enum: ['en', 'de', "es", "nl", "fr"]
+          enum: ['en', 'de', "es", "nl", "fr", "ru"]
           default: "en"
         debug:
           description: "Turn on debug checks. Set the logLevel to debug to additional outputs"
