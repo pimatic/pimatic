@@ -165,10 +165,14 @@ module.exports = (env) ->
           .then( => 
             if deleteNo % syncAllNo is 0
               env.logger.debug("done -> flushing to disk") if @dbSettings.debug
-              return @commitLoggingTransaction().then( =>
+              next = @commitLoggingTransaction().then( =>
                 env.logger.debug("-> done.") if @dbSettings.debug
               )
-            @deleteExpiredTimeout = setTimeout(doDeleteExpired, deleteExpiredInterval)
+            else
+              next = Promise.resolve()
+            return next.then( =>
+              @deleteExpiredTimeout = setTimeout(doDeleteExpired, deleteExpiredInterval)
+            )
           ).catch( (error) =>
             env.logger.error(error.message)
             env.logger.debug(error.stack)
