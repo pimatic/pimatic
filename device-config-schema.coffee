@@ -36,10 +36,10 @@ module.exports = {
               description: "Name for the corresponding attribute."
               type: "string"
             expression:
-              description: """
+              description: "
                 The expression to use to get the value. Can be just a variable name ($myVar), 
-                a calculation ($myVar + 10) or a string interpolation ("Test: {$myVar}!")
-                """
+                a calculation ($myVar + 10) or a string interpolation (\"Test: {$myVar}!\")
+                "
               type: "string"
             type:
               description: "The type of the variable."
@@ -52,6 +52,11 @@ module.exports = {
             label: 
               description: "A custom label to use in the frontend."
               type: "string"
+            discrete:
+              description: "
+                Should be set to true if the value does not change continuously over time.
+              "
+              type: "boolean"
   }
   DummySwitch:
     title: "DummySwitch config"

@@ -561,6 +561,9 @@ module.exports = (env) ->
           if variable.unit? and variable.unit.length > 0
             @attributes[name].unit = variable.unit
 
+          if variable.discrete
+            @attributes[name].discrete = variable.discrete
+
           evaluate = ( => 
             # wait till veraibelmanager is ready
             return Promise.delay(1).then( =>
