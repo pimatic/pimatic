@@ -47,7 +47,7 @@ module.exports = {
               default: "string"
               enum: ["string", "number"]
             unit:
-              description: "The unit of the variable, only works if type is number."
+              description: "The unit of the variable. Only works if type is a number."
               type: "string"
             label: 
               description: "A custom label to use in the frontend."
@@ -86,15 +86,15 @@ module.exports = {
         type: "number"
         default: 17
       guiShowModeControl: 
-        description: "Show the mode buttons in the gui"
+        description: "Show the mode buttons in the GUI"
         type: "boolean"
         default: true
       guiShowPresetControl:
-        description: "Show the preset temperatures in the gui"
+        description: "Show the preset temperatures in the GUI"
         type: "boolean"
         default: true
       guiShowTemperatueInput:
-        description: "Show the temperature input spinbox in the gui"
+        description: "Show the temperature input spinbox in the GUI"
         type: "boolean"
         default: true        
   }
