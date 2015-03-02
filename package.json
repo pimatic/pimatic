@@ -1,6 +1,6 @@
 {
   "name": "pimatic",
-  "description": "A home automation server and framework for the raspberry pi running on node.js",
+  "description": "A home automation server and framework for the Raspberry PI running on node.js",
   "author": "Oliver Schneider <oliverschneider89+sweetpi@gmail.com> (http://sweetpi.de)",
   "main": "pimatic.js",
   "files": [
