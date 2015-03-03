@@ -46,17 +46,17 @@ class Matcher
 
 
   # ###constructor()
-  # Create a matcher for the input string, with the given parse context
+  # Create a matcher for the input string, with the given parse context.
   constructor: (@input, @context = null, @prevInput = "", @elements = []) ->
 
   
   # ###match()
   ###
-  Matches the current inputs against the given pattern
-  pattern can be an string, an regexp or an array of strings or regexps.
+  Matches the current inputs against the given pattern.
+  Pattern can be a string, a regexp or an array of strings or regexps.
   If a callback is given it is called with a new Matcher for the remaining part of the string
-  and the matching part of the input
-  In addition a matcher is returned that hast the remaining parts as input.
+  and the matching part of the input.
+  In addition a matcher is returned that has the remaining parts as input.
   ###
   match: (patterns, options = {}, callback = null) ->
     unless @input? then return @
@@ -67,14 +67,14 @@ class Matcher
 
     matches = []
     for p, j in patterns
-      # If pattern is a array then assume that first element is an id that should be returned
-      # on match
+      # If pattern is an array then assume that first element is an ID that should be returned
+      # on match.
       matchId = null
       if Array.isArray p
         assert p.length is 2
         [matchId, p] = p
 
-      # handle ignore case for string
+      # Handle ignore case for string.
       [pT, inputT] = (
         if options.ignoreCase and typeof p is "string"
           [p.toLowerCase(), @input.toLowerCase()]
@@ -82,14 +82,14 @@ class Matcher
           [p, @input]
       )
 
-      # if pattern is an string, then we can add an autocomplete for it
+      # If pattern is a string, then we can add an autocomplete for it.
       if typeof p is "string" and @context
         showAc = (if options.acFilter? then options.acFilter(p) else true) 
         if showAc
           if S(pT).startsWith(inputT) and @input.length < p.length
             @context?.addHint(autocomplete: p)
 
-      # Now try to match the pattern against the input string
+      # Now try to match the pattern against the input string.
       wildcardMatch = false
       doesMatch = false
       match = null
@@ -98,13 +98,13 @@ class Matcher
       if options.wildcard?
         wildcardMatch = S(inputT).startsWith(options.wildcard)
       switch 
-        # do a normal string match
+        # Do a normal string match
         when typeof p is "string"
           doesMatch =  S(inputT).startsWith(pT)
           if doesMatch 
             match = p
             nextToken = @input.substring(p.length)
-        # do a regax match
+        # Do a regex match
         when p instanceof RegExp
           if options.ignoreCase?
             throw new Error("ignoreCase option can't be used with regexp")
@@ -123,7 +123,7 @@ class Matcher
           nextToken = @input.substring(options.wildcard.length)
         assert match?
         assert nextToken?
-        # If no matchId was provided then use the matching string itself
+        # If no matchID was provided then use the matching string itself.
         unless matchId? then matchId = match
         matches.push {
           matchId
@@ -183,7 +183,7 @@ class Matcher
 
   # ###matchNumber()
   ###
-  Matches any Number.
+  Matches any number.
   ###
   matchNumber: (options, callback) -> 
     unless @input? then return @
@@ -449,7 +449,7 @@ class Matcher
 
     next = @match('"')
     while next.hadMatch() and (not last?)
-      # match unescapted ", $ or {
+      # match unescaped ", $ or {
       next.match(/((?:(?:\\\\)*(?:\\.|[^"\$\{]))*)(.*?)$/, (m, strPart) =>
         # strPart is string till first var or ending quote
         # Check for end:
@@ -643,14 +643,14 @@ class Matcher
 
   # ###onEnd()
   ###
-  The given callback will be called for every empty string in the inputs of ther current matcher
+  The given callback will be called for every empty string in the inputs of the current matcher.
   ###
   onEnd: (callback) ->
     if @input?.length is 0 then callback()
 
   # ###onHadMatches()
   ###
-  The given callback will be called for every string in the inputs of ther current matcher
+  The given callback will be called for every string in the inputs of the current matcher.
   ###
   ifhadMatches: (callback) ->
     if @input? then callback(@input)
@@ -685,7 +685,7 @@ class Matcher
       m = cb(this)
       assert m instanceof Matcher
       matches.push m
-    # Get the longest match
+    # Get the longest match.
     next = _(matches).sortBy( (m) => 
       if m.input? then m.input.length else Number.MAX_VALUE
     ).first()
