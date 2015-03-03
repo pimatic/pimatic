@@ -338,7 +338,7 @@ module.exports = (env) ->
     _checkVariableName: (name) ->
       unless name.match /^[a-z0-9\-_]+$/i
         throw new Error(
-          "variable name must only contain alpha numerical symbols, \"-\" and  \"_\""
+          "Variable name must only contain alpha numerical symbols, \"-\" and  \"_\""
         )
 
     setVariableToValue: (name, value, unit) ->
@@ -419,7 +419,7 @@ module.exports = (env) ->
       variable = @variables[name]
       if variable?
         if variable.type isnt 'attribute'
-          throw new Error("Not an device attribute.")
+          throw new Error("Not a device attribute.")
         variable.destroy()
         delete @variables[name]
         @_emitVariableRemoved(variable)
