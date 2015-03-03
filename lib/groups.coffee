@@ -14,7 +14,7 @@ module.exports = (env) ->
 
     addGroup: (id, group) ->
       if _.findIndex(@groups, {id: id}) isnt -1
-        throw new Error('A group with this id already exists')
+        throw new Error('A group with this ID already exists')
       unless group.name?
         throw new Error('No name given')
       @groups.push( group = {
