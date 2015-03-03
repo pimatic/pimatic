@@ -616,8 +616,7 @@ module.exports = (env) ->
       @framework.variableManager.on("variableValueChanged", @changeListener)
       super()
     getValue: -> 
-      if @lastState? then return Promise.resolve(@lastState)
-      else return @_evaluate()
+      return @_evaluate()
     destroy: -> 
       @framework.variableManager.removeListener("variableValueChanged", @changeListener)
       super()
