@@ -141,7 +141,7 @@ module.exports = (env) ->
           id = e[idProperty]
           if ids[id]?
             throw new Error(
-              "Dublicate #{type} #{id} in config."
+              "Duplicate #{type} #{id} in config."
             )
           ids[id] = yes
 
@@ -155,7 +155,7 @@ module.exports = (env) ->
       # Check groups, rules, variables, pages integrity
       logWarning = (type, id, name, collection = "group") ->
         env.logger.warn(
-          """Could not find a #{type} with the id "#{id}" from """ + 
+          """Could not find a #{type} with the ID "#{id}" from """ + 
           """#{collection} "#{name}" in #{type}s config section."""
         )        
 
@@ -217,7 +217,7 @@ module.exports = (env) ->
           )
           unless validUsername
             throw new Error(
-              "Authentication is enabled, but no username is defined for a user. " +
+              "Authentication is enabled, but no username has been defined for the user. " +
               "Please define a username in the user section of the config.json file."
             )
           validPassword = (
@@ -225,7 +225,7 @@ module.exports = (env) ->
           )
           unless validPassword
             throw new Error(
-              "Authentication is enabled, but no password is defined for the user " +
+              "Authentication is enabled, but no password has been defined for the user " +
               "\"#{user.username}\". Please define a password for \"#{user.username}\" " +
               "in the users section of the config.json file or disable authentication."
             )
@@ -320,7 +320,7 @@ module.exports = (env) ->
       )
 
       unless serverEnabled 
-        env.logger.warn "You have no https and no http server enabled!"
+        env.logger.warn "You have no HTTPS and no HTTP server enabled!"
 
       @_initRestApi()
 
@@ -364,7 +364,7 @@ module.exports = (env) ->
           )
         else
           env.logger.warn "No cookie transmitted."
-          return next(new Error('unauthorizied'))
+          return next(new Error('Unauthorized'))
       )
 
       @io.bind(engine)
@@ -379,7 +379,7 @@ module.exports = (env) ->
           socket.end()
         return
 
-      # Start the https-server if it is enabled.
+      # Start the HTTPS-server if it is enabled.
       if @config.settings.httpsServer?.enabled
         httpsConfig = @config.settings.httpsServer
         assert httpsConfig instanceof Object
@@ -394,7 +394,7 @@ module.exports = (env) ->
         @app.httpsServer = https.createServer httpsOptions, @app
         @app.httpsServer.on('upgrade', onUpgrade)
 
-      # Start the http-server if it is enabled.
+      # Start the HTTP-server if it is enabled.
       if @config.settings.httpServer?.enabled
         http = require "http"
         @app.httpServer = http.createServer @app
@@ -515,7 +515,7 @@ module.exports = (env) ->
           httpsServerConfig.port, httpsServerConfig.hostname
         )
         listenPromises.push awaiting.then( =>
-          env.logger.info "listening for https-request on port #{httpsServerConfig.port}..."
+          env.logger.info "Listening for HTTPS-request on port #{httpsServerConfig.port}..."
         )
         
       if @app.httpServer?
@@ -525,7 +525,7 @@ module.exports = (env) ->
           httpServerConfig.port, httpServerConfig.hostname
         )
         listenPromises.push awaiting.then( =>
-          env.logger.info "listening for http-request on port #{httpServerConfig.port}..."
+          env.logger.info "Listening for HTTP-request on port #{httpServerConfig.port}..."
         )
         
       Promise.all(listenPromises).then( =>
@@ -539,7 +539,7 @@ module.exports = (env) ->
           'Please run pimatic with: "node ' + process.argv[1] + ' start" to use this feature.'
         )
       # monitor will auto restart script
-      env.logger.info("restarting...")
+      env.logger.info("Restarting...")
       @destroy().then( =>
         daemon = require 'daemon'
         daemon.daemon process.argv[1], process.argv[2..]
@@ -728,8 +728,8 @@ module.exports = (env) ->
             unless rule.id.match /^[a-z0-9\-_]+$/i
               newId = S(rule.id).slugify().s
               env.logger.warn """
-                The id of the rule "#{rule.id}" contains a non alphanumeric letter or symbol.
-                Changing the id of the rule to "#{newId}".
+                The ID of the rule "#{rule.id}" contains a non alphanumeric letter or symbol.
+                Changing the ID of the rule to "#{newId}".
               """
               rule.id = newId
 
@@ -780,7 +780,7 @@ module.exports = (env) ->
             @emit "config"
           # * If a rule was removed then
           @ruleManager.on "ruleRemoved", (rule) =>
-            # ...Remove the rule with the right id in the config.json file
+            # ...Remove the rule with the right ID in the config.json file
             @config.rules = (r for r in @config.rules when r.id isnt rule.id)
             @_emitRuleRemoved(rule)
             @emit "config"
@@ -867,7 +867,7 @@ module.exports = (env) ->
                       action.permission.action
                     )
                   else
-                    throw new Error("Unknown permission declaration for action #{action}")
+                    throw new Error("Unknown permissions declaration for action #{action}")
                 else
                   username = "nobody"
                   hasPermission = yes
@@ -918,7 +918,7 @@ module.exports = (env) ->
         unless typeof password is "string"
           throw new Error("Password is not a string")
         unless @userManager.checkLogin(@userManager.requestUsername, password)
-          throw new Error("Invalid Password")
+          throw new Error("Invalid password")
       else
         blankSecrets schema, configCopy
       return configCopy
