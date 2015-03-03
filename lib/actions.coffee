@@ -3,7 +3,7 @@ Action Provider
 =================
 A Action Provider can parse a action of a rule string and returns an Action Handler for that.
 The Action Handler offers a `executeAction` method to execute the action. 
-For actions and rule explenations take a look at the [rules file](rules.html).
+For actions and rule explanations take a look at the [rules file](rules.html).
 ###
 
 __ = require("i18n").__
@@ -25,8 +25,8 @@ module.exports = (env) ->
 
     # ### parseAction()
     ###
-    This function should parse the given input string `input` and return a ActionHandler if 
-    it can handle the by the input described action else it should return `null`.
+    This function should parse the given input string `input` and return an ActionHandler if 
+    handled by the input of described action, otherwise it should return `null`.
     ###
     parseAction: (input, context) => 
       throw new Error("Your ActionProvider must implement parseAction")
@@ -50,7 +50,7 @@ module.exports = (env) ->
     Take a look at the Log Action Handler for a simple example.
     ###
     executeAction: (simulate) =>
-      throw new Error("should be implemented by a subclass")  
+      throw new Error("Should be implemented by a subclass")  
 
     hasRestoreAction: => no
 
