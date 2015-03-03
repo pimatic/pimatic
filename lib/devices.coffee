@@ -41,8 +41,8 @@ module.exports = (env) ->
 
     _checkAttribute: (attrName) ->
       attr = @attributes[attrName]
-      assert attr.description?, "no description for #{attrName} of #{@name} given"
-      assert attr.type?, "no type for #{attrName} of #{@name} given"
+      assert attr.description?, "No description for #{attrName} of #{@name} given"
+      assert attr.type?, "No type for #{attrName} of #{@name} given"
 
       isValidType = (type) => type in _.values(t)
       assert isValidType(attr.type), "#{attrName} of #{@name} has no valid type."
@@ -56,10 +56,10 @@ module.exports = (env) ->
         attr.discrete = (if attr.type is "number" then no else yes)
 
     constructor: ->
-      assert @id?, "the device has no id"
-      assert @name?, "the device has no name"
-      assert @id.length isnt 0, "the id of the device is empty"
-      assert @name.length isnt 0, "the name of the device is empty"
+      assert @id?, "The device has no ID"
+      assert @name?, "The device has no name"
+      assert @id.length isnt 0, "The ID of the device is empty"
+      assert @name.length isnt 0, "The name of the device is empty"
       @_checkAttributes()
       @_constructorCalled = yes
       @_attributesMeta = {}
@@ -119,7 +119,7 @@ module.exports = (env) ->
       return @_attributesMeta[attrName].value
 
     addAttribute: (name, attribute) ->
-      assert (not @_constructorCalled), "attributes can only be added in the constructor"
+      assert (not @_constructorCalled), "Attributes can only be added in the constructor"
       if @attributes is @constructor.prototype.attributes
         @attributes = _.clone(@attributes)
       @attributes[name] = attribute
@@ -186,25 +186,25 @@ module.exports = (env) ->
 
     actions: 
       turnOn:
-        description: "turns the switch on"
+        description: "Turns the switch on"
       turnOff:
-        description: "turns the switch off"
+        description: "Turns the switch off"
       changeStateTo:
-        description: "changes the switch to on or off"
+        description: "Changes the switch to on or off"
         params:
           state:
             type: t.boolean
       toggle:
-        description: "toggle the state of the switch"
+        description: "Toggle the state of the switch"
       getState:
-        description: "returns the current state of the switch"
+        description: "Returns the current state of the switch"
         returns:
           state:
             type: t.boolean
         
     attributes:
       state:
-        description: "the current state of the switch"
+        description: "The current state of the switch"
         type: t.boolean
         labels: ['on', 'off']
 
@@ -248,27 +248,27 @@ module.exports = (env) ->
 
     actions: 
       changeDimlevelTo:
-        description: "sets the level of the dimmer"
+        description: "Sets the level of the dimmer"
         params:
           dimlevel:
             type: t.number
       changeStateTo:
-        description: "changes the switch to on or off"
+        description: "Changes the switch to on or off"
         params:
           state:
             type: t.boolean
       turnOn:
-        description: "turns the dim level to 100%"
+        description: "Turns the dim level to 100%"
       turnOff:
-        description: "turns the dim level to 0%"
+        description: "Turns the dim level to 0%"
         
     attributes:
       dimlevel:
-        description: "the current dim level"
+        description: "The current dim level"
         type: t.number
         unit: "%"
       state:
-        description: "the current state of the switch"
+        description: "The current state of the switch"
         type: t.boolean
         labels: ['on', 'off']
 
@@ -301,7 +301,7 @@ module.exports = (env) ->
   ###
   ShutterController
   -----
-  A class for all devices you can switch on and off.
+  A class for all devices you can move up and down.
   ###
   class ShutterController extends Actuator
     _position: null
@@ -309,19 +309,19 @@ module.exports = (env) ->
     attributes:
       position:
         label: "Position"
-        description: "state of the shutter"
+        description: "State of the shutter"
         type: t.string
         enum: ['up', 'down', 'stopped']
 
     actions: 
       moveUp:
-        description: "raise the shutter"
+        description: "Raise the shutter"
       moveDown:
-        description: "lower the shutter"
+        description: "Lower the shutter"
       stop:
-        description: "stops the shutter move"
+        description: "Stops the shutter move"
       moveToPosition:
-        description: "changes the shutter state"
+        description: "Changes the shutter state"
         params:
           state:
             type: t.string
@@ -363,7 +363,7 @@ module.exports = (env) ->
 
     attributes:
       temperature:
-        description: "the messured temperature"
+        description: "The measured temperature"
         type: t.number
         unit: '°C'
 
@@ -378,7 +378,7 @@ module.exports = (env) ->
 
     attributes:
       presence:
-        description: "presence of the human/device"
+        description: "Presence of the human/device"
         type: t.boolean
         labels: ['present', 'absent']
         
@@ -402,7 +402,7 @@ module.exports = (env) ->
 
     attributes:
       contact:
-        description: "state of the contact"
+        description: "State of the contact"
         type: t.boolean
         labels: ['closed', 'opened']
 
@@ -425,25 +425,25 @@ module.exports = (env) ->
     attributes:
       temperatureSetpoint:
         label: "Temperature Setpoint"
-        description: "the temp that should be set"
+        description: "The temp that should be set"
         type: "number"
         discrete: true
         unit: "°C"
       valve:
-        description: "position of the valve"
+        description: "Position of the valve"
         type: "number"
         discrete: true
         unit: "%"
       mode:
-        description: "the current mode"
+        description: "The current mode"
         type: "string"
         enum: ["auto", "manu", "boost"]
       battery:
-        description: "battery status"
+        description: "Battery status"
         type: "string"
         enum: ["ok", "low"]
       synced:
-        description: "pimatic and thermostat in sync"
+        description: "Pimatic and thermostat in sync"
         type: "boolean"
 
     actions:
@@ -496,10 +496,10 @@ module.exports = (env) ->
       @emit "battery", @_battery
 
     changeModeTo: (mode) ->
-      throw new Error("changeModeTo must be implemented by subclass")
+      throw new Error("changeModeTo must be implemented by a subclass")
         
     changeTemperatureTo: (temperatureSetpoint) ->
-      throw new Error("changeTemperatureTo must be implemented by subclass")
+      throw new Error("changeTemperatureTo must be implemented by a subclass")
 
   class ButtonsDevice extends Device
 
@@ -674,7 +674,7 @@ module.exports = (env) ->
   class ConfirmDeviceConfigExtention extends DeviceConfigExtension
     configSchema:
       xConfirm:
-        description: "Triggering an device action needs a confirmation"
+        description: "Triggering a device action needs a confirmation"
         type: "boolean"
         required: no
 
@@ -762,15 +762,15 @@ module.exports = (env) ->
         configDef must have a property "properties"
       """
       configDef.properties.id = {
-        description: "the id for the device"
+        description: "The ID for the device"
         type: "string"
       }
       configDef.properties.name = {
-        description: "the name for the device"
+        description: "The name for the device"
         type: "string"
       }
       configDef.properties.class = {
-        description: "the class to use for the device"
+        description: "The class to use for the device"
         type: "string"
       }
 
@@ -799,7 +799,7 @@ module.exports = (env) ->
       assert device._constructorCalled
 
       if isNew and @devices[device.id]?
-        throw new Error("dublicate device id \"#{device.id}\"")
+        throw new Error("Duplicate device id \"#{device.id}\"")
       unless device.id.match /^[a-z0-9\-_]+$/i
         env.logger.warn """
           The id of #{device.id} contains a non alphanumeric letter or symbol.
@@ -813,9 +813,9 @@ module.exports = (env) ->
           """
 
       if isNew
-        env.logger.info "new device \"#{device.name}\"..." 
+        env.logger.info "New device \"#{device.name}\"..." 
       else
-        env.logger.info "recreating \"#{device.name}\"..." 
+        env.logger.info "Recreating \"#{device.name}\"..." 
 
       @devices[device.id]=device
 
@@ -893,7 +893,7 @@ module.exports = (env) ->
       assert deviceConfig.class?
       if @isDeviceInConfig(deviceConfig.id)
         throw new Error(
-          "A device with the id \"#{deviceConfig.id}\" is already in the config."
+          "A device with the ID \"#{deviceConfig.id}\" is already in the config."
         )
       device = @_loadDevice(deviceConfig, {})
       @addDeviceToConfig(deviceConfig)
@@ -911,7 +911,7 @@ module.exports = (env) ->
  
 
     updateDeviceByConfig: (deviceConfig) ->
-      throw new Error("The Operation isn't supported yet.")
+      throw new Error("This operation isn't supported yet.")
 
     removeDevice: (deviceId) ->
       device = @getDeviceById(deviceId)
@@ -932,7 +932,7 @@ module.exports = (env) ->
       present = @isDeviceInConfig deviceConfig.id
       if present
         throw new Error(
-          "an device with the id #{deviceConfig.id} is already in the config" 
+          "An device with the ID #{deviceConfig.id} is already in the config" 
         )
       @devicesConfig.push deviceConfig
       @framework.saveConfig()
