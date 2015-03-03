@@ -96,7 +96,7 @@ module.exports = (env) ->
                     setTimeout(destroy, 100)
                 destroy()
               ).then( =>
-                env.logger.info("Flushing database to disk, please wait...Done.")
+                env.logger.info("Flushing database to disk, please wait... Done.")
               )
             )
           )
@@ -138,33 +138,33 @@ module.exports = (env) ->
 
         minExpireInterval = 1 * 60 * 1000
         if deleteExpiredInterval < minExpireInterval
-          env.logger.warn("deleteExpiredInterval can't be less then 1min, setting it to 1min.")
+          env.logger.warn("deleteExpiredInterval can't be less then 1 min, setting it to 1 min.")
           deleteExpiredInterval = minExpireInterval
 
         if (diskSyncInterval/deleteExpiredInterval % 1) isnt 0
-          env.logger.warn("diskSyncInterval should be a multipe of deleteExpiredInterval.")
+          env.logger.warn("diskSyncInterval should be a multiple of deleteExpiredInterval.")
 
         syncAllNo = Math.max(Math.ceil(diskSyncInterval/deleteExpiredInterval), 1)
         deleteNo = 0
 
         doDeleteExpired = ( =>
-          env.logger.debug("deleteing expired logged values") if @dbSettings.debug
+          env.logger.debug("Deleting expired logged values") if @dbSettings.debug
           deleteNo++
           Promise.resolve().then( =>
-            env.logger.debug("deleteing expired events") if @dbSettings.debug
+            env.logger.debug("Deleting expired events") if @dbSettings.debug
             return @_deleteExpiredDeviceAttributes().then( =>
-              env.logger.debug("deleteing expired events...Done") if @dbSettings.debug
+              env.logger.debug("Deleting expired events... Done.") if @dbSettings.debug
             )
           )
           .then( =>
-            env.logger.debug("deleteing expired message") if @dbSettings.debug
+            env.logger.debug("Deleting expired message") if @dbSettings.debug
             return @_deleteExpiredMessages().then( =>
-              env.logger.debug("deleteing expired message...Done") if @dbSettings.debug
+              env.logger.debug("Deleting expired message... Done.") if @dbSettings.debug
             )
           )
           .then( => 
             if deleteNo % syncAllNo is 0
-              env.logger.debug("done -> flushing to disk") if @dbSettings.debug
+              env.logger.debug("Done -> flushing to disk") if @dbSettings.debug
               next = @commitLoggingTransaction().then( =>
                 env.logger.debug("-> done.") if @dbSettings.debug
               )
@@ -218,7 +218,7 @@ module.exports = (env) ->
       promise = Promise.resolve()
       if @_loggingTransaction?
         promise = @_loggingTransaction.then( (transactionInfo) =>
-          env.logger.debug("commiting") if @dbSettings.debug
+          env.logger.debug("Committing") if @dbSettings.debug
           doCommit = => 
             return transactionInfo.trx.commit()
           if transactionInfo.count is 0
@@ -334,7 +334,7 @@ module.exports = (env) ->
           entry.type = "*"
 
         unless entry.type in possibleTypes
-          throw new Error("type option in database config must be one of #{possibleTypes}")
+          throw new Error("Type option in database config must be one of #{possibleTypes}")
 
         # Get expire info from entry or create it
         expireInfo = entry.expireInfo
@@ -648,12 +648,12 @@ module.exports = (env) ->
     queryDeviceAttributeEvents: (queryCriteria) ->
       @doInLoggingTransaction( (trx) =>
         query = @_buildQueryDeviceAttributeEvents(queryCriteria).transacting(trx)
-        env.logger.debug("query:", query.toString()) if @dbSettings.debug
+        env.logger.debug("Query:", query.toString()) if @dbSettings.debug
         time = new Date().getTime()
         return Promise.resolve(query).then( (result) =>
           timeDiff = new Date().getTime()-time
           if @dbSettings.debug
-            env.logger.debug("quering #{result.length} events took #{timeDiff}ms.")
+            env.logger.debug("Quering #{result.length} events took #{timeDiff}ms.")
           for r in result
             if r.type is "boolean"
               # convert numeric or string value from db to boolean
@@ -755,7 +755,7 @@ module.exports = (env) ->
                 id: result.id
                 deviceId: result.deviceId
                 attribute: result.attributeName
-                description: "No device with the id \"#{result.deviceId}\" found."
+                description: "No device with the ID \"#{result.deviceId}\" found."
                 action: "delete"
               }
             else
