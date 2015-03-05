@@ -366,6 +366,7 @@ module.exports = (env) ->
         description: "the messured temperature"
         type: t.number
         unit: '°C'
+        acronym: 'T'
 
     template: "temperature"
 
@@ -561,8 +562,11 @@ module.exports = (env) ->
           if variable.unit? and variable.unit.length > 0
             @attributes[name].unit = variable.unit
 
-          if variable.discrete
+          if variable.discrete?
             @attributes[name].discrete = variable.discrete
+
+          if variable.acronym?
+            @attributes[name].acronym = variable.acronym
 
           evaluate = ( => 
             # wait till veraibelmanager is ready

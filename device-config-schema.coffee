@@ -57,6 +57,10 @@ module.exports = {
                 Should be set to true if the value does not change continuously over time.
               "
               type: "boolean"
+            acronym:
+              description: "Acronym to show as value label in the frontend"
+              type: "string"
+              required: false
   }
   DummySwitch:
     title: "DummySwitch config"
