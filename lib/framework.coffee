@@ -132,6 +132,9 @@ module.exports = (env) ->
         defaultLocale: @config.settings.locale,
       })
 
+      unless @config.debug
+        EventEmitter.defaultMaxListeners(100)
+
 
     _checkConfig: (config)->
 
