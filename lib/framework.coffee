@@ -19,10 +19,11 @@ _ = require 'lodash'
 declapi = require 'decl-api'
 util = require 'util'
 cjson = require 'cjson'
+events = require 'events'
 
 module.exports = (env) ->
 
-  class Framework extends require('events').EventEmitter
+  class Framework extends events.EventEmitter
     configFile: null
     app: null
     io: null
@@ -133,7 +134,7 @@ module.exports = (env) ->
       })
 
       unless @config.debug
-        EventEmitter.defaultMaxListeners(100)
+        events.EventEmitter.defaultMaxListeners = 100
 
 
     _checkConfig: (config)->
