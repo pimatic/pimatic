@@ -288,6 +288,7 @@ describe "SwitchPredicateProvider", ->
     describe '#on "change"', ->  
       predicateHandler = null
       before ->
+        context = createDummyParseContext()
         result = provider.parsePredicate "test is on", context
         assert result?
         predicateHandler = result.predicateHandler

@@ -76,7 +76,6 @@ module.exports = (env) ->
       match = null
 
       stateAcFilter = (v) => v.trim() isnt 'is switched' 
-
       M(input, context)
         .matchDevice(switchDevices, (next, d) =>
           next.match([' is', ' is turned', ' is switched'], acFilter: stateAcFilter, type: 'static')
