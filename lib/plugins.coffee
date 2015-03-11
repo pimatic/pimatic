@@ -18,7 +18,7 @@ events = require 'events'
 S = require 'string'
 declapi = require 'decl-api'
 rp = require 'request-promise'
-ghdownload = require 'github-download'
+download = require 'gethub'
 
 module.exports = (env) ->
 
@@ -281,16 +281,7 @@ module.exports = (env) ->
         return fs.rmrfAsync(tmpDir)
           .catch()
           .then( =>
-            return new Promise( (resolve, reject) =>
-              ghdownload({
-                user: 'pimatic-ci', 
-                repo: name, 
-                ref: dist.name
-              }, tmpDir
-              )
-              .on('error', reject)
-              .on('end', resolve)
-            )
+            return download('pimatic-ci', name, dist.name, tmpDir)
           )
           .then( =>
             return fs.rmrfAsync(destdir)
