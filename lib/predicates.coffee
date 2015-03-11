@@ -1,7 +1,7 @@
 ###
 Predicate Provider
 =================
-A Predicate Provider provides a predicate for the Rule System. For predicate and rule explenations
+A Predicate Provider provides a predicate for the Rule System. For predicate and rule explanations
 take a look at the [rules file](rules.html). A predicate is a string that describes a state. A
 predicate is either true or false at a given time. There are special predicates, 
 called event-predicates, that represent events. These predicate are just true in the moment a 
@@ -36,12 +36,12 @@ module.exports = (env) ->
     setup: -> 
       # You must overwrite this method and set up your listener here.
       # You should call super() after that.
-      if @_setupCalled then throw new Error("setup already called!")
+      if @_setupCalled then throw new Error("Setup already called!")
       @_setupCalled = yes
     destroy: -> 
       # You must overwrite this method and remove your listener here.
       # You should call super() after that.
-      unless @_setupCalled then throw new Error("destroy called but not setup called!")
+      unless @_setupCalled then throw new Error("Destroy called, but setup was not called!")
       delete @_setupCalled
 
   ###
@@ -279,7 +279,7 @@ module.exports = (env) ->
   ###
   The Device-Attribute Predicate Provider
   ----------------
-  Handles predicates for comparing device attributes like sensor value or other states:
+  Handles predicates for comparing device attributes like sensor values or other states:
 
   * _attribute_ of _device_ is equal to _value_
   * _attribute_ of _device_ equals _value_
@@ -538,7 +538,7 @@ module.exports = (env) ->
   ###
   The Variable Predicate Provider
   ----------------
-  Handles comparision of variables
+  Handles comparison of variables
   ####
   class VariablePredicateProvider extends PredicateProvider
 

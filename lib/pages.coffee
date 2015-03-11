@@ -14,7 +14,7 @@ module.exports = (env) ->
 
     addPage: (id, page) ->
       if _.findIndex(@pages, {id: id}) isnt -1
-        throw new Error('A page with this id already exists')
+        throw new Error('A page with this ID already exists')
       unless page.name?
         throw new Error('No name given')
       @pages.push( page = {

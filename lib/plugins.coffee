@@ -34,7 +34,7 @@ module.exports = (env) ->
     loadPlugin: (name) ->
       packageInfo = @getInstalledPackageInfo(name)
       packageInfoStr = (if packageInfo? then "(" + packageInfo.version  + ")" else "")
-      env.logger.info("""loading plugin: "#{name}" #{packageInfoStr}""")
+      env.logger.info("""Loading plugin: "#{name}" #{packageInfoStr}""")
       # require the plugin and return it
       # create a sublogger:
       pluginEnv = Object.create(env)
@@ -226,10 +226,10 @@ module.exports = (env) ->
           ret = []
           for info in infos
             unless info.current?
-              env.logger.warn "Could not get installed package version of #{info.plugin}"
+              env.logger.warn "Could not get the installed package version of #{info.plugin}"
               continue
             unless info.latest?
-              env.logger.warn "Could not get latest version of #{info.plugin}"
+              env.logger.warn "Could not get the latest version of #{info.plugin}"
               continue
             ret.push info
           return ret
@@ -343,7 +343,7 @@ module.exports = (env) ->
             try
               info = JSON.parse(str)
               if info.error?
-                throw new Error("getting info about #{name} failed: #{info.reason}")
+                throw new Error("Getting info about #{name} failed: #{info.reason}")
               resolve info
             catch e
               reject e.message
@@ -445,7 +445,7 @@ module.exports = (env) ->
   class Plugin extends require('events').EventEmitter
     name: null
     init: ->
-      throw new Error("your plugin must implement init")
+      throw new Error("Your plugin must implement init")
 
     #createDevice: (config) ->
 
