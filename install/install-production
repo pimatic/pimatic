@@ -1,6 +1,23 @@
 #!/bin/sh
-# run with sudo curl -s https://raw2.github.com/pimatic/pimatic/master/install/install-production | bash /dev/stdin
-mkdir pimatic-app
-cd pimatic-app
-npm install pimatic --production
+# run with sudo curl -s https://raw2.github.com/pimatic/pimatic/master/install/install-production | bash /dev/stdin pimatic-app
+INSTALL_DIR=$1
+
+if [ -z "$INSTALL_DIR" ]; then
+  echo "No Install dir given"
+  exit
+fi
+
+CURRENT_DIR=`pwd`
+PLATFORM=`/usr/bin/env node -e 'console.log(process.versions.modules + "-" + process.arch + "-" + process.platform)'`
+if [ "$PLATFORM" = "11-arm-linux" ]; then
+  # Use precompiled source for arm:
+  wget http://api.pimatic.org/download/pimatic/node-11-armhf-linux-latest.tar.gz -P /tmp
+  mkdir -p $INSTALL_DIR/node_modules/pimatic
+  cd $INSTALL_DIR/node_modules/pimatic
+  tar xzvf /tmp/node-11-armhf-linux-latest.tar.gz --strip=1
+else
+  npm install pimatic --production
+fi
+cd $INSTALL_DIR
 cp ./node_modules/pimatic/config_default.json ./config.json
+cd $CURRENT_DIR
