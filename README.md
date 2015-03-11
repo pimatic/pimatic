@@ -10,6 +10,8 @@ common extensible platform for home control and automation tasks.
 
 Read more at [pimatic.org](http://pimatic.org/) or visit the [forum](http://forum.pimatic.org).
 
+[![Join the chat at https://gitter.im/pimatic/pimatic](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/pimatic/pimatic?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Screenshots
 -----------
 [![Screenshot 1][screen1_thumb]](http://www.pimatic.org/screens/screen1.png) 
