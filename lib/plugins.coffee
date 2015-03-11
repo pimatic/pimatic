@@ -148,12 +148,12 @@ module.exports = (env) ->
 
     searchForPlugin: ->
       return @_pluginList = rp('http://api.pimatic.org/plugins').then( (res) =>
-        return JSON.parse(res);
+        return JSON.parse(res)
       )
 
     searchForCoreUpdate: ->
       return @_coreInfo = rp('http://api.pimatic.org/core').then( (res) =>
-        return JSON.parse(res);
+        return JSON.parse(res)
       )
 
     findInPluginList: (name) ->

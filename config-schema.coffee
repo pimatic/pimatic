@@ -25,10 +25,10 @@ module.exports = {
               type: "boolean"
               default: true
             secret:
-              description: """Secret string used for cookie signing. Should be kept secret! If it 
-              is not set, then a secret string will be generated for you, at first start. The secret string must
-              be at least 32 characters long.
-              """
+              description: "Secret string used for cookie signing. Should be kept secret! If it 
+              is not set, then a secret string will be generated for you, at first start. The 
+              secret string must be at least 32 characters long.
+              "
               secret: yes
             loginTime:
               description: """The time in milliseconds to keep the session cookie if rememberMe is 
@@ -92,10 +92,10 @@ module.exports = {
               type: "string"
               default: "ca/pimatic-ssl/public/cert.pem"
             rootCertFile:
-              description: """The public root certificate file of your own CA if you are using a self 
-              signed certificate. This is optional. It's just for the frontend, so that it 
+              description: "The public root certificate file of your own CA if you are using a 
+              self signed certificate. This is optional. It's just for the frontend, so that it 
               can provide a link to the the root certificate for easy importing in mobile devices.
-              """
+              "
               type: "string"
               default: "ca/certs/cacert.crt"
         database:
@@ -365,8 +365,9 @@ module.exports = {
             type: "object"
             properties:
               pages:
-                description: """Allow to list all pages with its devices (read) or edit existing pages (write)
-                """
+                description: "
+                Allow to list all pages with its devices (read) or edit existing pages (write)
+                "
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]               
