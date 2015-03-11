@@ -1,5 +1,5 @@
 #!/bin/sh
-# run with sudo curl -s https://raw2.github.com/pimatic/pimatic/master/install/install-production | bash /dev/stdin pimatic-app
+# run with sudo curl -s https://raw.githubusercontent.com/pimatic/pimatic/master/install/install-production | bash /dev/stdin pimatic-app
 INSTALL_DIR=$1
 
 if [ -z "$INSTALL_DIR" ]; then
@@ -16,8 +16,9 @@ if [ "$PLATFORM" = "11-arm-linux" ]; then
   cd $INSTALL_DIR/node_modules/pimatic
   tar xzvf /tmp/node-11-armhf-linux-latest.tar.gz --strip=1
 else
-  npm install pimatic --production
+  npm install pimatic --prefix $INSTALL_DIR --production
 fi
+cd $CURRENT_DIR
 cd $INSTALL_DIR
 cp ./node_modules/pimatic/config_default.json ./config.json
 cd $CURRENT_DIR
