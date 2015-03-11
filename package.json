@@ -45,7 +45,7 @@
     "decl-api": "0.0.17",
     "express": "3.4.7",
     "fs.extra": "1.2.1",
-    "github-download": "^0.3.0",
+    "gethub": "^2.0.1",
     "human-format": "^0.2.0",
     "i18n": "0.4.*",
     "jayschema": "~0.2.7",
@@ -84,7 +84,8 @@
     "relaxed-json",
     "cjson",
     "source-map-support",
-    "human-format"
+    "human-format",
+    "gethub"
   ],
   "devDependencies": {
     "grunt-cli": "0.1.11",
@@ -95,7 +96,6 @@
     "coffee-errors": "0.8.4",
     "supertest": "0.8.2",
     "grunt-bump": "0.0.13",
-    "groc": "git+https://github.com/sweetpi/groc.git#pimatic-style",
     "proxyquire": "~0.5.2",
     "mocha": "1.17.0",
     "sinon": "1.7.3"
