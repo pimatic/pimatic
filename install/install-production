@@ -11,10 +11,11 @@ CURRENT_DIR=`pwd`
 PLATFORM=`/usr/bin/env node -e 'console.log(process.versions.modules + "-" + process.arch + "-" + process.platform)'`
 if [ "$PLATFORM" = "11-arm-linux" ]; then
   # Use precompiled source for arm:
-  wget http://api.pimatic.org/download/pimatic/node-11-armhf-linux-latest.tar.gz -P /tmp
+  wget http://api.pimatic.org/download/pimatic/node-11-armhf-linux-latest.tar.gz -O /tmp/pimatic-node-11-armhf-linux-latest.tar.gz
   mkdir -p $INSTALL_DIR/node_modules/pimatic
   cd $INSTALL_DIR/node_modules/pimatic
-  tar xzvf /tmp/node-11-armhf-linux-latest.tar.gz --strip=1
+  tar xzvf /tmp/pimatic-node-11-armhf-linux-latest.tar.gz --strip=1
+  rm /tmp/pimatic-node-11-armhf-linux-latest.tar.gz
 else
   npm install pimatic --prefix $INSTALL_DIR --production
 fi
