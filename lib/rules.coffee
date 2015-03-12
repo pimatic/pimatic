@@ -808,7 +808,7 @@ module.exports = (env) ->
                 # can't hold (it's just one time)
                 assert pred.handler.getType() is 'state'
                 # if predicate is false we don't have to wait for it
-                if knownPredicates[pred.id] is true
+                if knownPredicates[pred.id] isnt false
                   promise = @_evaluateTimeExpr(
                     pred.for.exprTokens,
                     pred.for.unit
@@ -819,42 +819,48 @@ module.exports = (env) ->
           # Check for each predicate,
           return Promise.each(predsWithForTime, ([pred, forTime]) =>
             assert pred.lastChange?
-            # The time since last change
-            lastChangeTimeDiff = nowTime - pred.lastChange 
-            # Time to wait till condition becomes true, if nothing changes
-            timeToWait = forTime - lastChangeTimeDiff
+            return pred.handler.getValue().then( (currentValue) =>
+              # when predicate is false then its already false
+              if currentValue is false
+                knownPredicates[pred.id] = false
+                return
+              # The time since last change
+              lastChangeTimeDiff = nowTime - pred.lastChange 
+              # Time to wait till condition becomes true, if nothing changes
+              timeToWait = forTime - lastChangeTimeDiff
 
-            if timeToWait > 0              
-              # Mark that we are awaiting the result
-              awaiting[pred.id] = {}
-              # and as long as we are awaiting the result, the predicate is false.
-              knownPredicates[pred.id] = false
+              if timeToWait > 0              
+                # Mark that we are awaiting the result
+                awaiting[pred.id] = {}
+                # and as long as we are awaiting the result, the predicate is false.
+                knownPredicates[pred.id] = false
 
-              # When the time passes
-              timeout = setTimeout( ( =>
-                knownPredicates[pred.id] = true
-                # the predicate remains true and no value is awaited anymore.
-                awaiting[pred.id].cancel()
-                reevaluateCondition()
-              ), timeToWait)
-
-              # Let us be notified when it becomes false.
-              pred.handler.on 'change', changeListener = (state) =>
-                assert state is true or state is false
-                # If it changes to false
-                if state is false
-                  # then the predicate is false
-                  knownPredicates[pred.id] = false
-                  # and clear the timeout,
+                # When the time passes
+                timeout = setTimeout( ( =>
+                  knownPredicates[pred.id] = true
+                  # the predicate remains true and no value is awaited anymore.
                   awaiting[pred.id].cancel()
                   reevaluateCondition()
+                ), timeToWait)
 
-              awaiting[pred.id].cancel = =>
-                delete awaiting[pred.id]
-                clearTimeout timeout
-                # and we can cancel the notify
-                pred.handler.removeListener 'change', changeListener
-            return
+                # Let us be notified when it becomes false.
+                pred.handler.on 'change', changeListener = (state) =>
+                  assert state is true or state is false
+                  # If it changes to false
+                  if state is false
+                    # then the predicate is false
+                    knownPredicates[pred.id] = false
+                    # and clear the timeout,
+                    awaiting[pred.id].cancel()
+                    reevaluateCondition()
+
+                awaiting[pred.id].cancel = =>
+                  delete awaiting[pred.id]
+                  clearTimeout timeout
+                  # and we can cancel the notify
+                  pred.handler.removeListener 'change', changeListener
+                return
+              )
           ).then( =>
             # If we have not found awaiting predicates
             if (id for id of awaiting).length is 0

@@ -1004,6 +1004,9 @@ describe "RuleManager", ->
       this.timeout 3000
       start = getTime()
 
+      predHandler1.getValue = => Promise.resolve true
+      predHandler2.getValue = => Promise.resolve true
+
       predHandler2.on = (event, listener) -> 
         cassert event is 'change'
         setTimeout ->
@@ -1065,15 +1068,20 @@ describe "RuleManager", ->
       this.timeout 3000
       start = getTime()
 
+      predHandler1.getValue = => Promise.resolve true
+      predHandler2.getValue = => Promise.resolve true
+
       predHandler1.on = (event, listener) -> 
         cassert event is 'change'
         setTimeout ->
+          console.log "emit1"
           listener false
         , 500
 
       predHandler2.on = (event, listener) -> 
         cassert event is 'change'
         setTimeout ->
+          console.log "emit2"
           listener false
         , 500
 
