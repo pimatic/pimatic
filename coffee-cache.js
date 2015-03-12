@@ -122,7 +122,7 @@ var compile = function(module, filename) {
   try {
     var sourceTime = fs.statSync(filename).mtime;
     var cacheTime = fs.statSync(cachePath).mtime;
-    if (cacheTime > sourceTime) {
+    if (cacheTime >= sourceTime) {
       // We can return the cached version
       content = fs.readFileSync(cachePath, 'utf8');
     }
