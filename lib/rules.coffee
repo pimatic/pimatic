@@ -807,11 +807,13 @@ module.exports = (env) ->
                 # If it has a for suffix and it is an event something gone wrong, because an event 
                 # can't hold (it's just one time)
                 assert pred.handler.getType() is 'state'
-                promise = @_evaluateTimeExpr(
-                  pred.for.exprTokens,
-                  pred.for.unit
-                ).then( (ms) => [pred, ms] )
-                predsWithForTime.push(promise)
+                # if predicate is false we don't have to wait for it
+                if knownPredicates[pred.id] is true
+                  promise = @_evaluateTimeExpr(
+                    pred.for.exprTokens,
+                    pred.for.unit
+                  ).then( (ms) => [pred, ms] )
+                  predsWithForTime.push(promise)
           nowTime = (new Date()).getTime()
           # Fill the awaiting list:
           # Check for each predicate,
