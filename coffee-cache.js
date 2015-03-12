@@ -154,7 +154,7 @@ var compile = function(module, filename) {
         content = compiled;
 
       // Try writing to cache
-      fs.mkdirs(path.dirname(cachePath));
+      fs.mkdirsSync(path.dirname(cachePath));
 
       fs.writeFileSync(cachePath, content, 'utf8');
       if (mapPath)
