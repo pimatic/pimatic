@@ -21,5 +21,5 @@ else
 fi
 cd $CURRENT_DIR
 cd $INSTALL_DIR
-cp ./node_modules/pimatic/config_default.json ./config.json
+#cp ./node_modules/pimatic/config_default.json ./config.json
 cd $CURRENT_DIR
