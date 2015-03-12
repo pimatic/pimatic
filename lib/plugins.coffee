@@ -45,12 +45,12 @@ module.exports = (env) ->
     # Checks if the plugin folder exists under node_modules
     isInstalled: (name) ->
       assert name?
-      assert name.match(/^pimatic-.*$/)?
+      assert name.match(/^pimatic.*$/)?
       return fs.existsSync(@pathToPlugin name)
 
     isGitRepo: (name) ->
       assert name?
-      assert name.match(/^pimatic-.*$/)?
+      assert name.match(/^pimatic.*$/)?
       return fs.existsSync("#{@pathToPlugin name}/.git")
 
     installByGit: (name) ->
@@ -77,7 +77,7 @@ module.exports = (env) ->
     # Install a plugin from the npm repository
     installPlugin: (name) ->
       assert name?
-      assert name.match(/^pimatic-.*$/)?
+      assert name.match(/^pimatic.*$/)?
       return @installByGit(name).then( (useGit) =>
         if useGit
           return @installGitPlugin(name)
@@ -135,7 +135,7 @@ module.exports = (env) ->
 
     pathToPlugin: (name) ->
       assert name?
-      assert name.match(/^pimatic-.*$/)? or name is "pimatic"
+      assert name.match(/^pimatic.*$/)? or name is "pimatic"
       return path.resolve @framework.maindir, "..", name
 
     getPluginList: ->
@@ -329,7 +329,7 @@ module.exports = (env) ->
 
     getInstalledPackageInfo: (name) ->
       assert name?
-      assert name.match(/^pimatic-.*$/)? or name is "pimatic"
+      assert name.match(/^pimatic.*$/)? or name is "pimatic"
       return JSON.parse fs.readFileSync(
         "#{@pathToPlugin name}/package.json", 'utf-8'
       )
