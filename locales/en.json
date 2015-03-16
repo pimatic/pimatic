@@ -214,5 +214,6 @@
 	"Remove": "Remove",
 	"Stop": "Stop",
 	"No data to display.": "No data to display.",
-	"started %s": "started %s"
+	"started %s": "started %s",
+	"Reset": "Reset"
 }

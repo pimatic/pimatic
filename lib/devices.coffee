@@ -694,6 +694,8 @@ module.exports = (env) ->
       resetTimer:
         description: "reset the timer"
 
+    template: "timer"
+
     constructor: (@config, lastState) ->
       @id = @config.id
       @name = @config.name
