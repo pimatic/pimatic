@@ -102,4 +102,14 @@ module.exports = {
         type: "boolean"
         default: true        
   }
+  Timer:
+    title: "timer config"
+    type: "object"
+    extensions: ["xLink"]
+    properties: {
+      resolution:
+        description: "The interval the timer is updated in seconds"
+        type: "number"
+        default: 1
+    }
 }

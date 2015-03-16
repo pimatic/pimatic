@@ -702,6 +702,7 @@ module.exports = (env) ->
           env.actions.ToggleActionProvider
           env.actions.HeatingThermostatModeActionProvider
           env.actions.HeatingThermostatSetpointActionProvider
+          env.actions.TimerActionProvider
         ]
         for actProv in defaultActionProvider
           actProvInst = new actProv(this)

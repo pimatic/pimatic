@@ -674,6 +674,78 @@ module.exports = (env) ->
           return yes
       return false
 
+  class Timer extends Device
+
+    attributes:
+      time: 
+        description: "The elapesed time"
+        type: "number"
+        unit: "s"
+        displaySparkline: no
+      running:
+        description: "Is the timer running?"
+        type: "boolean"
+
+    actions:
+      startTimer:
+        description: "Starts the timer"
+      stopTimer:
+        description: "stops the timer"
+      resetTimer:
+        description: "reset the timer"
+
+    constructor: (@config, lastState) ->
+      @id = @config.id
+      @name = @config.name
+      @_time = lastState?.time?.value or 0
+      @_running = lastState?.running?.value or false
+      @_setupInterval() if _running?
+      super()
+
+    resetTimer: () ->
+      if @_time is 0
+        return Promise.resolve()
+      @_time = 0
+      @emit 'time', 0
+      return Promise.resolve()
+
+    startTimer: () ->
+      if @_running
+        return Promise.resolve()
+      @_running = true
+      @emit 'running', true
+      @_setupInterval()
+      return Promise.resolve()
+
+    stopTimer: () ->
+      unless @_running
+        return Promise.resolve()
+      @_destroyInterval()
+      @_running = false
+      @emit 'running', false
+      return Promise.resolve()
+
+    getTime: () ->
+      return Promise.resolve(@_time)
+
+    getRunning: () ->
+      return Promise.resolve(@_running)
+
+    _setupInterval: ->
+      if @_interval? then return
+      res = @config.resolution
+      onTick = =>
+        @_time += res
+        @emit 'time', @_time
+      @_interval = setInterval(onTick, res * 1000)
+
+    _destroyInterval: ->
+      clearInterval(@_interval)
+      @_interval = null
+
+    destroy: ->
+      @_destroyInterval()
+      super()
 
   class ConfirmDeviceConfigExtention extends DeviceConfigExtension
     configSchema:
@@ -956,6 +1028,7 @@ module.exports = (env) ->
         env.devices.DummyDimmer
         env.devices.DummyShutter
         env.devices.DummyHeatingThermostat
+        env.devices.Timer
       ]
       for deviceClass in defaultDevices
         do (deviceClass) =>
@@ -984,4 +1057,5 @@ module.exports = (env) ->
     DummyDimmer
     DummyShutter
     DummyHeatingThermostat
+    Timer
   }

@@ -794,6 +794,81 @@ module.exports = (env) ->
     # ### executeRestoreAction()
     executeRestoreAction: (simulate) => Promise.resolve(@_doExecuteAction(simulate, @lastValue))
 
+
+  ###
+  The Timer Action Provider
+  -------------
+  Start, stop or reset Timer
+
+  * start|stop|reset the _device_ [timer] 
+
+  where _device_ is the name or id of a timer device and "the" is optional.
+  ###
+  class TimerActionProvider extends ActionProvider
+
+    constructor: (@framework) ->
+
+    # ### parseAction()
+    ###
+    Parses the above actions.
+    ###
+    parseAction: (input, context) =>
+
+      timerDevices = _(@framework.deviceManager.devices).values().filter( 
+        (device) => (
+          device.hasAction("startTimer") and 
+          device.hasAction("stopTimer") and 
+          device.hasAction("resetTimer") 
+        )
+      ).value()
+
+      device = null
+      action = null
+      match = null
+
+      # Try to match the input string with: start|stop|reset ->
+      m = M(input, context).match(['start ', 'stop ', 'reset '], (m, a) =>
+        # device name -> up|down
+        m.matchDevice(timerDevices, (m, d) ->
+          last = m.match(' timer', {optional: yes})
+          if last.hadMatch()
+             # Already had a match with another device?
+            if device? and device.id isnt d.id
+              context?.addError(""""#{input.trim()}" is ambiguous.""")
+              return
+            device = d
+            action = a.trim()
+            match = last.getFullMatch()
+        )
+      )
+
+      if match?
+        assert device?
+        assert action in ['start', 'stop', 'reset']
+        assert typeof match is "string"
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new TimerActionHandler(device, action)
+        }
+      
+        return null
+
+  class TimerActionHandler extends ActionHandler
+
+    constructor: (@device, @action) ->
+
+    # ### executeAction()
+    executeAction: (simulate) => 
+      return (
+        if simulate
+          Promise.resolve __("would #{@action} %s", @device.name)
+        else
+          @device["#{@action}Timer"]().then( => __("#{@action}ed %s", @device.name) )
+      )
+    # ### hasRestoreAction()
+    hasRestoreAction: -> false
+
   # Export the classes so that they can be accessed by the framework
   return exports = {
     ActionHandler
@@ -807,4 +882,5 @@ module.exports = (env) ->
     ToggleActionProvider
     HeatingThermostatModeActionProvider
     HeatingThermostatSetpointActionProvider
+    TimerActionProvider
   }
