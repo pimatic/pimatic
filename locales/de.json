@@ -213,5 +213,7 @@
 	"Stop": "Stopp",
 	"No data to display.": "Keine Daten zum Anzeigen.",
 	"Add a variable": "Variable hinzufügen",
-	"Available Events": "Verfügbare Ereignisse"
+	"Available Events": "Verfügbare Ereignisse",
+	"opened": "offen",
+	"closed": "geschlossen"
 }
