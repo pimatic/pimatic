@@ -56,7 +56,7 @@ module.exports = (env) ->
     installByGit: (name) ->
       return @findInPluginList(name).then( (plugin) =>
         unless plugin? then return false
-        dist = @_findDist(plugin)?
+        dist = @_findDist(plugin)
         return dist?
       )
 
