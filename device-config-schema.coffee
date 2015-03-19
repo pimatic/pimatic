@@ -17,6 +17,10 @@ module.exports = {
               type: "string"
             text:
               type: "string"
+            confirm:
+              description: "Ask the user to confirm the button press"
+              type: "boolean"
+              default: false
   }
   VariablesDevice: {
     title: "VariablesDevice config"
