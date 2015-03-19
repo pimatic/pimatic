@@ -185,6 +185,18 @@ module.exports = (env) ->
           minf = parseFloat(min)
           maxf = parseFloat(max)
           return Math.floor( Math.random() * (maxf+1-minf) ) + minf
+      round:
+        args:
+          number:
+            type: "number"
+          decimals:
+            type: "number"
+            optional: yes
+        exec: (value, decimals) -> 
+          unless decimals?
+            decimals = 0
+          multiplier = Math.pow(10, decimals)
+          return Math.round(value * multiplier) / multiplier
       date:
         args:
           format:
