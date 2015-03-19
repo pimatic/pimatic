@@ -131,8 +131,6 @@ module.exports = (env) ->
         throw error
       )
 
-
-
     pathToPlugin: (name) ->
       assert name?
       assert name.match(/^pimatic.*$/)? or name is "pimatic"
@@ -148,12 +146,18 @@ module.exports = (env) ->
 
     searchForPlugin: ->
       return @_pluginList = rp('http://api.pimatic.org/plugins').then( (res) =>
-        return JSON.parse(res)
+        json = JSON.parse(res)
+        # cache for 1min
+        setTimeout( (=> @_pluginList = null), 60*1000)
+        return json
       )
 
     searchForCoreUpdate: ->
       return @_coreInfo = rp('http://api.pimatic.org/core').then( (res) =>
-        return JSON.parse(res)
+        json = JSON.parse(res)
+        # cache for 1min
+        setTimeout( (=> @_coreInfo = null), 60*1000)
+        return json
       )
 
     findInPluginList: (name) ->
