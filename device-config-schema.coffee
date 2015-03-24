@@ -81,6 +81,11 @@ module.exports = {
     type: "object"
     extensions: ["xLink"]
     properties: {}
+  DummyContactSensor:
+    title: "DummyContactSensor config"
+    type: "object"
+    extensions: ["xLink", "xClosedLabel", "xOpenedLabel"]
+    properties: {}
   DummyHeatingThermostat: {
     title: "DummyHeatingThermostat config options"
     type: "object"

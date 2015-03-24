@@ -659,6 +659,23 @@ module.exports = (env) ->
       @_setSetpoint(temperatureSetpoint)
       return Promise.resolve()
 
+  class DummyContactSensor extends ContactSensor
+    
+    actions:
+      changeContactTo:
+        params: 
+          contact: 
+            type: "boolean"
+
+    constructor: (@config, lastState) ->
+      @name = config.name
+      @id = config.id
+      @_contact = lastState?.contact?.value or off
+      super()
+        
+    changeContactTo: (contact) ->
+      @_setContact(contact)
+      return Promise.resolve()
 
   class DeviceConfigExtension
     extendConfigShema: (schema) ->
@@ -1030,6 +1047,7 @@ module.exports = (env) ->
         env.devices.DummyDimmer
         env.devices.DummyShutter
         env.devices.DummyHeatingThermostat
+        env.devices.DummyContactSensor
         env.devices.Timer
       ]
       for deviceClass in defaultDevices
@@ -1059,5 +1077,6 @@ module.exports = (env) ->
     DummyDimmer
     DummyShutter
     DummyHeatingThermostat
+    DummyContactSensor
     Timer
   }
