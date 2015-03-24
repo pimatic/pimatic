@@ -10,7 +10,7 @@
 	"On": "An",
 	"Menu": "Menu",
 	"Speak": "Sprechen",
-	"Devices": "Objekte",
+	"Devices": "Geräte",
 	"Drop here to remove item": "Zum Löschen hierhin ziehen",
 	"Rules": "Regeln",
 	"Close menu": "Menu schließen",
@@ -154,7 +154,6 @@
 	"Delete this Device": "Dieses Objekt löschen",
 	"Showen devices": "Showen devices",
 	"Hide": "Verbergen",
-	"pushover message sent successfully": "Pushover Nachricht wurde erfolgreich gesendet",
 	"Show data of ": "Zeige Daten ab ",
 	"24 hours": "24 Stunden",
 	"7 days": "7 Tage",
@@ -215,5 +214,8 @@
 	"Add a variable": "Variable hinzufügen",
 	"Available Events": "Verfügbare Ereignisse",
 	"opened": "offen",
-	"closed": "geschlossen"
+	"closed": "geschlossen",
+	"present": "anwesend",
+	"absend": "abwesend",
+	"Reset": "Reset"
 }
