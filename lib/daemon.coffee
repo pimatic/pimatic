@@ -27,6 +27,7 @@ THE SOFTWARE.
 
 fs = require 'fs'
 daemon = require 'daemon'
+stream = require 'logrotate-stream'
 
 exports.printStatus = (st) ->
   if st.pid
@@ -64,7 +65,6 @@ exports.startFailed = (err) ->
   console.log err
   process.exit 1
 
-
 exports.start = ({ pidfile, logfile, run, success, failure }) ->
   success or= exports.startSucceeded
   failure or= exports.startFailed
@@ -73,24 +73,13 @@ exports.start = ({ pidfile, logfile, run, success, failure }) ->
   start = (err) ->
     return failure(err) if err
     if process.env['PIMATIC_DAEMONIZED']? 
-      
       # pipe strams to lofile:
-      logStream = fs.createWriteStream(logfile, flags: "a")
-      process.stdout.write = ((write) ->
-        (string, encoding, fd) ->
-          logStream.write string
-      )(process.stdout.write)
-      process.stderr.write = ((write) ->
-        (string, encoding, fd) ->
-          logStream.write string
-      )(process.stderr.write)
-
-      process.on 'uncaughtException', (err) =>
-        if err.silent is yes
-          console.log('pimatic is still running...')
-        else
-          console.log('a uncaught exception occured: ', err.stack)
-          console.log('keeping pimatic alive but could be in an undefined state...')
+      logStream = stream(file: logfile, size: '1m', keep: 3)
+      process.stdout.writeOut = process.stdout.write
+      process.stderr.writeOut = process.stderr.write
+      process.stdout.write = (string) -> logStream.write string
+      process.stderr.write = (string) -> logStream.write string
+      process.logStream = logStream
 
       # write the pidfile
       fs.writeFile pidfile, process.pid, (err) ->
@@ -118,19 +107,36 @@ exports.stopped = (killed) ->
     console.log 'Not running.'
   process.exit 0
 
-exports.hardKiller = (timeout = 2000) ->
+exports.hardKiller = () ->
   (pid, cb) ->
-    signals = ['TERM', 'INT', 'QUIT', 'KILL']
-    tryKill = ->
-      sig = "SIG#{ signals[0] }"
+    checkInterval = 1000
+    timeout = 10000
+    signals = ['TERM', 'QUIT', 'KILL']
+    tryKill = (time)->
+      sig = "SIG#{signals[0]}"
       try
-        # throws when the process no longer exists
-        process.kill pid, sig
-        signals.shift() if signals.length > 1
-        setTimeout (-> tryKill sig), timeout
+        if time is 0
+          console.log "Sending #{sig} to pimatic, waiting for process exit..."
+          # throws when the process no longer exists
+          process.kill pid, sig
+        else if time >= timeout
+          console.log "Process didn't shutdown in time, sending signal #{sig} to pimatic, 
+            waiting for process exit..."
+          # throws when the process no longer exists
+          signals.shift() if signals.length > 1
+          time = 0
+        else
+          # test if process exists
+          process.kill pid, 0
+        setTimeout (-> tryKill(time + checkInterval) ), checkInterval
       catch e
-        cb(signals.length < 4)
-    tryKill()
+        killed = e.code is 'ESRCH'
+          # throws an error if the process was killed
+        unless killed
+          console.error "Couldn't kill process, error: #{e.message}"
+        cb(killed)
+
+    tryKill(0)
 
 exports.softKiller = (timeout = 2000) ->
   (pid, cb) ->
@@ -147,7 +153,7 @@ exports.softKiller = (timeout = 2000) ->
         cb(sig == 0)
     tryKill()
 
-exports.stop = (pidfile, cb = exports.stopped, killer = exports.hardKiller(2000)) ->
+exports.stop = (pidfile, cb = exports.stopped, killer = exports.hardKiller()) ->
   exports.status pidfile, ({pid}) ->
     if pid
       killer pid, (killed) ->

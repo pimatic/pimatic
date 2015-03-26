@@ -33,7 +33,7 @@ device = {
       description: "List of all attributes of the device."
       type: t.array
     actions:
-      description: "List of all Actions of the device."
+      description: "List of all actions of the device."
       type: t.array
     config: 
       description: "Config of the device, without default values."
@@ -103,7 +103,7 @@ api.framework = {
               type: t.object
   actions:
     getGuiSetttings:
-      description: "Get the gui config options"
+      description: "Get the GUI config options"
       rest: 
         type: "GET"
         url: "/api/config/settings/gui"
@@ -125,23 +125,38 @@ api.framework = {
       permission:
         action: "restart"
     getConfig:
-      description: "Get the config"
+      description: "Get the config, fields will be blank if no password was provided"
       rest:
         type: "GET"
         url: '/api/config'
+      params:
+        password:
+          type: t.string
+          optional: yes
       result:
         config:
-          description: "the config"
+          description: "The config"
           type: t.object
       permission:
         scope: "config"
-        access: "read"        
+        access: "read"
+    updateConfig:
+      description: "Update the config"
+      rest:
+        type: "POST"
+        url: '/api/config'
+      params:
+        config:
+          type: t.object
+      permission:
+        scope: "config"
+        access: "write"        
 }
 
 api.devices = {
   actions:
     getDevices:
-      description: "Lists all devices."
+      description: "List all devices."
       rest:
         type: "GET"
         url: "/api/devices"
@@ -157,13 +172,13 @@ api.devices = {
         scope: "devices"
         access: "read"
     getDeviceById:
-      description: "Retrieve a device by a given id."
+      description: "Retrieve a device by a given ID."
       rest:
         type: "GET"
         url: "/api/devices/:deviceId"
       params:
         deviceId:
-          description: "The id of the device that should be returned."
+          description: "The ID of the device that should be returned."
           type: t.string
       result:
         device:
@@ -178,7 +193,7 @@ api.devices = {
       rest:
         type: "POST"
         url: "/api/devices"
-      description: "Update the Order of all devices"
+      description: "Update the order of all devices"
       params:
         deviceOrder:
           type: t.array
@@ -200,7 +215,7 @@ api.devices = {
         scope: "devices"
         access: "read"
     getDeviceConfigSchema:
-      description: "Gets the config schema of a device class."
+      description: "Get the config schema of a device class."
       rest:
         type: "GET"
         url: "/api/device-class/:className"
@@ -240,7 +255,7 @@ api.devices = {
         scope: "devices"
         access: "write"
     removeDevice:
-      description: "Removes a device from the framework an config"
+      description: "Remove a device from the framework an config"
       rest:
         type: "DELETE"
         url: "/api/device-config/:deviceId"
@@ -257,7 +272,7 @@ api.devices = {
 api.rules = {
   actions:
     addRuleByString:
-      description: "Adds a rule by a string"
+      description: "Add a rule by a string"
       rest:
         type: "POST"
         url: "/api/rules/:ruleId"
@@ -287,7 +302,7 @@ api.rules = {
       rest:
         type: "PATCH"
         url: "/api/rules/:ruleId"
-      description: "Updates a rule by a string"
+      description: "Update a rule by a string"
       params:
         ruleId:
           type: t.string
@@ -313,7 +328,7 @@ api.rules = {
       rest:
         type: "DELETE"
         url: "/api/rules/:ruleId"
-      description: "Remove the rule with the given id"
+      description: "Remove the rule with the given ID"
       params:
         ruleId:
           type: t.string
@@ -324,7 +339,7 @@ api.rules = {
       rest:
         type: "GET"
         url: "/api/rules"
-      description: "Lists all rules"
+      description: "List all rules"
       params: {}
       result:
         rules:
@@ -337,7 +352,7 @@ api.rules = {
       rest:
         type: "GET"
         url: "/api/rules/:ruleId"
-      description: "Lists all rules"
+      description: "List all rules"
       params:
         ruleId:
           type: t.string
@@ -402,6 +417,36 @@ api.rules = {
       permission:
         scope: "rules"
         access: "read"
+    getPredicatePresets:
+      rest:
+        type: "GET"
+        url: "/api/rules-parser/get-predicate-presets"
+      description: "Get predicates the user can choose from"
+      params: {}
+      result:
+        presets:
+          type: "array"
+       permission:
+        scope: "rules"
+        access: "read"
+    getPredicateInfo:
+      rest:
+        type: "GET"
+        url: "/api/rules-parser/get-predicate-info"
+      description: "Get predicates info"
+      params: {
+        input:
+          type: "string"
+        predicateProviderClass:
+          type: "string"
+          optional: yes
+      }
+      result:
+        result:
+          type: "array"
+       permission:
+        scope: "rules"
+        access: "read"
     executeAction:
       rest:
         type: "POST"
@@ -409,7 +454,7 @@ api.rules = {
       description: "Execute a rule action by a given string"
       params:
         actionString:
-          description: "The action to executed"
+          description: "The action to execute"
           type: t.string
         simulate:
           description: "If it is true then only simulate the action."
@@ -429,7 +474,7 @@ api.rules = {
       rest:
         type: "POST"
         url: "/api/rules"
-      description: "Update the Order of all rules"
+      description: "Update the order of all rules"
       params:
         ruleOrder:
           type: t.array
@@ -445,7 +490,7 @@ api.rules = {
 api.pages = {
   actions:
     getPages:
-      description: "Lists all pages."
+      description: "List all pages."
       rest:
         type: "GET"
         url: "/api/pages"
@@ -459,13 +504,13 @@ api.pages = {
         scope: "pages"
         access: "read"
     getPageById:
-      description: "Get a page by id"
+      description: "Get a page by ID"
       rest:
         type: "GET"
         url: "/api/pages/:pageId"
       params:
         pageId:
-          description: "The id of the page that should be returned."
+          description: "The ID of the page that should be returned."
           type: t.string
       result:
         page:
@@ -482,7 +527,7 @@ api.pages = {
         url: "/api/pages/:pageId"
       params:
         pageId:
-          description: "The id of the page that should be removed."
+          description: "The ID of the page that should be removed."
           type: t.string
       result:
         removed:
@@ -499,10 +544,10 @@ api.pages = {
       description: "Add a page."
       params:
         pageId:
-          description: "The id of the page that should be added."
+          description: "The ID of the page that should be added."
           type: t.string
         page:
-          description: "Object with id and name of the page to create."
+          description: "Object with ID and name of the page to create."
           type: t.object
           properties:
             name: 
@@ -523,7 +568,7 @@ api.pages = {
         url: "/api/pages/:pageId"
       params:
         pageId:
-          description: "The id of the page to change."
+          description: "The ID of the page to change."
           type: t.string
         page:
           description: "An object with properties that should be updated."
@@ -534,7 +579,7 @@ api.pages = {
               type: t.string
               optional: yes
             devicesOrder:
-              description: "Array of ordered deviceIds."
+              description: "Array of ordered deviceIDs."
               type: t.array
               optional: yes
               items:
@@ -568,7 +613,7 @@ api.pages = {
       rest:
         type: "DELETE"
         url: "/api/pages/:pageId/devices/:deviceId"
-      description: "Remove a Device from a group."
+      description: "Remove a device from a group."
       params:
         pageId:
           type: t.string
@@ -584,7 +629,7 @@ api.pages = {
       rest:
         type: "POST"
         url: "/api/pages"
-      description: "Update the Order of all Pages"
+      description: "Update the order of all pages"
       params:
         pageOrder:
           type: t.array
@@ -677,7 +722,7 @@ api.groups = {
       rest:
         type: "DELETE"
         url: "/api/groups/:groupId/devices/:deviceId"
-      description: "Removes a device from a group"
+      description: "Remove a device from a group"
       params:
         groupId:
           type: t.string
@@ -712,7 +757,7 @@ api.groups = {
       rest:
         type: "DELETE"
         url: "/api/groups/:groupId/rules/:ruleId"
-      description: "Removes a rule from a group"
+      description: "Remove a rule from a group"
       params:
         groupId:
           type: t.string
@@ -779,7 +824,7 @@ api.groups = {
       rest:
         type: "DELETE"
         url: "/api/groups/:groupId/variables/:variableName"
-      description: "Removes a variable from a group"
+      description: "Remove a variable from a group"
       params:
         groupId:
           type: t.string
@@ -811,7 +856,7 @@ api.groups = {
       rest:
         type: "POST"
         url: "/api/groups"
-      description: "Update the Order of all Groups"
+      description: "Update the order of all groups"
       params:
         groupOrder:
           type: t.array
@@ -835,6 +880,9 @@ variableParams = {
     enum: ["expression", "value"]
   valueOrExpression:
     type: t.string
+  unit:
+    type: t.string
+    optional: yes
 }
 
 variableResult = {
@@ -846,7 +894,7 @@ variableResult = {
 api.variables = {
   actions:
     getVariables:
-      description: "Lists all variables"
+      description: "List all variables"
       rest:
         type: "GET"
         url: "/api/variables"
@@ -859,7 +907,7 @@ api.variables = {
         scope: "variables"
         access: "read"
     updateVariable:
-      description: "Updates a variable value or expression"
+      description: "Update a variable value or expression"
       rest:
         type: "PATCH"
         url: "/api/variables/:name"
@@ -869,7 +917,7 @@ api.variables = {
         scope: "variables"
         access: "write"
     addVariable:
-      description: "Adds a value or expression variable"
+      description: "Add a value or expression variable"
       rest:
         type: "POST"
         url: "/api/variables/:name"
@@ -906,7 +954,7 @@ api.variables = {
       rest:
         type: "POST"
         url: "/api/variables"
-      description: "Update the Order of all variables"
+      description: "Update the order of all variables"
       params:
         variableOrder:
           type: t.array
@@ -925,7 +973,7 @@ api.variables = {
 api.plugins = {
   actions:
     getInstalledPluginsWithInfo:
-      description: "Lists all installed plugins"
+      description: "List all installed plugins"
       rest:
         type: "GET"
         url: "/api/plugins"
@@ -937,7 +985,7 @@ api.plugins = {
         scope: "plugins"
         access: "read"
     searchForPluginsWithInfo:
-      description: "Searches for available plugins"
+      description: "Search for available plugins"
       rest:
         type: "GET"
         url: "/api/available-plugins"
@@ -973,7 +1021,7 @@ api.plugins = {
         scope: "updates"
         access: "read"
     installUpdatesAsync:
-      description: "Install Updates without awaiting result"
+      description: "Install updates without awaiting result"
       rest:
         type: "POST"
         url: "/api/update-async"
@@ -1087,7 +1135,7 @@ dataCriteria = {
 api.database = {
   actions:
     queryMessages:
-      description: "list log messages"
+      description: "List log messages"
       rest:
         type: 'GET'
         url: '/api/database/messages'
@@ -1099,7 +1147,7 @@ api.database = {
         scope: "messages"
         access: "read"
     deleteMessages:
-      description: "delets messages older than the given date"
+      description: "Delete messages older than the given date"
       rest:
         type: 'DELETE'
         url: '/api/database/messages'
@@ -1108,7 +1156,7 @@ api.database = {
         scope: "messages"
         access: "write"
     addDeviceAttributeLogging:
-      description: "enable or disable logging for an device attribute"
+      description: "Enable or disable logging for an device attribute"
       params:
         deviceId:
           type: t.string
@@ -1120,7 +1168,7 @@ api.database = {
         scope: "events"
         access: "read"
     queryMessagesTags:
-      description: "lists all tags from the matching messages"
+      description: "List all tags from the matching messages"
       rest:
         type: 'GET'
         url: '/api/database/messages/tags'
@@ -1132,7 +1180,7 @@ api.database = {
         scope: "messages"
         access: "read"
     queryMessagesCount:
-      description: "count of all matches matching the criteria"
+      description: "Count of all matches matching the criteria"
       rest:
         type: 'GET'
         url: '/api/database/messages/count'
@@ -1147,7 +1195,7 @@ api.database = {
       rest:
         type: 'GET'
         url: '/api/database/device-attributes/'
-      description: "get logged values of device attributes"
+      description: "Get logged values of device attributes"
       params: dataCriteria
       result:
         events:
@@ -1167,14 +1215,38 @@ api.database = {
       permission:
         scope: "events"
         access: "read"
+    queryDeviceAttributeEventsCounts:
+      rest:
+        type: 'GET'
+        url: '/api/database/device-attributes/counts'
+      description: "Get count of saved device attributes per atrtibute"
+      params: {}
+      result:
+        counts:
+          type: t.array
+      permission:
+        scope: "events"
+        access: "read"
     queryDeviceAttributeEventsDevices:
       rest:
         type: 'GET'
         url: '/api/database/device-attributes/devices'
-      description: "get logged values of all device attributes"
+      description: "Get all device attribute infos in database"
       params: {}
       result:
         devices:
+          type: t.array
+      permission:
+        scope: "events"
+        access: "read"
+    queryDeviceAttributeEventsInfo:
+      rest:
+        type: 'GET'
+        url: '/api/database/device-attributes-info'
+      description: "Get all device attribute infos in database"
+      params: {}
+      result:
+        deviceAttributes:
           type: t.array
       permission:
         scope: "events"
@@ -1183,7 +1255,7 @@ api.database = {
       rest:
         type: 'GET'
         url: '/api/database/device-attributes/:deviceId/:attributeName'
-      description: "get logged values of device attributes"
+      description: "Get logged values of device attributes"
       params:
         deviceId:
           type: t.string
@@ -1221,7 +1293,7 @@ api.database = {
         scope: "events"
         access: "read"
     getDeviceAttributeLogging:
-      description: "get device attribute logging times table"
+      description: "Get device attribute logging times table"
       params: {}
       result:
         attributeLogging:
@@ -1230,7 +1302,7 @@ api.database = {
         scope: "events"
         access: "read"
     setDeviceAttributeLogging:
-      description: "set device attribute logging times table"
+      description: "Set device attribute logging times table"
       params:
         attributeLogging:
           type: t.array
@@ -1238,7 +1310,7 @@ api.database = {
         scope: "events"
         access: "write"
     getDeviceAttributeLoggingTime:
-      description: "get device attribute logging times table"
+      description: "Get device attribute logging times table"
       params:
         deviceId:
           type: t.string
@@ -1250,6 +1322,49 @@ api.database = {
       permission:
         scope: "events"
         access: "read"
+    runVacuum:
+      description: "Run the sqlite3 vacuum pragma"
+      params: {}
+      rest:
+        type: 'GET'
+        url: '/api/database/vacuum'
+      permission:
+        scope: "database"
+        access: "write"
+    checkDatabase: 
+      description: "Check database and config integrity"
+      params: {}
+      rest:
+        type: 'GET'
+        url: '/api/database/check'
+      result:
+        problems:
+          type: t.array
+      permission:
+        scope: "database"
+        access: "write"
+    deleteDeviceAttribute:
+      description: "Delete a device attribute from the database"
+      rest:
+        type: 'DELETE'
+        url: '/api/database/device-attribue/by-id'
+      params:
+        id:
+          type: "number"
+      permission:
+        scope: "database"
+        access: "write"
+    updateDeviceAttribute:
+      description: "Updates a device attribute info in database"
+      rest:
+        type: 'PATCH'
+        url: '/api/database/device-attribue/by-id'
+      params:
+        id:
+          type: "number"
+      permission:
+        scope: "database"
+        access: "write"
 }
 
 # all

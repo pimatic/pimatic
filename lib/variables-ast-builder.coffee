@@ -21,6 +21,13 @@ class AddExpression extends Expression
       @right.evaluate(cache, yes).then( (val2) => parseFloat(val1) + parseFloat(val2) )
     )
   toString: -> "add(#{@left.toString()}, #{@right.toString()})"
+  getUnit: ->
+    leftUnit = @left.getUnit()
+    rightUnit = @right.getUnit()
+    if leftUnit?
+      return leftUnit
+     else
+      return rightUnit
 
 class SubExpression extends Expression
   constructor: (@left, @right) -> #nop
@@ -29,6 +36,13 @@ class SubExpression extends Expression
       @right.evaluate(cache, yes).then( (val2) => parseFloat(val1) - parseFloat(val2) )
     )
   toString: -> "sub(#{@left.toString()}, #{@right.toString()})"
+  getUnit: ->
+    leftUnit = @left.getUnit()
+    rightUnit = @right.getUnit()
+    if leftUnit? and leftUnit.length > 0
+      return leftUnit
+     else
+      return rightUnit
 
 class MulExpression extends Expression
   constructor: (@left, @right) -> #nop
@@ -37,6 +51,16 @@ class MulExpression extends Expression
       @right.evaluate(cache, yes).then( (val2) => parseFloat(val1) * parseFloat(val2) )
     )
   toString: -> "mul(#{@left.toString()}, #{@right.toString()})"
+  getUnit: ->
+    leftUnit = @left.getUnit()
+    rightUnit = @right.getUnit()
+    if leftUnit? and leftUnit.length > 0
+      if rightUnit? and rightUnit.length > 0
+        return "#{leftUnit}*#{rightUnit}"
+      else
+        return leftUnit
+    else
+      return rightUnit
 
 class DivExpression extends Expression
   constructor: (@left, @right) -> #nop
@@ -45,11 +69,25 @@ class DivExpression extends Expression
       @right.evaluate(cache, yes).then( (val2) => parseFloat(val1) / parseFloat(val2) )
     )
   toString: -> "div(#{@left.toString()}, #{@right.toString()})"
+  getUnit: ->
+    leftUnit = @left.getUnit()
+    rightUnit = @right.getUnit()
+    if leftUnit? and leftUnit.length > 0
+      if rightUnit? and rightUnit.length > 0
+        return "#{leftUnit}/#{rightUnit}"
+      else
+        return leftUnit
+    else
+      if rightUnit? and rightUnit.length > 0
+        return "1/#{rightUnit}"
+      else
+        return null
 
 class NumberExpression extends Expression
   constructor: (@value) -> #nop
   evaluate: (cache) -> Promise.resolve @value
   toString: -> "num(#{@value})"
+  getUnit: -> null
 
 class VariableExpression extends Expression
   constructor: (@variable) -> #nop
@@ -74,25 +112,35 @@ class VariableExpression extends Expression
         return numVal
       else return val
     )
+  getUnit: -> @variable.unit
+
   toString: -> "var(#{@variable.name})"
 
 class FunctionCallExpression extends Expression
   constructor: (@name, @func, @args) -> #nop
-  evaluate: (cache) -> 
+  evaluate: (cache) ->
+    context = {
+      units: _.map(@args, (a) -> a.getUnit() ) 
+    }
     return Promise
       .map(@args, ( (a) -> a.evaluate(cache) ), {concurrency: 1})
-      .then( (args) => @func.exec(args...) )
+      .then( (args) => @func.exec.apply(context, args) )
   toString: -> 
     argsStr = (
       if @args.length > 0 then _.reduce(@args, (l,r) -> "#{l.toString()}, #{r.toString()}" )
       else ""
     )
     return "fun(#{@name}, [#{argsStr}])"
+  getUnit: ->
+    if @func.unit? 
+      return @func.unit()
+    return ''
 
 class StringExpression extends Expression
   constructor: (@value) -> #nop
   evaluate: -> Promise.resolve @value
   toString: -> "str('#{@value}')"
+  getUnit: -> null
 
 class StringConcatExpression extends Expression
   constructor: (@left, @right) -> #nop

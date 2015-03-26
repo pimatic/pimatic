@@ -21,9 +21,9 @@ __The condition and predicates__
 The condition of a rule consists of one or more predicates. The predicates can be combined with
 "and", "or" and can be grouped by parentheses ('[' and ']'). A predicate is either true or false at 
 a given time. There are special predicates, called event-predicates, that represent events. 
-These predicate are  just true in the moment a special event happen.
+These predicate are just true in the moment a special event happen.
 
-Each predicate is handled by an Predicate Provider. Take a look at the 
+Each predicate is handled by a Predicate Provider. Take a look at the 
 [predicates file](predicates.html) for more details.
 
 __for-suffix__
@@ -36,7 +36,7 @@ can't have a for-suffix because the condition can never hold.
 __The actions__
 
 The actions of a rule can consists of one or more actions. Each action describes a command that 
-should be executed when the confition of the rule is true. Take a look at the 
+should be executed when the condition of the rule is true. Take a look at the 
 [actions.coffee](actions.html) for more details.
 ###
 
@@ -119,11 +119,11 @@ module.exports = (env) ->
   The Rule Manager
   ----------------
   The Rule Manager holds a collection of rules. Rules can be added to this collection. When a rule
-  is added the rule is parsed by the Rule Manager and for each predicate a Predicate Provider will
+  is added, the rule is parsed by the Rule Manager and for each predicate a Predicate Provider will
   be searched. Predicate Provider that should be considered can be added to the Rule Manager.
 
-  If all predicates of the added rule can be handled by an Predicate Provider for each action of
-  the actions of the rule a Action Handler is searched. Action Handler can be added to the
+  If all predicates of the added rule can be handled by a Predicate Provider, for each action of a
+  rule's action an Action Handler is searched. Action Handler can be added to the
   Rule Manager, too.
 
   ###
@@ -190,7 +190,7 @@ module.exports = (env) ->
       assert ruleString? and typeof ruleString is "string"
 
       rule = new Rule(id, name, ruleString)
-      # Allways return a promise
+      # Always return a promise
       return Promise.try( =>
         
         ###
@@ -205,9 +205,9 @@ module.exports = (env) ->
           when parts.length < 3
             throw new Error('The rule must start with "if" and contain a "then" part!')
           when parts.length > 3 
-            throw new Error('The rule must exactly contain one "if" and one "then"!')
+            throw new Error('The rule must exactly contain one "if" and one "then" part!')
         ###
-        Then extraxt the condition and actions from the rule 
+        Then extract the condition and actions from the rule 
          
             rule.conditionToken = "its 10pm and light is on"
             rule.actions = "turn the light off"
@@ -298,13 +298,16 @@ module.exports = (env) ->
               token = m.getFullMatch()
               assert S(nextInput.toLowerCase()).startsWith(token.toLowerCase())
               nextInput = nextInput.substring(token.length)
-
+      if tokens.length > 0
+        lastToken = tokens[tokens.length-1]
+        if lastToken in ["and", "or"]
+          context.addError("""Expected a new predicate after last "#{lastToken}".""")
       return {
         predicates: predicates
         tokens: tokens
       }
 
-    _parsePredicate: (predId, nextInput, context) =>
+    _parsePredicate: (predId, nextInput, context, predicateProviderClass) =>
       assert typeof predId is "string" and predId.length isnt 0
       assert typeof nextInput is "string"
       assert context?
@@ -328,15 +331,19 @@ module.exports = (env) ->
       else
         predicate.justTrigger = no
 
-      # find a prdicate provider for that can parse and decide the predicate:
+      # find a predicate provider for that can parse and decide the predicate:
       parseResults = []
       for predProvider in @predicateProviders
+        if predicateProviderClass?
+          continue if predProvider.constructor.name isnt predicateProviderClass
+        context.elements = {}
         parseResult = predProvider.parsePredicate(nextInput, context)
         if parseResult?
           assert parseResult.token? and parseResult.token.length > 0
           assert parseResult.nextInput? and typeof parseResult.nextInput is "string"
           assert parseResult.predicateHandler?
           assert parseResult.predicateHandler instanceof env.predicates.PredicateHandler
+          parseResult.elements = context.elements[parseResult.token]
           parseResults.push parseResult
 
       switch parseResults.length
@@ -349,11 +356,11 @@ module.exports = (env) ->
           parseResult = parseResults[0]
           token += parseResult.token
           assert parseResult.token?
-          assert S(nextInput.toLowerCase()).startsWith(parseResult.token.toLowerCase())
+          #assert S(nextInput.toLowerCase()).startsWith(parseResult.token.toLowerCase())
           predicate.token = parseResult.token
           nextInput = parseResult.nextInput
           predicate.handler = parseResult.predicateHandler
-
+          context.elements = {}
           timeParseResult = @_parseTimePart(nextInput, " for ", context)
           if timeParseResult?
             token += timeParseResult.token
@@ -366,19 +373,23 @@ module.exports = (env) ->
 
           if predicate.justTrigger and predicate.for?
             context.addError(
-              "\"#{token}\" is markes as trigger, it can't be true for \"#{redicate.token}\"."
+              "\"#{token}\" is marked as trigger, it can't be true for \"#{predicate.token}\"."
             )
 
           if predicate.handler.getType() is 'event' and predicate.for?
             context.addError(
-              "\"#{token}\" is an event it can't be true for \"#{redicate.token}\"."
+              "\"#{token}\" is an event it can't be true for \"#{predicate.token}\"."
             )
 
         else
           context.addError(
             """Next predicate of "#{nextInput}" is ambiguous."""
           )
-      return { predicate, token, nextInput }
+      return { 
+        predicate, token, nextInput, 
+        elements: parseResult?.elements 
+        forElements: timeParseResult?.elements
+      }
 
     _parseTimePart: (nextInput, prefixToken, context, options = null) ->
       # Parse the for-Suffix:
@@ -398,7 +409,8 @@ module.exports = (env) ->
         assert S(nextInput).startsWith(token)
         timeToken = S(token).chompLeft(prefixToken).s
         nextInput = nextInput.substring(token.length)
-        return {token, nextInput, timeToken, timeExprTokens, unit}
+        elements = m.elements
+        return {token, nextInput, timeToken, timeExprTokens, unit, elements}
       else
         return null
 
@@ -465,10 +477,10 @@ module.exports = (env) ->
             exprTokens: timeParseResult.timeExprTokens
             unit: timeParseResult.unit
           }
-      # Try to macth after as prefix: after 10 seconds log "42" 
+      # Try to match after as prefix: after 10 seconds log "42" 
       parseAfter('prefix')
 
-      # find a prdicate provider for that can parse and decide the predicate:
+      # find a predicate provider for that can parse and decide the predicate:
       parseResults = []
       for actProvider in @actionProviders
         parseResult = actProvider.parseAction(nextInput, context)
@@ -485,7 +497,7 @@ module.exports = (env) ->
             """Could not find an provider that provides the next action of "#{nextInput}"."""
           )
         when 1
-          # get part of nextInput that is related to the found provider
+          # Get part of nextInput that is related to the found provider
           parseResult = parseResults[0]
           token = parseResult.token
           assert token?
@@ -494,11 +506,11 @@ module.exports = (env) ->
           nextInput = parseResult.nextInput
           action.handler = parseResult.actionHandler
 
-          # try to match after as suffix: log "42" after 10 seconds
+          # Try to match after as suffix: log "42" after 10 seconds
           unless action.after?
             parseAfter('suffix')
 
-          # try to parse "for 10 seconds"
+          # Try to parse "for 10 seconds"
           forSuffixAllowed = action.handler.hasRestoreAction()
           timeParseResult = @_parseTimePart(nextInput, " for ", context, {
             acFilter: () => forSuffixAllowed
@@ -513,7 +525,7 @@ module.exports = (env) ->
 
           if action.for? and forSuffixAllowed is no
             context.addError(
-              """Action "#{action.token}" can't have an "for"-Suffix."""
+              """Action "#{action.token}" can't have a "for"-Suffix."""
             )
           
         else
@@ -537,11 +549,11 @@ module.exports = (env) ->
           assert(not p.changeListener?)
           p.lastChange = setupTime
           p.handler.setup()
-          # let us be notified when the predicate state changes.
+          # Let us be notified when the predicate state changes.
           p.handler.on 'change', changeListener = (state) =>
             assert state is 'event' or state is true or state is false
             p.lastChange = (new Date()).getTime()
-            #If the state is true then call the `whenPredicateIsTrue` function.
+            # If the state is true then call the `whenPredicateIsTrue` function.
             if state is true or state is 'event'
               whenPredicateIsTrue rule, p.id, state
           p.changeListener = changeListener
@@ -552,16 +564,16 @@ module.exports = (env) ->
         assert predicateId? and typeof predicateId is "string" and predicateId.length isnt 0
         assert state is 'event' or state is true
 
-        # if not active, then nothing to do
+        # If not active, then nothing to do
         unless rule.active then return
 
         # Then mark the given predicate as true
         knownPredicates = {}
         knownPredicates[predicateId] = true
 
-        # and check if the rule is now true.
+        # And check if the rule is now true.
         @_doesRuleCondtionHold(rule, knownPredicates).then( (isTrue) =>
-          # if the rule is now true, then execute its action
+          # If the rule is now true, then execute its action
           if isTrue 
             return @_executeRuleActionsAndLogResult(rule)
         ).catch( (error) => 
@@ -608,15 +620,15 @@ module.exports = (env) ->
       unless logging? then logging = yes
 
 
-      unless id.match /^[a-z0-9\-_]+$/i then throw new Error "rule id must only contain " +
+      unless id.match /^[a-z0-9\-_]+$/i then throw new Error "Rule ID must only contain " +
         "alpha numerical symbols, \"-\" and  \"_\""
-      if @rules[id]? then throw new Error "There is already a rule with the id \"#{id}\""
+      if @rules[id]? then throw new Error "There is already a rule with the ID \"#{id}\""
 
       context = @_createParseContext()
       # First parse the rule.
       return @_parseRuleString(id, name, ruleString, context).then( (rule) =>
         rule.logging = logging
-        # If we have parse error we don't need to continue here
+        # If we have a parse error we don't need to continue here
         if context.hasErrors()
           error = new Error context.getErrorsAsString()
           error.rule = rule
@@ -629,10 +641,10 @@ module.exports = (env) ->
         rule.valid = yes
         @rules[id] = rule
         @emit "ruleAdded", rule
-        # Check if the condition of the rule is allready true.
+        # Check if the condition of the rule is already true.
         if active
           @_doesRuleCondtionHold(rule).then( (isTrue) =>
-            # If the confition is true then execute the action.
+            # If the condition is true then execute the action.
             if isTrue 
               return @_executeRuleActionsAndLogResult(rule)
           ).catch( (error) =>
@@ -643,7 +655,7 @@ module.exports = (env) ->
           )
         return
       ).catch( (error) =>
-        # If there was an error pasring the rule, but the rule is forced to be added, then add
+        # If there was an error parsing the rule, but the rule is forced to be added, then add
         # the rule with an error.
         if force
           if error.rule?
@@ -654,20 +666,20 @@ module.exports = (env) ->
             @rules[id] = rule
             @emit 'ruleAdded', rule
           else
-            env.logger.error 'Could not force add rule, because error had no rule attribute.'
+            env.logger.error 'Could not force add rule, because error has no rule attribute.'
             env.logger.debug error.stack
         throw error
       )
 
     # ###removeRule()
-    # Removes a rule, from the Rule Manager.
+    # Removes a rule from the Rule Manager.
     removeRule: (id) ->
       assert id? and typeof id is "string" and id.length isnt 0
       throw new Error("Invalid ruleId: \"#{id}\"") unless @rules[id]?
 
       # First get the rule from the rule array.
       rule = @rules[id]
-      # Then get cancel all notifies
+      # Then cancel all notifications
       @_removePredicateChangeListener(rule)
       @_cancelScheduledActions(rule)
       # and delete the rule from the array
@@ -709,10 +721,10 @@ module.exports = (env) ->
         @_removePredicateChangeListener(rule)
         @_cancelScheduledActions(rule)
 
-        # We do that to keep the old rule object and not use the new one
+        # We do that to keep the old rule object and don't use the new one
         rule.update(newRule)
 
-        # and register the new ones:
+        # and register the new ones,
         @_addPredicateChangeListener(rule)
         # and emit the event.
         @emit "ruleChanged", rule
@@ -731,7 +743,7 @@ module.exports = (env) ->
       )
 
     # ###_evaluateConditionOfRule()
-    # This function returnes a promise thatwill be fulfilled with true if the condition of the 
+    # This function returns a promise that will be fulfilled with true if the condition of the 
     # rule is true. This function ignores all the "for"-suffixes of predicates. 
     # The `knownPredicates` is an object containing a value for
     # each predicate for that the state is already known.
@@ -748,12 +760,12 @@ module.exports = (env) ->
 
       # First evaluate the condition and
       return @_evaluateConditionOfRule(rule, knownPredicates).then( (isTrue) =>
-        # if the condition is false then the condition con not hold, because it is already false
+        # if the condition is false then the condition can not hold, because it is already false,
         # so return false.
         unless isTrue then return false
-        # Some predicates could have a 'for'-Suffix like 'for 10 seconds' then the predicates 
+        # Some predicates could have a 'for'-Suffix like 'for 10 seconds' then the predicate 
         # must at least hold for 10 seconds to be true, so we have to wait 10 seconds to decide
-        # if the rule is realy true
+        # if the rule is really true
 
         # Create a deferred that will be resolve with the return value when the decision can be 
         # made. 
@@ -792,62 +804,70 @@ module.exports = (env) ->
           for pred in rule.predicates
             do (pred) =>
               if pred.for?
-                # If it has a for suffix and its an event something gone wrong, because an event 
-                # can't hold (its just one time)
+                # If it has a for suffix and it is an event something gone wrong, because an event 
+                # can't hold (it's just one time)
                 assert pred.handler.getType() is 'state'
-                promise = @_evaluateTimeExpr(
-                  pred.for.exprTokens,
-                  pred.for.unit
-                ).then( (ms) => [pred, ms] )
-                predsWithForTime.push(promise)
+                # if predicate is false we don't have to wait for it
+                if knownPredicates[pred.id] isnt false
+                  promise = @_evaluateTimeExpr(
+                    pred.for.exprTokens,
+                    pred.for.unit
+                  ).then( (ms) => [pred, ms] )
+                  predsWithForTime.push(promise)
           nowTime = (new Date()).getTime()
           # Fill the awaiting list:
           # Check for each predicate,
           return Promise.each(predsWithForTime, ([pred, forTime]) =>
             assert pred.lastChange?
-            # The time since last change
-            lastChangeTimeDiff = nowTime - pred.lastChange 
-            # Time to wait till condition becomes true, if not change occures
-            timeToWait = forTime - lastChangeTimeDiff
+            return pred.handler.getValue().then( (currentValue) =>
+              # when predicate is false then its already false
+              if currentValue is false
+                knownPredicates[pred.id] = false
+                return
+              # The time since last change
+              lastChangeTimeDiff = nowTime - pred.lastChange 
+              # Time to wait till condition becomes true, if nothing changes
+              timeToWait = forTime - lastChangeTimeDiff
 
-            if timeToWait > 0              
-              # Mark that we are awaiting the result
-              awaiting[pred.id] = {}
-              # and as long as we are awaiting the result, the predicate is false.
-              knownPredicates[pred.id] = false
+              if timeToWait > 0              
+                # Mark that we are awaiting the result
+                awaiting[pred.id] = {}
+                # and as long as we are awaiting the result, the predicate is false.
+                knownPredicates[pred.id] = false
 
-              # When the time passes
-              timeout = setTimeout( ( =>
-                knownPredicates[pred.id] = true
-                # the predicate remains true and no value is awaited anymore.
-                awaiting[pred.id].cancel()
-                reevaluateCondition()
-              ), timeToWait)
-
-              # Let us be notified when it becomes false.
-              pred.handler.on 'change', changeListener = (state) =>
-                assert state is true or state is false
-                # If it changes to false
-                if state is false
-                  # then the predicate is false
-                  knownPredicates[pred.id] = false
-                  # and clear the timeout.
+                # When the time passes
+                timeout = setTimeout( ( =>
+                  knownPredicates[pred.id] = true
+                  # the predicate remains true and no value is awaited anymore.
                   awaiting[pred.id].cancel()
                   reevaluateCondition()
+                ), timeToWait)
 
-              awaiting[pred.id].cancel = =>
-                delete awaiting[pred.id]
-                clearTimeout timeout
-                # and we can cancel the notify
-                pred.handler.removeListener 'change', changeListener
-            return
+                # Let us be notified when it becomes false.
+                pred.handler.on 'change', changeListener = (state) =>
+                  assert state is true or state is false
+                  # If it changes to false
+                  if state is false
+                    # then the predicate is false
+                    knownPredicates[pred.id] = false
+                    # and clear the timeout,
+                    awaiting[pred.id].cancel()
+                    reevaluateCondition()
+
+                awaiting[pred.id].cancel = =>
+                  delete awaiting[pred.id]
+                  clearTimeout timeout
+                  # and we can cancel the notify
+                  pred.handler.removeListener 'change', changeListener
+                return
+              )
           ).then( =>
             # If we have not found awaiting predicates
             if (id for id of awaiting).length is 0
               # then resolve the return value to true.
               resolve true
           ).catch( (error) =>
-            # Cancel all awatting changeHandler
+            # Cancel all awaiting changeHandler
             for id, a of awaiting
               a.cancel()
             throw error
@@ -863,7 +883,7 @@ module.exports = (env) ->
       if rule.lastExecuteTime?
         delta = currentTime - rule.lastExecuteTime
         if delta <= 500
-          env.logger.debug "Suppressing rule #{rule.id} execute because it was executed resently."
+          env.logger.debug "Suppressing rule #{rule.id} execute because it was executed recently."
           return Promise.resolve()
       rule.lastExecuteTime = currentTime
 
@@ -906,12 +926,12 @@ module.exports = (env) ->
           promise = null
           if action.after?
             unless simulate 
-              # cancel scheule for pending executes
+              # Cancel schedule for pending executes
               if action.scheduled?
                 action.scheduled.cancel(
                   "reschedule action #{action.token} in #{action.after.token}"
                 ) 
-              # schedule new action
+              # Schedule new action
               promise = @_evaluateTimeExpr(
                 action.after.exprTokens, 
                 action.after.unit
@@ -932,7 +952,7 @@ module.exports = (env) ->
       )
 
     _executeAction: (action, simulate) =>
-      # wrap into an fcall to convert throwen erros to a rejected promise
+      # wrap into an fcall to convert thrown erros to a rejected promise
       return Promise.try( => 
         promise = action.handler.executeAction(simulate)
         if action.for?
@@ -947,7 +967,7 @@ module.exports = (env) ->
       )
 
     _executeRestoreAction: (action, simulate) =>
-      # wrap into an fcall to convert throwen erros to a rejected promise
+      # Wrap into an fcall to convert thrown erros to a rejected promise
       return Promise.try( => action.handler.executeRestoreAction(simulate) )
 
     _scheduleAction: (action, ms, isRestore = no) =>
@@ -1018,14 +1038,43 @@ module.exports = (env) ->
       for p in result.predicates
         delete p.handler
 
+      tree = null
+      if context.errors.length is 0
+        tree = (new rulesAst.BoolExpressionTreeBuilder())
+          .build(result.tokens, result.predicates)
+
       return {
         tokens: result.tokens
         predicates: result.predicates
+        tree: tree
         autocomplete: context.autocomplete
         errors: context.errors
         format: context.format
         warnings: context.warnings
       }
+
+    getPredicatePresets: () ->
+      presets = []
+      for p in @predicateProviders
+        if p.presets?
+          for d in p.presets
+            d.predicateProviderClass = p.constructor.name
+            presets.push d
+      return presets
+
+
+    getPredicateInfo: (input, predicateProviderClass) ->
+      context = @_createParseContext()
+      result = @_parsePredicate("id", input, context, predicateProviderClass)
+      if result?.predicate?
+        unless result.predicate.justTrigger or result.predicate.handler?.getType() is "event"
+          unless result.forElements?
+            timeParseResult = @_parseTimePart(" for 5 minutes", " for ", context)
+            result.forElements = timeParseResult.elements
+        delete result.predicate.handler
+      context.finalize()
+      result.errors = context.errors
+      return result
 
     executeAction: (actionString, simulate = false, logging = yes) =>
       context = @_createParseContext()

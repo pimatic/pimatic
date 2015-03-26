@@ -23,7 +23,7 @@ serial = $dir/serial
 private_key = $dir/private/cakey.pem
 x509_extensions = usr_cert
 default_days = 3650
-default_md = sha1
+default_md = sha256
 preserve = no
 policy = policy_match
 
@@ -44,7 +44,7 @@ attributes = req_attributes
 x509_extensions = v3_ca
 string_mask = utf8only
 req_extensions = v3_req
-
+default_md = sha256
 [ req_attributes ]
 
 [ req_distinguished_name ]
@@ -85,9 +85,9 @@ echo "---------------------------------------------------------------"
 echo "You will have to enter a pass phrase to protect your ca root cert."
 echo "You must type in 4 to 1024 characters."
 echo "---------------------------------------------------------------"
-openssl req -new -x509 -days 3650 -config caconfig.cnf -keyform PEM -keyout private/cakey.pem -outform PEM -out certs/cacert.pem -subj "$CERT_INFO"
+openssl req -new -x509 -sha256 -days 3650 -config caconfig.cnf -keyform PEM -keyout private/cakey.pem -outform PEM -out certs/cacert.pem -subj "$CERT_INFO"
 # Convert root cert to DER
-openssl x509 -in certs/cacert.pem -outform der -out certs/cacert.crt
+openssl x509 -sha512 -in certs/cacert.pem -outform der -out certs/cacert.crt
 
 # Generate server certificate for pimatic
 mkdir pimatic-ssl
@@ -100,7 +100,7 @@ echo "---------------------------------------------------------------"
 echo 'Please enter the hostname of your pimatic installation. For example mypm.dyndns.org'
 echo "---------------------------------------------------------------"
 read -p "Enter hostname: " CN
-openssl req -new -key private/privkey.pem -out cert-req.pem -subj "/C=DE/ST=Germany/L=pimatic city/O=pimatic.org/OU=pimatic.org/CN=$CN"
+openssl req -new -sha256 -key private/privkey.pem -out cert-req.pem -subj "/C=DE/ST=Germany/L=pimatic city/O=pimatic.org/OU=pimatic.org/CN=$CN"
 chmod 600 private/privkey.pem
 cd ..
 
@@ -108,7 +108,7 @@ echo ""
 echo "---------------------------------------------------------------"
 echo "You have to enter your pass phrase from above again to make the cert request."
 echo "---------------------------------------------------------------"
-openssl x509 -days 3650 -CA certs/cacert.pem -CAkey private/cakey.pem -req -in pimatic-ssl/cert-req.pem -outform PEM -out pimatic-ssl/public/cert.pem -CAserial serial
+openssl x509 -sha512 -days 3650 -CA certs/cacert.pem -CAkey private/cakey.pem -req -in pimatic-ssl/cert-req.pem -outform PEM -out pimatic-ssl/public/cert.pem -CAserial serial
 rm pimatic-ssl/cert-req.pem
 chmod 600 private
 cd ..
@@ -124,3 +124,4 @@ echo "---------------------------------------------------------------"
 echo "Import the following certificate in your devices: "
 echo "---------------------------------------------------------------"
 echo "public certificate authority certificate: ca/certs/cacert.crt"
+echo "https://$CN/root-ca-cert.crt"

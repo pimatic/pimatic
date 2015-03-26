@@ -3,21 +3,14 @@ pimatic
 
 [![Build Status](https://travis-ci.org/pimatic/pimatic.png?branch=master)](https://travis-ci.org/pimatic/pimatic)
 [![NPM version](https://badge.fury.io/js/pimatic.png)](http://badge.fury.io/js/pimatic)
-[![Gittip donate button](http://img.shields.io/gittip/sweetpi.png)](https://www.gittip.com/sweetpi/ "Donate weekly to this project using Gittip")
-[![PayPal donate button](http://img.shields.io/paypal/donate.png?color=blue)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=KCVVRY4243JS6 "Donate once-off to this project using Paypal")
+[![Ready](https://badge.waffle.io/pimatic/pimatic.png?label=ready&title=Ready)](https://waffle.io/pimatic/pimatic)
 
 pimatic is a home automation framework that runs on [node.js](http://nodejs.org). It provides a 
 common extensible platform for home control and automation tasks.  
 
-Read more at [pimatic.org](http://pimatic.org/).
+Read more at [pimatic.org](http://pimatic.org/) or visit the [forum](http://forum.pimatic.org).
 
-Version 0.8 is ready for testing
---------------------------------
-pimatic version 0.8 is now available for installation in the npm-registry. __Please do a complete
-reinstallation instead of a update from 0.7.__ Read more about it [here](https://github.com/pimatic/pimatic/issues/207).
-
-[More information about the changes.](https://github.com/pimatic/pimatic/issues/186)
-
+[![Join the chat at https://gitter.im/pimatic/pimatic](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/pimatic/pimatic?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Screenshots
 -----------
@@ -26,32 +19,24 @@ Screenshots
 [![Screenshot 3][screen3_thumb]](http://www.pimatic.org/screens/screen3.png) 
 [![Screenshot 4][screen4_thumb]](http://www.pimatic.org/screens/screen4.png)
 
-[screen1_thumb]: http://www.pimatic.org/screens/screen1_thumb.png
-[screen2_thumb]: http://www.pimatic.org/screens/screen2_thumb.png
-[screen3_thumb]: http://www.pimatic.org/screens/screen3_thumb.png
-[screen4_thumb]: http://www.pimatic.org/screens/screen4_thumb.png
-
-Motivation - Why Node.js?
-------------
-__Why not just using php with apache, nginx or C++?__  
-Because Node.js is fancy and cool and javaScript is the language of the internet of things. No, to be seriously: Because Node.js with its event loop, asynchronously and non-blocking programming model is well suited for home automation tasks. Have you ever tryed implementing a cron like job in php? In addition there are tons of easy to use [packages and libs](https://npmjs.org/).
-
-__But the Raspberry Pi ist not very powerful, won't JavaScript be very slow?__  
-Yes and No, JavaScript is surely slower than C, but its getting faster and faster and runs very well on arm devices. Because disk access and network latency should be the real bottleneck of the pi, Node.js could perform well better than c++ because of its non blocking nature.
+[screen1_thumb]: http://www.pimatic.org/screens/screen1_thumb.png?v=1
+[screen2_thumb]: http://www.pimatic.org/screens/screen2_thumb.png?v=1
+[screen3_thumb]: http://www.pimatic.org/screens/screen3_thumb.png?v=1
+[screen4_thumb]: http://www.pimatic.org/screens/screen4_thumb.png?v=1
 
 Getting Started
 ------------
 
-[Install instuction](http://pimatic.org/guide/getting-started/installation/) can be found 
-on [pimatic.org](http://pimatic.org/).
+[Install instruction](http://pimatic.org/guide/getting-started/installation/) can be found 
+on [pimatic.org](http://pimatic.org/). If you need any help, [ask at the forum](http://forum.pimatic.org).
 
-Documentation
--------------
+Donation
+--------
 
-pimatics source files are annotated with 
-[literate programming](http://en.wikipedia.org/wiki/Literate_programming) style comments and docs. 
-You can [browse the self generated documentation](http://www.pimatic.org/docs/) with the 
-source code side by side.
+Happy with pimatic and using it everyday? Consider a donation to support developlment and keeping the website and forum up: [![Gittip donate button](http://img.shields.io/gittip/sweetpi.png)](https://www.gittip.com/sweetpi/ "Donate weekly to this project using Gittip")
+[![PayPal donate button](http://img.shields.io/paypal/donate.png?color=blue)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=KCVVRY4243JS6 "Donate once-off to this project using Paypal")
+
+We promise, that pimatic will always be free to use and its code be open sourced.
 
 Get Involved
 -------------
@@ -62,8 +47,8 @@ Architecture Overview
 ---------------------
 
     +-------------------------------------------+
-    | mobile-  | rest- | cron | pilight   | ... |  Plugins (Views, Device-/Preidcates-
-    | frontend | api   |      | (adapter) |     |  Action-Provider, Services)
+    | mobile-  | rest- | cron | homeduino | ... |  Plugins (Views, Device-/Preidcates-
+    | frontend | api   |      |           |     |  Action-Provider, Services)
     |-------------------------------------------|
     | pimatic (framework)                       |  Framework
     |-------------------------------------------|
@@ -79,7 +64,7 @@ Extensions and Hacking
 ----------------------
 The framework is built to be extendable by plugins. If you have devices that are currently not 
 supported please add a plugin for your devices. 
-As well, if you have a nice Ideas for plugins or need support for specials actuators you are
+As well, if you have a nice Ideas for plugins or need support for specials devices you are
 welcome to create a issue or submit a patch.
 
 For plugin development take a look at the 

@@ -41,8 +41,8 @@ module.exports = (env) ->
 
     _checkAttribute: (attrName) ->
       attr = @attributes[attrName]
-      assert attr.description?, "no description for #{attrName} of #{@name} given"
-      assert attr.type?, "no type for #{attrName} of #{@name} given"
+      assert attr.description?, "No description for #{attrName} of #{@name} given"
+      assert attr.type?, "No type for #{attrName} of #{@name} given"
 
       isValidType = (type) => type in _.values(t)
       assert isValidType(attr.type), "#{attrName} of #{@name} has no valid type."
@@ -52,35 +52,41 @@ module.exports = (env) ->
       # If it is a Boolean it must have labels
       if attr.type is t.boolean and not attr.labels then attr.labels = ["true", "false"]
       unless attr.label then attr.label = upperCaseFirst(attrName)
+      unless attr.discrete?
+        attr.discrete = (if attr.type is "number" then no else yes)
 
     constructor: ->
-      assert @id?, "the device has no id"
-      assert @name?, "the device has no name"
-      assert @id.length isnt 0, "the id of the device is empty"
-      assert @name.length isnt 0, "the name of the device is empty"
+      assert @id?, "The device has no ID"
+      assert @name?, "The device has no name"
+      assert @id.length isnt 0, "The ID of the device is empty"
+      assert @name.length isnt 0, "The name of the device is empty"
       @_checkAttributes()
       @_constructorCalled = yes
       @_attributesMeta = {}
       device = @
-      for attrName, attr of @attributes
-        do (attrName, attr) =>
-          @_attributesMeta[attrName] = {
-            value: null
-            history: []
-            update: (value) ->
-              if attr.type in ["number", "integer"] and typeof value is "string"
-                env.logger.error(
-                  "Got string value for attribute #{attrName} of #{device.constructor.name} but " + 
-                  "attribute type is #{attr.type}."
-                )
-              timestamp = (new Date()).getTime()
-              @value = value
-              @lastUpdate = timestamp
-              if @history.length is 30
-                @history.shift()
-              @history.push {t:timestamp, v:value}
-          }
-          @on(attrName, (value) => @_attributesMeta[attrName].update(value) )
+      @_initAttributeMeta(attrName, attr) for attrName, attr of @attributes
+
+
+    _initAttributeMeta: (attrName, attr) ->
+      @_attributesMeta[attrName] = {
+        value: null
+        history: []
+        update: (value) ->
+          if attr.type in ["number", "integer"] and typeof value is "string"
+            env.logger.error(
+              "Got string value for attribute #{attrName} of #{device.constructor.name} but " + 
+              "attribute type is #{attr.type}."
+            )
+          timestamp = (new Date()).getTime()
+          @value = value
+          @lastUpdate = timestamp
+          if @history.length is 30
+            @history.shift()
+          @history.push {t:timestamp, v:value}
+      }
+      attrListener = (value) => @_attributesMeta[attrName].update(value)
+      @_attributesMeta[attrName].attrListener = attrListener
+      @on(attrName, attrListener)
 
     destroy: ->
       @emit('destroy', @)
@@ -111,6 +117,17 @@ module.exports = (env) ->
 
     getLastAttributeValue: (attrName) ->
       return @_attributesMeta[attrName].value
+
+    addAttribute: (name, attribute) ->
+      assert (not @_constructorCalled), "Attributes can only be added in the constructor"
+      if @attributes is @constructor.prototype.attributes
+        @attributes = _.clone(@attributes)
+      @attributes[name] = attribute
+
+    updateName: (name) ->
+      if name is @name then return
+      @name = name
+      @emit "nameChanged", this
 
     getUpdatedAttributeValue: (attrName) ->
       getter = 'get' + upperCaseFirst(attrName)
@@ -169,25 +186,25 @@ module.exports = (env) ->
 
     actions: 
       turnOn:
-        description: "turns the switch on"
+        description: "Turns the switch on"
       turnOff:
-        description: "turns the switch off"
+        description: "Turns the switch off"
       changeStateTo:
-        description: "changes the switch to on or off"
+        description: "Changes the switch to on or off"
         params:
           state:
             type: t.boolean
       toggle:
-        description: "toggle the state of the switch"
+        description: "Toggle the state of the switch"
       getState:
-        description: "returns the current state of the switch"
+        description: "Returns the current state of the switch"
         returns:
           state:
             type: t.boolean
         
     attributes:
       state:
-        description: "the current state of the switch"
+        description: "The current state of the switch"
         type: t.boolean
         labels: ['on', 'off']
 
@@ -231,27 +248,27 @@ module.exports = (env) ->
 
     actions: 
       changeDimlevelTo:
-        description: "sets the level of the dimmer"
+        description: "Sets the level of the dimmer"
         params:
           dimlevel:
             type: t.number
       changeStateTo:
-        description: "changes the switch to on or off"
+        description: "Changes the switch to on or off"
         params:
           state:
             type: t.boolean
       turnOn:
-        description: "turns the dim level to 100%"
+        description: "Turns the dim level to 100%"
       turnOff:
-        description: "turns the dim level to 0%"
+        description: "Turns the dim level to 0%"
         
     attributes:
       dimlevel:
-        description: "the current dim level"
+        description: "The current dim level"
         type: t.number
         unit: "%"
       state:
-        description: "the current state of the switch"
+        description: "The current state of the switch"
         type: t.boolean
         labels: ['on', 'off']
 
@@ -284,7 +301,7 @@ module.exports = (env) ->
   ###
   ShutterController
   -----
-  A class for all devices you can switch on and off.
+  A class for all devices you can move up and down.
   ###
   class ShutterController extends Actuator
     _position: null
@@ -292,19 +309,19 @@ module.exports = (env) ->
     attributes:
       position:
         label: "Position"
-        description: "state of the shutter"
+        description: "State of the shutter"
         type: t.string
         enum: ['up', 'down', 'stopped']
 
     actions: 
       moveUp:
-        description: "raise the shutter"
+        description: "Raise the shutter"
       moveDown:
-        description: "lower the shutter"
+        description: "Lower the shutter"
       stop:
-        description: "stops the shutter move"
+        description: "Stops the shutter move"
       moveToPosition:
-        description: "changes the shutter state"
+        description: "Changes the shutter state"
         params:
           state:
             type: t.string
@@ -346,9 +363,10 @@ module.exports = (env) ->
 
     attributes:
       temperature:
-        description: "the messured temperature"
+        description: "The measured temperature"
         type: t.number
         unit: '°C'
+        acronym: 'T'
 
     template: "temperature"
 
@@ -361,7 +379,7 @@ module.exports = (env) ->
 
     attributes:
       presence:
-        description: "presence of the human/device"
+        description: "Presence of the human/device"
         type: t.boolean
         labels: ['present', 'absent']
         
@@ -385,7 +403,7 @@ module.exports = (env) ->
 
     attributes:
       contact:
-        description: "state of the contact"
+        description: "State of the contact"
         type: t.boolean
         labels: ['closed', 'opened']
 
@@ -402,6 +420,87 @@ module.exports = (env) ->
     unless string.length is 0
       string[0].toUpperCase() + string.slice(1)
     else ""
+
+  class HeatingThermostat extends Device
+
+    attributes:
+      temperatureSetpoint:
+        label: "Temperature Setpoint"
+        description: "The temp that should be set"
+        type: "number"
+        discrete: true
+        unit: "°C"
+      valve:
+        description: "Position of the valve"
+        type: "number"
+        discrete: true
+        unit: "%"
+      mode:
+        description: "The current mode"
+        type: "string"
+        enum: ["auto", "manu", "boost"]
+      battery:
+        description: "Battery status"
+        type: "string"
+        enum: ["ok", "low"]
+      synced:
+        description: "Pimatic and thermostat in sync"
+        type: "boolean"
+
+    actions:
+      changeModeTo:
+        params: 
+          mode: 
+            type: "string"
+      changeTemperatureTo:
+        params: 
+          temperatureSetpoint: 
+            type: "number"
+
+    template: "thermostat"
+
+    _mode: null
+    _temperatureSetpoint: null
+    _valve: null
+    _battery: null
+    _synced: false
+
+    getMode: () -> Promise.resolve(@_mode)
+    getTemperatureSetpoint: () -> Promise.resolve(@_temperatureSetpoint)
+    getValve: () -> Promise.resolve(@_valve)
+    getBattery: () -> Promise.resolve(@_battery)
+    getSynced: () -> Promise.resolve(@_synced)
+
+    _setMode: (mode) ->
+      if mode is @_mode then return
+      @_mode = mode
+      @emit "mode", @_mode
+
+    _setSynced: (synced) ->
+      if synced is @_synced then return
+      @_synced = synced
+      @emit "synced", @_synced
+
+    _setSetpoint: (temperatureSetpoint) ->
+      if temperatureSetpoint is @_temperatureSetpoint then return
+      @_temperatureSetpoint = temperatureSetpoint
+      @emit "temperatureSetpoint", @_temperatureSetpoint
+
+    _setValve: (valve) ->
+      if valve is @_valve then return
+      @_valve= valve
+      @emit "valve", @_valve
+
+    _setBattery: (battery) ->
+      if battery is @_battery then return
+      @_battery = battery
+      @emit "battery", @_battery
+
+    changeModeTo: (mode) ->
+      throw new Error("changeModeTo must be implemented by a subclass")
+        
+    changeTemperatureTo: (temperatureSetpoint) ->
+      throw new Error("changeTemperatureTo must be implemented by a subclass")
 
   class ButtonsDevice extends Device
 
@@ -459,8 +558,15 @@ module.exports = (env) ->
             label: (if variable.label? then variable.label else "$#{name}")
             type: variable.type or "string"
           }
+
           if variable.unit? and variable.unit.length > 0
-            @attributes[name].unit = variable.unit 
+            @attributes[name].unit = variable.unit
+
+          if variable.discrete?
+            @attributes[name].discrete = variable.discrete
+
+          if variable.acronym?
+            @attributes[name].acronym = variable.acronym
 
           evaluate = ( => 
             # wait till veraibelmanager is ready
@@ -469,6 +575,9 @@ module.exports = (env) ->
                 info = @_vars.parseVariableExpression(variable.expression) 
                 @_vars.notifyOnChange(info.tokens, evaluate)
                 @_exprChangeListeners.push evaluate
+              if @attributes[name].type is "number"
+                unless @attributes[name].unit? and @attributes[name].unit.length > 0
+                  @attributes[name].unit = @_vars.inferUnitOfExpression(info.tokens)
               switch info.datatype
                 when "numeric" then @_vars.evaluateNumericExpression(info.tokens)
                 when "string" then @_vars.evaluateStringExpression(info.tokens)
@@ -531,6 +640,43 @@ module.exports = (env) ->
       return Promise.resolve()
 
 
+  class DummyHeatingThermostat extends HeatingThermostat
+
+    constructor: (@config, lastState) ->
+      @id = @config.id
+      @name = @config.name
+      @_temperatureSetpoint = lastState?.temperatureSetpoint?.value or 20
+      @_mode = lastState?.mode?.value or "auto"
+      @_battery = lastState?.battery?.value or "ok"
+      @_synced = true
+      super()
+
+    changeModeTo: (mode) -> 
+      @_setMode(mode)
+      return Promise.resolve()
+      
+    changeTemperatureTo: (temperatureSetpoint) -> 
+      @_setSetpoint(temperatureSetpoint)
+      return Promise.resolve()
+
+  class DummyContactSensor extends ContactSensor
+    
+    actions:
+      changeContactTo:
+        params: 
+          contact: 
+            type: "boolean"
+
+    constructor: (@config, lastState) ->
+      @name = config.name
+      @id = config.id
+      @_contact = lastState?.contact?.value or off
+      super()
+        
+    changeContactTo: (contact) ->
+      @_setContact(contact)
+      return Promise.resolve()
+
   class DeviceConfigExtension
     extendConfigShema: (schema) ->
       unless schema.extensions? then return
@@ -545,11 +691,85 @@ module.exports = (env) ->
           return yes
       return false
 
+  class Timer extends Device
+
+    attributes:
+      time: 
+        description: "The elapesed time"
+        type: "number"
+        unit: "s"
+        displaySparkline: no
+      running:
+        description: "Is the timer running?"
+        type: "boolean"
+
+    actions:
+      startTimer:
+        description: "Starts the timer"
+      stopTimer:
+        description: "stops the timer"
+      resetTimer:
+        description: "reset the timer"
+
+    template: "timer"
+
+    constructor: (@config, lastState) ->
+      @id = @config.id
+      @name = @config.name
+      @_time = lastState?.time?.value or 0
+      @_running = lastState?.running?.value or false
+      @_setupInterval() if _running?
+      super()
+
+    resetTimer: () ->
+      if @_time is 0
+        return Promise.resolve()
+      @_time = 0
+      @emit 'time', 0
+      return Promise.resolve()
+
+    startTimer: () ->
+      if @_running
+        return Promise.resolve()
+      @_running = true
+      @emit 'running', true
+      @_setupInterval()
+      return Promise.resolve()
+
+    stopTimer: () ->
+      unless @_running
+        return Promise.resolve()
+      @_destroyInterval()
+      @_running = false
+      @emit 'running', false
+      return Promise.resolve()
+
+    getTime: () ->
+      return Promise.resolve(@_time)
+
+    getRunning: () ->
+      return Promise.resolve(@_running)
+
+    _setupInterval: ->
+      if @_interval? then return
+      res = @config.resolution
+      onTick = =>
+        @_time += res
+        @emit 'time', @_time
+      @_interval = setInterval(onTick, res * 1000)
+
+    _destroyInterval: ->
+      clearInterval(@_interval)
+      @_interval = null
+
+    destroy: ->
+      @_destroyInterval()
+      super()
 
   class ConfirmDeviceConfigExtention extends DeviceConfigExtension
     configSchema:
       xConfirm:
-        description: "Triggering an device action needs a confirmation"
+        description: "Triggering a device action needs a confirmation"
         type: "boolean"
         required: no
 
@@ -598,7 +818,23 @@ module.exports = (env) ->
         device.attributes = _.cloneDeep(device.attributes)
         device.attributes.state.labels[0] = config.xOnLabel if config.xOnLabel? 
         device.attributes.state.labels[1] = config.xOffLabel if config.xOffLabel?
-        
+
+  class ContactLabelConfigExtension extends DeviceConfigExtension
+    configSchema:
+      xClosedLabel:
+        description: "The label for the closed state"
+        type: "string"
+        required: no
+      xOpenedLabel:
+        description: "The label for the opened state"
+        type: "string"
+        required: no
+
+    apply: (config, device) -> 
+      if config.xOpenedLabel? or config.xClosedLabel?
+        device.attributes = _.cloneDeep(device.attributes)
+        device.attributes.contact.labels[0] = config.xClosedLabel if config.xClosedLabel? 
+        device.attributes.contact.labels[1] = config.xOpenedLabel if config.xOpenedLabel?
 
   class DeviceManager extends events.EventEmitter
     devices: {}
@@ -610,6 +846,7 @@ module.exports = (env) ->
       @deviceConfigExtensions.push(new LinkDeviceConfigExtention())
       @deviceConfigExtensions.push(new PresentLabelConfigExtension())
       @deviceConfigExtensions.push(new SwitchLabelConfigExtension())
+      @deviceConfigExtensions.push(new ContactLabelConfigExtension())
 
     registerDeviceClass: (className, {configDef, createCallback, prepareConfig}) ->
       assert typeof className is "string", "className must be a string"
@@ -620,15 +857,15 @@ module.exports = (env) ->
         configDef must have a property "properties"
       """
       configDef.properties.id = {
-        description: "the id for the device"
+        description: "The ID for the device"
         type: "string"
       }
       configDef.properties.name = {
-        description: "the name for the device"
+        description: "The name for the device"
         type: "string"
       }
       configDef.properties.class = {
-        description: "the class to use for the device"
+        description: "The class to use for the device"
         type: "string"
       }
 
@@ -651,24 +888,29 @@ module.exports = (env) ->
       @framework._emitDeviceOrderChanged(deviceOrder)
       return deviceOrder
 
-    registerDevice: (device) ->
+    registerDevice: (device, isNew = true) ->
       assert device?
       assert device instanceof env.devices.Device
       assert device._constructorCalled
-      if @devices[device.id]?
-        throw new Error("dublicate device id \"#{device.id}\"")
+
+      if isNew and @devices[device.id]?
+        throw new Error("Duplicate device id \"#{device.id}\"")
       unless device.id.match /^[a-z0-9\-_]+$/i
         env.logger.warn """
           The id of #{device.id} contains a non alphanumeric letter or symbol.
           This could lead to errors.
         """
-      for reservedWord in ["and", "or", "then"]
-        if device.name.indexOf(" and ") isnt -1
+      for reservedWord in [" and ", " or "]
+        if device.name.indexOf(reservedWord) isnt -1
           env.logger.warn """
             Name of device "#{device.id}" contains an "#{reservedWord}". 
             This could lead to errors in rules.
           """
-      env.logger.info "new device \"#{device.name}\"..."
+
+      if isNew
+        env.logger.info "New device \"#{device.name}\"..." 
+      else
+        env.logger.info "Recreating \"#{device.name}\"..." 
 
       @devices[device.id]=device
 
@@ -678,10 +920,10 @@ module.exports = (env) ->
             @framework._emitDeviceAttributeEvent(device, attrName, attr,  new Date(), value)
           )
       device.afterRegister()
-      @framework._emitDeviceAdded(device)
+      @framework._emitDeviceAdded(device) if isNew
       return device
 
-    _loadDevice: (deviceConfig, lastDeviceState) ->
+    _loadDevice: (deviceConfig, lastDeviceState, isNew = true) ->
       classInfo = @deviceClasses[deviceConfig.class]
       unless classInfo?
         throw new Error("Unknown device class \"#{deviceConfig.class}\"")
@@ -705,14 +947,15 @@ module.exports = (env) ->
         if device.attributes[name]?
           meta = device._attributesMeta[name]
           unless meta? then continue
-          meta.value = valueAndTime.value
+          # Do not set `meta.value` here, because internal state and meta could be divergent
+          # Should be better handled in a new pimatic "major" version
           meta.history = [t:valueAndTime.time, v: valueAndTime.value]
 
       for extension in @deviceConfigExtensions
         if extension.applicable(classInfo.configDef)
           extension.apply(device.config, device)
 
-      return @registerDevice(device)
+      return @registerDevice(device, isNew)
 
     loadDevices: ->
       return Promise.each(@devicesConfig, (deviceConfig) =>
@@ -720,7 +963,7 @@ module.exports = (env) ->
           classInfo = @deviceClasses[deviceConfig.class]
           if classInfo?
             try
-              @_loadDevice(deviceConfig, lastDeviceState)
+              @_loadDevice(deviceConfig, lastDeviceState, true)
             catch e
               env.logger.error("Error loading device #{deviceConfig.id}: #{e.message}")
               env.logger.debug(e.stack)
@@ -745,14 +988,25 @@ module.exports = (env) ->
       assert deviceConfig.class?
       if @isDeviceInConfig(deviceConfig.id)
         throw new Error(
-          "A device with the id \"#{deviceConfig.id}\" is already in the config."
+          "A device with the ID \"#{deviceConfig.id}\" is already in the config."
         )
       device = @_loadDevice(deviceConfig, {})
       @addDeviceToConfig(deviceConfig)
       return device
 
+    recreateDevice: (device) ->
+      return @framework.database.getLastDeviceState(device.id).then( (lastDeviceState) =>
+        newDevice =  @_loadDevice(device.config, lastDeviceState, false)
+        @framework._emitDeviceChanged(newDevice)
+        device.emit 'change', newDevice
+        @emit 'deviceChanged', newDevice
+        @framework.saveConfig()
+        device.destroy()    
+      )
+ 
+
     updateDeviceByConfig: (deviceConfig) ->
-      throw new Error("The Operation isn't supported yet.")
+      throw new Error("This operation isn't supported yet.")
 
     removeDevice: (deviceId) ->
       device = @getDeviceById(deviceId)
@@ -773,7 +1027,7 @@ module.exports = (env) ->
       present = @isDeviceInConfig deviceConfig.id
       if present
         throw new Error(
-          "an device with the id #{deviceConfig.id} is already in the config" 
+          "An device with the ID #{deviceConfig.id} is already in the config" 
         )
       @devicesConfig.push deviceConfig
       @framework.saveConfig()
@@ -792,6 +1046,9 @@ module.exports = (env) ->
         env.devices.DummySwitch
         env.devices.DummyDimmer
         env.devices.DummyShutter
+        env.devices.DummyHeatingThermostat
+        env.devices.DummyContactSensor
+        env.devices.Timer
       ]
       for deviceClass in defaultDevices
         do (deviceClass) =>
@@ -813,9 +1070,13 @@ module.exports = (env) ->
     TemperatureSensor
     PresenceSensor
     ContactSensor
+    HeatingThermostat
     ButtonsDevice
     VariablesDevice
     DummySwitch
     DummyDimmer
     DummyShutter
+    DummyHeatingThermostat
+    DummyContactSensor
+    Timer
   }

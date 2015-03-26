@@ -21,7 +21,7 @@ module.exports = (env) ->
         throw new Error('No username given')
       unless user.role?
         throw new Error('No role given')
-      @pages.push( user = {
+      @users.push( user = {
         username: username
         password: user.password
         role: user.role
@@ -51,7 +51,8 @@ module.exports = (env) ->
     hasPermission: (username, scope, access) ->
       assert scope in [
         "pages", "rules", "variables", "messages", "config"
-        "events", "devices", "groups", "plugins", "updates"
+        "events", "devices", "groups", "plugins", "updates",
+        "database"
       ]
       assert access in ["read", "write", "none"]
       user = @getUserByUsername(username)

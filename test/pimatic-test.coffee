@@ -80,7 +80,7 @@ describe "pimatic", ->
         framework.deviceManager.addDeviceToConfig deviceConfig
         assert false
       catch e
-        assert e.message is "an device with the id #{deviceConfig.id} is already in the config"
+        assert e.message is "An device with the ID #{deviceConfig.id} is already in the config"
 
   describe '#isDeviceInConfig()', ->
 

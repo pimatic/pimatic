@@ -32,7 +32,8 @@ module.exports = (env) ->
       "attributeValueString": {
         valueColumnType: "string"
       }
-
+    toDBBool: (v) => if v then 1 else 0
+    fromDBBool: (v) => (v == 1 or v is "1") 
     deviceAttributeCache: {}
     typeToAttributeTable: (type) -> @typeMap[type]
   }
@@ -59,155 +60,324 @@ module.exports = (env) ->
         require.resolve(dbPackageToInstall)
       catch e
         unless e.code is 'MODULE_NOT_FOUND' then throw e
-        env.logger.info("Installing database package #{dbPackageToInstall}")
+        env.logger.info(
+          "Installing database package #{dbPackageToInstall}, this can take some minutes"
+        )
         pending = @framework.pluginManager.spawnNpm(['install', dbPackageToInstall])
 
-      pending = pending.then( =>
+      return pending.then( =>
         @knex = Knex.initialize(
           client: @dbSettings.client
           connection: connection
+          pool:
+            destroy: (connection) => 
+              connection.close( (err) =>
+                @emit "close", err
+              )
+        )
+        
+        @framework.on('destroy', (context) =>
+          @framework.removeListener("messageLogged", @messageLoggedListener)
+          @framework.removeListener('deviceAttributeChanged', @deviceAttributeChangedListener)
+          clearTimeout(@deleteExpiredTimeout)
+          @_isDestroying = true
+          env.logger.info("Flushing database to disk, please wait...")
+          context.waitForIt(
+            @commitLoggingTransaction().then( () =>
+              return new Promise( (resolve, reject) =>
+                destroy = =>
+                  if  @knex.client.pool.genericPool.availableObjects.length isnt 0
+                    @once('close', (err) =>
+                      if err? then reject(err)
+                      else resolve()
+                    )
+                    @knex.destroy()
+                  else
+                    setTimeout(destroy, 100)
+                destroy()
+              ).then( =>
+                env.logger.info("Flushing database to disk, please wait... Done.")
+              )
+            )
+          )
         )
         @knex.subquery = (query) -> this.raw("(#{query.toString()})")
-        createTableIfNotExists = (tableName, cb) =>
-          @knex.schema.hasTable(tableName).then( (exists) =>
-            if not exists        
-              return @knex.schema.createTable(tableName, cb).then(( =>
-                env.logger.info("#{tableName} table created!")
-              ), (error) =>
-                env.logger.error(error) 
-              )
-          )
+        if @dbSettings.client is "sqlite3"
+          return Promise.all([
+            # Prevents a shm file to be created for wal index:
+            @knex.raw("PRAGMA locking_mode=EXCLUSIVE")
+            @knex.raw("PRAGMA synchronous=NORMAL;")
+            @knex.raw("PRAGMA auto_vacuum=FULL;")
+            # Don't write data to disk inside one transaction, this reduces disk writes
+            @knex.raw("PRAGMA cache_spill=false;")
+            # Increase the cache size to around 20MB (pagesize=1024B)
+            @knex.raw("PRAGMA cache_size=20000;")
+            # WAL mode to prevents disk corruption and minimize disk writes
+            @knex.raw("PRAGMA journal_mode=WAL;")
+          ])
 
-        pending = []
-
-        pending.push createTableIfNotExists('message', (table) =>
-          table.increments('id').primary()
-          table.timestamp('time').index()
-          table.integer('level')
-          table.text('tags')
-          table.text('text')
-        )
-        pending.push createTableIfNotExists('deviceAttribute', (table) =>
-          table.increments('id').primary()
-          table.string('deviceId')
-          table.string('attributeName')
-          table.string('type')
-          table.timestamp('lastUpdate').nullable()
-          table.string('lastValue').nullable()
-        )
-
-        # add to old deviceAttribute table 
-        pending.push @knex.schema.table('deviceAttribute', (table) =>
-          table.timestamp('lastUpdate').nullable()
-          table.string('lastValue').nullable()
-        ).catch( (error) -> 
-          if error.errno is 1 then return #ignore
-          throw error
-        )
-
-        for tableName, tableInfo of dbMapping.attributeValueTables
-          pending.push createTableIfNotExists(tableName, (table) =>
-            table.increments('id').primary()
-            table.timestamp('time').index() 
-            table.integer('deviceAttributeId')
-              .references('id')
-              .inTable('deviceAttribute')
-            table[tableInfo.valueColumnType]('value')
-          ).then( =>
-            return @knex.raw("""
-              CREATE INDEX IF NOT EXISTS
-              deviceAttributeIdTime 
-              ON #{tableName} (deviceAttributeId, time);
-            """)
-          )
-
+      ).then( =>         
+        @_createTables()
+      ).then( =>     
         # Save log-messages
-        @framework.on("messageLogged", ({level, msg, meta}) =>
+        @framework.on("messageLogged", @messageLoggedListener = ({level, msg, meta}) =>
           @saveMessageEvent(meta.timestamp, level, meta.tags, msg).done()
         )
 
         # Save device attribute changes
-        @framework.on('deviceAttributeChanged', ({device, attributeName, time, value}) =>
-          @saveDeviceAttributeEvent(device.id, attributeName, time, value).done()
+        @framework.on('deviceAttributeChanged', 
+          @deviceAttributeChangedListener = ({device, attributeName, time, value}) =>
+            @saveDeviceAttributeEvent(device.id, attributeName, time, value).done()
         )
 
         @_updateDeviceAttributeExpireInfos()
         @_updateMessageseExpireInfos()
 
-        deleteExpiredEntriesInterval = 30 * 60 * 1000#ms
+        deleteExpiredInterval = @_parseTime(@dbSettings.deleteExpiredInterval)
+        diskSyncInterval = @_parseTime(@dbSettings.diskSyncInterval)
 
-        return Promise.all(pending).then( =>
-          return @knex.raw("""
-            CREATE INDEX IF NOT EXISTS
-            deviceAttributeDeviceIdAttributeName ON 
-            deviceAttribute(deviceId, attributeName);
-            CREATE INDEX IF NOT EXISTS
-            deviceAttributeDeviceId ON 
-            deviceAttribute(deviceId);
-            CREATE INDEX IF NOT EXISTS
-            deviceAttributeAttributeName ON 
-            deviceAttribute(attributeName);
-          """)
-        ).then( =>
-          setInterval( ( =>
-            env.logger.debug("deleteing expired device attributes") if @dbSettings.debug
-            @_deleteExpiredDeviceAttributes().catch( (error) =>
-              env.logger.error(error.message)
-              env.logger.debug(error.stack)
-            ).done()
-          ), deleteExpiredEntriesInterval)
+        minExpireInterval = 1 * 60 * 1000
+        if deleteExpiredInterval < minExpireInterval
+          env.logger.warn("deleteExpiredInterval can't be less then 1 min, setting it to 1 min.")
+          deleteExpiredInterval = minExpireInterval
 
-          setInterval( ( =>
-            env.logger.debug("deleteing expired messages") if @dbSettings.debug
-            @_deleteExpiredMessages().catch( (error) =>
-              env.logger.error(error.message)
+        if (diskSyncInterval/deleteExpiredInterval % 1) isnt 0
+          env.logger.warn("diskSyncInterval should be a multiple of deleteExpiredInterval.")
+
+        syncAllNo = Math.max(Math.ceil(diskSyncInterval/deleteExpiredInterval), 1)
+        deleteNo = 0
+
+        doDeleteExpired = ( =>
+          env.logger.debug("Deleting expired logged values") if @dbSettings.debug
+          deleteNo++
+          Promise.resolve().then( =>
+            env.logger.debug("Deleting expired events") if @dbSettings.debug
+            return @_deleteExpiredDeviceAttributes().then( =>
+              env.logger.debug("Deleting expired events... Done.") if @dbSettings.debug
+            )
+          )
+          .then( =>
+            env.logger.debug("Deleting expired message") if @dbSettings.debug
+            return @_deleteExpiredMessages().then( =>
+              env.logger.debug("Deleting expired message... Done.") if @dbSettings.debug
+            )
+          )
+          .then( => 
+            if deleteNo % syncAllNo is 0
+              env.logger.debug("Done -> flushing to disk") if @dbSettings.debug
+              next = @commitLoggingTransaction().then( =>
+                env.logger.debug("-> done.") if @dbSettings.debug
+              )
+            else
+              next = Promise.resolve()
+            return next.then( =>
+              @deleteExpiredTimeout = setTimeout(doDeleteExpired, deleteExpiredInterval)
+            )
+          ).catch( (error) =>
+            env.logger.error(error.message)
+            env.logger.debug(error.stack)
+          ).done()
+        )
+
+        @deleteExpiredTimeout = setTimeout(doDeleteExpired, deleteExpiredInterval)
+        return
+      )
+
+    loggingTransaction: ->
+      unless @_loggingTransaction?
+        @_loggingTransaction = new Promise( (resolve, reject) =>
+          @knex.transaction( (trx) => 
+            transactionInfo = {
+              trx, 
+              count: 0,
+              resolve: null
+            }
+            resolve(transactionInfo)
+          ).catch(reject)
+        )
+      return @_loggingTransaction
+
+    doInLoggingTransaction: (callback) ->
+      return new Promise(  (resolve, reject) =>
+        @_loggingTransaction = @loggingTransaction().then( (transactionInfo) =>
+          action = callback(transactionInfo.trx)
+          # must return a promise
+          transactionInfo.count++
+          actionCompleted = -> 
+            transactionInfo.count--
+            if transactionInfo.count is 0 and transactionInfo.resolve?
+              transactionInfo.resolve()
+          # remove when action finished
+          action.then(actionCompleted, actionCompleted)
+          resolve(action)
+          return transactionInfo
+        ).catch(reject)
+      )
+
+    commitLoggingTransaction: ->
+      promise = Promise.resolve()
+      if @_loggingTransaction?
+        promise = @_loggingTransaction.then( (transactionInfo) =>
+          env.logger.debug("Committing") if @dbSettings.debug
+          doCommit = => 
+            return transactionInfo.trx.commit()
+          if transactionInfo.count is 0
+            return doCommit()
+          else
+            return new Promise( (resolve) -> 
+              transactionInfo.resolve = -> 
+                doCommit()
+                resolve()
+            )
+        )
+        @_loggingTransaction = null
+      return promise.catch( (error) =>
+        env.logger.error(error.message)
+        env.logger.debug(error.stack)
+      )    
+
+    _createTables: ->
+      pending = []
+
+      createTableIfNotExists = ( (tableName, cb) =>
+        @knex.schema.hasTable(tableName).then( (exists) =>
+          if not exists        
+            return @knex.schema.createTable(tableName, cb).then(( =>
+              env.logger.info("#{tableName} table created!")
+            ), (error) =>
+              env.logger.error(error)
               env.logger.debug(error.stack)
-            ).done()
-          ), deleteExpiredEntriesInterval)
-          return
+            )
+          else return
         )
       )
-      return pending
+
+      pending.push createTableIfNotExists('message', (table) =>
+        table.increments('id').primary()
+        table.timestamp('time').index()
+        table.integer('level')
+        table.text('tags')
+        table.text('text')
+      )
+      pending.push createTableIfNotExists('deviceAttribute', (table) =>
+        table.increments('id').primary()
+        table.string('deviceId')
+        table.string('attributeName')
+        table.string('type')
+        table.boolean('discrete')
+        table.timestamp('lastUpdate').nullable()
+        table.string('lastValue').nullable()
+      )
+
+      # add to old deviceAttribute table 
+      pending.push @knex.schema.table('deviceAttribute', (table) =>
+        table.boolean('discrete').nullable()
+      ).catch( (error) -> 
+        if error.errno is 1 then return #ignore
+        throw error
+      )
+
+      for tableName, tableInfo of dbMapping.attributeValueTables
+        pending.push createTableIfNotExists(tableName, (table) =>
+          table.increments('id').primary()
+          table.timestamp('time').index() 
+          table.integer('deviceAttributeId')
+            .references('id')
+            .inTable('deviceAttribute')
+          table[tableInfo.valueColumnType]('value')
+        ).then( =>
+          return @knex.raw("""
+            CREATE INDEX IF NOT EXISTS
+            deviceAttributeIdTime 
+            ON #{tableName} (deviceAttributeId, time);
+          """)
+        )
+
+      return Promise.all(pending).then( =>
+        return @knex.raw("""
+          CREATE INDEX IF NOT EXISTS
+          deviceAttributeDeviceIdAttributeName ON 
+          deviceAttribute(deviceId, attributeName);
+          CREATE INDEX IF NOT EXISTS
+          deviceAttributeDeviceId ON 
+          deviceAttribute(deviceId);
+          CREATE INDEX IF NOT EXISTS
+          deviceAttributeAttributeName ON 
+          deviceAttribute(attributeName);
+        """)
+      )
 
     getDeviceAttributeLogging: () ->
       return _.clone(@dbSettings.deviceAttributeLogging)
 
     setDeviceAttributeLogging: (deviceAttributeLogging) ->
-      dbSettings.deviceAttributeLogging = deviceAttributeLogging
+      @dbSettings.deviceAttributeLogging = deviceAttributeLogging
       @_updateDeviceAttributeExpireInfos()
       @framework.saveConfig()
       return
 
     _updateDeviceAttributeExpireInfos: ->
+      for info in dbMapping.deviceAttributeCache
+        info.expireMs = null
+        info.intervalMs = null
       entries = @dbSettings.deviceAttributeLogging
       i = entries.length - 1
       sqlNot = ""
+      possibleTypes = ["number", "string", "boolean", "date", "discrete", "continuous", "*"]
       while i >= 0
         entry = entries[i]
+        #legazy support
+        if entry.time?
+          entry.expire = entry.time
+          delete entry.time
+        unless entry.type?
+          entry.type = "*"
+
+        unless entry.type in possibleTypes
+          throw new Error("Type option in database config must be one of #{possibleTypes}")
+
         # Get expire info from entry or create it
         expireInfo = entry.expireInfo
         unless expireInfo?
           expireInfo = {
             expireMs: 0
+            interval: 0
             whereSQL: ""
           }
           info = {expireInfo}
           info.__proto__ = entry.__proto__
           entry.__proto__ = info
         # Generate sql where to use on deletion
-        ownWhere = "1=1"
-        if entry.deviceId isnt '*'
-          ownWhere += " AND deviceId='#{entry.deviceId}'"
-        if entry.attributeName isnt '*'
-          ownWhere += " AND attributeName='#{entry.attributeName}'"
-        expireInfo.whereSQL = "(#{ownWhere})#{sqlNot}"
-        sqlNot = " AND NOT (#{ownWhere})#{sqlNot}"
+        ownWhere = ["1=1"]
+        if entry.expire?
+          if entry.deviceId isnt '*'
+            ownWhere.push "deviceId='#{entry.deviceId}'"
+          if entry.attributeName isnt '*'
+            ownWhere.push "attributeName='#{entry.attributeName}'"
+          if entry.type isnt '*'
+            if entry.type is "continuous"
+              ownWhere.push "discrete=0"
+            else if entry.type is "discrete"
+              ownWhere.push "discrete=1"
+            else
+              ownWhere.push "type='#{entry.type}'"
+        if entry.expire?
+          ownWhere = ownWhere.join(" and ")
+          expireInfo.whereSQL = "(#{ownWhere})#{sqlNot}"
+          sqlNot = " AND NOT (#{ownWhere})#{sqlNot}"
         # Set expire date
-        timeMs = null
-        M(entry.time).matchTimeDuration((m, info) => timeMs = info.timeMs)
-        unless timeMs? then throw new Error("Can not parse database expire time #{entry.time}")
-        expireInfo.expireMs = timeMs  
+        expireInfo.expireMs = @_parseTime(entry.expire) if entry.expire?
+        expireInfo.interval = @_parseTime(entry.interval) if entry.interval?
         i--
+
+    _parseTime: (time) ->
+      if time is "0" then return 0
+      else
+        timeMs = null
+        M(time).matchTimeDuration((m, info) => timeMs = info.timeMs)
+        unless timeMs?
+          throw new Error("Can not parse time in database config: #{time}")
+        return timeMs
 
     _updateMessageseExpireInfos: ->
       entries = @dbSettings.messageLogging
@@ -215,6 +385,10 @@ module.exports = (env) ->
       sqlNot = ""
       while i >= 0
         entry = entries[i]
+        #legazy support
+        if entry.time?
+          entry.expire = entry.time
+          delete entry.time
         # Get expire info from entry or create it
         expireInfo = entry.expireInfo
         unless expireInfo?
@@ -235,56 +409,77 @@ module.exports = (env) ->
         expireInfo.whereSQL = "(#{ownWhere})#{sqlNot}"
         sqlNot = " AND NOT (#{ownWhere})#{sqlNot}"
         # Set expire date
-        timeMs = null
-        M(entry.time).matchTimeDuration((m, info) => timeMs = info.timeMs)
-        unless timeMs? then throw new Error("Can not parse database expire time #{entry.time}")
-        expireInfo.expireMs = timeMs
+        expireInfo.expireMs = @_parseTime(entry.expire) if entry.expire?
         i--
 
-    getDeviceAttributeLoggingTime: (deviceId, attributeName) ->
-      time = null
+
+     getDeviceAttributeLoggingTime: (deviceId, attributeName, type, discrete) ->
+      expireMs = 0
+      expire = "0"
+      intervalMs = 0
+      interval = "0"
       for entry in @dbSettings.deviceAttributeLogging
-        if (
-          (entry.deviceId is "*" or entry.deviceId is deviceId) and 
-          (entry.attributeName is "*" or entry.attributeName is attributeName)
+        matches = (
+          (entry.deviceId is '*' or entry.deviceId is deviceId) and
+          (entry.attributeName is '*' or entry.attributeName is attributeName) and
+          (
+            switch entry.type
+              when '*' then true
+              when "discrete" then discrete
+              when "continuous" then not discrete
+              else  entry.type is type
+            )
         )
-          time = entry.expireInfo.expireMs
-      return time
+        if matches
+          if entry.expire?
+            expireMs = entry.expireInfo.expireMs
+            expire = entry.expire
+          if entry.interval?
+            intervalMs = entry.expireInfo.interval
+            interval = entry.interval
+      return {expireMs, intervalMs, expire, interval}
 
     getMessageLoggingTime: (time, level, tags, text) ->
-      time = null
+      expireMs = null
       for entry in @dbSettings.messageLogging
         if (
           (entry.level is "*" or entry.level is level) and 
           (entry.tags.length is 0 or (t for t in entry.tags when t in tags).length > 0)
         )
-          time = entry.expireInfo.expireMs
-      return time
+          expireMs = entry.expireInfo.expireMs
+      return expireMs
 
     _deleteExpiredDeviceAttributes: ->
-      awaiting = []
-      for entry in  @dbSettings.deviceAttributeLogging
-        subquery = @knex('deviceAttribute')
-          .select('id')
-        subquery.whereRaw(entry.expireInfo.whereSQL)
-        subqueryRaw = "deviceAttributeId in (#{subquery.toString()})"
-        for tableName in _.keys(dbMapping.attributeValueTables)
-          del = @knex(tableName)
-          del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
-          del.whereRaw(subqueryRaw)
-          del.del()
-          awaiting.push del
-      return Promise.all(awaiting)
+      return @doInLoggingTransaction( (trx) =>
+        return Promise.each(@dbSettings.deviceAttributeLogging, (entry) =>
+          if entry.expire?
+            subquery = @knex('deviceAttribute').select('id')
+            subquery.whereRaw(entry.expireInfo.whereSQL)
+            subqueryRaw = "deviceAttributeId in (#{subquery.toString()})"
+            return Promise.each(_.keys(dbMapping.attributeValueTables), (tableName) =>
+              if @_isDestroying then return
+              del = @knex(tableName).transacting(trx)
+              del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
+              del.whereRaw(subqueryRaw)
+              query = del.del()
+              env.logger.debug("query:", query.toString()) if @dbSettings.debug
+              return query
+            )
+        )
+      )
 
     _deleteExpiredMessages: ->
-      awaiting = []
-      for entry in  @dbSettings.messageLogging
-        del = @knex('message')
-        del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
-        del.whereRaw(entry.expireInfo.whereSQL)
-        del.del()
-        awaiting.push del
-      return Promise.all(awaiting)
+      return @doInLoggingTransaction( (trx) =>
+        return Promise.each(@dbSettings.messageLogging, (entry) =>
+          if @_isDestroying then return
+          del = @knex('message').transacting(trx)
+          del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
+          del.whereRaw(entry.expireInfo.whereSQL)
+          query = del.del()
+          env.logger.debug("query:", query.toString()) if @dbSettings.debug
+          return query
+        )
+      )
 
     saveMessageEvent: (time, level, tags, text) ->
       @emit 'log', {time, level, tags, text}
@@ -292,13 +487,60 @@ module.exports = (env) ->
       assert Array.isArray(tags)
       assert typeof level is 'string'
       assert level in _.keys(dbMapping.logLevelToInt) 
-      insert = @knex('message').insert(
-        time: time
-        level: dbMapping.logLevelToInt[level]
-        tags: JSON.stringify(tags)
-        text: text
+
+      expireMs = @getMessageLoggingTime(time, level, tags, text)
+      if expireMs is 0
+        return Promise.resolve()
+
+      return @doInLoggingTransaction( (trx) =>
+        return @knex('message').transacting(trx).insert(
+          time: time
+          level: dbMapping.logLevelToInt[level]
+          tags: JSON.stringify(tags)
+          text: text
+        ).return()
       )
-      return Promise.resolve(insert)
+
+    saveDeviceAttributeEvent: (deviceId, attributeName, time, value) ->
+      assert typeof deviceId is 'string' and deviceId.length > 0
+      assert typeof attributeName is 'string' and attributeName.length > 0
+      @emit 'device-attribute-save', {deviceId, attributeName, time, value}
+
+      return @_getDeviceAttributeInfo(deviceId, attributeName).then( (info) =>
+        return @doInLoggingTransaction( (trx) =>
+          # insert into value table
+          tableName = dbMapping.typeToAttributeTable(info.type)
+          timestamp = time.getTime()
+          if info.expireMs is 0
+            # value expires immediatly
+            doInsert = false
+          else
+            if info.intervalMs is 0 or timestamp - info.lastInsertTime > info.intervalMs 
+              doInsert = true
+            else
+              doInsert = false
+          if doInsert
+            info.lastInsertTime = timestamp
+            insert1 = @knex(tableName).transacting(trx).insert(
+              time: time
+              deviceAttributeId: info.id
+              value: value
+            )
+          else
+            insert1 = Promise.resolve()
+          # and update lastValue in attributeInfo
+          insert2 = @knex('deviceAttribute').transacting(trx)
+            .where(
+              id: info.id
+            )
+            .update(
+              lastUpdate: time
+              lastValue: value
+            )
+          return Promise.all([insert1, insert2])
+        )
+      )
+
 
     _buildMessageWhere: (query, {level, levelOp, after, before, tags, offset, limit}) ->
       if level?
@@ -323,33 +565,38 @@ module.exports = (env) ->
         query.limit(limit)
 
     queryMessagesCount: (criteria = {})->
-      query = @knex('message').count('*')
-      @_buildMessageWhere(query, criteria)
-      return Promise.resolve(query).then( (result) => result[0]["count(*)"] )
-
-    queryMessagesTags: (criteria = {})->
-      query = @knex('message').distinct('tags').select()
-      @_buildMessageWhere(query, criteria)
-      return Promise.resolve(query).then( (tags) =>
-        _(tags).map((r)=>JSON.parse(r.tags)).flatten().uniq().valueOf()
+      return @doInLoggingTransaction( (trx) =>
+        query = @knex('message').transacting(trx).count('*')
+        @_buildMessageWhere(query, criteria)
+        return Promise.resolve(query).then( (result) => result[0]["count(*)"] )
       )
 
-
+    queryMessagesTags: (criteria = {})->
+      return @doInLoggingTransaction( (trx) =>
+        query = @knex('message').transacting(trx).distinct('tags').select()
+        @_buildMessageWhere(query, criteria)
+        return Promise.resolve(query).then( (tags) =>
+          _(tags).map((r)=>JSON.parse(r.tags)).flatten().uniq().valueOf()
+        )
+      )
     queryMessages: (criteria = {}) ->
-      query = @knex('message').select('time', 'level', 'tags', 'text')
-      @_buildMessageWhere(query, criteria)
-      return Promise.resolve(query).then( (msgs) =>
-        for m in msgs
-          m.tags = JSON.parse(m.tags)
-          m.level = dbMapping.logIntToLevel[m.level]
-        return msgs 
+      return @doInLoggingTransaction( (trx) =>
+        query = @knex('message').transacting(trx).select('time', 'level', 'tags', 'text')
+        @_buildMessageWhere(query, criteria)
+        return Promise.resolve(query).then( (msgs) =>
+          for m in msgs
+            m.tags = JSON.parse(m.tags)
+            m.level = dbMapping.logIntToLevel[m.level]
+          return msgs 
+        )
       )
 
     deleteMessages: (criteria = {}) ->
-      query = @knex('message')
-      @_buildMessageWhere(query, criteria)
-      return Promise.resolve((query).del()) 
-
+      return @doInLoggingTransaction( (trx) =>
+        query = @knex('message').transacting(trx)
+        @_buildMessageWhere(query, criteria)
+        return Promise.resolve((query).del()) 
+      )
 
     _buildQueryDeviceAttributeEvents: (queryCriteria = {}) ->
       {
@@ -399,46 +646,190 @@ module.exports = (env) ->
       return query
 
     queryDeviceAttributeEvents: (queryCriteria) ->
-      query = @_buildQueryDeviceAttributeEvents(queryCriteria)
-      env.logger.debug("query:", query.toString()) if @dbSettings.debug
-      time = new Date().getTime()
-      return Promise.resolve(query).then( (result) =>
-        timeDiff = new Date().getTime()-time
-        if @dbSettings.debug
-          env.logger.debug("quering #{result.length} events took #{timeDiff}ms.")
-        for r in result
-          if r.type is "boolean"
-            # convert numeric or string value from db to boolean
-            r.value = not (r.value is "0" or r.value is 0)
-        return result
+      @doInLoggingTransaction( (trx) =>
+        query = @_buildQueryDeviceAttributeEvents(queryCriteria).transacting(trx)
+        env.logger.debug("Query:", query.toString()) if @dbSettings.debug
+        time = new Date().getTime()
+        return Promise.resolve(query).then( (result) =>
+          timeDiff = new Date().getTime()-time
+          if @dbSettings.debug
+            env.logger.debug("Quering #{result.length} events took #{timeDiff}ms.")
+          for r in result
+            if r.type is "boolean"
+              # convert numeric or string value from db to boolean
+              r.value = dbMapping.fromDBBool(r.value)
+            else if r.type is "number"
+              # convert string values to number
+              r.value = parseFloat(r.value)
+          return result
+        )
       )
 
     queryDeviceAttributeEventsCount: () ->
-      pending = []
-      for tableName in _.keys(dbMapping.attributeValueTables)
-        pending.push @knex(tableName).count('* AS count')
-      return Promise.all(pending).then( (counts) =>
-        count = 0
-        for c in counts
-          count += c[0].count
-        return count
+      @doInLoggingTransaction( (trx) =>
+        pending = []
+        for tableName in _.keys(dbMapping.attributeValueTables)
+          pending.push @knex(tableName).transacting(trx).count('* AS count')
+        return Promise.all(pending).then( (counts) =>
+          count = 0
+          for c in counts
+            count += c[0].count
+          return count
+        )
       )
 
     queryDeviceAttributeEventsDevices: () ->
-      return @knex('deviceAttribute').select(
-        'deviceId', 
-        'attributeName', 
-        'type'
+      @doInLoggingTransaction( (trx) =>
+        return @knex('deviceAttribute').transacting(trx).select(
+          'id',
+          'deviceId', 
+          'attributeName', 
+          'type'
+        )
+      )
+
+    queryDeviceAttributeEventsInfo: () ->
+      @doInLoggingTransaction( (trx) =>
+        return @knex('deviceAttribute').transacting(trx).select(
+          'id',
+          'deviceId', 
+          'attributeName',
+          'type',
+          'discrete'
+        ).then( (results) =>
+          for result in results
+            result.discrete = dbMapping.fromDBBool(result.discrete)
+            info = @getDeviceAttributeLoggingTime(
+              result.deviceId, result.attributeName, result.type, result.discrete
+            )
+            result.interval = info.interval
+            result.expire = info.expire
+            # device = @framework.deviceManager.getDeviceById(result.deviceId)
+            # if device?
+            #   attribute = device.attributes[result.attributeName]
+            #   if attribute?
+            #     if attribute.discrete
+            #       result.interval = 'all'
+          return results
+        )
+      )
+
+    queryDeviceAttributeEventsCounts: () ->
+      @doInLoggingTransaction( (trx) =>
+        queries = []
+        for tableName in _.keys(dbMapping.attributeValueTables)
+          queries.push(
+            @knex(tableName).transacting(trx)
+              .select('deviceAttributeId').count('id')
+              .groupBy('deviceAttributeId')
+          )
+        return Promise
+          .reduce(queries, (all, result) => all.concat result)
+          .each( (entry) => 
+            entry.count = entry['count("id")'] 
+            entry['count("id")'] = undefined
+          )
+      )
+
+    runVacuum: -> 
+      @commitLoggingTransaction().then( =>
+        return @knex.raw('VACUUM;')
       )
 
 
-    # queryDeviceAttributeEventsStream: (queryCriteria) ->
-    #   query = @_queryDeviceAttributeEvents(queryCriteria)
-    #   query.stream( (stream)  =>
-    #     stream.on("data", (data) => console.log "data:", data )
-    #   ).then( =>
-    #     console.log "finished"
-    #   ).done()
+    checkDatabase: () ->
+      return @doInLoggingTransaction( (trx) =>
+        return @knex('deviceAttribute').transacting(trx).select(
+          'id'
+          'deviceId', 
+          'attributeName',
+          'type',
+          'discrete'
+        ).then( (results) =>
+          problems = []
+          for result in results
+            result.discrete = dbMapping.fromDBBool(result.discrete)
+            device = @framework.deviceManager.getDeviceById(result.deviceId)
+            unless device?
+              problems.push {
+                id: result.id
+                deviceId: result.deviceId
+                attribute: result.attributeName
+                description: "No device with the ID \"#{result.deviceId}\" found."
+                action: "delete"
+              }
+            else
+              unless device.hasAttribute(result.attributeName)
+                problems.push {
+                  id: result.id
+                  deviceId: result.deviceId
+                  attribute: result.attributeName
+                  description: "Device \"#{result.deviceId}\" has no attribute with the name " +
+                          "\"#{result.attributeName}\" found."
+                  action: "delete"
+                }
+              else
+                attribute = device.attributes[result.attributeName]
+                if attribute.type isnt result.type
+                  problems.push {
+                    id: result.id
+                    deviceId: result.deviceId
+                    attribute: result.attributeName
+                    description: "Attribute \"#{result.attributeName}\" of  " +
+                             "\"#{result.deviceId}\" has the wrong type"
+                    action: "delete"
+                  }
+                else if attribute.discrete isnt result.discrete
+                  problems.push {
+                    id: result.id
+                    deviceId: result.deviceId
+                    attribute: result.attributeName
+                    description: "Attribute \"#{result.attributeName}\" of" +
+                             "\"#{result.deviceId}\" discrete flag is wrong."
+                    action: "update"
+                  }
+          return problems
+        )
+      )
+
+    deleteDeviceAttribute: (id) ->
+      assert typeof id is "number"
+      @doInLoggingTransaction( (trx) =>
+        return @knex('deviceAttribute').transacting(trx).where('id', id).del().then( () =>
+          for key, entry of dbMapping.deviceAttributeCache
+            if entry.id is id
+              delete dbMapping.deviceAttributeCache[key]
+          awaiting = []
+          for tableName, tableInfo of dbMapping.attributeValueTables
+            awaiting.push @knex(tableName).transacting(trx).where('deviceAttributeId', id).del()
+          return Promise.all(awaiting)
+        )
+      )
+
+    updateDeviceAttribute: (id) ->
+      assert typeof id is "number"
+      return @doInLoggingTransaction( (trx) =>
+        @knex('deviceAttribute').transacting(trx)
+          .select('deviceId', 'attributeName')
+          .where(id: id).then( (results) =>
+            if results.length is 1
+              result = results[0]
+              fullQualifier = "#{result.deviceId}.#{result.attributeName}"
+              device = @framework.deviceManager.getDeviceById(result.deviceId)
+              unless device? then throw new Error("#{result.deviceId} not found.")
+              attribute = device.attributes[result.attributeName]
+              unless attribute? 
+                new Error("#{result.deviceId} has no attribute #{result.attributeName}.")
+              info = dbMapping.deviceAttributeCache[fullQualifier]
+              info.discrete = attribute.discrete if info?
+              return update = @knex('deviceAttribute').transacting(trx)
+                .where(id: id).update(
+                  discrete: dbMapping.toDBBool(attribute.discrete)
+                ).return()
+            else
+              return
+        )
+      )
 
     querySingleDeviceAttributeEvents: (deviceId, attributeName, queryCriteria = {}) ->
       {
@@ -449,69 +840,61 @@ module.exports = (env) ->
         offset, 
         limit,
         groupByTime
-      } = queryCriteria 
+      } = queryCriteria
       unless order?
         order = "time"
         orderDirection = "asc"
       return @_getDeviceAttributeInfo(deviceId, attributeName).then( (info) =>
-        query = @knex(dbMapping.typeToAttributeTable(info.type))
-        unless groupByTime?
-          query.select('time', 'value')
-        else
-          query.select(@knex.raw('MIN(time) AS time'), @knex.raw('AVG(value) AS value'))
-        query.where('deviceAttributeId', info.id)
-        if after?
-          query.where('time', '>=', parseFloat(after))
-        if before?
-          query.where('time', '<=', parseFloat(before))
-        if order?
-          query.orderBy(order, orderDirection)
-        if groupByTime?
-          groupByTime = parseFloat(groupByTime)
-          query.groupByRaw("time/#{groupByTime}")
-        if offset? then query.offset(offset)
-        if limit? then query.limit(limit)
-        env.logger.debug("query:", query.toString()) if @dbSettings.debug
-        time = new Date().getTime()
-        return Promise.resolve(query).then( (result) =>
-          timeDiff = new Date().getTime()-time
-          if @dbSettings.debug
-            env.logger.debug("quering #{result.length} events took #{timeDiff}ms.")
-          return result
-        )
-      )
-
-    saveDeviceAttributeEvent: (deviceId, attributeName, time, value) ->
-      assert typeof deviceId is 'string' and deviceId.length > 0
-      assert typeof attributeName is 'string' and attributeName.length > 0
-
-      @emit 'device-attribute-save', {deviceId, attributeName, time, value}
-
-      return @_getDeviceAttributeInfo(deviceId, attributeName).then( (info) =>
-        # insert into value table
-        tableName = dbMapping.typeToAttributeTable(info.type)
-        insert1 = @knex(tableName).insert(
-          time: time
-          deviceAttributeId: info.id
-          value: value
-        )
-        # and update lastValue in attributeInfo
-        insert2 = @knex('deviceAttribute')
-          .where(
-            id: info.id
+        return @doInLoggingTransaction( (trx) =>
+          query = @knex(dbMapping.typeToAttributeTable(info.type)).transacting(trx)
+          unless groupByTime?
+            query.select('time', 'value')
+          else
+            query.select(@knex.raw('MIN(time) AS time'), @knex.raw('AVG(value) AS value'))
+          query.where('deviceAttributeId', info.id)
+          if after?
+            query.where('time', '>=', parseFloat(after))
+          if before?
+            query.where('time', '<=', parseFloat(before))
+          if order?
+            query.orderBy(order, orderDirection)
+          if groupByTime?
+            groupByTime = parseFloat(groupByTime)
+            query.groupByRaw("time/#{groupByTime}")
+          if offset? then query.offset(offset)
+          if limit? then query.limit(limit)
+          env.logger.debug("query:", query.toString()) if @dbSettings.debug
+          time = new Date().getTime()
+          return Promise.resolve(query).then( (result) =>
+            timeDiff = new Date().getTime()-time
+            if @dbSettings.debug
+              env.logger.debug("quering #{result.length} events took #{timeDiff}ms.")
+            if info.type is "boolean"
+              for r in result
+                # convert numeric or string value from db to boolean
+                r.value = dbMapping.fromDBBool(r.value)
+            else if info.type is "number"
+              for r in result
+                # convert string values to number
+                r.value = parseFloat(r.value)
+            return result
           )
-          .update(
-            lastUpdate: time
-            lastValue: value
-          )
-        return Promise.all([insert1, insert2])
+        )
       )
 
     _getDeviceAttributeInfo: (deviceId, attributeName) ->
       fullQualifier = "#{deviceId}.#{attributeName}"
       info = dbMapping.deviceAttributeCache[fullQualifier]
       return (
-        if info? then Promise.resolve(info)
+        if info? 
+          unless info.expireMs?
+            expireInfo = @getDeviceAttributeLoggingTime(
+              deviceId, attributeName, info.type, info.discrete
+            )
+            info.expireMs = expireInfo.expireMs
+            info.intervalMs = expireInfo.intervalMs
+            info.lastInsertTime = 0
+          Promise.resolve(info)
         else @_insertDeviceAttribute(deviceId, attributeName)
       )
 
@@ -519,36 +902,37 @@ module.exports = (env) ->
     getLastDeviceState: (deviceId) ->
       if @_lastDevicesStateCache?
         return @_lastDevicesStateCache.then( (devices) -> devices[deviceId] )
-      
-      # query all devices for performance reason and cache the result
-      @_lastDevicesStateCache = @knex('deviceAttribute').select(
-        'deviceId', 'attributeName', 'type', 'lastUpdate', 'lastValue'
-      ).then( (result) =>
-        #group by device
-        devices = {}
-        convertValue = (value, type) ->
-          unless value? then return null
-          return (
-            switch type
-              when 'number' then parseFloat(value)
-              when 'boolean' then (value is '1')
-              else value
-          )
-        for r in result
-          d = devices[r.deviceId]
-          unless d? then d = devices[r.deviceId] = {}
-          d[r.attributeName] = {
-            time: r.lastUpdate
-            value: convertValue(r.lastValue, r.type)
-          }
-        # Clear cache after one minute
-        clearTimeout(@_lastDevicesStateCacheTimeout)
-        @_lastDevicesStateCacheTimeout = setTimeout( (=>
-          @_lastDevicesStateCache = null
-        ), 60*1000)
-        return devices
+      return @doInLoggingTransaction( (trx) =>
+        # query all devices for performance reason and cache the result
+        @_lastDevicesStateCache = @knex('deviceAttribute').transacting(trx).select(
+          'deviceId', 'attributeName', 'type', 'lastUpdate', 'lastValue'
+        ).then( (result) =>
+          #group by device
+          devices = {}
+          convertValue = (value, type) ->
+            unless value? then return null
+            return (
+              switch type
+                when 'number' then parseFloat(value)
+                when 'boolean' then dbMapping.fromDBBool(value)
+                else value
+            )
+          for r in result
+            d = devices[r.deviceId]
+            unless d? then d = devices[r.deviceId] = {}
+            d[r.attributeName] = {
+              time: r.lastUpdate
+              value: convertValue(r.lastValue, r.type)
+            }
+          # Clear cache after one minute
+          clearTimeout(@_lastDevicesStateCacheTimeout)
+          @_lastDevicesStateCacheTimeout = setTimeout( (=>
+            @_lastDevicesStateCache = null
+          ), 60*1000)
+          return devices
+        )
+        return @_lastDevicesStateCache.then( (devices) -> devices[deviceId] )
       )
-      return @_lastDevicesStateCache.then( (devices) -> devices[deviceId] )
 
 
     _insertDeviceAttribute: (deviceId, attributeName) ->
@@ -560,35 +944,54 @@ module.exports = (env) ->
       attribute = device.attributes[attributeName]
       unless attribute? then throw new Error("#{deviceId} has no attribute #{attributeName}.")
 
+      expireInfo = @getDeviceAttributeLoggingTime(
+        deviceId, attributeName, attribute.type, attribute.discrete
+      )
+
       info = {
         id: null
         type: attribute.type
+        discrete: attribute.discrete
+        expireMs: expireInfo.expireMs
+        intervalMs: expireInfo.intervalMs
+        lastInsertTime: 0
       }
 
       ###
         Don't create a new entry for the device if an entry with the attributeName and deviceId
         already exists.
       ###
-      return @knex.raw("""
-        INSERT INTO deviceAttribute(deviceId, attributeName, type)
-        SELECT
-          '#{deviceId}' AS deviceId,
-          '#{attributeName}' AS attributeName,
-          '#{info.type}' as type
-        WHERE 0 = (
-          SELECT COUNT(*)
-          FROM deviceAttribute
-          WHERE deviceId = '#{deviceId}' and attributeName = '#{attributeName}'
-        );
-        """).then( => 
-        @knex('deviceAttribute').select('id').where(
-          deviceId: deviceId
-          attributeName: attributeName
-        ).then( ([result]) =>
-          info.id = result.id
-          assert info.id? and typeof info.id is "number"
-          fullQualifier = "#{deviceId}.#{attributeName}"
-          return (dbMapping.deviceAttributeCache[fullQualifier] = info)
+      return @doInLoggingTransaction( (trx) =>
+        return @knex.raw("""
+          INSERT INTO deviceAttribute(deviceId, attributeName, type, discrete)
+          SELECT
+            '#{deviceId}' AS deviceId,
+            '#{attributeName}' AS attributeName,
+            '#{info.type}' as type,
+            #{dbMapping.toDBBool(info.discrete)} as discrete
+          WHERE 0 = (
+            SELECT COUNT(*)
+            FROM deviceAttribute
+            WHERE deviceId = '#{deviceId}' and attributeName = '#{attributeName}'
+          );
+          """
+        ).transacting(trx).then( => 
+          @knex('deviceAttribute').transacting(trx).select('id').where(
+            deviceId: deviceId
+            attributeName: attributeName
+          ).then( ([result]) =>
+            info.id = result.id
+            assert info.id? and typeof info.id is "number"
+            update = Promise.resolve()
+            if (not info.discrete?) or dbMapping.fromDBBool(info.discrete) isnt attribute.discrete
+              update = @knex('deviceAttribute').transacting(trx)
+                .where(id: info.id).update(
+                  discrete: dbMapping.toDBBool(attribute.discrete)
+                )
+            info.discrete = attribute.discrete
+            fullQualifier = "#{deviceId}.#{attributeName}"
+            return update.then( => (dbMapping.deviceAttributeCache[fullQualifier] = info) )
+          )
         )
       )
 

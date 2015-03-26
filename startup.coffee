@@ -30,16 +30,52 @@ startup = =>
     else path.resolve __dirname, '../../config.json'
   )
 
+  exit = (code) ->  
+    env.logger.info "exiting..."
+    if process.logStream?
+      # close logstream first
+      process.stdout.write = process.stdout.writeOut
+      process.stderr.write = process.stderr.writeOut
+      process.logStream.writer.on 'finish', ->
+        process.exit(code)
+      process.logStream.end()
+    else
+      process.exit(code)
+
   # Setup the framework
   env.framework = (require './lib/framework') env 
-  Promise.try( =>
+  return Promise.try( =>
     framework = new env.framework.Framework configFile
-    promise = framework.init()
+    promise = framework.init().then( ->
+
+      onKill = -> 
+        framework.destroy().then( -> exit(0) )
+
+      uncaughtException = (err) ->
+        unless err.silent
+          env.logger.error(
+            "A uncaught exception occured: #{err.stack}\n
+             This is most probably a bug in pimatic or in a module, please report it!"
+          )
+        if process.env['PIMATIC_DAEMONIZED']
+          env.logger.warn(
+            "Keeping pimatic alive, but could be in an undefined state, 
+             please restart pimatic so soon as possible!"
+          )
+        else
+          env.logger.warn("shutting pimatic down...")
+          framework.destroy().then( -> exit(1) )
+
+      process.on('SIGINT', onKill)
+      process.on('SIGTERM', onKill)
+      process.on('uncaughtException', uncaughtException)
+    )
+
     return promise.then( => framework )
-  ).catch( (e) =>
-    env.logger.error e.message
-    env.logger.debug e.stack
-    throw e
+  ).catch( (err) =>
+    unless err.silent
+      env.logger.error "Startup error: #{err.stack}"
+    exit(1)
   )
 
 module.exports.startup = startup

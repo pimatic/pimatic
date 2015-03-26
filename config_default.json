@@ -1,5 +1,5 @@
 {
-  "//": "Please only change this file when pimatic is NOT running else pimatic will overwrite your changes.",
+  "//": "Please only change this file when pimatic is NOT running, otherwise pimatic will overwrite your changes.",
   "settings": {
     "httpServer": {
       "enabled": true,
@@ -52,6 +52,8 @@
         "groups": "write",
         "plugins": "write",
         "updates": "write",
+        "database": "write",
+        "config": "write",
         "controlDevices": true,
         "restart": true
       }

@@ -19,10 +19,11 @@ _ = require 'lodash'
 declapi = require 'decl-api'
 util = require 'util'
 cjson = require 'cjson'
+events = require 'events'
 
 module.exports = (env) ->
 
-  class Framework extends require('events').EventEmitter
+  class Framework extends events.EventEmitter
     configFile: null
     app: null
     io: null
@@ -74,7 +75,6 @@ module.exports = (env) ->
       )
 
       @_setupExpressApp()
-
 
     _validateConfig: (config, schema, scope = "config") ->
       js = new JaySchema()
@@ -133,6 +133,9 @@ module.exports = (env) ->
         defaultLocale: @config.settings.locale,
       })
 
+      unless @config.debug
+        events.EventEmitter.defaultMaxListeners = 100
+
 
     _checkConfig: (config)->
 
@@ -142,7 +145,7 @@ module.exports = (env) ->
           id = e[idProperty]
           if ids[id]?
             throw new Error(
-              "Dublicate #{type} #{id} in config."
+              "Duplicate #{type} #{id} in config."
             )
           ids[id] = yes
 
@@ -156,7 +159,7 @@ module.exports = (env) ->
       # Check groups, rules, variables, pages integrity
       logWarning = (type, id, name, collection = "group") ->
         env.logger.warn(
-          """Could not find a #{type} with the id "#{id}" from """ + 
+          """Could not find a #{type} with the ID "#{id}" from """ + 
           """#{collection} "#{name}" in #{type}s config section."""
         )        
 
@@ -218,7 +221,7 @@ module.exports = (env) ->
           )
           unless validUsername
             throw new Error(
-              "Authentication is enabled, but no username is defined for a user. " +
+              "Authentication is enabled, but no username has been defined for the user. " +
               "Please define a username in the user section of the config.json file."
             )
           validPassword = (
@@ -226,7 +229,7 @@ module.exports = (env) ->
           )
           unless validPassword
             throw new Error(
-              "Authentication is enabled, but no password is defined for the user " +
+              "Authentication is enabled, but no password has been defined for the user " +
               "\"#{user.username}\". Please define a password for \"#{user.username}\" " +
               "in the users section of the config.json file or disable authentication."
             )
@@ -313,7 +316,7 @@ module.exports = (env) ->
         delete req.session.username
         delete req.session.loginToken
         delete req.session.role
-        res.send 401, "Yor are now logged out."
+        res.send 401, "You are now logged out."
         return
       )
       serverEnabled = (
@@ -321,7 +324,7 @@ module.exports = (env) ->
       )
 
       unless serverEnabled 
-        env.logger.warn "You have no https and no http server enabled!"
+        env.logger.warn "You have no HTTPS and no HTTP server enabled!"
 
       @_initRestApi()
 
@@ -332,8 +335,14 @@ module.exports = (env) ->
       @io.use( (socket, next) =>
         if auth.enabled is no
           return next()
-        req = socket.request 
-        if req.headers.cookie?
+        req = socket.request
+        if req.query.username? and req.query.password?
+          if @userManager.checkLogin(req.query.username, req.query.password)
+            socket.username = req.query.username
+            return next()
+          else
+            return next(new Error('unauthorizied'))
+        else if req.headers.cookie?
           req.cookies = null
           ioCookieParser(req, null, =>
             sessionCookie = req.signedCookies?[@app.cookieSessionOptions.key]
@@ -359,7 +368,7 @@ module.exports = (env) ->
           )
         else
           env.logger.warn "No cookie transmitted."
-          return next(new Error('unauthorizied'))
+          return next(new Error('Unauthorized'))
       )
 
       @io.bind(engine)
@@ -374,7 +383,7 @@ module.exports = (env) ->
           socket.end()
         return
 
-      # Start the https-server if it is enabled.
+      # Start the HTTPS-server if it is enabled.
       if @config.settings.httpsServer?.enabled
         httpsConfig = @config.settings.httpsServer
         assert httpsConfig instanceof Object
@@ -389,7 +398,7 @@ module.exports = (env) ->
         @app.httpsServer = https.createServer httpsOptions, @app
         @app.httpsServer.on('upgrade', onUpgrade)
 
-      # Start the http-server if it is enabled.
+      # Start the HTTP-server if it is enabled.
       if @config.settings.httpServer?.enabled
         http = require "http"
         @app.httpServer = http.createServer @app
@@ -410,7 +419,10 @@ module.exports = (env) ->
         env.logger.error(error.message)
         env.logger.debug(error)
 
+
+
       checkPermissions = (socket, action) =>
+        if auth.enabled is no then return true
         hasPermission = no
         if action.permission? and action.permission.scope?
           hasPermission = @userManager.hasPermission(
@@ -429,34 +441,53 @@ module.exports = (env) ->
 
       @io.on('connection', (socket) =>
         declapi.createSocketIoApi(socket, actionsWithBindings, onError, checkPermissions)
-        username = socket.username
-        role = @userManager.getUserByUsername(username).role
-        permissions = @userManager.getPermissionsByUsername(username)
+        if auth.enabled is yes
+          username = socket.username
+          role = @userManager.getUserByUsername(username).role
+          permissions = @userManager.getPermissionsByUsername(username)
+        else
+          username = 'nobody'
+          role = 'no'
+          permissions = {
+            pages: "write"
+            rules: "write"
+            variables: "write"
+            messages: "write"
+            events: "write"
+            devices: "write"
+            groups: "write"
+            plugins: "write"
+            updates: "write"
+            controlDevices: true
+            restart: true
+          }
         socket.emit('hello', {
           username
           role
           permissions
         })
         if (
+          auth.enabled is no or
           @userManager.hasPermission(username, 'devices', 'read') or
           @userManager.hasPermission(username, 'pages', 'read')  
         )
           socket.emit('devices', (d.toJson() for d in @deviceManager.getDevices()) )
         else socket.emit('devices', [])
 
-        if @userManager.hasPermission(username, 'rules', 'read')      
+        if auth.enabled is no or @userManager.hasPermission(username, 'rules', 'read')      
           socket.emit('rules', (r.toJson() for r in @ruleManager.getRules()) )
         else socket.emit('rules', [])
 
-        if @userManager.hasPermission(username, 'rules', 'read')   
+        if auth.enabled is no or @userManager.hasPermission(username, 'rules', 'read')   
           socket.emit('variables', (v.toJson() for v in @variableManager.getVariables()) )
         else socket.emit('variables', [])
 
-        if @userManager.hasPermission(username, 'pages', 'read')  
+        if auth.enabled is no or @userManager.hasPermission(username, 'pages', 'read')  
           socket.emit('pages',  @pageManager.getPages() )
         else socket.emit('pages', [])
 
         needsRules = (
+          auth.enabled is no or 
           @userManager.hasPermission(username, 'devices', 'read') or
           @userManager.hasPermission(username, 'rules', 'read') or
           @userManager.hasPermission(username, 'variables', 'read') or
@@ -475,22 +506,20 @@ module.exports = (env) ->
           switch err.code 
             when "EACCES" then msg += "Are you root?."
             when "EADDRINUSE" then msg += "Is a server already running?"
-            else msg = null
-          if msg?
-            env.logger.error msg
-            env.logger.debug err.stack
-            err.silent = yes  
+          env.logger.error msg
+          env.logger.debug err.stack
+          err.silent = yes  
           throw err
 
       listenPromises = []
       if @app.httpsServer?
         httpsServerConfig = @config.settings.httpsServer
-        @app.httpsServer.on 'error', genErrFunc(@config.settings.httpsServer)
+        @app.httpsServer.on 'error', genErrFunc(httpsServerConfig)
         awaiting = Promise.promisify(@app.httpsServer.listen, @app.httpsServer)(
           httpsServerConfig.port, httpsServerConfig.hostname
         )
         listenPromises.push awaiting.then( =>
-          env.logger.info "listening for https-request on port #{httpsServerConfig.port}..."
+          env.logger.info "Listening for HTTPS-request on port #{httpsServerConfig.port}..."
         )
         
       if @app.httpServer?
@@ -500,7 +529,7 @@ module.exports = (env) ->
           httpServerConfig.port, httpServerConfig.hostname
         )
         listenPromises.push awaiting.then( =>
-          env.logger.info "listening for http-request on port #{httpServerConfig.port}..."
+          env.logger.info "Listening for HTTP-request on port #{httpServerConfig.port}..."
         )
         
       Promise.all(listenPromises).then( =>
@@ -514,11 +543,12 @@ module.exports = (env) ->
           'Please run pimatic with: "node ' + process.argv[1] + ' start" to use this feature.'
         )
       # monitor will auto restart script
-      process.nextTick -> 
+      env.logger.info("Restarting...")
+      @destroy().then( =>
         daemon = require 'daemon'
-        env.logger.info("restarting...")
         daemon.daemon process.argv[1], process.argv[2..]
         process.exit 0
+      )
 
     getGuiSetttings: () -> {
       config: @config.settings.gui
@@ -670,6 +700,9 @@ module.exports = (env) ->
           env.actions.ShutterActionProvider
           env.actions.StopShutterActionProvider
           env.actions.ToggleActionProvider
+          env.actions.HeatingThermostatModeActionProvider
+          env.actions.HeatingThermostatSetpointActionProvider
+          env.actions.TimerActionProvider
         ]
         for actProv in defaultActionProvider
           actProvInst = new actProv(this)
@@ -685,6 +718,7 @@ module.exports = (env) ->
           env.predicates.ContactPredicateProvider
           env.predicates.ButtonPredicateProvider
           env.predicates.DeviceAttributeWatchdogProvider
+          env.predicates.StartupPredicateProvider
         ]
         for predProv in defaultPredicateProvider
           predProvInst = new predProv(this)
@@ -699,8 +733,8 @@ module.exports = (env) ->
             unless rule.id.match /^[a-z0-9\-_]+$/i
               newId = S(rule.id).slugify().s
               env.logger.warn """
-                The id of the rule "#{rule.id}" contains a non alphanumeric letter or symbol.
-                Changing the id of the rule to "#{newId}".
+                The ID of the rule "#{rule.id}" contains a non alphanumeric letter or symbol.
+                Changing the ID of the rule to "#{newId}".
               """
               rule.id = newId
 
@@ -751,7 +785,7 @@ module.exports = (env) ->
             @emit "config"
           # * If a rule was removed then
           @ruleManager.on "ruleRemoved", (rule) =>
-            # ...Remove the rule with the right id in the config.json file
+            # ...Remove the rule with the right ID in the config.json file
             @config.rules = (r for r in @config.rules when r.id isnt rule.id)
             @_emitRuleRemoved(rule)
             @emit "config"
@@ -781,6 +815,8 @@ module.exports = (env) ->
         )
 
     _initRestApi: ->
+      auth = @config.settings.authentication
+
       onError = (error) =>
         if error instanceof Error
           message = error.message
@@ -788,10 +824,14 @@ module.exports = (env) ->
           env.logger.debug error.stack
 
       @app.get("/api/device/:deviceId/:actionName", (req, res, next) =>
-        username = req.session.username
-        hasPermission = @userManager.hasPermissionBoolean(
-          username, 'controlDevices'
-        )
+        if auth.enabled is yes
+          username = req.session.username
+          hasPermission = @userManager.hasPermissionBoolean(
+            username, 'controlDevices'
+          )
+        else
+          hasPermission = true
+          username = "nobody"
 
         if hasPermission
           deviceId = req.params.deviceId
@@ -818,22 +858,28 @@ module.exports = (env) ->
               type = (action.rest.type or 'get').toLowerCase()
               url = action.rest.url
               app[type](url, (req, res, next) =>
-                username = req.session.username
-                if action.permission.scope?
-                  hasPermission = @userManager.hasPermission(
-                    username, 
-                    action.permission.scope, 
-                    action.permission.access
-                  )
-                else if action.permission.action?
-                  hasPermission = @userManager.hasPermissionBoolean(
-                    username,
-                    action.permission.action
-                  )
+                if auth.enabled is yes
+                  username = req.session.username
+                  if action.permission.scope?
+                    hasPermission = @userManager.hasPermission(
+                      username, 
+                      action.permission.scope, 
+                      action.permission.access
+                    )
+                  else if action.permission.action?
+                    hasPermission = @userManager.hasPermissionBoolean(
+                      username,
+                      action.permission.action
+                    )
+                  else
+                    throw new Error("Unknown permissions declaration for action #{action}")
                 else
-                  throw new Error("Unknown permission declaration for action #{action}")
+                  username = "nobody"
+                  hasPermission = yes
                 if hasPermission is yes
+                  @userManager.requestUsername = username
                   next()
+                  @userManager.requestUsername = null
                 else
                   res.send(403)
               )
@@ -855,7 +901,7 @@ module.exports = (env) ->
       declapi.createExpressRestApi(@app, env.api.pages.actions, this.pageManager, onError)
       declapi.createExpressRestApi(@app, env.api.devices.actions, this.deviceManager, onError)
 
-    getConfig: ->
+    getConfig: (password) ->
       #blank passwords
       blankSecrets = (schema, obj) ->
         switch schema.type
@@ -871,9 +917,75 @@ module.exports = (env) ->
                 blankSecrets schema.items, e
       schema = require("../config-schema") 
       configCopy = _.cloneDeep(@config)
-      delete configCopy['//']     
-      blankSecrets schema, configCopy
+      delete configCopy['//']
+      assert @userManager.requestUsername
+      if password?
+        unless typeof password is "string"
+          throw new Error("Password is not a string")
+        unless @userManager.checkLogin(@userManager.requestUsername, password)
+          throw new Error("Invalid password")
+      else
+        blankSecrets schema, configCopy
       return configCopy
+
+    updateConfig: (config) ->
+      schema = require("../config-schema")
+      @_validateConfig(config, schema)
+      assert Array.isArray config.plugins
+      assert Array.isArray config.devices
+      assert Array.isArray config.pages
+      assert Array.isArray config.groups
+      @_checkConfig(config)
+
+      for pConf in config.plugins
+        fullPluginName = "pimatic-#{pConf.plugin}"
+        packageInfo = @pluginManager.getInstalledPackageInfo(fullPluginName)
+        if packageInfo?.configSchema?
+          pathToSchema = path.resolve(
+            @pluginManager.pathToPlugin(fullPluginName), 
+            packageInfo.configSchema
+          )
+          pluginConfigSchema = require(pathToSchema)
+          @_validateConfig(pConf, pluginConfigSchema, "config of #{fullPluginName}")
+        else
+          env.logger.warn(
+            "package.json of \"#{fullPluginName}\" has no \"configSchema\" property. " +
+            "Could not validate config."
+          )
+
+      for deviceConfig in config.devices
+        classInfo = @deviceManager.deviceClasses[deviceConfig.class]
+        unless classInfo?
+          env.logger.debug("Unknown device class \"#{deviceConfig.class}\"")
+          continue
+        warnings = []
+        classInfo.prepareConfig(deviceConfig) if classInfo.prepareConfig?
+        @_validateConfig(
+          deviceConfig, 
+          classInfo.configDef, 
+            "config of device #{deviceConfig.id}"
+        )
+        declapi.checkConfig(classInfo.configDef.properties, deviceConfig, warnings)
+        for w in warnings
+          env.logger.warn("Device configuration of #{deviceConfig.id}: #{w}")
+
+      @config = config
+      @saveConfig()
+      @restart()
+      return
+
+    destroy: ->
+      if @_destroying? then return @_destroying
+      return @_destroying = Promise.resolve().then( =>
+        context = 
+          waitFor: []
+          waitForIt: (promise) -> @waitFor.push promise
+
+        @emit "destroy", context
+        @saveConfig()
+        return Promise.all(context.waitFor)
+      )
+
 
     saveConfig: ->
       assert @config?

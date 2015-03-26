@@ -11,7 +11,7 @@ module.exports = {
         locale:
           description: "The default language"
           type: "string"
-          enum: ['en', 'de', "es", "nl"]
+          enum: ['en', 'de', "es", "nl", "fr", "ru"]
           default: "en"
         debug:
           description: "Turn on debug checks. Set the logLevel to debug to additional outputs"
@@ -25,14 +25,14 @@ module.exports = {
               type: "boolean"
               default: true
             secret:
-              description: """Secret string used for cookie signing. Should be kept secret. If it 
-              is not set, then a secret will be generate for you, at first start. The secret must
-              be at least 32 characters long.
-              """
+              description: "Secret string used for cookie signing. Should be kept secret! If it 
+              is not set, then a secret string will be generated for you, at first start. The 
+              secret string must be at least 32 characters long.
+              "
               secret: yes
             loginTime:
               description: """The time in milliseconds to keep the session cookie if rememberMe is 
-              checked. If 0 then delete the cookie on browser close. """
+              checked. If 0 then the cookie will be deleted on browser close. """
               type: "integer"
               default: 10 * 365 * 24 * 60 * 60 * 1000 #ten years
         logLevel:
@@ -43,34 +43,34 @@ module.exports = {
           type: "object"
           properties:
             enabled: 
-              description: "Should the http-server be started"
+              description: "Should the HTTP-server be started"
               type: "boolean"
               default: true
             port:
-              description: "The port of the http-server"
+              description: "The port of the HTTP-server"
               type: "integer"
               format: "port"
               default: 80
               minimum: 0
             hostname:
-              description: "The hostname of the http-server"
+              description: "The hostname of the HTTP-server"
               type: "string"
               default: "" # If is empty then listen to all ip4Adresses
         httpsServer:
           type: "object"
           properties:
             enabled: 
-              description: "Should the https-server be started"
+              description: "Should the HTTPS-server be started"
               type: "boolean"
               default: false
             port:
-              description: "The port of the https-server"
+              description: "The port of the HTTPS-server"
               type: "integer"
               format: "port"
               default: 443
               minimum: 0
             hostname:
-              description: "The hostname of the https-server"
+              description: "The hostname of the HTTPS-server"
               type: "string"
               default: "" # If is empty then listen to all ip4Adresses
             ###
@@ -84,7 +84,7 @@ module.exports = {
 
             ###
             keyFile:
-              description: "Privatekey file"
+              description: "Private-Key file"
               type: "string"
               default: "ca/pimatic-ssl/private/privkey.pem"
             certFile:
@@ -92,17 +92,17 @@ module.exports = {
               type: "string"
               default: "ca/pimatic-ssl/public/cert.pem"
             rootCertFile:
-              description: """The public root certificate file of your own CA if you using a self 
-              signed  certificate. This option is optional. Its just for the frontent, so that it 
+              description: "The public root certificate file of your own CA if you are using a 
+              self signed certificate. This is optional. It's just for the frontend, so that it 
               can provide a link to the the root certificate for easy importing in mobile devices.
-              """
+              "
               type: "string"
               default: "ca/certs/cacert.crt"
         database:
           type: "object"
           properties:
             client: 
-              description: "the databse client to use"
+              description: "The database client to use"
               type: "string"
               enum: ["sqlite3", "mysql", "pg"]
               default: "sqlite3"
@@ -124,25 +124,51 @@ module.exports = {
                 }
             ###
             connection:
-              description: "the connection settings for the database client"
+              description: "The connection settings for the database client"
               type: "object"
               default: {
                 filename: "pimatic-database.sqlite"
               }
             deviceAttributeLogging:
-              description: "time to keep logged device attributes values in database"
+              description: "Time to keep logged device attributes values in database"
               type: "array"
               default: [ 
-                { deviceId: '*', attributeName: '*', time: '7d' }
-                { deviceId: '*', attributeName: 'temperature', time: '1y' },
-                { deviceId: '*', attributeName: 'humidity', time: '1y' } 
+                { 
+                  deviceId: '*', attributeName: '*', type: "*", 
+                  interval: "0", expire: '7d' 
+                }
+                { 
+                  deviceId: '*', attributeName: '*', type: "continuous", 
+                  interval: "5min", expire: '7d'
+                }
+                { 
+                  deviceId: '*', attributeName: 'temperature', type: "number", 
+                  expire: '1y' 
+                }
+                { 
+                  deviceId: '*', attributeName: 'humidity', type: "number", 
+                  expire: '1y' 
+                } 
               ]
             messageLogging:
-              description: "time to keep logged messages in database"
+              description: "Time to keep logged messages in database"
               type: "array"
               default: [ 
-                { level: '*', tags: [], time: '7d' }
+                { level: '*', tags: [], expire: '7d' }
+                { level: 'debug', tags: [], expire: '0' }
               ]
+            deleteExpiredInterval:
+              description: "Interval for deleting expired entries from the database"
+              type: "string"
+              default: "2h"
+            diskSyncInterval:
+              description: "
+                Interval for writing logged entries to disk. If this value is smaller than 
+                the deleteExpiredInterval setting, than the value of it is used 
+                instead. Should be a multiple of deleteExpiredInterval.
+                "
+              type: "string"
+              default: "4h"
             debug: 
               description: "Enable to show database queries and some additional outputs"
               type: "boolean"
@@ -151,21 +177,21 @@ module.exports = {
           type: "object"
           properties:
             hideRuleName: 
-              description: "Dont show the name of rules on the rules page"
+              description: "Don't show the name of rules on the rules page"
               type: "boolean"
               default: false
             hideRuleText: 
-              description: "Dont show the text of rules on the rules page"
+              description: "Don't show the text of rules on the rules page"
               type: "boolean"
               default: false
             demo:
-              doc: """show edit pages also if the user has no permissions, 
+              doc: """Show edit pages also if the user has no permissions, 
               like at demo.pimatic.org:8080
               """
               type: "boolean"
               default: false
     pages:
-      description: "Array of gui pages"
+      description: "Array of GUI pages"
       type: "array"
       default: []
       items:
@@ -214,7 +240,7 @@ module.exports = {
       type: "array"
       default: []
     devices:
-      description: "Array of device definations"
+      description: "Array of device definitions"
       type: "array"
       default: []
       items:
@@ -256,6 +282,8 @@ module.exports = {
                 type: "string"
               value:
                 type: "string"
+              unit:
+                type: "string"
           }, 
           {
             type: "object"
@@ -263,6 +291,8 @@ module.exports = {
               name:
                 type: "string"
               expression:
+                type: "string"
+              unit:
                 type: "string"
           }
         ]
@@ -305,6 +335,7 @@ module.exports = {
             groups: "write"
             plugins: "write"
             updates: "write"
+            config: "write"
             controlDevices: true
             restart: true
         },
@@ -320,6 +351,7 @@ module.exports = {
             groups: "none"
             plugins: "none"
             updates: "none"
+            config: "none"
             controlDevices: true
             restart: false
         }
@@ -333,78 +365,78 @@ module.exports = {
             type: "object"
             properties:
               pages:
-                description: """Allow to list all pages with its devices (read) or additional 
-                edit the pages (write)
-                """
+                description: "
+                Allow to list all pages with its devices (read) or edit existing pages (write)
+                "
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]               
               rules:
                 description: """
-                Allow to list all rules (read) or additional edit the rules (write)
+                Allow to list all rules (read) or edit existing rules (write)
                 """
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]
               variables:
                 description: """
-                Allow to list all variables (read) or additional edit the variables (write)
+                Allow to list all variables (read) or edit existing variables (write)
                 """
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]
               messages:
                 description: """
-                Allow to list all messages (read) or additional edit the messages (write)
+                Allow to list all messages (read) or delete existing messages (write)
                 """
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]
               events:
                 description: """
-                Allow to list all events (read) or additional edit the events (write)
+                Allow to list all events (read) or delete existing events (write)
                 """
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]
               devices:
                 description: """
-                Allow to list all devices (read) or additional edit the devices (write)
+                Allow to list all devices (read) or edit existing devices (write)
                 """
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]
               groups:
                 description: """
-                Allow to list all groups (read) or additional edit the groups (write)
+                Allow to list all groups (read) or edit existing groups (write)
                 """
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]
               users:
                 description: """
-                Allow to list all users (read) or additional edit the users (write)
+                Allow to list all users (read) or edit existing users (write)
                 """
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]
               plugins:
                 description: """
-                Allow to list all plugins (read) or additional edit the plugins (write)
+                Allow to list all plugins (read) or edit existing plugins (write)
                 """
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]
               updates:
                 description: """
-                Allow to show update or additional do updating
+                Allow to search for updates or additional do updating
                 """
                 type: "string"
                 default: "none"
                 enum: ["none", "read", "write"]
               config:
                 description: """
-                Allow show the config (read) or additional edit the config (write)
+                Allow to show the config (read) or edit existing config (write)
                 """
                 type: "string"
                 default: "none"

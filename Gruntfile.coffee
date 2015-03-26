@@ -6,66 +6,8 @@ module.exports = (grunt) ->
   # just the pimatic-* modules:
   plugins = (module for module in modules when module.match(/^pimatic-.*/)?)
 
-  # some realy dirty tricks:
-  orgGrocPath = require("fs").existsSync './node_modules/grunt-groc/node_modules/groc'
-  ownGrocPath = require("fs").existsSync './node_modules/groc'
-
-  if orgGrocPath
-    orgGroc = require './node_modules/grunt-groc/node_modules/groc'
-    if ownGrocPath
-      # Use our own groc implementation
-      ownGroc = require './node_modules/groc'
-      for name, prop of ownGroc
-        orgGroc[name] = prop
-    else
-      grunt.log.writeln "Could not use own groc version. Not found!" 
-  else
-    unless ownGrocPath
-      grunt.log.writeln "Could not use own groc version. Not found!" 
-
-  grocTasks =
-    pimatic:
-      src: [
-        "./documentation.md"
-        "./config-schema.coffee"
-        "./startup.coffee"
-        "./lib/*.coffee"
-      ]
-      options: 
-        root: "."
-        out: "doc"
-        "repository-url": "https://github.com/pimatic/pimatic"
-        style: 'pimatic'
-        index: "documentation.md"
-          
-  for plugin in plugins
-    grocTasks[plugin] =
-      src: [
-        "../#{plugin}/README.md"
-        "../#{plugin}/*.coffee"
-      ]
-      options: 
-        root: "../#{plugin}"
-        out: "../#{plugin}/doc"
-        "repository-url": "https://github.com/pimatic/pimatic/#{plugin}"
-
-
-
-  ftpTasks = {}
-  for plugin in ["pimatic"].concat plugins 
-    ftpTasks[plugin] =
-      auth:
-        host: "pimatic.org"
-        port: 21
-      authKey: 'pimatic.org'
-      src: path.resolve __dirname, '..', plugin, "doc"
-      dest: (if plugin is "pimatic" then "/pimatic/docs"
-      else "/pimatic/docs/#{plugin}")
-
   # package.json files of plugins
   pluginPackageJson = ("../#{plugin}/package.json" for plugin in plugins)
-  # and main package.json files
-  bumpFiles = ["package.json"].concat pluginPackageJson
 
   # Project configuration.
   grunt.initConfig
@@ -87,9 +29,6 @@ module.exports = (grunt) ->
           level: "error"
         no_unnecessary_fat_arrows:
           level: 'ignore'
-    groc: grocTasks
-
-    "ftp-deploy": ftpTasks
 
     mochaTest:
       test:
@@ -113,27 +52,9 @@ module.exports = (grunt) ->
           quiet: true
           captureFile: "coverage.html"
         src: ["test/*"]
-    bump:
-      options:
-        files: bumpFiles
-        updateConfigs: []
-        commit: true
-        commitMessage: "version %VERSION%"
-        commitFiles: ["-a"] # '-a' for all files
-        createTag: true
-        tagName: "v%VERSION%"
-        tagMessage: "version %VERSION%"
-        push: true
-        pushTo: "origin"
-        gitDescribeOptions: "--tags --always --abbrev=1 --dirty=-d"
 
-
-  grunt.loadNpmTasks 'grunt-bump'
   grunt.loadNpmTasks "grunt-coffeelint"
-  grunt.loadNpmTasks "grunt-groc"
-  grunt.loadNpmTasks "grunt-ftp-deploy"
   grunt.loadNpmTasks "grunt-mocha-test"
-
 
   grunt.registerTask "blanket", =>
     blanket = require "blanket"
@@ -161,7 +82,7 @@ module.exports = (grunt) ->
     fs.writeFileSync file, html
 
   # Default task(s).
-  grunt.registerTask "default", ["coffeelint", "mochaTest:test", "groc"]
+  grunt.registerTask "default", ["coffeelint", "mochaTest:test"]
   grunt.registerTask "test", ["coffeelint", "mochaTest:test"]
   grunt.registerTask "coverage", 
     ["blanket", "mochaTest:testBlanket", "mochaTest:coverage", "clean-coverage"]

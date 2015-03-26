@@ -1,10 +1,11 @@
+
 ###
 Plugin Manager
 =======
 ###
 
 Promise = require 'bluebird'
-fs = require 'fs'; Promise.promisifyAll(fs)
+fs = require 'fs.extra'; Promise.promisifyAll(fs)
 path = require 'path'
 util = require 'util'
 assert = require 'cassert'
@@ -16,6 +17,8 @@ semver = require "semver"
 events = require 'events'
 S = require 'string'
 declapi = require 'decl-api'
+rp = require 'request-promise'
+download = require 'gethub'
 
 module.exports = (env) ->
 
@@ -31,7 +34,7 @@ module.exports = (env) ->
     loadPlugin: (name) ->
       packageInfo = @getInstalledPackageInfo(name)
       packageInfoStr = (if packageInfo? then "(" + packageInfo.version  + ")" else "")
-      env.logger.info("""loading plugin: "#{name}" #{packageInfoStr}""")
+      env.logger.info("""Loading plugin: "#{name}" #{packageInfoStr}""")
       # require the plugin and return it
       # create a sublogger:
       pluginEnv = Object.create(env)
@@ -42,19 +45,63 @@ module.exports = (env) ->
     # Checks if the plugin folder exists under node_modules
     isInstalled: (name) ->
       assert name?
-      assert name.match(/^pimatic-.*$/)?
+      assert name.match(/^pimatic.*$/)?
       return fs.existsSync(@pathToPlugin name)
+
+    isGitRepo: (name) ->
+      assert name?
+      assert name.match(/^pimatic.*$/)?
+      return fs.existsSync("#{@pathToPlugin name}/.git")
+
+    installByGit: (name) ->
+      return @findInPluginList(name).then( (plugin) =>
+        unless plugin? then return false
+        dist = @_findDist(plugin)
+        return dist?
+      )
+
+    _getFullPlatfrom: ->
+      abiVersion = process.versions.modules
+      platform = process.platform
+      arch = if process.arch is "arm" then "armhf" else process.arch
+      return "node-#{abiVersion}-#{arch}-#{platform}"
+
+    _findDist: (plugin) ->
+      if (not plugin.dists?) or plugin.dists.length is 0 then return null
+      fullPlatform = @_getFullPlatfrom()
+      for dist in plugin.dists
+        if dist.name.indexOf(fullPlatform) is 0
+          return dist
+      return null
 
     # Install a plugin from the npm repository
     installPlugin: (name) ->
       assert name?
-      assert name.match(/^pimatic-.*$/)?
-      return @spawnNpm(['install', name])
+      assert name.match(/^pimatic.*$/)?
+      return @installByGit(name).then( (useGit) =>
+        if useGit
+          return @installGitPlugin(name)
+        else
+          env.logger.info("Installing: \"#{name}\" from npm-registry.")
+          return @spawnNpm(['install', name])
+      )
+
+    updatePlugin: (name) ->
+      if @isGitRepo(name) then throw new Error("Can't update a git repository!")
+      return @installByGit(name).then( (useGit) =>
+        if useGit
+          return @updateGitPlugin(name)
+        else
+          env.logger.info("Installing: \"#{name}\" from npm-registry.")
+          return @spawnNpm(['update', name])
+      )
 
     _emitUpdateProcessStatus: (status, info) ->
+      @updateProcessStatus = status
       @emit 'updateProcessStatus', status, info
 
     _emitUpdateProcessMessage: (message, info) ->
+      @updateProcessMessages.push message
       @emit 'updateProcessMessage', message, info
 
     getUpdateProcessStatus: () ->
@@ -68,8 +115,13 @@ module.exports = (env) ->
       @_emitUpdateProcessStatus('running', info)
       npmMessageListener = ( (line) => @_emitUpdateProcessMessage(line, info); )
       @on 'npmMessage', npmMessageListener
-
-      return @spawnNpm(['update'].concat modules).then( =>
+      hasErrors = false
+      return Promise.each(modules, (plugin) =>
+        @updatePlugin(plugin).catch( (error) =>
+          env.logger.error("Error Updating plugin #{plugin}: #{error.message}")
+          env.logger.debug(error.stack)
+        )
+      ).then( =>
         @_emitUpdateProcessStatus('done', info)
         @removeListener 'npmMessage', npmMessageListener
         return modules
@@ -78,46 +130,46 @@ module.exports = (env) ->
         @removeListener 'npmMessage', npmMessageListener
         throw error
       )
-      # ), onProgress = ( (message) =>
-      #   @_emitUpdateProcessMessage(message, {modules})
-      # ))
 
     pathToPlugin: (name) ->
       assert name?
-      assert name.match(/^pimatic-.*$/)? or name is "pimatic"
+      assert name.match(/^pimatic.*$/)? or name is "pimatic"
       return path.resolve @framework.maindir, "..", name
 
-    searchForPlugins: ->
-      plugins = [ 
-        'pimatic-cron',
-        'pimatic-filebrowser',
-        'pimatic-gpio',
-        'pimatic-log-reader',
-        'pimatic-mobile-frontend',
-        'pimatic-pilight',
-        'pimatic-ping',
-        'pimatic-redirect',
-        'pimatic-shell-execute',
-        'pimatic-sispmctl',
-        "pimatic-pushover",
-        "pimatic-sunrise",
-        "pimatic-voice-recognition",
-        "pimatic-mail"
-      ]
-      waiting = []
-      found = {}
-      for p in plugins
-        do (p) =>
-          waiting.push @getNpmInfo(p).then( (info) =>
-            found[p] = info
-          )
-      return Promise.settle(waiting).then( (results) =>
-        env.logger.error(r.reason) for r in results when r.state is "rejected"
-        return found
-      ).catch( (e) => env.logger.error e )
+    getPluginList: ->
+      if @_pluginList then return @_pluginList
+      else return @searchForPlugin()
+
+    getCoreInfo: ->
+      if @_coreInfo then return @_coreInfo
+      else return @searchForCoreUpdate()
+
+    searchForPlugin: ->
+      return @_pluginList = rp('http://api.pimatic.org/plugins').then( (res) =>
+        json = JSON.parse(res)
+        # cache for 1min
+        setTimeout( (=> @_pluginList = null), 60*1000)
+        return json
+      )
+
+    searchForCoreUpdate: ->
+      return @_coreInfo = rp('http://api.pimatic.org/core').then( (res) =>
+        json = JSON.parse(res)
+        # cache for 1min
+        setTimeout( (=> @_coreInfo = null), 60*1000)
+        return json
+      )
+
+    findInPluginList: (name) ->
+      return @getCoreInfo() if name is "pimatic"
+      return @getPluginList().then( (plugins) =>
+        plugin = _.find(plugins, (p) -> p.name is name)
+        if plugin? then return plugin
+        throw new Error("Couldn't find plugin info for #{name}")
+      )
 
     searchForPluginsWithInfo: ->
-      return @searchForPlugins().then( (plugins) =>
+      return @searchForPlugin().then( (plugins) =>
         return pluginList = (
           for k, p of plugins 
             name = p.name.replace 'pimatic-', ''
@@ -140,7 +192,7 @@ module.exports = (env) ->
 
     isPimaticOutdated: ->
       installed = @getInstalledPackageInfo("pimatic")
-      return @getNpmInfo("pimatic").then( (latest) =>
+      return @findInPluginList("pimatic").then( (latest) =>
         if semver.gt(latest.version, installed.version)
           return {
             current: installed.version
@@ -165,7 +217,7 @@ module.exports = (env) ->
         for p in plugins
           do (p) =>
             installed = @getInstalledPackageInfo(p)
-            waiting.push @getNpmInfo(p).then( (latest) =>
+            waiting.push @findInPluginList(p).then( (latest) =>
               infos.push {
                 plugin: p
                 current: installed.version
@@ -178,10 +230,10 @@ module.exports = (env) ->
           ret = []
           for info in infos
             unless info.current?
-              env.logger.warn "Could not get installed package version of #{info.plugin}"
+              env.logger.warn "Could not get the installed package version of #{info.plugin}"
               continue
             unless info.latest?
-              env.logger.warn "Could not get latest version of #{info.plugin}"
+              env.logger.warn "Could not get the latest version of #{info.plugin}"
               continue
             ret.push info
           return ret
@@ -222,6 +274,33 @@ module.exports = (env) ->
 
       )
 
+    installGitPlugin: (name) ->
+      return @findInPluginList(name).then( (plugin) =>
+        dist = @_findDist(plugin)
+        unless dist? then throw new Error("dist package not found")
+        env.logger.info("Installing: \"#{name}\" from precompiled source (#{dist.name})")
+        tmpDir = path.resolve @framework.maindir, "..", ".#{name}.tmp"
+        destdir = @pathToPlugin(name)
+
+        return fs.rmrfAsync(tmpDir)
+          .catch()
+          .then( =>
+            return download('pimatic-ci', name, dist.name, tmpDir)
+          )
+          .then( =>
+            return fs.rmrfAsync(destdir)
+              .catch()
+              .then( =>
+                fs.moveAsync(tmpDir, destdir)
+              )
+          )
+          .finally( =>
+            fs.rmrfAsync(tmpDir)
+          )
+      )
+
+    updateGitPlugin: (name) -> @installGitPlugin(name)
+
     getInstalledPlugins: ->
       return fs.readdirAsync("#{@framework.maindir}/..").then( (files) =>
         return plugins = (f for f in files when f.match(/^pimatic-.*/)?)
@@ -254,7 +333,7 @@ module.exports = (env) ->
 
     getInstalledPackageInfo: (name) ->
       assert name?
-      assert name.match(/^pimatic-.*$/)? or name is "pimatic"
+      assert name.match(/^pimatic.*$/)? or name is "pimatic"
       return JSON.parse fs.readFileSync(
         "#{@pathToPlugin name}/package.json", 'utf-8'
       )
@@ -268,7 +347,7 @@ module.exports = (env) ->
             try
               info = JSON.parse(str)
               if info.error?
-                throw new Error("getting info about #{name} failed: #{info.reason}")
+                throw new Error("Getting info about #{name} failed: #{info.reason}")
               resolve info
             catch e
               reject e.message
@@ -281,18 +360,20 @@ module.exports = (env) ->
 
       for pConf, i in @pluginsConfig
         do (pConf, i) =>
-          assert pConf?
-          assert pConf instanceof Object
-          assert pConf.plugin? and typeof pConf.plugin is "string" 
-
           chain = chain.then( () =>
+            assert pConf?
+            assert pConf instanceof Object
+            assert pConf.plugin? and typeof pConf.plugin is "string" 
+
+            if pConf.active is false
+              return Promise.resolve()
+
             fullPluginName = "pimatic-#{pConf.plugin}"
             return Promise.try( =>     
               # If the plugin folder already exist
               return (
                 if @isInstalled(fullPluginName) then Promise.resolve()
                 else 
-                  env.logger.info("Installing: \"#{pConf.plugin}\"")
                   @installPlugin(fullPluginName)
               ).then( =>
                 return @loadPlugin(fullPluginName).then( ([plugin, packageInfo]) =>
@@ -313,11 +394,11 @@ module.exports = (env) ->
                   @registerPlugin(plugin, pConf, configSchema)
                 )
               )
-            ).catch( (error) ->
-              # If an error occures log an ignore it.
-              env.logger.error error.message
-              env.logger.debug error.stack
             )
+          ).catch( (error) ->
+            # If an error occures log an ignore it.
+            env.logger.error error.message
+            env.logger.debug error.stack
           )
 
       return chain
@@ -368,7 +449,7 @@ module.exports = (env) ->
   class Plugin extends require('events').EventEmitter
     name: null
     init: ->
-      throw new Error("your plugin must implement init")
+      throw new Error("Your plugin must implement init")
 
     #createDevice: (config) ->
 

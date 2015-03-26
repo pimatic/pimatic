@@ -14,7 +14,9 @@ S = require 'string'
 class BoolExpression
 
 class AndExpression extends BoolExpression
-  constructor: (@left, @right) -> #nop
+  constructor: (@left, @right) ->
+    @type = "and"
+
   evaluate: (cache) -> 
     return @left.evaluate(cache).then( (val) => 
       if val then @right.evaluate(cache) else false 
@@ -23,6 +25,8 @@ class AndExpression extends BoolExpression
 
 class OrExpression extends BoolExpression
   constructor: (@left, @right) -> #nop
+    @type = "or"
+
   evaluate: (cache) -> 
     return @left.evaluate(cache).then( (val) => 
       if val then true else @right.evaluate(cache) 
@@ -31,12 +35,14 @@ class OrExpression extends BoolExpression
   
 class PredicateExpression extends BoolExpression
   constructor: (@predicate) -> #nop
+    @type = "predicate"
+  
   evaluate: (cache) -> 
     id = @predicate.id
     value = cache[id]
     return (
       if value? then Promise.resolve(value)
-      # If the trigger keyword was present then the predicate is only true of it got tiggered...
+      # If the trigger keyword was present then the predicate is only true of it got triggered...
       else if @predicate.justTrigger is yes then Promise.resolve(false)
       else @predicate.handler.getValue().then( (value) =>
         cache[id] = value

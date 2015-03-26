@@ -17,6 +17,10 @@ module.exports = {
               type: "string"
             text:
               type: "string"
+            confirm:
+              description: "Ask the user to confirm the button press"
+              type: "boolean"
+              default: false
   }
   VariablesDevice: {
     title: "VariablesDevice config"
@@ -36,10 +40,10 @@ module.exports = {
               description: "Name for the corresponding attribute."
               type: "string"
             expression:
-              description: """
+              description: "
                 The expression to use to get the value. Can be just a variable name ($myVar), 
-                a calculation ($myVar + 10) or a string interpolation ("Test: {$myVar}!")
-                """
+                a calculation ($myVar + 10) or a string interpolation (\"Test: {$myVar}!\")
+                "
               type: "string"
             type:
               description: "The type of the variable."
@@ -47,11 +51,20 @@ module.exports = {
               default: "string"
               enum: ["string", "number"]
             unit:
-              description: "The unit of the variable, only works if type is number."
+              description: "The unit of the variable. Only works if type is a number."
               type: "string"
             label: 
               description: "A custom label to use in the frontend."
               type: "string"
+            discrete:
+              description: "
+                Should be set to true if the value does not change continuously over time.
+              "
+              type: "boolean"
+            acronym:
+              description: "Acronym to show as value label in the frontend"
+              type: "string"
+              required: false
   }
   DummySwitch:
     title: "DummySwitch config"
@@ -68,4 +81,44 @@ module.exports = {
     type: "object"
     extensions: ["xLink"]
     properties: {}
+  DummyContactSensor:
+    title: "DummyContactSensor config"
+    type: "object"
+    extensions: ["xLink", "xClosedLabel", "xOpenedLabel"]
+    properties: {}
+  DummyHeatingThermostat: {
+    title: "DummyHeatingThermostat config options"
+    type: "object"
+    properties:
+      comfyTemp:
+        description: "The defined comfy temperature"
+        type: "number"
+        default: 21
+      ecoTemp:
+        description: "The defined eco mode temperature"
+        type: "number"
+        default: 17
+      guiShowModeControl: 
+        description: "Show the mode buttons in the GUI"
+        type: "boolean"
+        default: true
+      guiShowPresetControl:
+        description: "Show the preset temperatures in the GUI"
+        type: "boolean"
+        default: true
+      guiShowTemperatueInput:
+        description: "Show the temperature input spinbox in the GUI"
+        type: "boolean"
+        default: true        
+  }
+  Timer:
+    title: "timer config"
+    type: "object"
+    extensions: ["xLink"]
+    properties: {
+      resolution:
+        description: "The interval the timer is updated in seconds"
+        type: "number"
+        default: 1
+    }
 }

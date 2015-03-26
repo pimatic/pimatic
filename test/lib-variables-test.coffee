@@ -120,8 +120,59 @@ describe "VariableManager", ->
       ).catch(finish)
 
 
+  describe '#units()', ->
 
+    before ->
+      varManager.setVariableToValue('a', 1, 'V')
+      varManager.setVariableToValue('b', 2, '')
 
+    it 'should use the right unit for 1V + 2', (finish) ->
+      varManager.evaluateExpressionWithUnits(["$a", "+", "$b"]).then( (result) =>
+        assert result.unit is 'V'
+        finish()
+      ).catch(finish)
 
+    it 'should use the right unit for 1V - 2', (finish) ->
+      varManager.evaluateExpressionWithUnits(["$a", "-", "$b"]).then( (result) =>
+        assert result.unit is 'V'
+        finish()
+      ).catch(finish)
 
+    it 'should use the right unit for 1V * 2', (finish) ->
+      varManager.evaluateExpressionWithUnits(["$a", "*", "$b"]).then( (result) =>
+        assert result.unit is 'V'
+        finish()
+      ).catch(finish)
 
+    it 'should use the right unit for 1V * 1V', (finish) ->
+      varManager.evaluateExpressionWithUnits(["$a", "*", "$a"]).then( (result) =>
+        assert result.unit is 'V*V'
+        finish()
+      ).catch(finish)
+
+    it 'should use the right unit for 1V / 2', (finish) ->
+      varManager.evaluateExpressionWithUnits(["$a", "/", "$b"]).then( (result) =>
+        assert result.unit is 'V'
+        finish()
+      ).catch(finish)
+
+    it 'should use the right unit for 2 / 1V', (finish) ->
+      varManager.evaluateExpressionWithUnits(["$b", "/", "$a"]).then( (result) =>
+        assert result.unit is '1/V'
+        finish()
+      ).catch(finish)
+
+    it 'should format the value', (finish) ->
+      varManager.evaluateExpressionWithUnits(["formatNumber", "(", "$a", ")"]).then( (result) =>
+        assert result.value is '1V'
+        assert result.unit is ''
+        finish()
+      ).catch(finish)
+
+    it 'should format the value with prefix', (finish) ->
+      varManager.setVariableToValue('a', 1000, 'V')
+      varManager.evaluateExpressionWithUnits(["formatNumber", "(", "$a", ")"]).then( (result) =>
+        assert result.value is '1kV'
+        assert result.unit is ''
+        finish()
+      ).catch(finish)

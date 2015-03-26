@@ -74,6 +74,7 @@ function getCachPaths(filename) {
 }
 
 require('source-map-support').install({
+  handleUncaughtExceptions: false,
   retrieveSourceMap: function(source) {
     if(source.indexOf('.coffee', source.length - '.coffee'.length) === -1) {
       return null;
@@ -121,7 +122,7 @@ var compile = function(module, filename) {
   try {
     var sourceTime = fs.statSync(filename).mtime;
     var cacheTime = fs.statSync(cachePath).mtime;
-    if (cacheTime > sourceTime) {
+    if (cacheTime >= sourceTime) {
       // We can return the cached version
       content = fs.readFileSync(cachePath, 'utf8');
     }
@@ -153,7 +154,7 @@ var compile = function(module, filename) {
         content = compiled;
 
       // Try writing to cache
-      fs.mkdirs(path.dirname(cachePath));
+      fs.mkdirsSync(path.dirname(cachePath));
 
       fs.writeFileSync(cachePath, content, 'utf8');
       if (mapPath)

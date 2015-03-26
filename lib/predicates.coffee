@@ -1,7 +1,7 @@
 ###
 Predicate Provider
 =================
-A Predicate Provider provides a predicate for the Rule System. For predicate and rule explenations
+A Predicate Provider provides a predicate for the Rule System. For predicate and rule explanations
 take a look at the [rules file](rules.html). A predicate is a string that describes a state. A
 predicate is either true or false at a given time. There are special predicates, 
 called event-predicates, that represent events. These predicate are just true in the moment a 
@@ -36,12 +36,12 @@ module.exports = (env) ->
     setup: -> 
       # You must overwrite this method and set up your listener here.
       # You should call super() after that.
-      if @_setupCalled then throw new Error("setup already called!")
+      if @_setupCalled then throw new Error("Setup already called!")
       @_setupCalled = yes
     destroy: -> 
       # You must overwrite this method and remove your listener here.
       # You should call super() after that.
-      unless @_setupCalled then throw new Error("destroy called but not setup called!")
+      unless @_setupCalled then throw new Error("Destroy called, but setup was not called!")
       delete @_setupCalled
 
   ###
@@ -56,6 +56,13 @@ module.exports = (env) ->
   ####
   class SwitchPredicateProvider extends PredicateProvider
 
+    presets: [
+      {
+        name: "switch turned on/off"
+        input: "{device} is turned on"
+      }
+    ]
+
     constructor: (@framework) ->
 
     # ### parsePredicate()
@@ -69,11 +76,10 @@ module.exports = (env) ->
       match = null
 
       stateAcFilter = (v) => v.trim() isnt 'is switched' 
-
       M(input, context)
         .matchDevice(switchDevices, (next, d) =>
-          next.match([' is', ' is turned', ' is switched'], acFilter: stateAcFilter)
-            .match([' on', ' off'], (next, s) =>
+          next.match([' is', ' is turned', ' is switched'], acFilter: stateAcFilter, type: 'static')
+            .match([' on', ' off'], param: 'state', type: 'select', (next, s) =>
               # Already had a match with another device?
               if device? and device.id isnt d.id
                 context?.addError(""""#{input.trim()}" is ambiguous.""")
@@ -125,6 +131,13 @@ module.exports = (env) ->
   ####
   class PresencePredicateProvider extends PredicateProvider
 
+    presets: [
+      {
+        name: "device is present/absent"
+        input: "{device} is present"
+      }
+    ]
+
     constructor: (@framework) ->
 
     parsePredicate: (input, context) ->
@@ -140,15 +153,18 @@ module.exports = (env) ->
 
       M(input, context)
         .matchDevice(presenceDevices, (next, d) =>
-          next.match([' is', ' reports', ' signals'])
-            .match([' present', ' absent', ' not present'], {acFilter: stateAcFilter}, (m, s) =>
-              # Already had a match with another device?
-              if device? and device.id isnt d.id
-                context?.addError(""""#{input.trim()}" is ambiguous.""")
-                return
-              device = d
-              negated = (s.trim() isnt "present") 
-              match = m.getFullMatch()
+          next.match([' is', ' reports', ' signals'], type: "static")
+            .match(
+              [' present', ' absent', ' not present'], 
+              acFilter: stateAcFilter, type: "select", param: "state", 
+              (m, s) =>
+                # Already had a match with another device?
+                if device? and device.id isnt d.id
+                  context?.addError(""""#{input.trim()}" is ambiguous.""")
+                  return
+                device = d
+                negated = (s.trim() isnt "present") 
+                match = m.getFullMatch()
             )
       )
       
@@ -192,6 +208,13 @@ module.exports = (env) ->
   ####
   class ContactPredicateProvider extends PredicateProvider
 
+    presets: [
+      {
+        name: "device is opened/closed"
+        input: "{device} is opened"
+      }
+    ]
+
     constructor: (@framework) ->
 
     parsePredicate: (input, context) ->
@@ -207,15 +230,18 @@ module.exports = (env) ->
 
       M(input, context)
         .matchDevice(contactDevices, (next, d) =>
-          next.match(' is')
-            .match([' open', ' close', ' opened', ' closed'], {acFilter: contactAcFilter}, (m, s) =>
-              # Already had a match with another device?
-              if device? and device.id isnt d.id
-                context?.addError(""""#{input.trim()}" is ambiguous.""")
-                return
-              device = d
-              negated = (s.trim() in ["opened", 'open']) 
-              match = m.getFullMatch()
+          next.match(' is', type: "static")
+            .match(
+              [' open', ' close', ' opened', ' closed'], 
+              acFilter: contactAcFilter, type: "select", 
+              (m, s) =>
+                # Already had a match with another device?
+                if device? and device.id isnt d.id
+                  context?.addError(""""#{input.trim()}" is ambiguous.""")
+                  return
+                device = d
+                negated = (s.trim() in ["opened", 'open']) 
+                match = m.getFullMatch()
             )
       )
       
@@ -225,7 +251,7 @@ module.exports = (env) ->
         assert typeof match is "string"
         return {
           token: match
-          nextInput: input.substring(match.length)
+          nextInput: input.substring(match.length),
           predicateHandler: new ContactPredicateHandler(device, negated)
         }
       else
@@ -252,7 +278,7 @@ module.exports = (env) ->
   ###
   The Device-Attribute Predicate Provider
   ----------------
-  Handles predicates for comparing device attributes like sensor value or other states:
+  Handles predicates for comparing device attributes like sensor values or other states:
 
   * _attribute_ of _device_ is equal to _value_
   * _attribute_ of _device_ equals _value_
@@ -263,6 +289,13 @@ module.exports = (env) ->
   * _attribute_ of _device_ is higher than _value_
   ####
   class DeviceAttributePredicateProvider extends PredicateProvider
+    
+    presets: [
+      {
+        name: "attribute of a device"
+        input: "{attribute} of {device} is equal to {value}"
+      }
+    ]
 
     constructor: (@framework) ->
 
@@ -277,65 +310,69 @@ module.exports = (env) ->
       matches = []
 
       M(input, context)
-      .match(allAttributes, (m, attr) =>
-        info = {
-          device: null
-          attributeName: null
-          comparator: null
-          referenceValue: null
-        }
+      .match(
+        allAttributes,
+        param: "attribute", wildcard: "{attribute}"
+        (m, attr) =>
+          info = {
+            device: null
+            attributeName: null
+            comparator: null
+            referenceValue: null
+          }
+          info.attributeName = attr
+          devices = _(@framework.deviceManager.devices).values()
+            .filter((device) => device.hasAttribute(attr)).value()
 
-        info.attributeName = attr
-        devices = _(@framework.deviceManager.devices).values()
-          .filter((device) => device.hasAttribute(attr)).value()
-        m.match(' of ').matchDevice(devices, (m, device) =>
-          info.device = device
-          unless device.hasAttribute(attr) then return
-          attribute = device.attributes[attr]
+          m.match(' of ').matchDevice(devices, (next, device) =>
+            info.device = device
+            unless device.hasAttribute(attr) then return
+            attribute = device.attributes[attr]
+            setComparator =  (m, c) => info.comparator = c
+            setRefValue = (m, v) => info.referenceValue = v
+            end =  => matchCount++
 
-          setComparator =  (m, c) => info.comparator = c
-          setRefValue = (m, v) => info.referenceValue = v
-          end =  => matchCount++
-
-          if attribute.type is types.boolean
-            m = m.matchComparator('boolean', setComparator).match(attribute.labels, (m, v) =>
-              if v is attribute.labels[0] then setRefValue(m, true)
-              else if v is attribute.labels[1] then setRefValue(m, false)
-              else assert(false)
-            )
-          else if attribute.type is types.number
-            m = m.matchComparator('number', setComparator)
-              .matchNumber( (m,v) => setRefValue(m, parseFloat(v)) )
-            if attribute.unit? and attribute.unit.length > 0 
-              possibleUnits = _.uniq([
-                " #{attribute.unit}", 
-                "#{attribute.unit}", 
-                "#{attribute.unit.toLowerCase()}", 
-                " #{attribute.unit.toLowerCase()}",
-                "#{attribute.unit.replace('°', '')}", 
-                " #{attribute.unit.replace('°', '')}",
-                "#{attribute.unit.toLowerCase().replace('°', '')}", 
-                " #{attribute.unit.toLowerCase().replace('°', '')}",
+            if attribute.type is types.boolean
+              m = next.matchComparator('boolean', setComparator)
+                .match(attribute.labels, wildcard: '{value}', (m, v) =>
+                  if v is attribute.labels[0] then setRefValue(m, true)
+                  else if v is attribute.labels[1] then setRefValue(m, false)
+                  else assert(false)
+              )
+            else if attribute.type is types.number
+              m = next.matchComparator('number', setComparator)
+                .matchNumber(wildcard: '{value}', (m,v) => setRefValue(m, parseFloat(v)) )
+              if attribute.unit? and attribute.unit.length > 0 
+                possibleUnits = _.uniq([
+                  " #{attribute.unit}", 
+                  "#{attribute.unit}", 
+                  "#{attribute.unit.toLowerCase()}", 
+                  " #{attribute.unit.toLowerCase()}",
+                  "#{attribute.unit.replace('°', '')}", 
+                  " #{attribute.unit.replace('°', '')}",
+                  "#{attribute.unit.toLowerCase().replace('°', '')}", 
+                  " #{attribute.unit.toLowerCase().replace('°', '')}",
+                  ])
+                autocompleteFilter = (v) => v is " #{attribute.unit}"
+                m = m.match(possibleUnits, {optional: yes, acFilter: autocompleteFilter})
+            else if attribute.type is types.string
+              m = next.matchComparator('string', setComparator)
+                .or([
+                  ( (m) => m.matchString(wildcard: '{value}', setRefValue) ),
+                  ( (m) => 
+                    if attribute.enum?
+                      m.match(attribute.enum, wildcard: '{value}', setRefValue) 
+                    else M(null) 
+                  )
                 ])
-              autocompleteFilter = (v) => v is " #{attribute.unit}"
-              m = m.match(possibleUnits, {optional: yes, acFilter: autocompleteFilter})
-          else if attribute.type is types.string
-            m = m.matchComparator('string', setComparator)
-              .or([
-                ( (m) => m.matchString(setRefValue) ),
-                ( (m) => 
-                  if attribute.enum? then m.match(attribute.enum, setRefValue) 
-                  else M(null) 
-                )
-              ])
-          if m.hadMatch()
-            matches.push m.getFullMatch()
-            if result?
-              if result.device.id isnt info.device.id or 
-              result.attributeName isnt info.attributeName
-                context?.addError(""""#{input.trim()}" is ambiguous.""")
-            result = info
-        )
+            if m.hadMatch()
+              matches.push m.getFullMatch()
+              if result?
+                if result.device.id isnt info.device.id or 
+                result.attributeName isnt info.attributeName
+                  context?.addError(""""#{input.trim()}" is ambiguous.""")
+              result = info
+          )
       )
 
       if result?
@@ -408,6 +445,13 @@ module.exports = (env) ->
   ####
   class DeviceAttributeWatchdogProvider extends PredicateProvider
 
+    presets: [
+      {
+        name: "attribute of a device not updated"
+        input: "{attribute} of {device} was not updated for {duration} minutes"
+      }
+    ]
+
     constructor: (@framework) ->
 
     # ### parsePredicate()
@@ -421,7 +465,7 @@ module.exports = (env) ->
       match = null
 
       M(input, context)
-      .match(allAttributes, (m, attr) =>
+      .match(allAttributes, wildcard: "{attribute}", type: "select", (m, attr) =>
         info = {
           device: null
           attributeName: null
@@ -436,11 +480,12 @@ module.exports = (env) ->
           unless device.hasAttribute(attr) then return
           attribute = device.attributes[attr]
 
-          m.match(' was not updated for ').matchTimeDuration( (m, {time, unit, timeMs}) =>
-            info.timeMs = timeMs
-            result = info
-            match = m.getFullMatch()
-          )
+          m.match(' was not updated for ', type: "static")
+            .matchTimeDuration(wildcard: "{duration}", type: "text", (m, {time, unit, timeMs}) =>
+              info.timeMs = timeMs
+              result = info
+              match = m.getFullMatch()
+            )
         )
       )
 
@@ -492,13 +537,16 @@ module.exports = (env) ->
   ###
   The Variable Predicate Provider
   ----------------
-  Handles comparision of variables
-
-  * _device_ is present
-  * _device_ is not present
-  * _device_ is absent
+  Handles comparison of variables
   ####
   class VariablePredicateProvider extends PredicateProvider
+
+    presets: [
+        {
+          name: "Variable comparison"
+          input: "{expr} = {expr}"
+        }
+      ]
 
     constructor: (@framework) ->
 
@@ -506,9 +554,9 @@ module.exports = (env) ->
       result = null
 
       M(input, context)
-        .matchNumericExpression( (next, leftTokens) =>
+        .matchAnyExpression( (next, leftTokens) =>
           next.matchComparator('number', (next, comparator) =>
-            next.matchNumericExpression( (next, rightTokens) =>
+            next.matchAnyExpression( (next, rightTokens) =>
               result = {
                 leftTokens
                 rightTokens
@@ -567,20 +615,18 @@ module.exports = (env) ->
       @framework.variableManager.on("variableValueChanged", @changeListener)
       super()
     getValue: -> 
-      if @lastState? then return Promise.resolve(@lastState)
-      else return @_evaluate()
+      return @_evaluate()
     destroy: -> 
       @framework.variableManager.removeListener("variableValueChanged", @changeListener)
       super()
     getType: -> 'state'
 
     _evaluate: ->
-      leftPromise = @framework.variableManager.evaluateNumericExpression(@leftTokens)
-      rightPromise = @framework.variableManager.evaluateNumericExpression(@rightTokens)
+      leftPromise = @framework.variableManager.evaluateExpression(@leftTokens)
+      rightPromise = @framework.variableManager.evaluateExpression(@rightTokens)
       return Promise.all([leftPromise, rightPromise]).then( ([leftValue, rightValue]) =>
         return state = @_compareValues(leftValue, rightValue)
       )
-
 
     # ### _compareValues()
     ###
@@ -599,28 +645,43 @@ module.exports = (env) ->
 
   class VariableUpdatedPredicateProvider extends PredicateProvider
 
+    presets: [
+        {
+          name: "Variable changes"
+          input: "{variable} changes"
+        }
+        {
+          name: "Variable increased/decreased"
+          input: "{variable} increased"
+        }
+      ]
+
     constructor: (@framework) ->
 
     parsePredicate: (input, context) ->
       variableName = null
-      mustChange = null
+      mode = null
 
       setVariableName = (next, name) => variableName = name.substring(1)
-      setMustChange = (next, match) => mustChange = (match.trim() is "changes")
+      setMode = (next, match) => mode = match.trim()
 
       m = M(input, context)
         .matchVariable(setVariableName)
-        .match([" changes", "gets updated"], setMustChange)
+        .match([
+          " changes", " gets updated", 
+          " increased", " decreased", 
+          " is increasing", " is decreasing"
+        ], setMode)
 
       if m.hadMatch()
         match = m.getFullMatch()
         assert typeof variableName is "string"
-        assert typeof mustChange is "boolean"
+        assert mode?
         return {
           token: match
           nextInput: input.substring(match.length)
           predicateHandler: new VariableUpdatedPredicateHandler(
-            @framework, variableName, mustChange
+            @framework, variableName, mode
           )
         }
       else
@@ -628,26 +689,64 @@ module.exports = (env) ->
 
   class VariableUpdatedPredicateHandler extends PredicateHandler
 
-    constructor: (@framework, @variableName, @mustChange) ->
+    constructor: (@framework, @variableName, @mode) ->
 
     setup: ->
       @lastValue = null
+      @state = false
       @changeListener = (variable, value) =>
         unless variable.name is @variableName then return
-        if @mustChange and @lastValue is value then return
+        switch @mode
+          when 'changes'
+            if @lastValue isnt value
+              @emit 'change', "event"
+          when 'gets updated'
+            @emit 'change', "event"
+          when 'increased'
+            if value > @lastValue
+              @emit 'change', "event"
+          when 'decreased'
+            if value < @lastValue
+              @emit 'change', "event"
+          when 'is increasing'
+            if value > @lastValue
+              if not @state
+                @state = true
+                @emit 'change', true
+            else
+              if @state
+                @state = false
+                @emit 'change', false
+          when 'is decreasing'
+            if value < @lastValue
+              if not @state
+                @state = true
+                @emit 'change', true
+            else
+              if @state
+                @state = false
+                @emit 'change', false
         @lastValue = value
-        @emit 'change', "event"
+       
       @framework.variableManager.on("variableValueChanged", @changeListener)
       super()
-    getValue: -> Promise.resolve(false)
+    getValue: -> Promise.resolve(@state)
     destroy: ->
       @framework.variableManager.removeListener("variableValueChanged", @changeListener)
       super()
-    getType: -> 'event'
+    getType: -> 
+      switch @mode
+        when 'is increasing', 'is decreasing' then return 'state'
+        else return 'event'
 
   class ButtonPredicateProvider extends PredicateProvider
 
-    _listener: {}
+    presets: [
+        {
+          name: "Button pressed"
+          input: "{button} is pressed"
+        }
+      ]
 
     constructor: (@framework) ->
 
@@ -671,7 +770,11 @@ module.exports = (env) ->
 
       m = M(input, context)
         .match('the ', optional: true)
-        .match(buttonsWithId, onButtonMatch)
+        .match(
+          buttonsWithId, 
+          wildcard: "{button}"
+          onButtonMatch
+        )
         .match(' button', optional: true)
         .match(' is', optional: true)
         .match(' pressed')
@@ -705,6 +808,42 @@ module.exports = (env) ->
       super()
     getType: -> 'event'
 
+
+  class StartupPredicateProvider extends PredicateProvider
+
+    presets: [
+        {
+          name: "pimatic is starting"
+          input: "pimatic is starting"
+        }
+      ]
+
+    constructor: (@framework) ->
+
+    parsePredicate: (input, context) ->
+      m = M(input, context).match(["pimatic is starting"])
+
+      if m.hadMatch()
+        match = m.getFullMatch()
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          predicateHandler: new StartupPredicateHandler(@framework)
+        }
+      else
+        return null
+
+  class StartupPredicateHandler extends PredicateHandler
+
+    constructor: (@framework) ->
+
+    setup: ->
+      @framework.once "after init", =>
+        @emit 'change', "event"
+      super()
+    getValue: -> Promise.resolve(false)
+    getType: -> 'event'
+
   return exports = {
     PredicateProvider
     PredicateHandler
@@ -716,4 +855,5 @@ module.exports = (env) ->
     ContactPredicateProvider
     ButtonPredicateProvider
     DeviceAttributeWatchdogProvider
+    StartupPredicateProvider
   }
