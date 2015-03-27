@@ -83,7 +83,7 @@ require('source-map-support').install({
 
     try{
       return {
-        url: path.basename(source),
+        url: source,
         map: fs.readFileSync(paths.map, 'utf8')
       };
     }catch(err) {
