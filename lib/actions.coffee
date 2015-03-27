@@ -356,7 +356,8 @@ module.exports = (env) ->
   ###
   The Button Action Provider
   -------------
-  Provides the ability to press the button of a buttonsdevices. Currently it handles the following actions:
+  Provides the ability to press the button of a buttonsdevices.
+  Currently it handles the following actions:
 
   * press [the] _device_
 
@@ -400,6 +401,8 @@ module.exports = (env) ->
 
       match = m.getFullMatch()
       if match?
+        assert matchingDevice?
+        assert matchingButtonId?
         assert typeof match is "string"
         return {
           token: match
@@ -423,7 +426,8 @@ module.exports = (env) ->
         if simulate
           Promise.resolve __("would press button %s of device %s", @buttonId, @device.id)
         else
-          @device.buttonPressed(@buttonId).then( => __("press button %s of device %s", @buttonId, @device.id) )
+          @device.buttonPressed(@buttonId)
+            .then( =>__("press button %s of device %s", @buttonId, @device.id) )
       )
 
     # ### executeAction()
