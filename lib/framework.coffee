@@ -699,6 +699,7 @@ module.exports = (env) ->
           env.actions.SetVariableActionProvider
           env.actions.ShutterActionProvider
           env.actions.StopShutterActionProvider
+          env.actions.ButtonActionProvider
           env.actions.ToggleActionProvider
           env.actions.HeatingThermostatModeActionProvider
           env.actions.HeatingThermostatSetpointActionProvider

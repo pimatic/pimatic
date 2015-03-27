@@ -353,7 +353,7 @@ module.exports = (env) ->
           @device.toggle().then( => __("toggled state of %s", @device.name) )
       )
 
- ###
+  ###
   The Button Action Provider
   -------------
   Provides the ability to press the button of a buttonsdevices. Currently it handles the following actions:
@@ -372,63 +372,64 @@ module.exports = (env) ->
     ###
     parseAction: (input, context) =>
       # The result the function will return:
-      retVar = null
+      matchCount = 0
+      matchingDevice = null
+      matchingButtonId = null
+      end = () => matchCount++
+      onButtonMatch = (m, {device, buttonId}) =>
+        matchingDevice = device
+        matchingButtonId = buttonId
 
-      buttonsDevices = _(@framework.deviceManager.devices).values().filter( 
-        (device) => device.hasAction("buttonPressed")
-      ).value()
+      buttonsWithId = [] 
 
-      device = null
-      match = null
+      for id, d of @framework.deviceManager.devices
+        continue unless d instanceof env.devices.ButtonsDevice
+        for b in d.config.buttons
+          buttonsWithId.push [{device: d, buttonId: b.id}, b.id]
+          buttonsWithId.push [{device: d, buttonId: b.id}, b.text] if b.id isnt b.text
 
-      # Try to match the input string with: press ->
-      m = M(input, context).match(['press '])
-
-      # device name -> on|off
-      m.matchDevice(buttonsDevices, (m, d) ->
-        m.match([' on', ' off'], (m, s) ->
-          # Already had a match with another device?
-          if device? and device.id isnt d.id
-            context?.addError(""""#{input.trim()}" is ambiguous.""")
-            return
-          device = d
-          state = s.trim()
-          match = m.getFullMatch()
+      m = M(input, context)
+        .match('press ')
+        .match('the ', optional: true)
+        .match('button ', optional: true)
+        .match(
+          buttonsWithId, 
+          wildcard: "{button}",
+          onButtonMatch
         )
-      )
 
+      match = m.getFullMatch()
       if match?
-        assert device?
         assert typeof match is "string"
         return {
           token: match
           nextInput: input.substring(match.length)
-          actionHandler: new ButtonActionHandler(device, state)
+          actionHandler: new ButtonActionHandler(matchingDevice, matchingButtonId)
         }
       else
         return null
 
   class ButtonActionHandler extends ActionHandler
 
-    constructor: (@device, @buttonID) ->
+    constructor: (@device, @buttonId) ->
+      assert @device? and @device instanceof env.devices.ButtonsDevice
+      assert @buttonId? and typeof @buttonId is "string"
 
     ###
     Handles the above actions.
     ###
-    _doExectuteAction: (simulate, buttonID) =>
+    _doExecuteAction: (simulate) =>
       return (
         if simulate
-          Promise.resolve __("would press button %s of device %s", buttonID, @device.name)
+          Promise.resolve __("would press button %s of device %s", @buttonId, @device.id)
         else
-          @device.buttonPressed(buttonID).then( => __("pressed button %s", buttonID) )
+          @device.buttonPressed(@buttonId).then( => __("press button %s of device %s", @buttonId, @device.id) )
       )
 
     # ### executeAction()
-    executeAction: (simulate) => @_doExectuteAction(simulate, @buttonID)
+    executeAction: (simulate) => @_doExecuteAction(simulate)
     # ### hasRestoreAction()
-    hasRestoreAction: -> yes
-    # ### executeRestoreAction()
-    executeRestoreAction: (simulate) => @_doExectuteAction(simulate, (not @state))
+    hasRestoreAction: -> no
 
   ###
   The Shutter Action Provider
@@ -957,6 +958,7 @@ module.exports = (env) ->
     ShutterActionProvider
     StopShutterActionProvider
     ToggleActionProvider
+    ButtonActionProvider
     HeatingThermostatModeActionProvider
     HeatingThermostatSetpointActionProvider
     TimerActionProvider
