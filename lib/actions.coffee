@@ -354,6 +354,88 @@ module.exports = (env) ->
       )
 
   ###
+  The Button Action Provider
+  -------------
+  Provides the ability to press the button of a buttonsdevices.
+  Currently it handles the following actions:
+
+  * press [the] _device_
+
+  where _device_ is the name or id of a the button not the buttons device and "the" is optional.
+  ###
+  class ButtonActionProvider extends ActionProvider
+
+    constructor: (@framework) ->
+
+    # ### parseAction()
+    ###
+    Parses the above actions.
+    ###
+    parseAction: (input, context) =>
+      # The result the function will return:
+      matchCount = 0
+      matchingDevice = null
+      matchingButtonId = null
+      end = () => matchCount++
+      onButtonMatch = (m, {device, buttonId}) =>
+        matchingDevice = device
+        matchingButtonId = buttonId
+
+      buttonsWithId = [] 
+
+      for id, d of @framework.deviceManager.devices
+        continue unless d instanceof env.devices.ButtonsDevice
+        for b in d.config.buttons
+          buttonsWithId.push [{device: d, buttonId: b.id}, b.id]
+          buttonsWithId.push [{device: d, buttonId: b.id}, b.text] if b.id isnt b.text
+
+      m = M(input, context)
+        .match('press ')
+        .match('the ', optional: true)
+        .match('button ', optional: true)
+        .match(
+          buttonsWithId, 
+          wildcard: "{button}",
+          onButtonMatch
+        )
+
+      match = m.getFullMatch()
+      if match?
+        assert matchingDevice?
+        assert matchingButtonId?
+        assert typeof match is "string"
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new ButtonActionHandler(matchingDevice, matchingButtonId)
+        }
+      else
+        return null
+
+  class ButtonActionHandler extends ActionHandler
+
+    constructor: (@device, @buttonId) ->
+      assert @device? and @device instanceof env.devices.ButtonsDevice
+      assert @buttonId? and typeof @buttonId is "string"
+
+    ###
+    Handles the above actions.
+    ###
+    _doExecuteAction: (simulate) =>
+      return (
+        if simulate
+          Promise.resolve __("would press button %s of device %s", @buttonId, @device.id)
+        else
+          @device.buttonPressed(@buttonId)
+            .then( =>__("press button %s of device %s", @buttonId, @device.id) )
+      )
+
+    # ### executeAction()
+    executeAction: (simulate) => @_doExecuteAction(simulate)
+    # ### hasRestoreAction()
+    hasRestoreAction: -> no
+
+  ###
   The Shutter Action Provider
   -------------
   Provides the ability to raise or lower a shutter
@@ -880,6 +962,7 @@ module.exports = (env) ->
     ShutterActionProvider
     StopShutterActionProvider
     ToggleActionProvider
+    ButtonActionProvider
     HeatingThermostatModeActionProvider
     HeatingThermostatSetpointActionProvider
     TimerActionProvider
