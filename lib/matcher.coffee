@@ -693,7 +693,7 @@ class Matcher
 
   hadNoMatch: -> not @input?
   hadMatch: -> @input?
-  getFullMatch: -> @prevInput
+  getFullMatch: -> unless @input? then null else @prevInput
   getRemainingInput: -> @input
 
   dump: (info) ->
