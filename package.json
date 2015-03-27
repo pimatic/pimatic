@@ -34,7 +34,7 @@
   "dependencies": {
     "bluebird": "~2.9.9",
     "byline": "~4.2.1",
-    "cassert": "0.1.*",
+    "cassert": "git+https://github.com/sweetpi/cassert.git#master",
     "cjson": "~0.3.0",
     "coffee-script": "1.8.0",
     "colors": "~0.6.2",
