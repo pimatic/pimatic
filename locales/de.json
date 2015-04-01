@@ -217,5 +217,7 @@
 	"closed": "geschlossen",
 	"present": "anwesend",
 	"absend": "abwesend",
-	"Reset": "Reset"
+	"Reset": "Reset",
+	"started %s": "gestartet %s",
+	"press button %s of device %s": "Button %s von Gerät %s gedrückt"
 }
