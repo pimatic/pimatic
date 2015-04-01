@@ -532,7 +532,7 @@ module.exports = (env) ->
         if b.id is buttonId
           @_lastPressedButton = b.id
           @emit 'button', b.id
-          return
+          return Promise.resolve()
       throw new Error("No button with the id #{buttonId} found")
 
   class VariablesDevice extends Device
