@@ -836,6 +836,43 @@ module.exports = (env) ->
         device.attributes.contact.labels[0] = config.xClosedLabel if config.xClosedLabel? 
         device.attributes.contact.labels[1] = config.xOpenedLabel if config.xOpenedLabel?
 
+  class AttributeOptionsConfigExtension extends DeviceConfigExtension
+    configSchema:
+      xAttributeOptions:
+        description: "Extra attribute options for one or more attributes"
+        type: "array"
+        required: no
+        items:
+          type: "object"
+          required: ["name"]
+          properties:
+            name:
+              description: "Name for the corresponding attribute."
+              type: "string"
+            displaySparkline:
+              description: "Show a sparkline behind the numeric attribute"
+              type: "boolean"
+              required: false
+            hidden:
+              description: "Hide the attribute in the gui"
+              type: "boolean"
+              requrire: false
+
+    apply: (config, device) ->
+      if config.xAttributeOptions?
+        device.attributes = _.cloneDeep(device.attributes)
+        for attrOpts in config.xAttributeOptions
+          name = attrOpts.name
+          attr = device.attributes[name]
+          unless attr?
+            env.logger.warn(
+              "Can't apply xAttributeOptions for \"#{name}\". Device #{device.name}
+              has no attribute with this name"
+            )
+            continue
+          attr.displaySparkline = attrOpts.displaySparkline if attrOpts.displaySparkline?
+          attr.hidden = attrOpts.hidden if attrOpts.hidden?
+
   class DeviceManager extends events.EventEmitter
     devices: {}
     deviceClasses: {}
@@ -847,6 +884,7 @@ module.exports = (env) ->
       @deviceConfigExtensions.push(new PresentLabelConfigExtension())
       @deviceConfigExtensions.push(new SwitchLabelConfigExtension())
       @deviceConfigExtensions.push(new ContactLabelConfigExtension())
+      @deviceConfigExtensions.push(new AttributeOptionsConfigExtension())
 
     registerDeviceClass: (className, {configDef, createCallback, prepareConfig}) ->
       assert typeof className is "string", "className must be a string"

@@ -25,7 +25,7 @@ module.exports = {
   VariablesDevice: {
     title: "VariablesDevice config"
     type: "object"
-    extensions: ["xLink"]
+    extensions: ["xLink", "xAttributeOptions"]
     properties:
       variables:
         description: "Variables to display"
@@ -89,6 +89,7 @@ module.exports = {
   DummyHeatingThermostat: {
     title: "DummyHeatingThermostat config options"
     type: "object"
+    extensions: ["xLink"]
     properties:
       comfyTemp:
         description: "The defined comfy temperature"
