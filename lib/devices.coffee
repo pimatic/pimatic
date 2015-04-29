@@ -856,7 +856,7 @@ module.exports = (env) ->
             hidden:
               description: "Hide the attribute in the gui"
               type: "boolean"
-              requrire: false
+              required: false
 
     apply: (config, device) ->
       if config.xAttributeOptions?
