@@ -90,7 +90,15 @@ module.exports = {
     title: "DummyPresenceSensor config"
     type: "object"
     extensions: ["xLink", "xClosedLabel", "xOpenedLabel"]
-    properties: {}
+    properties:
+      autoReset:
+        description: """Reset the state to absent after resetTime"""
+        type: "boolean"
+        default: true
+      resetTime:
+        description: "Time after that the presence value is reseted to absent."
+        type: "integer"
+        default: 10000
   DummyHeatingThermostat: {
     title: "DummyHeatingThermostat config options"
     type: "object"

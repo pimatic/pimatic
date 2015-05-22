@@ -675,7 +675,14 @@ module.exports = (env) ->
         
     changePresenceTo: (presence) ->
       @_setPresence(presence)
+      if @config.autoReset
+        clearTimeout(@_resetPresenceTimeout)
+        @_resetPresenceTimeout = setTimeout(@_resetPresence, @config.resetTime)
       return Promise.resolve()
+
+    _resetPresence = =>
+      @_setPresence(no)
+
 
   class DummyContactSensor extends ContactSensor
     
