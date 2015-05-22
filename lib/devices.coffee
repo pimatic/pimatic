@@ -659,6 +659,24 @@ module.exports = (env) ->
       @_setSetpoint(temperatureSetpoint)
       return Promise.resolve()
 
+  class DummyPresenceSensor extends PresenceSensor
+
+    actions:
+      changePresenceTo:
+        params: 
+          presence: 
+            type: "boolean"
+
+    constructor: (@config, lastState) ->
+      @name = config.name
+      @id = config.id
+      @_contact = lastState?.presence?.value or off
+      super()
+        
+    changePresenceTo: (presence) ->
+      @_setPresence(presence)
+      return Promise.resolve()
+
   class DummyContactSensor extends ContactSensor
     
     actions:
@@ -1086,6 +1104,7 @@ module.exports = (env) ->
         env.devices.DummyShutter
         env.devices.DummyHeatingThermostat
         env.devices.DummyContactSensor
+        env.devices.DummyPresenceSensor
         env.devices.Timer
       ]
       for deviceClass in defaultDevices
@@ -1116,5 +1135,6 @@ module.exports = (env) ->
     DummyShutter
     DummyHeatingThermostat
     DummyContactSensor
+    DummyPresenceSensor
     Timer
   }
