@@ -677,7 +677,7 @@ module.exports = (env) ->
       @_setPresence(presence)
       if @config.autoReset
         clearTimeout(@_resetPresenceTimeout)
-        @_resetPresenceTimeout = setTimeout(@_resetPresence, @config.resetTime)
+        @_resetPresenceTimeout = setTimeout(@_resetPresence, @config.resetTime) if presence
       return Promise.resolve()
 
     _resetPresence = =>
