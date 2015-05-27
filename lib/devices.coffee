@@ -670,17 +670,21 @@ module.exports = (env) ->
     constructor: (@config, lastState) ->
       @name = config.name
       @id = config.id
-      @_contact = lastState?.presence?.value or off
+      @_presence = lastState?.presence?.value or off
+      @_triggerAutoReset()
       super()
         
     changePresenceTo: (presence) ->
       @_setPresence(presence)
-      if @config.autoReset
-        clearTimeout(@_resetPresenceTimeout)
-        @_resetPresenceTimeout = setTimeout(@_resetPresence, @config.resetTime) if presence
+      @_triggerAutoReset()
       return Promise.resolve()
 
-    _resetPresence = =>
+    _triggerAutoReset: ->
+      if @config.autoReset and @_presence
+        clearTimeout(@_resetPresenceTimeout)
+        @_resetPresenceTimeout = setTimeout(@_resetPresence, @config.resetTime) 
+
+    _resetPresence: =>
       @_setPresence(no)
 
 
