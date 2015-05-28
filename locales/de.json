@@ -216,7 +216,7 @@
 	"opened": "offen",
 	"closed": "geschlossen",
 	"present": "anwesend",
-	"absend": "abwesend",
+	"absent": "abwesend",
 	"Reset": "Zurücksetzen",
 	"started %s": "%s gestartet",
 	"press button %s of device %s": "Taste %s von Gerät %s gedrückt"
