@@ -9,6 +9,7 @@ JaySchema = require 'jayschema'
 RJSON = require 'relaxed-json'
 i18n = require 'i18n'
 express = require "express"
+connectTimeout = require 'connect-timeout'
 socketIo = require 'socket.io'
 # Require engine.io from socket.io
 engineIo = require.cache[require.resolve('socket.io')].require('engine.io')
@@ -187,6 +188,17 @@ module.exports = (env) ->
       # Setup express
       # -------------
       @app = express()
+      @app.use(connectTimeout("5min", respond: false))
+      @app.use( (req, res, next) =>
+        req.on("timeout", =>
+          env.logger.warn(
+            "http request handler timeout. Possible unhandled request: 
+            #{req.method} #{req.url}"
+          )
+          env.logger.debug(req.body) if req.body?
+        )
+        next()
+      )
       #@app.use express.logger()
       @app.use express.cookieParser()
       @app.use express.urlencoded(limit: '10mb')
@@ -207,6 +219,7 @@ module.exports = (env) ->
         cookie: { maxAge: null }        
       }
       @app.use express.cookieSession(@app.cookieSessionOptions)
+
       # Setup authentication
       # ----------------------
       # Use http-basicAuth if authentication is not disabled.
@@ -269,7 +282,7 @@ module.exports = (env) ->
             delete req.session.username
             delete req.session.loginToken
             delete req.session.role
-          # return allwys true, so that the next callback below is called and we can awnser with
+          # return always true, so that the next callback below is called and we can awnser with
           # 401 instead of show the auth dialog
           return yes
         )(req, res, next)
@@ -375,6 +388,12 @@ module.exports = (env) ->
 
       @app.all( '/socket.io/socket.io.js', (req, res) => @io.serve(req, res) )
       @app.all( '/socket.io/*', (req, res) => engine.handleRequest(req, res) )
+
+      @app.use( (err, req, res, next) =>
+        env.logger.error("Error on incoming http request: #{err.message}")
+        env.logger.debug(err)
+        res.status(500).send(err.stack)
+      )
 
       onUpgrade = (req, socket, head) =>
         if socketIoPath is req.url.substr(0, socketIoPath.length)

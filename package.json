@@ -38,6 +38,7 @@
     "cjson": "~0.3.0",
     "coffee-script": "1.8.0",
     "colors": "~0.6.2",
+    "connect-timeout": "^1.6.2",
     "convict": "0.4.*",
     "cross-spawn": "^0.2.3",
     "daemon": "1.1.0",
