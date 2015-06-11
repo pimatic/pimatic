@@ -240,7 +240,6 @@ module.exports = (env) ->
       for variable in @variablesConfig
         do (variable) =>
           assert variable.name? and variable.name.length > 0
-          assert(typeof variable.value is 'number' or variable.value.length > 0) if variable.value?
           variable.name = variable.name.substring(1) if variable.name[0] is '$'
           if variable.expression?
             try
