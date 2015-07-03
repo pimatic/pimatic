@@ -21,7 +21,7 @@
   ],
   "version": "0.8.74",
   "license": "GPL-2.0",
-  "homepage": "http://github.com/pimatic/pimatic",
+  "homepage": "http://pimatic.org",
   "repository": {
     "type": "git",
     "url": "git://github.com/pimatic/pimatic.git"
