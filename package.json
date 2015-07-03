@@ -20,6 +20,7 @@
     "LICENSE"
   ],
   "version": "0.8.74",
+  "license": "GPL-2.0",
   "homepage": "http://github.com/pimatic/pimatic",
   "repository": {
     "type": "git",
