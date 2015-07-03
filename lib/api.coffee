@@ -643,6 +643,21 @@ api.pages = {
 
 api.groups = {
   actions:
+    getGroups:
+      description: "List all groups."
+      rest:
+        type: "GET"
+        url: "/api/groups"
+      params: {}
+      result:
+        groups:
+          type: t.array
+          items:
+            group:
+              type: t.object
+      permission:
+        scope: "groups"
+        access: "read"
     removeGroup:
       description: "Remove group"
       rest:
