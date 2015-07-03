@@ -203,7 +203,7 @@ module.exports = (env) ->
       m = M(input, context).match(['set presence of '])
       
       m.matchDevice(presenceDevices, (m, d) ->
-        m.match([' present', '  absent'], (m, s) ->
+        m.match([' present', ' absent'], (m, s) ->
           # Already had a match with another device?
           if device? and device.id isnt d.id
             context?.addError(""""#{input.trim()}" is ambiguous.""")
