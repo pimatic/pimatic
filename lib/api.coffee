@@ -35,7 +35,7 @@ device = {
     actions:
       description: "List of all actions of the device."
       type: t.array
-    config: 
+    config:
       description: "Config of the device, without default values."
       type: t.object
     configDefaults:
@@ -46,10 +46,10 @@ device = {
 page = {
   type: t.object
   properties:
-    id: 
+    id:
       description: "A user chosen string, used to identify the page."
       type: t.string
-    name: 
+    name:
       description: "A user chosen string that should be used to display the page."
       type: t.string
     devices:
@@ -87,7 +87,7 @@ api.framework = {
               type: t.object
             time:
               type: t.date
-            value: 
+            value:
               type: t.any
     messageLogged:
       description: "A new log message was emitted"
@@ -104,7 +104,7 @@ api.framework = {
   actions:
     getGuiSetttings:
       description: "Get the GUI config options"
-      rest: 
+      rest:
         type: "GET"
         url: "/api/config/settings/gui"
       result:
@@ -150,7 +150,7 @@ api.framework = {
           type: t.object
       permission:
         scope: "config"
-        access: "write"        
+        access: "write"
 }
 
 api.devices = {
@@ -166,7 +166,7 @@ api.devices = {
           description: "Array of all devices."
           type: t.array
           toJson: yes
-          items: 
+          items:
             device: device
       permission:
         scope: "devices"
@@ -550,7 +550,7 @@ api.pages = {
           description: "Object with ID and name of the page to create."
           type: t.object
           properties:
-            name: 
+            name:
               description: "A user chosen string that should be used to display the page."
               type: t.string
       result:
@@ -1100,7 +1100,7 @@ messageCriteria = {
         type: t.number
         optional: yes
 }
-  
+
 dataCriteria = {
   criteria:
     type: t.object
@@ -1331,7 +1331,7 @@ api.database = {
       permission:
         scope: "database"
         access: "write"
-    checkDatabase: 
+    checkDatabase:
       description: "Check database and config integrity"
       params: {}
       rest:
