@@ -713,6 +713,7 @@ module.exports = (env) ->
       initActionProvider = =>
         defaultActionProvider = [
           env.actions.SetPresenceActionProvider
+          env.actions.ContactActionProvider
           env.actions.SwitchActionProvider
           env.actions.DimmerActionProvider
           env.actions.LogActionProvider

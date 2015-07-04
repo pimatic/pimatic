@@ -226,7 +226,7 @@ module.exports = (env) ->
         }
       else
         return null
-
+        
   class PresenceActionHandler extends ActionHandler 
 
     constructor: (@device, @state) ->
@@ -251,7 +251,76 @@ module.exports = (env) ->
     # ### executeRestoreAction()
     executeRestoreAction: (simulate) => @_doExectuteAction(simulate, (not @state))
 
+  ###
+  The open/close ActionProvider
+  -------------
+  Provides open/close action, for the DummyContactSensor.
+  ###
+  class ContactActionProvider extends ActionProvider
 
+    constructor: (@framework) ->
+
+    parseAction: (input, context) ->
+      retVar = null
+
+      contactDevices = _(@framework.deviceManager.devices).values().filter( 
+        (device) => device.hasAction("changeContactTo")
+      ).value()
+      
+      device = null
+      state = null
+      match = null
+      
+      m = M(input, context).match(['open ', 'close '], (m, a) =>
+        m.matchDevice(contactDevices, (m, d) ->
+          if device? and device.id isnt d.id
+            context?.addError(""""#{input.trim()}" is ambiguous.""")
+            return
+          device = d
+          state = a.trim()
+          match = m.getFullMatch()
+        )
+      )
+      
+      if match?
+        assert device?
+        assert state in ['open', 'close']
+        assert typeof match is "string"
+        state = (state is 'close')
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new ContactActionHandler(device, state)
+        }
+      else
+        return null
+
+
+  class ContactActionHandler extends ActionHandler 
+
+    constructor: (@device, @state) ->
+
+    ###
+    Handles the above actions.
+    ###
+    _doExectuteAction: (simulate, state) =>
+      return (
+        if simulate
+          if state then Promise.resolve __("would set contact %s to closed", @device.name)
+          else Promise.resolve __("would set contact %s to opened", @device.name)
+        else
+          if state then @device.changeContactTo(state).then( => __("set contact %s to closed", @device.name) )
+          else @device.changeContactTo(state).then( => __("set contact %s to opened", @device.name) )
+      )
+
+    # ### executeAction()
+    executeAction: (simulate) => @_doExectuteAction(simulate, @state)
+    # ### hasRestoreAction()
+    hasRestoreAction: -> yes
+    # ### executeRestoreAction()
+    executeRestoreAction: (simulate) => @_doExectuteAction(simulate, (not @state))
+
+        
   ###
   The Switch Action Provider
   -------------
@@ -1029,6 +1098,8 @@ module.exports = (env) ->
     SetVariableActionProvider
     SetPresenceActionProvider
     PresenceActionHandler
+    ContactActionProvider
+    ContactActionHandler
     SwitchActionProvider
     DimmerActionProvider
     LogActionProvider
