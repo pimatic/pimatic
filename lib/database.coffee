@@ -33,7 +33,7 @@ module.exports = (env) ->
         valueColumnType: "string"
       }
     toDBBool: (v) => if v then 1 else 0
-    fromDBBool: (v) => (v == 1 or v is "1") 
+    fromDBBool: (v) => (v == 1 or v is "1")
     deviceAttributeCache: {}
     typeToAttributeTable: (type) -> @typeMap[type]
   }
@@ -70,12 +70,12 @@ module.exports = (env) ->
           client: @dbSettings.client
           connection: connection
           pool:
-            destroy: (connection) => 
+            destroy: (connection) =>
               connection.close( (err) =>
                 @emit "close", err
               )
         )
-        
+
         @framework.on('destroy', (context) =>
           @framework.removeListener("messageLogged", @messageLoggedListener)
           @framework.removeListener('deviceAttributeChanged', @deviceAttributeChangedListener)
@@ -116,16 +116,16 @@ module.exports = (env) ->
             @knex.raw("PRAGMA journal_mode=WAL;")
           ])
 
-      ).then( =>         
+      ).then( =>
         @_createTables()
-      ).then( =>     
+      ).then( =>
         # Save log-messages
         @framework.on("messageLogged", @messageLoggedListener = ({level, msg, meta}) =>
           @saveMessageEvent(meta.timestamp, level, meta.tags, msg).done()
         )
 
         # Save device attribute changes
-        @framework.on('deviceAttributeChanged', 
+        @framework.on('deviceAttributeChanged',
           @deviceAttributeChangedListener = ({device, attributeName, time, value}) =>
             @saveDeviceAttributeEvent(device.id, attributeName, time, value).done()
         )
@@ -162,7 +162,7 @@ module.exports = (env) ->
               env.logger.debug("Deleting expired message... Done.") if @dbSettings.debug
             )
           )
-          .then( => 
+          .then( =>
             if deleteNo % syncAllNo is 0
               env.logger.debug("Done -> flushing to disk") if @dbSettings.debug
               next = @commitLoggingTransaction().then( =>
@@ -186,9 +186,9 @@ module.exports = (env) ->
     loggingTransaction: ->
       unless @_loggingTransaction?
         @_loggingTransaction = new Promise( (resolve, reject) =>
-          @knex.transaction( (trx) => 
+          @knex.transaction( (trx) =>
             transactionInfo = {
-              trx, 
+              trx,
               count: 0,
               resolve: null
             }
@@ -203,7 +203,7 @@ module.exports = (env) ->
           action = callback(transactionInfo.trx)
           # must return a promise
           transactionInfo.count++
-          actionCompleted = -> 
+          actionCompleted = ->
             transactionInfo.count--
             if transactionInfo.count is 0 and transactionInfo.resolve?
               transactionInfo.resolve()
@@ -219,13 +219,13 @@ module.exports = (env) ->
       if @_loggingTransaction?
         promise = @_loggingTransaction.then( (transactionInfo) =>
           env.logger.debug("Committing") if @dbSettings.debug
-          doCommit = => 
+          doCommit = =>
             return transactionInfo.trx.commit()
           if transactionInfo.count is 0
             return doCommit()
           else
-            return new Promise( (resolve) -> 
-              transactionInfo.resolve = -> 
+            return new Promise( (resolve) ->
+              transactionInfo.resolve = ->
                 doCommit()
                 resolve()
             )
@@ -234,14 +234,14 @@ module.exports = (env) ->
       return promise.catch( (error) =>
         env.logger.error(error.message)
         env.logger.debug(error.stack)
-      )    
+      )
 
     _createTables: ->
       pending = []
 
       createTableIfNotExists = ( (tableName, cb) =>
         @knex.schema.hasTable(tableName).then( (exists) =>
-          if not exists        
+          if not exists
             return @knex.schema.createTable(tableName, cb).then(( =>
               env.logger.info("#{tableName} table created!")
             ), (error) =>
@@ -267,45 +267,42 @@ module.exports = (env) ->
         table.boolean('discrete')
         table.timestamp('lastUpdate').nullable()
         table.string('lastValue').nullable()
+        table.index(['deviceId','attributeName'], 'deviceAttributeDeviceIdAttributeName')
+        table.index(['deviceId'], 'deviceAttributeDeviceId')
+        table.index(['attributeName'], 'deviceAttributeAttributeName')
       )
 
-      # add to old deviceAttribute table 
-      pending.push @knex.schema.table('deviceAttribute', (table) =>
-        table.boolean('discrete').nullable()
-      ).catch( (error) -> 
-        if error.errno is 1 then return #ignore
-        throw error
+      @knex.schema.hasTable('deviceAttribute').then( (tableExists) =>
+        if tableExists
+          pending.push @knex.schema.hasColumn('deviceAttribute', 'discrete').then( (exists) =>
+            @knex.schema.table('deviceAttribute', (table) =>
+              if not exists
+                table.boolean('discrete').nullable()
+                env.logger.info("Added 'discrete' column to the 'deviceAttribute' table.")
+              else
+                env.logger.info("No need to add 'discrete' column to the 'deviceAttribute' table.")
+            )
+          )
+        else
+          #If no table is present we dont need to upate it because it
+          #will be generatet with the missing field
+          env.logger.info("No 'deviceAttribute' table found, so nothing to update")
       )
 
       for tableName, tableInfo of dbMapping.attributeValueTables
         pending.push createTableIfNotExists(tableName, (table) =>
           table.increments('id').primary()
-          table.timestamp('time').index() 
+          table.timestamp('time').index()
           table.integer('deviceAttributeId')
+            .unsigned()
             .references('id')
             .inTable('deviceAttribute')
           table[tableInfo.valueColumnType]('value')
-        ).then( =>
-          return @knex.raw("""
-            CREATE INDEX IF NOT EXISTS
-            deviceAttributeIdTime 
-            ON #{tableName} (deviceAttributeId, time);
-          """)
+        ).then(tableName, (table) =>
+          return table.index(['deviceAttributeId','time'], 'deviceAttributeIdTime')
         )
 
-      return Promise.all(pending).then( =>
-        return @knex.raw("""
-          CREATE INDEX IF NOT EXISTS
-          deviceAttributeDeviceIdAttributeName ON 
-          deviceAttribute(deviceId, attributeName);
-          CREATE INDEX IF NOT EXISTS
-          deviceAttributeDeviceId ON 
-          deviceAttribute(deviceId);
-          CREATE INDEX IF NOT EXISTS
-          deviceAttributeAttributeName ON 
-          deviceAttribute(attributeName);
-        """)
-      )
+      return Promise.all(pending)
 
     getDeviceAttributeLogging: () ->
       return _.clone(@dbSettings.deviceAttributeLogging)
@@ -443,7 +440,7 @@ module.exports = (env) ->
       expireMs = null
       for entry in @dbSettings.messageLogging
         if (
-          (entry.level is "*" or entry.level is level) and 
+          (entry.level is "*" or entry.level is level) and
           (entry.tags.length is 0 or (t for t in entry.tags when t in tags).length > 0)
         )
           expireMs = entry.expireInfo.expireMs
@@ -486,7 +483,7 @@ module.exports = (env) ->
       #assert typeof time is 'number'
       assert Array.isArray(tags)
       assert typeof level is 'string'
-      assert level in _.keys(dbMapping.logLevelToInt) 
+      assert level in _.keys(dbMapping.logLevelToInt)
 
       expireMs = @getMessageLoggingTime(time, level, tags, text)
       if expireMs is 0
@@ -515,7 +512,7 @@ module.exports = (env) ->
             # value expires immediatly
             doInsert = false
           else
-            if info.intervalMs is 0 or timestamp - info.lastInsertTime > info.intervalMs 
+            if info.intervalMs is 0 or timestamp - info.lastInsertTime > info.intervalMs
               doInsert = true
             else
               doInsert = false
@@ -587,7 +584,7 @@ module.exports = (env) ->
           for m in msgs
             m.tags = JSON.parse(m.tags)
             m.level = dbMapping.logIntToLevel[m.level]
-          return msgs 
+          return msgs
         )
       )
 
@@ -595,32 +592,32 @@ module.exports = (env) ->
       return @doInLoggingTransaction( (trx) =>
         query = @knex('message').transacting(trx)
         @_buildMessageWhere(query, criteria)
-        return Promise.resolve((query).del()) 
+        return Promise.resolve((query).del())
       )
 
     _buildQueryDeviceAttributeEvents: (queryCriteria = {}) ->
       {
-        deviceId, 
-        attributeName, 
-        after, 
-        before, 
-        order, 
-        orderDirection, 
-        offset, 
+        deviceId,
+        attributeName,
+        after,
+        before,
+        order,
+        orderDirection,
+        offset,
         limit
-      } = queryCriteria 
+      } = queryCriteria
       unless order?
         order = "time"
         orderDirection = "desc"
 
       buildQueryForType = (tableName, query) =>
         query.select(
-          'deviceAttribute.deviceId AS deviceId', 
-          'deviceAttribute.attributeName AS attributeName', 
+          'deviceAttribute.deviceId AS deviceId',
+          'deviceAttribute.attributeName AS attributeName',
           'deviceAttribute.type AS type',
-          'time AS time', 
+          'time AS time',
           'value AS value'
-        ).from(tableName).join('deviceAttribute', 
+        ).from(tableName).join('deviceAttribute',
           "#{tableName}.deviceAttributeId", '=', 'deviceAttribute.id',
         )
         if deviceId?
@@ -682,8 +679,8 @@ module.exports = (env) ->
       @doInLoggingTransaction( (trx) =>
         return @knex('deviceAttribute').transacting(trx).select(
           'id',
-          'deviceId', 
-          'attributeName', 
+          'deviceId',
+          'attributeName',
           'type'
         )
       )
@@ -692,7 +689,7 @@ module.exports = (env) ->
       @doInLoggingTransaction( (trx) =>
         return @knex('deviceAttribute').transacting(trx).select(
           'id',
-          'deviceId', 
+          'deviceId',
           'attributeName',
           'type',
           'discrete'
@@ -725,13 +722,13 @@ module.exports = (env) ->
           )
         return Promise
           .reduce(queries, (all, result) => all.concat result)
-          .each( (entry) => 
-            entry.count = entry['count("id")'] 
+          .each( (entry) =>
+            entry.count = entry['count("id")']
             entry['count("id")'] = undefined
           )
       )
 
-    runVacuum: -> 
+    runVacuum: ->
       @commitLoggingTransaction().then( =>
         return @knex.raw('VACUUM;')
       )
@@ -741,7 +738,7 @@ module.exports = (env) ->
       return @doInLoggingTransaction( (trx) =>
         return @knex('deviceAttribute').transacting(trx).select(
           'id'
-          'deviceId', 
+          'deviceId',
           'attributeName',
           'type',
           'discrete'
@@ -818,7 +815,7 @@ module.exports = (env) ->
               device = @framework.deviceManager.getDeviceById(result.deviceId)
               unless device? then throw new Error("#{result.deviceId} not found.")
               attribute = device.attributes[result.attributeName]
-              unless attribute? 
+              unless attribute?
                 new Error("#{result.deviceId} has no attribute #{result.attributeName}.")
               info = dbMapping.deviceAttributeCache[fullQualifier]
               info.discrete = attribute.discrete if info?
@@ -833,11 +830,11 @@ module.exports = (env) ->
 
     querySingleDeviceAttributeEvents: (deviceId, attributeName, queryCriteria = {}) ->
       {
-        after, 
-        before, 
-        order, 
-        orderDirection, 
-        offset, 
+        after,
+        before,
+        order,
+        orderDirection,
+        offset,
         limit,
         groupByTime
       } = queryCriteria
@@ -886,7 +883,7 @@ module.exports = (env) ->
       fullQualifier = "#{deviceId}.#{attributeName}"
       info = dbMapping.deviceAttributeCache[fullQualifier]
       return (
-        if info? 
+        if info?
           unless info.expireMs?
             expireInfo = @getDeviceAttributeLoggingTime(
               deviceId, attributeName, info.type, info.discrete
@@ -975,7 +972,7 @@ module.exports = (env) ->
             WHERE deviceId = '#{deviceId}' and attributeName = '#{attributeName}'
           );
           """
-        ).transacting(trx).then( => 
+        ).transacting(trx).then( =>
           @knex('deviceAttribute').transacting(trx).select('id').where(
             deviceId: deviceId
             attributeName: attributeName
