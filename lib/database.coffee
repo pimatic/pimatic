@@ -272,23 +272,6 @@ module.exports = (env) ->
         table.index(['attributeName'], 'deviceAttributeAttributeName')
       )
 
-      @knex.schema.hasTable('deviceAttribute').then( (tableExists) =>
-        if tableExists
-          pending.push @knex.schema.hasColumn('deviceAttribute', 'discrete').then( (exists) =>
-            @knex.schema.table('deviceAttribute', (table) =>
-              if not exists
-                table.boolean('discrete').nullable()
-                env.logger.info("Added 'discrete' column to the 'deviceAttribute' table.")
-              else
-                env.logger.info("No need to add 'discrete' column to the 'deviceAttribute' table.")
-            )
-          )
-        else
-          #If no table is present we dont need to upate it because it
-          #will be generatet with the missing field
-          env.logger.info("No 'deviceAttribute' table found, so nothing to update")
-      )
-
       for tableName, tableInfo of dbMapping.attributeValueTables
         pending.push createTableIfNotExists(tableName, (table) =>
           table.increments('id').primary()
