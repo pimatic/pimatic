@@ -197,6 +197,16 @@ module.exports = (env) ->
             decimals = 0
           multiplier = Math.pow(10, decimals)
           return Math.round(value * multiplier) / multiplier
+      roundToNearest:
+        args:
+          number:
+            type: "number"
+          steps:
+            type: "number"
+        exec: (number, steps) ->
+          steps = String(steps)
+          decimals = (if steps % 1 != 0 then steps.substr(steps.indexOf(".") + 1).length else 0)
+          return (Math.round(number / steps) * steps).toFixed(decimals)
       date:
         args:
           format:
