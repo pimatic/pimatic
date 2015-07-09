@@ -70,10 +70,17 @@ module.exports = (env) ->
           client: @dbSettings.client
           connection: connection
           pool:
+            min: 1
+            max: 1
             destroy: (connection) =>
+              if @dbSettings.client is "sqlite3"
               connection.close( (err) =>
                 @emit "close", err
               )
+              else
+                connection.end( (err) =>
+                  @emit "close", err
+                )
         )
 
         @framework.on('destroy', (context) =>
