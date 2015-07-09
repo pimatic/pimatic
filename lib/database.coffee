@@ -74,9 +74,9 @@ module.exports = (env) ->
             max: 1
             destroy: (connection) =>
               if @dbSettings.client is "sqlite3"
-              connection.close( (err) =>
-                @emit "close", err
-              )
+                connection.close( (err) =>
+                  @emit "close", err
+                )
               else
                 connection.end( (err) =>
                   @emit "close", err
@@ -267,7 +267,7 @@ module.exports = (env) ->
         table.text('text')
       )
       pending.push createTableIfNotExists('deviceAttribute', (table) =>
-        table.increments('id').primary()
+        table.increments('id').primary().unique()
         table.string('deviceId')
         table.string('attributeName')
         table.string('type')
@@ -949,19 +949,37 @@ module.exports = (env) ->
         already exists.
       ###
       return @doInLoggingTransaction( (trx) =>
-        return @knex.raw("""
-          INSERT INTO deviceAttribute(deviceId, attributeName, type, discrete)
-          SELECT
-            '#{deviceId}' AS deviceId,
-            '#{attributeName}' AS attributeName,
-            '#{info.type}' as type,
-            #{dbMapping.toDBBool(info.discrete)} as discrete
-          WHERE 0 = (
-            SELECT COUNT(*)
-            FROM deviceAttribute
-            WHERE deviceId = '#{deviceId}' and attributeName = '#{attributeName}'
-          );
-          """
+        if @dbSettings.client is "sqlite3"
+          statement = """
+            INSERT INTO deviceAttribute(deviceId, attributeName, type, discrete)
+            SELECT
+              '#{deviceId}' AS deviceId,
+              '#{attributeName}' AS attributeName,
+              '#{info.type}' as type,
+              #{dbMapping.toDBBool(info.discrete)} as discrete
+            WHERE 0 = (
+              SELECT COUNT(*)
+              FROM deviceAttribute
+              WHERE deviceId = '#{deviceId}' and attributeName = '#{attributeName}'
+            );
+            """
+        else
+          statement = """
+            INSERT INTO deviceAttribute(deviceId, attributeName, type, discrete)
+            SELECT * FROM
+              ( SELECT '#{deviceId}' AS deviceId,
+              '#{attributeName}' AS attributeName,
+              '#{info.type}' as type,
+              #{dbMapping.toDBBool(info.discrete)} as discrete
+              ) as tmp
+            WHERE NOT EXISTS (
+              SELECT deviceId, attributeName
+              FROM deviceAttribute
+              WHERE deviceId = '#{deviceId}' and attributeName = '#{attributeName}'
+            ) LIMIT 1;
+            """
+        return @knex.raw(
+          statement
         ).transacting(trx).then( =>
           @knex('deviceAttribute').transacting(trx).select('id').where(
             deviceId: deviceId
