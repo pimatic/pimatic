@@ -1348,6 +1348,7 @@ module.exports = (env) ->
       m = M(input, context)
         .match(['play next', 'next '])
         .match(" song ", optional: yes)
+        .match("on ", optional: yes)
         .matchDevice(avPlayers, onDeviceMatch)
 
       if match?
@@ -1399,6 +1400,7 @@ module.exports = (env) ->
       m = M(input, context)
         .match(['play previous', 'previous '])
         .match(" song ", optional: yes)
+        .match("on ", optional: yes)
         .matchDevice(avPlayers, onDeviceMatch)
 
       if match?
