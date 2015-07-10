@@ -725,6 +725,12 @@ module.exports = (env) ->
           env.actions.HeatingThermostatModeActionProvider
           env.actions.HeatingThermostatSetpointActionProvider
           env.actions.TimerActionProvider
+          env.actions.AVPlayerPauseActionProvider
+          env.actions.AVPlayerStopActionProvider
+          env.actions.AVPlayerPlayActionProvider
+          env.actions.AVPlayerVolumeActionProvider
+          env.actions.AVPlayerNextActionProvider
+          env.actions.AVPlayerPrevActionProvider
         ]
         for actProv in defaultActionProvider
           actProvInst = new actProv(this)

@@ -502,6 +502,68 @@ module.exports = (env) ->
     changeTemperatureTo: (temperatureSetpoint) ->
       throw new Error("changeTemperatureTo must be implemented by a subclass")
 
+  class AVPlayer extends Device
+
+    actions: 
+      play:
+        description: "starts playing"
+      pause:
+        description: "pauses playing"
+      stop:
+        description: "stops playing"
+      next:
+        description: "play next song"
+      previous:
+        description: "play previous song"
+      volume:
+        description: "Change volume of player"
+
+    attributes:
+      currentArtist:
+        description: "the current playing track artist"
+        type: "string"   
+      currentTitle:
+        description: "the current playing track title"
+        type: "string"
+      state:
+        description: "the current state of the player"
+        type: "string"
+      volume:
+        description: "the volume of the player"
+        type: "string"
+
+    _state: null
+    _currentTitle: null
+    _currentArtist: null
+    _volume: null
+
+    template: "musicplayer"
+
+    _setState: (state) ->
+      if @_state isnt state
+        @_state = state
+        @emit 'state', state
+
+    _setCurrentTitle: (title) ->
+      if @_currentTitle isnt title
+        @_currentTitle = title
+        @emit 'currentTitle', title
+
+    _setCurrentArtist: (artist) ->
+      if @_currentArtist isnt artist
+        @_currentArtist = artist
+        @emit 'currentArtist', artist
+
+    _setVolume: (volume) ->
+      if @_volume isnt volume
+        @_volume = volume
+        @emit 'volume', volume
+
+    getState: () -> Promise.resolve @_state
+    getCurrentTitle: () -> Promise.resolve(@_currentTitle)
+    getCurrentArtist: () -> Promise.resolve(@_currentTitle)
+    getVolume: ()  -> Promise.resolve(@_volume)
+
   class ButtonsDevice extends Device
 
     attributes:
@@ -1141,6 +1203,7 @@ module.exports = (env) ->
     HeatingThermostat
     ButtonsDevice
     VariablesDevice
+    AVPlayer
     DummySwitch
     DummyDimmer
     DummyShutter
