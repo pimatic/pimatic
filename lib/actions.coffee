@@ -179,8 +179,153 @@ module.exports = (env) ->
           return Promise.resolve("set $#{@variableName} to #{value}")
         )
 
+        
+  ###
+  The SetPresence ActionProvider
+  -------------
+  Provides set presence action, so that rules can use `set presence of <device> to present|absent` 
+  in the actions part.
+  ###
+  class SetPresenceActionProvider extends ActionProvider
+
+    constructor: (@framework) ->
+
+    parseAction: (input, context) ->
+      retVar = null
+
+      presenceDevices = _(@framework.deviceManager.devices).values().filter( 
+        (device) => device.hasAction("changePresenceTo")
+      ).value()
+      
+      device = null
+      state = null
+      match = null
+      
+      m = M(input, context).match(['set presence of '])
+      
+      m.matchDevice(presenceDevices, (m, d) ->
+        m.match([' present', ' absent'], (m, s) ->
+          # Already had a match with another device?
+          if device? and device.id isnt d.id
+            context?.addError(""""#{input.trim()}" is ambiguous.""")
+            return
+          device = d
+          state = s.trim()
+          match = m.getFullMatch()
+        )
+      )
+      
+      if match?
+        assert device?
+        assert state in ['present', 'absent']
+        assert typeof match is "string"
+        state = (state is 'present')
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new PresenceActionHandler(device, state)
+        }
+      else
+        return null
+        
+  class PresenceActionHandler extends ActionHandler 
+
+    constructor: (@device, @state) ->
+
+    ###
+    Handles the above actions.
+    ###
+    _doExectuteAction: (simulate, state) =>
+      return (
+        if simulate
+          if state then Promise.resolve __("would set presence of %s to present", @device.name)
+          else Promise.resolve __("would set presence of %s to absent", @device.name)
+        else
+          if state then @device.changePresenceTo(state).then( => 
+            __("set presence of %s to present", @device.name) )
+          else @device.changePresenceTo(state).then( => 
+            __("set presence %s to absent", @device.name) )
+      )
+
+    # ### executeAction()
+    executeAction: (simulate) => @_doExectuteAction(simulate, @state)
+    # ### hasRestoreAction()
+    hasRestoreAction: -> yes
+    # ### executeRestoreAction()
+    executeRestoreAction: (simulate) => @_doExectuteAction(simulate, (not @state))
+
+  ###
+  The open/close ActionProvider
+  -------------
+  Provides open/close action, for the DummyContactSensor.
+  ###
+  class ContactActionProvider extends ActionProvider
+
+    constructor: (@framework) ->
+
+    parseAction: (input, context) ->
+      retVar = null
+
+      contactDevices = _(@framework.deviceManager.devices).values().filter( 
+        (device) => device.hasAction("changeContactTo")
+      ).value()
+      
+      device = null
+      state = null
+      match = null
+      
+      m = M(input, context).match(['open ', 'close '], (m, a) =>
+        m.matchDevice(contactDevices, (m, d) ->
+          if device? and device.id isnt d.id
+            context?.addError(""""#{input.trim()}" is ambiguous.""")
+            return
+          device = d
+          state = a.trim()
+          match = m.getFullMatch()
+        )
+      )
+      
+      if match?
+        assert device?
+        assert state in ['open', 'close']
+        assert typeof match is "string"
+        state = (state is 'close')
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new ContactActionHandler(device, state)
+        }
+      else
+        return null
 
 
+  class ContactActionHandler extends ActionHandler 
+
+    constructor: (@device, @state) ->
+
+    ###
+    Handles the above actions.
+    ###
+    _doExectuteAction: (simulate, state) =>
+      return (
+        if simulate
+          if state then Promise.resolve __("would set contact %s to closed", @device.name)
+          else Promise.resolve __("would set contact %s to opened", @device.name)
+        else
+          if state then @device.changeContactTo(state).then( =>
+            __("set contact %s to closed", @device.name) )
+          else @device.changeContactTo(state).then( =>
+            __("set contact %s to opened", @device.name) )
+      )
+
+    # ### executeAction()
+    executeAction: (simulate) => @_doExectuteAction(simulate, @state)
+    # ### hasRestoreAction()
+    hasRestoreAction: -> yes
+    # ### executeRestoreAction()
+    executeRestoreAction: (simulate) => @_doExectuteAction(simulate, (not @state))
+
+        
   ###
   The Switch Action Provider
   -------------
@@ -956,6 +1101,10 @@ module.exports = (env) ->
     ActionHandler
     ActionProvider
     SetVariableActionProvider
+    SetPresenceActionProvider
+    PresenceActionHandler
+    ContactActionProvider
+    ContactActionHandler
     SwitchActionProvider
     DimmerActionProvider
     LogActionProvider

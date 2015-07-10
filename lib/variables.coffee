@@ -10,7 +10,7 @@ _ = require 'lodash'
 S = require 'string'
 M = require './matcher'
 humanFormat = require 'human-format'
-
+isNumber = (n) -> "#{n}".match(/^-?[0-9]+\.?[0-9]*$/)?
 varsAst = require './variables-ast-builder'
 
 module.exports = (env) ->
@@ -31,8 +31,9 @@ module.exports = (env) ->
 
     getCurrentValue: -> @value
     _setValue: (value) ->
-      numValue = parseFloat(value)
-      value = numValue unless isNaN(numValue)
+      if isNumber value
+        numValue = parseFloat(value)
+        value = numValue unless isNaN(numValue)
       if value is @value then return false
       @value = value
       @_vars._emitVariableValueChanged(this, @value)
