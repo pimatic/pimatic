@@ -183,7 +183,8 @@ module.exports = (env) ->
   ###
   The SetPresence ActionProvider
   -------------
-  Provides set presence action, so that rules can use `set presence of <device> to present|absent` in the actions part.
+  Provides set presence action, so that rules can use `set presence of <device> to present|absent` 
+  in the actions part.
   ###
   class SetPresenceActionProvider extends ActionProvider
 
@@ -240,8 +241,10 @@ module.exports = (env) ->
           if state then Promise.resolve __("would set presence of %s to present", @device.name)
           else Promise.resolve __("would set presence of %s to absent", @device.name)
         else
-          if state then @device.changePresenceTo(state).then( => __("set presence of %s to present", @device.name) )
-          else @device.changePresenceTo(state).then( => __("set presence %s to absent", @device.name) )
+          if state then @device.changePresenceTo(state).then( => 
+            __("set presence of %s to present", @device.name) )
+          else @device.changePresenceTo(state).then( => 
+            __("set presence %s to absent", @device.name) )
       )
 
     # ### executeAction()
@@ -309,8 +312,10 @@ module.exports = (env) ->
           if state then Promise.resolve __("would set contact %s to closed", @device.name)
           else Promise.resolve __("would set contact %s to opened", @device.name)
         else
-          if state then @device.changeContactTo(state).then( => __("set contact %s to closed", @device.name) )
-          else @device.changeContactTo(state).then( => __("set contact %s to opened", @device.name) )
+          if state then @device.changeContactTo(state).then( =>
+            __("set contact %s to closed", @device.name) )
+          else @device.changeContactTo(state).then( =>
+            __("set contact %s to opened", @device.name) )
       )
 
     # ### executeAction()
