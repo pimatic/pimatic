@@ -208,6 +208,25 @@ module.exports = (env) ->
           steps = String(steps)
           decimals = (if steps % 1 != 0 then steps.substr(steps.indexOf(".") + 1).length else 0)
           return (Math.round(number / steps) * steps).toFixed(decimals)
+      timeFormat:
+        args:
+          number:
+            type: "number"
+        exec: (number) ->
+          hours = parseInt(number)
+          decimalMinutes = (number-hours) * 60
+          minutes = Math.floor(decimalMinutes)
+          seconds = Math.round((decimalMinutes % 1) * 60)
+          if seconds == 60
+            minutes += 1
+            seconds = "0"
+          if minutes == 60
+            hours += 1
+            minutes = "0"
+          hours = "0" + hours if hours < 10
+          minutes = "0" + minutes if minutes < 10
+          seconds = "0" + seconds if seconds < 10
+          return "#{hours}:#{minutes}:#{seconds}"
       date:
         args:
           format:
