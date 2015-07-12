@@ -227,6 +227,16 @@ module.exports = (env) ->
           minutes = "0" + minutes if minutes < 10
           seconds = "0" + seconds if seconds < 10
           return "#{hours}:#{minutes}:#{seconds}"
+      timeDecimal:
+        args:
+          time:
+            type: "string"
+        exec: (time) ->
+          hours = time.substr(0, time.indexOf(':'))
+          minutes = time.substr(hours.length + 1, 2)
+          seconds = time.substr(hours.length + minutes.length + 2, 2)
+
+          return parseInt(hours) + parseFloat(minutes / 60) + parseFloat(seconds / 3600)
       date:
         args:
           format:
