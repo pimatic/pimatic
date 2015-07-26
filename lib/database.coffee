@@ -449,7 +449,14 @@ module.exports = (env) ->
               if @dbSettings.client is "sqlite3"
                 del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
               else
-                del.whereRaw('time < FROM_UNIXTIME(?)', [@_convertTimeForDatabase(parseFloat((new Date()).getTime() - entry.expireInfo.expireMs))])
+                del.whereRaw(
+                  'time < FROM_UNIXTIME(?)',
+                  [
+                    @_convertTimeForDatabase(
+                      parseFloat((new Date()).getTime() - entry.expireInfo.expireMs)
+                    )
+                  ]
+                )
               del.whereRaw(subqueryRaw)
               query = del.del()
               env.logger.debug("query:", query.toString()) if @dbSettings.debug
@@ -466,7 +473,14 @@ module.exports = (env) ->
           if @dbSettings.client is "sqlite3"
             del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
           else
-            del.whereRaw('time < FROM_UNIXTIME(?)', [@_convertTimeForDatabase(parseFloat((new Date()).getTime() - entry.expireInfo.expireMs))])
+            del.whereRaw(
+              'time < FROM_UNIXTIME(?)',
+              [
+                @_convertTimeForDatabase(
+                  parseFloat((new Date()).getTime() - entry.expireInfo.expireMs)
+                )
+              ]
+            )
           del.whereRaw(entry.expireInfo.whereSQL)
           query = del.del()
           env.logger.debug("query:", query.toString()) if @dbSettings.debug
@@ -862,18 +876,27 @@ module.exports = (env) ->
             if @dbSettings.client is "sqlite3"
               query.select(@knex.raw('MIN(time) AS time'), @knex.raw('AVG(value) AS value'))
             else
-              query.select(@knex.raw('MIN(UNIX_TIMESTAMP(time) * 1000) AS time'), @knex.raw('AVG(value) AS value'))
+              query.select(
+                @knex.raw('MIN(UNIX_TIMESTAMP(time) * 1000) AS time'),
+                @knex.raw('AVG(value) AS value')
+              )
           query.where('deviceAttributeId', info.id)
           if after?
             if @dbSettings.client is "sqlite3"
               query.where('time', '>=', @_convertTimeForDatabase(parseFloat(after)))
             else
-              query.whereRaw('time >= FROM_UNIXTIME(?)', [@_convertTimeForDatabase(parseFloat(after))])
+              query.whereRaw(
+                'time >= FROM_UNIXTIME(?)',
+                [@_convertTimeForDatabase(parseFloat(after))]
+              )
           if before?
             if @dbSettings.client is "sqlite3"
               query.where('time', '<=', @_convertTimeForDatabase(parseFloat(before)))
             else
-              query.whereRaw('time <= FROM_UNIXTIME(?)', [@_convertTimeForDatabase(parseFloat(before))])
+              query.whereRaw(
+                'time <= FROM_UNIXTIME(?)',
+                [@_convertTimeForDatabase(parseFloat(before))]
+              )
           if order?
             query.orderBy(order, orderDirection)
           if groupByTime?
