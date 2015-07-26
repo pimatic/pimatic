@@ -979,6 +979,7 @@ module.exports = (env) ->
       )
 
     _convertTimeForDatabase: (timestamp) ->
+      #For mysql we need a timestamp in seconds
       if @dbSettings.client is "sqlite3"
         return timestamp
       else
