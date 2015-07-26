@@ -879,9 +879,9 @@ module.exports = (env) ->
           if groupByTime?
             groupByTime = parseFloat(groupByTime)
             if @dbSettings.client is "sqlite3"
-                query.groupByRaw("time/#{groupByTime}")
+              query.groupByRaw("time/#{groupByTime}")
             else
-                query.groupByRaw("UNIX_TIMESTAMP(time)/#{groupByTime}")
+              query.groupByRaw("UNIX_TIMESTAMP(time)/#{groupByTime}")
           if offset? then query.offset(offset)
           if limit? then query.limit(limit)
           env.logger.debug("query:", query.toString()) if @dbSettings.debug
