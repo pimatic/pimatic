@@ -438,8 +438,6 @@ module.exports = (env) ->
         env.logger.error(error.message)
         env.logger.debug(error)
 
-
-
       checkPermissions = (socket, action) =>
         if auth.enabled is no then return true
         hasPermission = no
@@ -460,6 +458,7 @@ module.exports = (env) ->
 
       @io.on('connection', (socket) =>
         declapi.createSocketIoApi(socket, actionsWithBindings, onError, checkPermissions)
+
         if auth.enabled is yes
           username = socket.username
           role = @userManager.getUserByUsername(username).role
@@ -850,31 +849,6 @@ module.exports = (env) ->
           message = error.message
           env.logger.error error.message
           env.logger.debug error.stack
-
-      @app.get("/api/device/:deviceId/:actionName", (req, res, next) =>
-        if auth.enabled is yes
-          username = req.session.username
-          hasPermission = @userManager.hasPermissionBoolean(
-            username, 'controlDevices'
-          )
-        else
-          hasPermission = true
-          username = "nobody"
-
-        if hasPermission
-          deviceId = req.params.deviceId
-          actionName = req.params.actionName
-          device = @deviceManager.getDeviceById(deviceId)
-          if device?
-            if device.hasAction(actionName)
-              action = device.actions[actionName]
-              declapi.callActionFromReqAndRespond(actionName, action, device, req, res)
-            else
-              declapi.sendErrorResponse(res, 'device hasn\'t that action')
-          else declapi.sendErrorResponse(res, 'device not found')
-        else
-          res.send(403)
-      )
 
       @app.get("/api", (req, res, nest) => res.send(declapi.stringifyApi(env.api.all)) )
       @app.get("/api/decl-api-client.js", declapi.serveClient)

@@ -267,6 +267,21 @@ api.devices = {
       permission:
         scope: "devices"
         access: "write"
+    callDeviceAction:
+      description: "Calls the action of the given device"
+      rest:
+        type: "GET"
+        url: "/api/device/:deviceId/:actionName"
+        handler: "callDeviceActionReq"
+      socket:
+        handler: "callDeviceActionSocket"
+      params:
+        deviceId:
+          type: t.string
+        actionName:
+          type: t.string
+      permission:
+        action: 'controlDevices'
 }
 
 api.rules = {

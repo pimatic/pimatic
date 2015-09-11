@@ -1161,6 +1161,31 @@ module.exports = (env) ->
       @devicesConfig.push deviceConfig
       @framework.saveConfig()
 
+
+    callDeviceActionReq: (params, req) =>
+      deviceId = req.params.deviceId
+      actionName = req.params.actionName
+      device = @getDeviceById(deviceId)
+      unless device?
+        throw new Error('device not found')
+      unless device.hasAction(actionName)
+        throw new Error('device hasn\'t that action')
+      action = device.actions[actionName]
+      return declapi.callActionFromReq(actionName, action, device, req)
+
+    callDeviceActionSocket: (params, call) =>
+      deviceId = call.params.deviceId
+      actionName = call.params.actionName
+      device = @getDeviceById(deviceId)
+      unless device?
+        throw new Error('device not found')
+      unless device.hasAction(actionName)
+        throw new Error('device hasn\'t that action')
+      action = device.actions[actionName]
+      call = _.clone(call)
+      call.action = actionName
+      return declapi.callActionFromSocket(device, action, call)
+
     isDeviceInConfig: (id) ->
       assert id?
       for d in @devicesConfig
