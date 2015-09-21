@@ -286,6 +286,20 @@ describe "Matcher", ->
         finish()
       )
 
+    it "should handle new line \"some \\n text", (finish) ->
+      M('"some \\n text"').matchStringWithVars(varsAndFuns, (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['"some \n text"'])
+        finish()
+      )
+
+    it "should not handle as new line \"some \\\\n text", (finish) ->
+      M('"some \\\\n text"').matchStringWithVars(varsAndFuns, (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['"some \\n text"'])
+        finish()
+      )
+
 
 
   describe '#matchString()', ->
