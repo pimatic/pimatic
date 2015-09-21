@@ -207,7 +207,7 @@ module.exports = (env) ->
         exec: (number, steps) ->
           steps = String(steps)
           decimals = (if steps % 1 != 0 then steps.substr(steps.indexOf(".") + 1).length else 0)
-          return (Math.round(number / steps) * steps).toFixed(decimals)
+          return Number((Math.round(number / steps) * steps).toFixed(decimals))
       timeFormat:
         args:
           number:
