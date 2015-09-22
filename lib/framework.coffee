@@ -19,7 +19,7 @@ S = require 'string'
 _ = require 'lodash'
 declapi = require 'decl-api'
 util = require 'util'
-cjson = require 'cjson'
+jsonlint = require 'jsonlint'
 events = require 'events'
 
 module.exports = (env) ->
@@ -95,7 +95,7 @@ module.exports = (env) ->
     _loadConfig: () ->
       schema = require("../config-schema")
       contents = fs.readFileSync(@configFile).toString()
-      instance = cjson.parse(RJSON.transform(contents))
+      instance = jsonlint.parse(RJSON.transform(contents))
 
       # some legacy support for old single user
       auth = instance.settings?.authentication
