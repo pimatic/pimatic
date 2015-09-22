@@ -686,7 +686,8 @@ module.exports = (env) ->
     parseAction: (input, context) =>
 
       shutterDevices = _(@framework.deviceManager.devices).values().filter( 
-        (device) => device.hasAction("stop") 
+        # only match Shutter devices and not media players
+        (device) => device.hasAction("stop") and device.hasAction("moveUp")
       ).value()
 
       device = null
@@ -1159,7 +1160,8 @@ module.exports = (env) ->
       retVar = null
 
       avPlayers = _(@framework.deviceManager.devices).values().filter( 
-        (device) => device.hasAction("stop") 
+        # only match media players and not shutters
+        (device) => device.hasAction("stop") and device.hasAction("play")
       ).value()
 
       if avPlayers.length is 0 then return

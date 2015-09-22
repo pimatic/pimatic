@@ -215,5 +215,6 @@
 	"started %s": "started %s",
 	"Reset": "Reset",
 	"opened": "opened",
-	"closed": "closed"
+	"closed": "closed",
+	"press button %s of device %s": "press button %s of device %s"
 }
