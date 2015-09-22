@@ -513,6 +513,10 @@ module.exports = (env) ->
       assert typeof attributeName is 'string' and attributeName.length > 0
       @emit 'device-attribute-save', {deviceId, attributeName, time, value}
 
+      if value isnt value # just true for Number.NaN
+        # Don't insert NaN values into the database
+        return Promise.resolve()
+
       return @_getDeviceAttributeInfo(deviceId, attributeName).then( (info) =>
         return @doInLoggingTransaction( (trx) =>
           # insert into value table
