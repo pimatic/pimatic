@@ -568,7 +568,7 @@ module.exports = (env) ->
         process.exit 0
       )
 
-    getGuiSetttings: () -> {
+    getGuiSettings: () -> {
       config: @config.settings.gui
       defaults: @config.settings.gui.__proto__
     }

@@ -102,7 +102,7 @@ api.framework = {
             meta:
               type: t.object
   actions:
-    getGuiSetttings:
+    getGuiSettings:
       description: "Get the GUI config options"
       rest:
         type: "GET"
