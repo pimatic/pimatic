@@ -454,7 +454,7 @@ class Matcher
         # strPart is string till first var or ending quote
         strPart = strPart.replace(/(^|[^\\]|(\\\\)+)(\\n)/g, '$1$2\n') # make \n to new line
         strPart = strPart.replace(/(^|[^\\]|(\\\\)+)(\\r)/g, '$1$2\r') # make \r to carriage return
-        strPart = strPart.replace(/\\(["\$\\\\{])/g, '$1') # unescape ",/,$ or {
+        strPart = strPart.replace(/\\(["\$\\\\{\\}])/g, '$1') # unescape ",/,$, { or }
         tokens.push('"' + strPart + '"')
 
         end = m.match('"')
