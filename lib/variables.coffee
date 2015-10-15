@@ -34,7 +34,6 @@ module.exports = (env) ->
       if isNumber value
         numValue = parseFloat(value)
         value = numValue unless isNaN(numValue)
-      if value is @value then return false
       @value = value
       @_vars._emitVariableValueChanged(this, @value)
       return true
