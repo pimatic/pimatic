@@ -645,7 +645,8 @@ module.exports = (env) ->
                 when "string" then @_vars.evaluateStringExpression(info.tokens)
                 else assert false
             ).then( (val) =>
-              @emit name, val
+              if val isnt @_attributesMeta[name].value
+                @emit name, val
               return val
             )
           )
