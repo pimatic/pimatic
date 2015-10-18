@@ -34,7 +34,6 @@ module.exports = (env) ->
       if isNumber value
         numValue = parseFloat(value)
         value = numValue unless isNaN(numValue)
-      if value is @value then return false
       @value = value
       @_vars._emitVariableValueChanged(this, @value)
       return true
@@ -77,8 +76,8 @@ module.exports = (env) ->
       @_device.removeListener("change", @_deviceChangeListener)
       @_device.removeListener("destroy", @_deviceDestroyListener)
       
-    getUpdatedValue: -> 
-      return @_device.getUpdatedAttributeValue(@_attrName)
+    getUpdatedValue: (varsInEvaluation = {}) -> 
+      return @_device.getUpdatedAttributeValue(@_attrName, varsInEvaluation)
 
     destroy: =>
       @_removeListener()
