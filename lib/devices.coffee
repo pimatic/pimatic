@@ -63,11 +63,11 @@ module.exports = (env) ->
       @_checkAttributes()
       @_constructorCalled = yes
       @_attributesMeta = {}
-      device = @
       @_initAttributeMeta(attrName, attr) for attrName, attr of @attributes
 
 
     _initAttributeMeta: (attrName, attr) ->
+      device = @
       @_attributesMeta[attrName] = {
         value: null
         history: []
