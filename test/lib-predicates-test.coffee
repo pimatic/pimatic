@@ -582,3 +582,24 @@ describe "VariablePredicateProvider", ->
           finish()
         sensorDummy.getTestvalue = => Promise.resolve(50)
         sensorDummy.emit 'testvalue', 50
+
+
+    # describe '#on "change"', ->  
+    #   predicateHandler = null
+    #   after -> predicateHandler.destroy()
+
+    #   it "should throw an error, when comparing strings", (finish) ->
+    #     context = createDummyParseContext()
+    #     varsAndFuns = frameworkDummy.variableManager.getVariablesAndFunctions()
+    #     context.variables = varsAndFuns.variables
+    #     context.functions = varsAndFuns.functions
+    #     result = provider.parsePredicate "$test.testvalue > 42", context
+    #     assert result?
+    #     predicateHandler = result.predicateHandler
+    #     predicateHandler.setup()
+    #     predicateHandler.once 'change', (state) ->
+    #       cassert state is true
+    #       finish()
+    #     sensorDummy.getTestvalue = => Promise.resolve("a")
+    #     sensorDummy.attributes.testvalue.type = "string"
+    #     sensorDummy.emit 'testvalue', "a"
