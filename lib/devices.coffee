@@ -63,11 +63,11 @@ module.exports = (env) ->
       @_checkAttributes()
       @_constructorCalled = yes
       @_attributesMeta = {}
-      device = @
       @_initAttributeMeta(attrName, attr) for attrName, attr of @attributes
 
 
     _initAttributeMeta: (attrName, attr) ->
+      device = @
       @_attributesMeta[attrName] = {
         value: null
         history: []
@@ -129,13 +129,25 @@ module.exports = (env) ->
       @name = name
       @emit "nameChanged", this
 
-    getUpdatedAttributeValue: (attrName) ->
+    getUpdatedAttributeValue: (attrName, arg) ->
       getter = 'get' + upperCaseFirst(attrName)
       # call the getter
-      result = @[getter]()
+      result = @[getter](arg)
       # Be sure that it is a promise!
       assert result.then?, "#{getter} of #{@name} should always return a promise!"
       return result
+
+    getUpdatedAttributeValueCached: (attrName, arg) ->
+      unless @_promiseCache then @_promiseCache = {}
+      if @_promiseCache[attrName]? then return @_promiseCache[attrName]
+      @_promiseCache[attrName] = @getUpdatedAttributeValue(attrName, arg).then( (value) =>
+        delete @_promiseCache[attrName]
+        return value
+      , (error) => 
+        delete @_promiseCache[attrName]
+        throw error
+      )
+      return @_promiseCache[attrName]
 
     _createGetter: (attributeName, fn) ->
       getterName = 'get' + attributeName[0].toUpperCase() + attributeName.slice(1)
@@ -630,27 +642,42 @@ module.exports = (env) ->
           if variable.acronym?
             @attributes[name].acronym = variable.acronym
 
-          evaluate = ( => 
+
+          parseExprAndAddListener = ( () =>
+            info = @_vars.parseVariableExpression(variable.expression) 
+            @_vars.notifyOnChange(info.tokens, onChangedVar)
+            @_exprChangeListeners.push onChangedVar
+          )
+
+          evaluateExpr = ( (varsInEvaluation) =>
+            if @attributes[name].type is "number"
+              unless @attributes[name].unit? and @attributes[name].unit.length > 0
+                @attributes[name].unit = @_vars.inferUnitOfExpression(info.tokens)
+            switch info.datatype
+              when "numeric" then @_vars.evaluateNumericExpression(info.tokens, varsInEvaluation)
+              when "string" then @_vars.evaluateStringExpression(info.tokens, varsInEvaluation)
+              else assert false
+          )
+
+          onChangedVar = ( (changedVar) => 
+            evaluateExpr().then( (val) =>
+              @emit name, val
+            )
+          )
+
+          getValue = ( (varsInEvaluation) => 
             # wait till veraibelmanager is ready
             return Promise.delay(1).then( =>
               unless info?
-                info = @_vars.parseVariableExpression(variable.expression) 
-                @_vars.notifyOnChange(info.tokens, evaluate)
-                @_exprChangeListeners.push evaluate
-              if @attributes[name].type is "number"
-                unless @attributes[name].unit? and @attributes[name].unit.length > 0
-                  @attributes[name].unit = @_vars.inferUnitOfExpression(info.tokens)
-              switch info.datatype
-                when "numeric" then @_vars.evaluateNumericExpression(info.tokens)
-                when "string" then @_vars.evaluateStringExpression(info.tokens)
-                else assert false
+                parseExprAndAddListener()
+              return evaluateExpr(varsInEvaluation)
             ).then( (val) =>
               if val isnt @_attributesMeta[name].value
                 @emit name, val
               return val
             )
           )
-          @_createGetter(name, evaluate)
+          @_createGetter(name, getValue)
       super()
 
     destroy: ->

@@ -271,6 +271,13 @@ describe "Matcher", ->
         finish()
       )
 
+    it "should handle escaped brackets and other chars: \"\\{ \\} \\$\"", (finish) ->
+      M('"\\{ \\} \\$"').matchStringWithVars(varsAndFuns, (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['"{ } $"'])
+        finish()
+      )
+
     it "should handle escaped backslash at end \"some \\\\\"", (finish) ->
       M('"some \\\\"').matchStringWithVars(varsAndFuns, (m, tokens) =>
         assert m?
