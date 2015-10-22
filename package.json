@@ -41,7 +41,7 @@
     "colors": "~0.6.2",
     "connect-timeout": "^1.6.2",
     "convict": "0.4.*",
-    "cross-spawn": "^0.2.3",
+    "cross-spawn-async": "^2.0.0",
     "daemon": "1.1.0",
     "date-format-lite": "0.5.0",
     "decl-api": "0.0.20",
