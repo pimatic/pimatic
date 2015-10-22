@@ -765,6 +765,12 @@ module.exports = (env) ->
               """
               rule.id = newId
 
+            if rule.rule.match /^if .+/
+              env.logger.warn """
+                Converting old rule "#{rule.id}" from  "if ... then ..." to "when ... then ..."!
+              """
+              rule.rule = rule.rule.replace(/^if/, "when")
+
             unless rule.name? then rule.name = S(rule.id).humanize().s
 
             @ruleManager.addRuleByString(rule.id, {

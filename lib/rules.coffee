@@ -6,15 +6,15 @@ This file handles the parsing and executing of rules.
 
 What's a rule
 ------------
-A rule is a string that has the format: "if _this_ then _that_". The _this_ part will be called 
+A rule is a string that has the format: "when _this_ then _that_". The _this_ part will be called 
 the condition of the rule and the _that_ the actions of the rule.
 
 __Examples:__
 
-  * if its 10pm then turn the tv off
-  * if its friday and its 8am then turn the light on
-  * if [music is playing or the light is on] and somebody is present then turn the speaker on
-  * if temperatue of living room is below 15°C for 5 minutes then log "its getting cold" 
+  * when its 10pm then turn the tv off
+  * when its friday and its 8am then turn the light on
+  * when [music is playing or the light is on] and somebody is present then turn the speaker on
+  * when temperatue of living room is below 15°C for 5 minutes then log "its getting cold" 
 
 __The condition and predicates__
 
@@ -170,7 +170,7 @@ module.exports = (env) ->
     # it get parsed to the follwoing rule object:
     #  
     #     id: 'some-id'
-    #     string: 'if its 10pm and light is on then turn the light off'
+    #     string: 'when its 10pm and light is on then turn the light off'
     #     conditionToken: 'its 10pm and light is on'
     #     predicates: [
     #       { id: 'some-id0'
@@ -199,13 +199,13 @@ module.exports = (env) ->
             parts = ["", "its 10pm and light is on", "turn the light off"].
         
         ###
-        parts = ruleString.split /^if\s|\sthen\s/
+        parts = ruleString.split /^when\s|\sthen\s/
         # Check for the right parts count. Note the empty string at the beginning.
         switch
           when parts.length < 3
-            throw new Error('The rule must start with "if" and contain a "then" part!')
+            throw new Error('The rule must start with "when" and contain a "then" part!')
           when parts.length > 3 
-            throw new Error('The rule must exactly contain one "if" and one "then" part!')
+            throw new Error('The rule must exactly contain one "when" and one "then" part!')
         ###
         Then extract the condition and actions from the rule 
          
@@ -318,18 +318,21 @@ module.exports = (env) ->
         handler: null
         for: null
         justTrigger: null
+        justCondition: null
 
       token = ''
 
       # trigger keyword?
-      m = M(nextInput, context).match(["trigger: "])
+      m = M(nextInput, context).match(["trigger: ", "if "])
       if m.hadMatch()
         match = m.getFullMatch()
         token += match
         nextInput = nextInput.substring(match.length)
-        predicate.justTrigger = yes
+        predicate.justTrigger = match is "trigger: "
+        predicate.justCondition = match is "if "
       else
         predicate.justTrigger = no
+        predicate.justCondition = no
 
       # find a predicate provider for that can parse and decide the predicate:
       parseResults = []
@@ -378,7 +381,12 @@ module.exports = (env) ->
 
           if predicate.handler.getType() is 'event' and predicate.for?
             context.addError(
-              "\"#{token}\" is an event it can't be true for \"#{predicate.token}\"."
+              "\"#{token}\" is an event it can't be true for \"#{predicate.for.token}\"."
+            )
+
+          if predicate.handler.getType() is 'event' and predicate.justCondition
+            context.addError(
+              "\"#{token}\" is an event it can't be used with \"... and if ...\"."
             )
 
         else
@@ -554,8 +562,9 @@ module.exports = (env) ->
             assert state is 'event' or state is true or state is false
             p.lastChange = (new Date()).getTime()
             # If the state is true then call the `whenPredicateIsTrue` function.
-            if state is true or state is 'event'
-              whenPredicateIsTrue rule, p.id, state
+            unless p.justCondition
+              if state is true or state is 'event'
+                whenPredicateIsTrue rule, p.id, state
           p.changeListener = changeListener
 
       # This function should be called by a provider if a predicate becomes true.
