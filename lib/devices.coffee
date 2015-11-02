@@ -132,6 +132,7 @@ module.exports = (env) ->
     getUpdatedAttributeValue: (attrName, arg) ->
       getter = 'get' + upperCaseFirst(attrName)
       # call the getter
+      assert @[getter]?, "Method #{getter} of #{@name} does not exist!"
       result = @[getter](arg)
       # Be sure that it is a promise!
       assert result.then?, "#{getter} of #{@name} should always return a promise!"
