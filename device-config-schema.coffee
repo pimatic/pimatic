@@ -112,6 +112,10 @@ module.exports = {
         description: "The defined eco mode temperature"
         type: "number"
         default: 17
+      guiShowValvePosition:
+        description: "Show the valve position in the GUI"
+        type: "boolean"
+        default: true
       guiShowModeControl: 
         description: "Show the mode buttons in the GUI"
         type: "boolean"
