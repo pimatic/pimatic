@@ -373,6 +373,7 @@ module.exports = (env) ->
   ------
   ###
   class TemperatureSensor extends Sensor
+    _temperature: undefined
 
     attributes:
       temperature:
@@ -380,6 +381,13 @@ module.exports = (env) ->
         type: t.number
         unit: '°C'
         acronym: 'T'
+
+    _setTemperature: (value) ->
+      if @_temperature is value then return
+      @_temperature = value
+      @emit 'temperature', value
+
+    getTemperature: -> Promise.resolve(@_temperature)
 
     template: "temperature"
 
@@ -395,13 +403,11 @@ module.exports = (env) ->
         description: "Presence of the human/device"
         type: t.boolean
         labels: ['present', 'absent']
-        
 
     _setPresence: (value) ->
       if @_presence is value then return
       @_presence = value
       @emit 'presence', value
-
 
     getPresence: -> Promise.resolve(@_presence)
 
