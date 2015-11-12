@@ -1150,29 +1150,30 @@ module.exports = (env) ->
       @addDeviceToConfig(deviceConfig)
       return device
 
-    recreateDevice: (device) ->
-      return @framework.database.getLastDeviceState(device.id).then( (lastDeviceState) =>
-        newDevice =  @_loadDevice(device.config, lastDeviceState, false)
+    recreateDevice: (oldDevice, newDeviceConfig) ->
+      return @framework.database.getLastDeviceState(oldDevice.id).then( (lastDeviceState) =>
+        newDevice =  @_loadDevice(newDeviceConfig, lastDeviceState, false)
         @framework._emitDeviceChanged(newDevice)
-        device.emit 'change', newDevice
+        oldDevice.emit 'change', newDevice
         @emit 'deviceChanged', newDevice
-        @framework.saveConfig()
-        device.destroy()    
+        oldDevice.destroy()    
       )
  
-
     updateDeviceByConfig: (deviceConfig) ->
-      throw new Error("This operation isn't supported yet.")
+      unless deviceConfig.id?
+        throw new Error("No id given")
+      device = @getDeviceById(deviceConfig.id)
+      unless device?
+        throw new Error('device not found')
+      return @recreateDevice(device, deviceConfig)
 
     removeDevice: (deviceId) ->
       device = @getDeviceById(deviceId)
       unless device? then return
-      @framework._emitDeviceRemoved(device)
-      device.emit 'remove'
-      _.remove(@devicesConfig, {deviceId: deviceId})
+      delete @devices[deviceId];
       @emit 'deviceRemoved', device
+      device.emit 'remove'
       device.destroy()
-      @framework.saveConfig()
       return device
 
     addDeviceToConfig: (deviceConfig) ->

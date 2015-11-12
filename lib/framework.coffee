@@ -587,7 +587,8 @@ module.exports = (env) ->
 
     _emitDeviceAdded: (device) -> @_emitDeviceEvent('deviceAdded', device)
     _emitDeviceChanged: (device) -> @_emitDeviceEvent('deviceChanged', device)
-    _emitDeviceRemoved: (device) -> @_emitDeviceEvent('deviceRemoved', device)
+    _emitDeviceRemoved: (device) -> 
+      @_emitDeviceEvent('deviceRemoved', device)
 
     _emitDeviceOrderChanged: (deviceOrder) ->
       @_emitOrderChanged('deviceOrderChanged', deviceOrder)
@@ -708,6 +709,21 @@ module.exports = (env) ->
           @_emitVariableRemoved(removedVar)
           @emit "config"
         )
+
+      initDevices = =>
+        @deviceManager.on("deviceRemoved", (removedDevice) =>
+          for device, i in @config.devices
+            if device.id is removedDevice.id
+              @config.devices.splice(i, 1)
+              break
+          @_emitDeviceRemoved(removedDevice)
+          @emit "config"
+        )
+        @deviceManager.on("deviceChanged", (changedDevice) =>
+          @_emitDeviceChanged(changedDevice)
+          @emit "config"
+        )
+
 
       initActionProvider = =>
         defaultActionProvider = [
@@ -830,6 +846,7 @@ module.exports = (env) ->
         .then( => @deviceManager.initDevices() )
         .then( => @deviceManager.loadDevices() )
         .then(initVariables)
+        .then(initDevices)
         .then(initActionProvider)
         .then(initPredicateProvider)
         .then(initRules)

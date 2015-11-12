@@ -37,7 +37,7 @@ module.exports = (env) ->
   The base class for all Action Handler. If you want to provide actions in your plugin then 
   you should create a sub class that implements a `executeAction` function.
   ###
-  class ActionHandler
+  class ActionHandler extends require('events').EventEmitter
 
     # ### executeAction()
     ###
@@ -54,10 +54,42 @@ module.exports = (env) ->
 
     hasRestoreAction: => no
 
+    setup: -> 
+      # You must overwrite this method and set up your listener here.
+      # You should call super() after that.
+      if @_setupCalled then throw new Error("Setup already called!")
+      @_setupCalled = yes
+
+    destroy: -> 
+      # You must overwrite this method and remove your listener here.
+      # You should call super() after that.
+      unless @_setupCalled then throw new Error("Destroy called, but setup was not called!")
+      delete @_setupCalled
+      @emit "destroy"
+      @removeAllListeners()
+
     executeRestoreAction: (simulate) =>
       throw new Error(
         "executeRestoreAction must be implemented when hasRestoreAction returns true"
-      )  
+      )
+
+    dependOnDevice: (device) ->
+      recreateEmitter = (=> @emit "recreate")
+      device.on "change", recreateEmitter
+      device.on "destroy", recreateEmitter
+      @on 'destroy', =>
+        device.removeListener "change", recreateEmitter
+        device.removeListener "destory", recreateEmitter
+
+    dependOnVariable: (variableManager, varName) ->
+      recreateEmitter = ( (variable) => 
+        if variable.name isnt varName
+          return
+        @emit "recreate"
+      )
+      variableManager.on "variableRemoved", recreateEmitter
+      @on 'destroy', =>
+        variableManager.removeListener "variableRemoved", recreateEmitter
 
   ###
   The Log Action Provider
@@ -167,6 +199,9 @@ module.exports = (env) ->
 
     constructor: (@framework, @variableName, @rightTokens) ->
 
+    setup: ->
+      @dependOnVariable(@framework.variableManager, @variableName)
+
     executeAction: (simulate, context) ->
       if simulate
         # just return a promise fulfilled with a description about what we would do.
@@ -231,6 +266,9 @@ module.exports = (env) ->
   class PresenceActionHandler extends ActionHandler 
 
     constructor: (@device, @state) ->
+
+    setup: ->
+      @dependOnDevice(@device)
 
     ###
     Handles the above actions.
@@ -302,6 +340,9 @@ module.exports = (env) ->
   class ContactActionHandler extends ActionHandler 
 
     constructor: (@device, @state) ->
+
+    setup: ->
+      @dependOnDevice(@device)
 
     ###
     Handles the above actions.
@@ -404,6 +445,9 @@ module.exports = (env) ->
 
     constructor: (@device, @state) ->
 
+    setup: ->
+      @dependOnDevice(@device)
+
     ###
     Handles the above actions.
     ###
@@ -489,6 +533,9 @@ module.exports = (env) ->
 
     constructor: (@device) -> #nop
 
+    setup: ->
+      @dependOnDevice(@device)
+
     # ### executeAction()
     executeAction: (simulate) => 
       return (
@@ -562,6 +609,9 @@ module.exports = (env) ->
     constructor: (@device, @buttonId) ->
       assert @device? and @device instanceof env.devices.ButtonsDevice
       assert @buttonId? and typeof @buttonId is "string"
+
+    setup: ->
+      @dependOnDevice(@device)
 
     ###
     Handles the above actions.
@@ -649,6 +699,9 @@ module.exports = (env) ->
 
     constructor: (@device, @position) ->
 
+    setup: ->
+      @dependOnDevice(@device)
+
     # ### executeAction()
     executeAction: (simulate) => 
       return (
@@ -720,6 +773,9 @@ module.exports = (env) ->
   class StopShutterActionHandler extends ActionHandler
 
     constructor: (@device) ->
+
+    setup: ->
+      @dependOnDevice(@device)
 
     # ### executeAction()
     executeAction: (simulate) => 
@@ -804,6 +860,9 @@ module.exports = (env) ->
     constructor: (@framework, @device, @valueTokens) ->
       assert @device?
       assert @valueTokens?
+
+    setup: ->
+      @dependOnDevice(@device)
 
     _clampVal: (value) ->
       assert(not isNaN(value))
@@ -900,6 +959,9 @@ module.exports = (env) ->
       assert @device?
       assert @valueTokens?
 
+    setup: ->
+      @dependOnDevice(@device)
+
     ###
     Handles the above actions.
     ###
@@ -988,13 +1050,8 @@ module.exports = (env) ->
       assert @device?
       assert @valueTokens?
 
-    # _clampVal: (value) ->
-    #   assert(not isNaN(value))
-    #   return (switch
-    #     when value > 32 then 32
-    #     when value < 0 then 0
-    #     else value
-    #   )
+    setup: ->
+      @dependOnDevice(@device)
 
     ###
     Handles the above actions.
@@ -1086,6 +1143,9 @@ module.exports = (env) ->
 
     constructor: (@device, @action) ->
 
+    setup: ->
+      @dependOnDevice(@device)
+
     # ### executeAction()
     executeAction: (simulate) => 
       return (
@@ -1139,6 +1199,9 @@ module.exports = (env) ->
 
     constructor: (@device) -> #nop
 
+    setup: ->
+      @dependOnDevice(@device)
+
     executeAction: (simulate) => 
       return (
         if simulate
@@ -1190,6 +1253,9 @@ module.exports = (env) ->
 
     constructor: (@device) -> #nop
 
+    setup: ->
+      @dependOnDevice(@device)
+
     executeAction: (simulate) => 
       return (
         if simulate
@@ -1238,6 +1304,9 @@ module.exports = (env) ->
   class AVPlayerPlayActionHandler extends ActionHandler
 
     constructor: (@device) -> #nop
+
+    setup: ->
+      @dependOnDevice(@device)
 
     executeAction: (simulate) => 
       return (
@@ -1311,6 +1380,9 @@ module.exports = (env) ->
 
     constructor: (@framework, @device, @valueTokens) -> #nop
 
+    setup: ->
+      @dependOnDevice(@device)
+
     executeAction: (simulate, value) => 
       return (
         if isNaN(@valueTokens[0])
@@ -1367,6 +1439,9 @@ module.exports = (env) ->
   class AVPlayerNextActionHandler extends ActionHandler
     constructor: (@device) -> #nop
 
+    setup: ->
+      @dependOnDevice(@device)
+
     executeAction: (simulate) => 
       return (
         if simulate
@@ -1418,6 +1493,9 @@ module.exports = (env) ->
         
   class AVPlayerPrevActionHandler extends ActionHandler
     constructor: (@device) -> #nop
+
+    setup: ->
+      @dependOnDevice(@device)
 
     executeAction: (simulate) => 
       return (

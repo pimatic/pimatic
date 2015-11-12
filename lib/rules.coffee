@@ -567,6 +567,10 @@ module.exports = (env) ->
                 whenPredicateIsTrue rule, p.id, state
           p.changeListener = changeListener
 
+          p.handler.on 'recreate', recreateListener = =>
+            @recreateRule(rule)
+
+
       # This function should be called by a provider if a predicate becomes true.
       whenPredicateIsTrue = (rule, predicateId, state) =>
         assert rule?
@@ -602,20 +606,35 @@ module.exports = (env) ->
       if rule.valid
         for p in rule.predicates
           do (p) =>
-            assert typeof p.changeListener is "function"
-            p.handler.removeListener 'change', p.changeListener
-            delete p.changeListener
-            p.handler.destroy()
+            unless p.destroyed is true
+              assert typeof p.changeListener is "function"
+              p.handler.removeListener 'change', p.changeListener
+              delete p.changeListener
+              p.handler.removeAllListeners 'recreate'
+              p.handler.destroy()
+              p.destroyed = true
 
-    _cancelScheduledActions: (rule) ->
+    _setupActions: (rule) ->
+      for action in rule.actions
+        action.handler.setup()
+        action.handler.on 'recreate', recreateListener = =>
+          @recreateRule(rule)
+
+
+    _destroyActionsAndCancelSheduledActions: (rule) ->
       assert rule?
       # Then cancel the notifier for all predicates
       if rule.valid
         for action in rule.actions
-          if action.scheduled?
-            action.scheduled.cancel(
-              "canceling schedule of action #{action.token}"
-            )
+          do (action) =>
+            unless action.destroyed is true
+              action.handler.destroy()
+              action.handler.removeAllListeners 'recreate'
+              action.destroyed = true
+              if action.scheduled?
+                action.scheduled.cancel(
+                  "canceling schedule of action #{action.token}"
+                )
 
     # ###addRuleByString()
     addRuleByString: (id, {name, ruleString, active, logging}, force = false) ->
@@ -645,6 +664,7 @@ module.exports = (env) ->
           throw error
 
         @_addPredicateChangeListener rule
+        @_setupActions rule
         # If the rules was successful parsed add it to the rule array.
         rule.active = active
         rule.valid = yes
@@ -690,7 +710,7 @@ module.exports = (env) ->
       rule = @rules[id]
       # Then cancel all notifications
       @_removePredicateChangeListener(rule)
-      @_cancelScheduledActions(rule)
+      @_destroyActionsAndCancelSheduledActions(rule)
       # and delete the rule from the array
       delete @rules[id]
       # and emit the event.
@@ -728,28 +748,36 @@ module.exports = (env) ->
 
         # and cancel the notifier for the old predicates.
         @_removePredicateChangeListener(rule)
-        @_cancelScheduledActions(rule)
+        @_destroyActionsAndCancelSheduledActions(rule)
 
         # We do that to keep the old rule object and don't use the new one
         rule.update(newRule)
 
         # and register the new ones,
         @_addPredicateChangeListener(rule)
+        @_setupActions(rule)
         # and emit the event.
         @emit "ruleChanged", rule
-        # Then check if the condition of the rule is now true.
-        if rule.active
-          @_doesRuleCondtionHold(rule).then( (isTrue) =>
-            # If the condition is true then exectue the action.
-            return if isTrue then @_executeRuleActionsAndLogResult(rule)
-          ).catch( (error) =>
-            env.logger.error """
-              Error on evaluation of rule condition of rule #{rule.id}: #{error.message}
-            """ 
-            env.logger.debug error
-          )
-        return
       )
+
+    recreateRule: (rule) ->
+      if rule.recreating
+        return
+      rule.recreating = true
+      @updateRuleByString(rule.id, {})
+        .then( => rule.recreating = false )
+        .catch( (error) =>
+          @_removePredicateChangeListener(rule)
+          @_destroyActionsAndCancelSheduledActions(rule)
+          rule.active = false
+          rule.valid = false
+          rule.recreating = false 
+          env.logger.error("Error in rule #{rule.id}: #{error.message}")
+          env.logger.debug(error.stack)
+          # and emit the event.
+          @emit "ruleChanged", rule
+        ).done()
+
 
     # ###_evaluateConditionOfRule()
     # This function returns a promise that will be fulfilled with true if the condition of the 
