@@ -1,4 +1,4 @@
-# #Framwork start up
+# #Framework start up
 
 assert = require 'cassert'
 fs = require 'fs'
@@ -24,9 +24,9 @@ env.require = (args...) -> module.require args...
 startup = =>
   # set the config file to
   configFile = (
-    # PIMATIC_CONFIG envirement variable if it is set
+    # PIMATIC_CONFIG environment variable if it has been set up
     if process.env.PIMATIC_CONFIG? then process.env.PIMATIC_CONFIG 
-    # or get the config the parent folder of node_modules
+    # or get the configuration parent folder of node_modules
     else path.resolve __dirname, '../../config.json'
   )
 
@@ -60,7 +60,7 @@ startup = =>
         if process.env['PIMATIC_DAEMONIZED']
           env.logger.warn(
             "Keeping pimatic alive, but could be in an undefined state, 
-             please restart pimatic so soon as possible!"
+             please restart pimatic as soon as possible!"
           )
         else
           env.logger.warn("shutting pimatic down...")
