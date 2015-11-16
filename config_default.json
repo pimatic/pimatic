@@ -52,6 +52,8 @@
         "groups": "write",
         "plugins": "write",
         "updates": "write",
+        "database": "write",
+        "config": "write",
         "controlDevices": true,
         "restart": true
       }

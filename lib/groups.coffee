@@ -34,22 +34,22 @@ module.exports = (env) ->
       if index is -1
         throw new Error('Group not found')
       group = @groups[index]
-      
+
       if patch.name?
-        group.name = patch.name 
+        group.name = patch.name
       if patch.devicesOrder?
         group.devices = _.sortBy(group.devices, (deviceId) => 
-          index = patch.devicesOrder.indexOf deviceId 
+          index = patch.devicesOrder.indexOf deviceId
           return if index is -1 then 99999 else index # push it to the end if not found
         )
       if patch.rulesOrder?
-        group.rules = _.sortBy(group.rules, (ruleId) => 
-          index = patch.rulesOrder.indexOf ruleId 
+        group.rules = _.sortBy(group.rules, (ruleId) =>
+          index = patch.rulesOrder.indexOf ruleId
           return if index is -1 then 99999 else index # push it to the end if not found
         )
       if patch.variablesOrder
-        group.variables = _.sortBy(group.variables, (variableName) => 
-          index = patch.variablesOrder.indexOf variableName 
+        group.variables = _.sortBy(group.variables, (variableName) =>
+          index = patch.variablesOrder.indexOf variableName
           return if index is -1 then 99999 else index # push it to the end if not found
         )
       @framework.saveConfig()
@@ -109,7 +109,7 @@ module.exports = (env) ->
         index = _.indexOf(g.variables, variableName)
         if index isnt -1 then return g
       return null
-    
+
     removeDeviceFromGroup: (groupId, deviceId) ->
       group = @getGroupOfDevice(deviceId)
       unless group?
@@ -118,7 +118,7 @@ module.exports = (env) ->
         throw new Error("Device is not in group #{groupId}")
       _.remove(group.devices, (id) => id is deviceId)
       @framework.saveConfig()
-      @framework._emitGroupChanged(group)      
+      @framework._emitGroupChanged(group)
       return group
 
     removeRuleFromGroup: (groupId, ruleId) ->
@@ -129,7 +129,7 @@ module.exports = (env) ->
         throw new Error("Rule is not in group #{groupId}")
       _.remove(group.rules, (id) => id is ruleId)
       @framework.saveConfig()
-      @framework._emitGroupChanged(group)      
+      @framework._emitGroupChanged(group)
       return group
 
     removeVariableFromGroup: (groupId, variableName) ->
@@ -140,7 +140,7 @@ module.exports = (env) ->
         throw new Error("Variable is not in group #{groupId}")
       _.remove(group.variables, (name) => name is variableName)
       @framework.saveConfig()
-      @framework._emitGroupChanged(group)      
+      @framework._emitGroupChanged(group)
       return group
 
     addVariableToGroup: (groupId, variableName, position) ->
@@ -180,12 +180,12 @@ module.exports = (env) ->
 
     updateGroupOrder: (groupOrder) ->
       assert groupOrder? and Array.isArray groupOrder
-      @framework.config.groups = @groups = _.sortBy(@groups,  (group) => 
-        index = groupOrder.indexOf group.id 
+      @framework.config.groups = @groups = _.sortBy(@groups,  (group) =>
+        index = groupOrder.indexOf group.id
         return if index is -1 then 99999 else index # push it to the end if not found
       )
       @framework.saveConfig()
       @framework._emitGroupOrderChanged(groupOrder)
       return groupOrder
-      
+
   return exports = { GroupManager }

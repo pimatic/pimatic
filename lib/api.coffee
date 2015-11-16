@@ -35,7 +35,7 @@ device = {
     actions:
       description: "List of all actions of the device."
       type: t.array
-    config: 
+    config:
       description: "Config of the device, without default values."
       type: t.object
     configDefaults:
@@ -46,10 +46,10 @@ device = {
 page = {
   type: t.object
   properties:
-    id: 
+    id:
       description: "A user chosen string, used to identify the page."
       type: t.string
-    name: 
+    name:
       description: "A user chosen string that should be used to display the page."
       type: t.string
     devices:
@@ -87,7 +87,7 @@ api.framework = {
               type: t.object
             time:
               type: t.date
-            value: 
+            value:
               type: t.any
     messageLogged:
       description: "A new log message was emitted"
@@ -102,9 +102,9 @@ api.framework = {
             meta:
               type: t.object
   actions:
-    getGuiSetttings:
+    getGuiSettings:
       description: "Get the GUI config options"
-      rest: 
+      rest:
         type: "GET"
         url: "/api/config/settings/gui"
       result:
@@ -150,7 +150,7 @@ api.framework = {
           type: t.object
       permission:
         scope: "config"
-        access: "write"        
+        access: "write"
 }
 
 api.devices = {
@@ -166,7 +166,7 @@ api.devices = {
           description: "Array of all devices."
           type: t.array
           toJson: yes
-          items: 
+          items:
             device: device
       permission:
         scope: "devices"
@@ -267,6 +267,21 @@ api.devices = {
       permission:
         scope: "devices"
         access: "write"
+    callDeviceAction:
+      description: "Calls the action of the given device"
+      rest:
+        type: "GET"
+        url: "/api/device/:deviceId/:actionName"
+        handler: "callDeviceActionReq"
+      socket:
+        handler: "callDeviceActionSocket"
+      params:
+        deviceId:
+          type: t.string
+        actionName:
+          type: t.string
+      permission:
+        action: 'controlDevices'
 }
 
 api.rules = {
@@ -550,7 +565,7 @@ api.pages = {
           description: "Object with ID and name of the page to create."
           type: t.object
           properties:
-            name: 
+            name:
               description: "A user chosen string that should be used to display the page."
               type: t.string
       result:
@@ -643,6 +658,21 @@ api.pages = {
 
 api.groups = {
   actions:
+    getGroups:
+      description: "List all groups."
+      rest:
+        type: "GET"
+        url: "/api/groups"
+      params: {}
+      result:
+        groups:
+          type: t.array
+          items:
+            group:
+              type: t.object
+      permission:
+        scope: "groups"
+        access: "read"
     removeGroup:
       description: "Remove group"
       rest:
@@ -1100,7 +1130,7 @@ messageCriteria = {
         type: t.number
         optional: yes
 }
-  
+
 dataCriteria = {
   criteria:
     type: t.object
@@ -1331,7 +1361,7 @@ api.database = {
       permission:
         scope: "database"
         access: "write"
-    checkDatabase: 
+    checkDatabase:
       description: "Check database and config integrity"
       params: {}
       rest:

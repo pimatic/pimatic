@@ -452,8 +452,9 @@ class Matcher
       # match unescaped ", $ or {
       next.match(/((?:(?:\\\\)*(?:\\.|[^"\$\{]))*)(.*?)$/, (m, strPart) =>
         # strPart is string till first var or ending quote
-        # Check for end:
-        strPart = strPart.replace(/([\\]?)\\/g, '$1')
+        strPart = strPart.replace(/(^|[^\\]|(\\\\)+)(\\n)/g, '$1$2\n') # make \n to new line
+        strPart = strPart.replace(/(^|[^\\]|(\\\\)+)(\\r)/g, '$1$2\r') # make \r to carriage return
+        strPart = strPart.replace(/\\(["\$\\\\{\\}])/g, '$1') # unescape ",/,$, { or }
         tokens.push('"' + strPart + '"')
 
         end = m.match('"')
@@ -550,8 +551,22 @@ class Matcher
 
     matchingDevices = {}
 
-    onIdMatch = (m, d) => matchingDevices[d.id] = {m, d}
-    onNameMatch = (m, d) => matchingDevices[d.id] = {m, d}
+
+    onIdMatch = (m, d) => 
+      unless matchingDevices[d.id]?
+        matchingDevices[d.id] = {m, d}
+      else
+        # keep longest match
+        if d.id.length > d.name.length
+          matchingDevices[d.id].m = m
+
+    onNameMatch = (m, d) =>
+      unless matchingDevices[d.id]?
+        matchingDevices[d.id] = {m, d}
+      else
+        # keep longest match
+        if d.name.length > d.id.length
+          matchingDevices[d.id].m = m
 
     next = @match('the ', optional: true, type: "static").or([
        # first try to match by id
@@ -686,14 +701,14 @@ class Matcher
       assert m instanceof Matcher
       matches.push m
     # Get the longest match.
-    next = _(matches).sortBy( (m) => 
-      if m.input? then m.input.length else Number.MAX_VALUE
-    ).first()
+    next = _.max(matches, (m) => 
+      if m.input? then m.prevInput.length else 0
+    )
     return next
 
   hadNoMatch: -> not @input?
   hadMatch: -> @input?
-  getFullMatch: -> @prevInput
+  getFullMatch: -> unless @input? then null else @prevInput
   getRemainingInput: -> @input
 
   dump: (info) ->

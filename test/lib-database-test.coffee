@@ -25,13 +25,15 @@ describe "Database", ->
           filename: ':memory:'
         }
         deviceAttributeLogging: [ 
-          { deviceId: '*', attributeName: '*', time: '7d' }
-          { deviceId: '*', attributeName: 'temperature', time: '1y' },
-          { deviceId: '*', attributeName: 'humidity', time: '1y' } 
+          { deviceId: '*', attributeName: '*', expire: '7d' }
+          { deviceId: '*', attributeName: 'temperature', expire: '1y' },
+          { deviceId: '*', attributeName: 'humidity', expire: '1y' } 
         ]
         messageLogging: [
-          { level: '*', tags: [], time: '7d' } 
+          { level: '*', tags: [], expire: '7d' } 
         ]
+        deleteExpiredInterval: '1h',
+        diskSyncInterval: '2h'
       }
       database = new env.database.Database(frameworkDummy, dbSettings)
       database.init().then( => finish() ).catch(finish)

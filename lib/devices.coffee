@@ -63,11 +63,11 @@ module.exports = (env) ->
       @_checkAttributes()
       @_constructorCalled = yes
       @_attributesMeta = {}
-      device = @
       @_initAttributeMeta(attrName, attr) for attrName, attr of @attributes
 
 
     _initAttributeMeta: (attrName, attr) ->
+      device = @
       @_attributesMeta[attrName] = {
         value: null
         history: []
@@ -129,13 +129,26 @@ module.exports = (env) ->
       @name = name
       @emit "nameChanged", this
 
-    getUpdatedAttributeValue: (attrName) ->
+    getUpdatedAttributeValue: (attrName, arg) ->
       getter = 'get' + upperCaseFirst(attrName)
       # call the getter
-      result = @[getter]()
+      assert @[getter]?, "Method #{getter} of #{@name} does not exist!"
+      result = @[getter](arg)
       # Be sure that it is a promise!
       assert result.then?, "#{getter} of #{@name} should always return a promise!"
       return result
+
+    getUpdatedAttributeValueCached: (attrName, arg) ->
+      unless @_promiseCache then @_promiseCache = {}
+      if @_promiseCache[attrName]? then return @_promiseCache[attrName]
+      @_promiseCache[attrName] = @getUpdatedAttributeValue(attrName, arg).then( (value) =>
+        delete @_promiseCache[attrName]
+        return value
+      , (error) => 
+        delete @_promiseCache[attrName]
+        throw error
+      )
+      return @_promiseCache[attrName]
 
     _createGetter: (attributeName, fn) ->
       getterName = 'get' + attributeName[0].toUpperCase() + attributeName.slice(1)
@@ -360,12 +373,21 @@ module.exports = (env) ->
   ------
   ###
   class TemperatureSensor extends Sensor
+    _temperature: undefined
 
     attributes:
       temperature:
         description: "The measured temperature"
         type: t.number
         unit: '°C'
+        acronym: 'T'
+
+    _setTemperature: (value) ->
+      if @_temperature is value then return
+      @_temperature = value
+      @emit 'temperature', value
+
+    getTemperature: -> Promise.resolve(@_temperature)
 
     template: "temperature"
 
@@ -381,13 +403,11 @@ module.exports = (env) ->
         description: "Presence of the human/device"
         type: t.boolean
         labels: ['present', 'absent']
-        
 
     _setPresence: (value) ->
       if @_presence is value then return
       @_presence = value
       @emit 'presence', value
-
 
     getPresence: -> Promise.resolve(@_presence)
 
@@ -501,6 +521,68 @@ module.exports = (env) ->
     changeTemperatureTo: (temperatureSetpoint) ->
       throw new Error("changeTemperatureTo must be implemented by a subclass")
 
+  class AVPlayer extends Device
+
+    actions: 
+      play:
+        description: "starts playing"
+      pause:
+        description: "pauses playing"
+      stop:
+        description: "stops playing"
+      next:
+        description: "play next song"
+      previous:
+        description: "play previous song"
+      volume:
+        description: "Change volume of player"
+
+    attributes:
+      currentArtist:
+        description: "the current playing track artist"
+        type: "string"   
+      currentTitle:
+        description: "the current playing track title"
+        type: "string"
+      state:
+        description: "the current state of the player"
+        type: "string"
+      volume:
+        description: "the volume of the player"
+        type: "string"
+
+    _state: null
+    _currentTitle: null
+    _currentArtist: null
+    _volume: null
+
+    template: "musicplayer"
+
+    _setState: (state) ->
+      if @_state isnt state
+        @_state = state
+        @emit 'state', state
+
+    _setCurrentTitle: (title) ->
+      if @_currentTitle isnt title
+        @_currentTitle = title
+        @emit 'currentTitle', title
+
+    _setCurrentArtist: (artist) ->
+      if @_currentArtist isnt artist
+        @_currentArtist = artist
+        @emit 'currentArtist', artist
+
+    _setVolume: (volume) ->
+      if @_volume isnt volume
+        @_volume = volume
+        @emit 'volume', volume
+
+    getState: () -> Promise.resolve @_state
+    getCurrentTitle: () -> Promise.resolve(@_currentTitle)
+    getCurrentArtist: () -> Promise.resolve(@_currentTitle)
+    getVolume: ()  -> Promise.resolve(@_volume)
+
   class ButtonsDevice extends Device
 
     attributes:
@@ -531,7 +613,7 @@ module.exports = (env) ->
         if b.id is buttonId
           @_lastPressedButton = b.id
           @emit 'button', b.id
-          return
+          return Promise.resolve()
       throw new Error("No button with the id #{buttonId} found")
 
   class VariablesDevice extends Device
@@ -561,30 +643,48 @@ module.exports = (env) ->
           if variable.unit? and variable.unit.length > 0
             @attributes[name].unit = variable.unit
 
-          if variable.discrete
+          if variable.discrete?
             @attributes[name].discrete = variable.discrete
 
-          evaluate = ( => 
+          if variable.acronym?
+            @attributes[name].acronym = variable.acronym
+
+
+          parseExprAndAddListener = ( () =>
+            info = @_vars.parseVariableExpression(variable.expression) 
+            @_vars.notifyOnChange(info.tokens, onChangedVar)
+            @_exprChangeListeners.push onChangedVar
+          )
+
+          evaluateExpr = ( (varsInEvaluation) =>
+            if @attributes[name].type is "number"
+              unless @attributes[name].unit? and @attributes[name].unit.length > 0
+                @attributes[name].unit = @_vars.inferUnitOfExpression(info.tokens)
+            switch info.datatype
+              when "numeric" then @_vars.evaluateNumericExpression(info.tokens, varsInEvaluation)
+              when "string" then @_vars.evaluateStringExpression(info.tokens, varsInEvaluation)
+              else assert false
+          )
+
+          onChangedVar = ( (changedVar) => 
+            evaluateExpr().then( (val) =>
+              @emit name, val
+            )
+          )
+
+          getValue = ( (varsInEvaluation) => 
             # wait till veraibelmanager is ready
             return Promise.delay(1).then( =>
               unless info?
-                info = @_vars.parseVariableExpression(variable.expression) 
-                @_vars.notifyOnChange(info.tokens, evaluate)
-                @_exprChangeListeners.push evaluate
-              if @attributes[name].type is "number"
-                unless @attributes[name].unit? and @attributes[name].unit.length > 0
-                  @attributes[name].unit = @_vars.inferUnitOfExpression(info.tokens)
-              switch info.datatype
-                when "numeric" then @_vars.evaluateNumericExpression(info.tokens)
-                when "string" then @_vars.evaluateStringExpression(info.tokens)
-                else assert false
+                parseExprAndAddListener()
+              return evaluateExpr(varsInEvaluation)
             ).then( (val) =>
               if val isnt @_attributesMeta[name].value
                 @emit name, val
               return val
             )
           )
-          @_createGetter(name, evaluate)
+          @_createGetter(name, getValue)
       super()
 
     destroy: ->
@@ -655,6 +755,52 @@ module.exports = (env) ->
       @_setSetpoint(temperatureSetpoint)
       return Promise.resolve()
 
+  class DummyPresenceSensor extends PresenceSensor
+
+    actions:
+      changePresenceTo:
+        params: 
+          presence: 
+            type: "boolean"
+
+    constructor: (@config, lastState) ->
+      @name = config.name
+      @id = config.id
+      @_presence = lastState?.presence?.value or off
+      @_triggerAutoReset()
+      super()
+        
+    changePresenceTo: (presence) ->
+      @_setPresence(presence)
+      @_triggerAutoReset()
+      return Promise.resolve()
+
+    _triggerAutoReset: ->
+      if @config.autoReset and @_presence
+        clearTimeout(@_resetPresenceTimeout)
+        @_resetPresenceTimeout = setTimeout(@_resetPresence, @config.resetTime) 
+
+    _resetPresence: =>
+      @_setPresence(no)
+
+
+  class DummyContactSensor extends ContactSensor
+    
+    actions:
+      changeContactTo:
+        params: 
+          contact: 
+            type: "boolean"
+
+    constructor: (@config, lastState) ->
+      @name = config.name
+      @id = config.id
+      @_contact = lastState?.contact?.value or off
+      super()
+        
+    changeContactTo: (contact) ->
+      @_setContact(contact)
+      return Promise.resolve()
 
   class DeviceConfigExtension
     extendConfigShema: (schema) ->
@@ -670,6 +816,80 @@ module.exports = (env) ->
           return yes
       return false
 
+  class Timer extends Device
+
+    attributes:
+      time: 
+        description: "The elapesed time"
+        type: "number"
+        unit: "s"
+        displaySparkline: no
+      running:
+        description: "Is the timer running?"
+        type: "boolean"
+
+    actions:
+      startTimer:
+        description: "Starts the timer"
+      stopTimer:
+        description: "stops the timer"
+      resetTimer:
+        description: "reset the timer"
+
+    template: "timer"
+
+    constructor: (@config, lastState) ->
+      @id = @config.id
+      @name = @config.name
+      @_time = lastState?.time?.value or 0
+      @_running = lastState?.running?.value or false
+      @_setupInterval() if _running?
+      super()
+
+    resetTimer: () ->
+      if @_time is 0
+        return Promise.resolve()
+      @_time = 0
+      @emit 'time', 0
+      return Promise.resolve()
+
+    startTimer: () ->
+      if @_running
+        return Promise.resolve()
+      @_running = true
+      @emit 'running', true
+      @_setupInterval()
+      return Promise.resolve()
+
+    stopTimer: () ->
+      unless @_running
+        return Promise.resolve()
+      @_destroyInterval()
+      @_running = false
+      @emit 'running', false
+      return Promise.resolve()
+
+    getTime: () ->
+      return Promise.resolve(@_time)
+
+    getRunning: () ->
+      return Promise.resolve(@_running)
+
+    _setupInterval: ->
+      if @_interval? then return
+      res = @config.resolution
+      onTick = =>
+        @_time += res
+        @emit 'time', @_time
+      @_interval = setInterval(onTick, res * 1000)
+
+    _destroyInterval: ->
+      clearInterval(@_interval)
+      @_interval = null
+
+    destroy: ->
+      @_destroyInterval()
+      super()
 
   class ConfirmDeviceConfigExtention extends DeviceConfigExtension
     configSchema:
@@ -741,6 +961,43 @@ module.exports = (env) ->
         device.attributes.contact.labels[0] = config.xClosedLabel if config.xClosedLabel? 
         device.attributes.contact.labels[1] = config.xOpenedLabel if config.xOpenedLabel?
 
+  class AttributeOptionsConfigExtension extends DeviceConfigExtension
+    configSchema:
+      xAttributeOptions:
+        description: "Extra attribute options for one or more attributes"
+        type: "array"
+        required: no
+        items:
+          type: "object"
+          required: ["name"]
+          properties:
+            name:
+              description: "Name for the corresponding attribute."
+              type: "string"
+            displaySparkline:
+              description: "Show a sparkline behind the numeric attribute"
+              type: "boolean"
+              required: false
+            hidden:
+              description: "Hide the attribute in the gui"
+              type: "boolean"
+              required: false
+
+    apply: (config, device) ->
+      if config.xAttributeOptions?
+        device.attributes = _.cloneDeep(device.attributes)
+        for attrOpts in config.xAttributeOptions
+          name = attrOpts.name
+          attr = device.attributes[name]
+          unless attr?
+            env.logger.warn(
+              "Can't apply xAttributeOptions for \"#{name}\". Device #{device.name}
+              has no attribute with this name"
+            )
+            continue
+          attr.displaySparkline = attrOpts.displaySparkline if attrOpts.displaySparkline?
+          attr.hidden = attrOpts.hidden if attrOpts.hidden?
+
   class DeviceManager extends events.EventEmitter
     devices: {}
     deviceClasses: {}
@@ -752,6 +1009,7 @@ module.exports = (env) ->
       @deviceConfigExtensions.push(new PresentLabelConfigExtension())
       @deviceConfigExtensions.push(new SwitchLabelConfigExtension())
       @deviceConfigExtensions.push(new ContactLabelConfigExtension())
+      @deviceConfigExtensions.push(new AttributeOptionsConfigExtension())
 
     registerDeviceClass: (className, {configDef, createCallback, prepareConfig}) ->
       assert typeof className is "string", "className must be a string"
@@ -937,6 +1195,31 @@ module.exports = (env) ->
       @devicesConfig.push deviceConfig
       @framework.saveConfig()
 
+
+    callDeviceActionReq: (params, req) =>
+      deviceId = req.params.deviceId
+      actionName = req.params.actionName
+      device = @getDeviceById(deviceId)
+      unless device?
+        throw new Error('device not found')
+      unless device.hasAction(actionName)
+        throw new Error('device hasn\'t that action')
+      action = device.actions[actionName]
+      return declapi.callActionFromReq(actionName, action, device, req)
+
+    callDeviceActionSocket: (params, call) =>
+      deviceId = call.params.deviceId
+      actionName = call.params.actionName
+      device = @getDeviceById(deviceId)
+      unless device?
+        throw new Error('device not found')
+      unless device.hasAction(actionName)
+        throw new Error('device hasn\'t that action')
+      action = device.actions[actionName]
+      call = _.clone(call)
+      call.action = actionName
+      return declapi.callActionFromSocket(device, action, call)
+
     isDeviceInConfig: (id) ->
       assert id?
       for d in @devicesConfig
@@ -952,6 +1235,9 @@ module.exports = (env) ->
         env.devices.DummyDimmer
         env.devices.DummyShutter
         env.devices.DummyHeatingThermostat
+        env.devices.DummyContactSensor
+        env.devices.DummyPresenceSensor
+        env.devices.Timer
       ]
       for deviceClass in defaultDevices
         do (deviceClass) =>
@@ -976,8 +1262,12 @@ module.exports = (env) ->
     HeatingThermostat
     ButtonsDevice
     VariablesDevice
+    AVPlayer
     DummySwitch
     DummyDimmer
     DummyShutter
     DummyHeatingThermostat
+    DummyContactSensor
+    DummyPresenceSensor
+    Timer
   }

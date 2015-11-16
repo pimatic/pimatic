@@ -83,7 +83,7 @@ require('source-map-support').install({
 
     try{
       return {
-        url: path.basename(source),
+        url: source,
         map: fs.readFileSync(paths.map, 'utf8')
       };
     }catch(err) {
@@ -122,7 +122,7 @@ var compile = function(module, filename) {
   try {
     var sourceTime = fs.statSync(filename).mtime;
     var cacheTime = fs.statSync(cachePath).mtime;
-    if (cacheTime > sourceTime) {
+    if (cacheTime >= sourceTime) {
       // We can return the cached version
       content = fs.readFileSync(cachePath, 'utf8');
     }
@@ -154,7 +154,7 @@ var compile = function(module, filename) {
         content = compiled;
 
       // Try writing to cache
-      fs.mkdirs(path.dirname(cachePath));
+      fs.mkdirsSync(path.dirname(cachePath));
 
       fs.writeFileSync(cachePath, content, 'utf8');
       if (mapPath)

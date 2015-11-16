@@ -76,7 +76,6 @@ module.exports = (env) ->
       match = null
 
       stateAcFilter = (v) => v.trim() isnt 'is switched' 
-
       M(input, context)
         .matchDevice(switchDevices, (next, d) =>
           next.match([' is', ' is turned', ' is switched'], acFilter: stateAcFilter, type: 'static')
@@ -616,8 +615,7 @@ module.exports = (env) ->
       @framework.variableManager.on("variableValueChanged", @changeListener)
       super()
     getValue: -> 
-      if @lastState? then return Promise.resolve(@lastState)
-      else return @_evaluate()
+      return @_evaluate()
     destroy: -> 
       @framework.variableManager.removeListener("variableValueChanged", @changeListener)
       super()
@@ -635,6 +633,16 @@ module.exports = (env) ->
     Does the comparison.
     ###
     _compareValues: (left, right) ->
+      if @comparator in ["<", ">", "<=", ">="]
+        if typeof left is "string"
+          if isNaN(left)
+            throw new Error("Can not compare strings with #{@comparator}!")
+          left = parseFloat(left)
+        if typeof right is "string"
+          if isNaN(right)
+            throw new Error("Can not compare strings with #{@comparator}!")
+          right = parseFloat(right)
+
       return switch @comparator
         when '==' then left is right
         when '!=' then left isnt right

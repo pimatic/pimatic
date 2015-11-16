@@ -271,6 +271,13 @@ describe "Matcher", ->
         finish()
       )
 
+    it "should handle escaped brackets and other chars: \"\\{ \\} \\$\"", (finish) ->
+      M('"\\{ \\} \\$"').matchStringWithVars(varsAndFuns, (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['"{ } $"'])
+        finish()
+      )
+
     it "should handle escaped backslash at end \"some \\\\\"", (finish) ->
       M('"some \\\\"').matchStringWithVars(varsAndFuns, (m, tokens) =>
         assert m?
@@ -283,6 +290,20 @@ describe "Matcher", ->
       M('"echo \\"abc\\" | mailx -s \\"def\\""').matchStringWithVars(varsAndFuns, (m, tokens) =>
         assert m?
         assert.deepEqual(tokens, ['"echo "abc" | mailx -s "def""'])
+        finish()
+      )
+
+    it "should handle new line \"some \\n text", (finish) ->
+      M('"some \\n text"').matchStringWithVars(varsAndFuns, (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['"some \n text"'])
+        finish()
+      )
+
+    it "should not handle as new line \"some \\\\n text", (finish) ->
+      M('"some \\\\n text"').matchStringWithVars(varsAndFuns, (m, tokens) =>
+        assert m?
+        assert.deepEqual(tokens, ['"some \\n text"'])
         finish()
       )
 

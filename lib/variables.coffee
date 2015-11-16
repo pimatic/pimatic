@@ -10,7 +10,7 @@ _ = require 'lodash'
 S = require 'string'
 M = require './matcher'
 humanFormat = require 'human-format'
-
+isNumber = (n) -> "#{n}".match(/^-?[0-9]+\.?[0-9]*$/)?
 varsAst = require './variables-ast-builder'
 
 module.exports = (env) ->
@@ -31,9 +31,9 @@ module.exports = (env) ->
 
     getCurrentValue: -> @value
     _setValue: (value) ->
-      numValue = parseFloat(value)
-      value = numValue unless isNaN(numValue)
-      if value is @value then return false
+      if isNumber value
+        numValue = parseFloat(value)
+        value = numValue unless isNaN(numValue)
       @value = value
       @_vars._emitVariableValueChanged(this, @value)
       return true
@@ -76,8 +76,8 @@ module.exports = (env) ->
       @_device.removeListener("change", @_deviceChangeListener)
       @_device.removeListener("destroy", @_deviceDestroyListener)
       
-    getUpdatedValue: -> 
-      return @_device.getUpdatedAttributeValue(@_attrName)
+    getUpdatedValue: (varsInEvaluation = {}) -> 
+      return @_device.getUpdatedAttributeValue(@_attrName, varsInEvaluation)
 
     destroy: =>
       @_removeListener()
@@ -185,6 +185,57 @@ module.exports = (env) ->
           minf = parseFloat(min)
           maxf = parseFloat(max)
           return Math.floor( Math.random() * (maxf+1-minf) ) + minf
+      round:
+        args:
+          number:
+            type: "number"
+          decimals:
+            type: "number"
+            optional: yes
+        exec: (value, decimals) -> 
+          unless decimals?
+            decimals = 0
+          multiplier = Math.pow(10, decimals)
+          return Math.round(value * multiplier) / multiplier
+      roundToNearest:
+        args:
+          number:
+            type: "number"
+          steps:
+            type: "number"
+        exec: (number, steps) ->
+          steps = String(steps)
+          decimals = (if steps % 1 != 0 then steps.substr(steps.indexOf(".") + 1).length else 0)
+          return Number((Math.round(number / steps) * steps).toFixed(decimals))
+      timeFormat:
+        args:
+          number:
+            type: "number"
+        exec: (number) ->
+          hours = parseInt(number)
+          decimalMinutes = (number-hours) * 60
+          minutes = Math.floor(decimalMinutes)
+          seconds = Math.round((decimalMinutes % 1) * 60)
+          if seconds == 60
+            minutes += 1
+            seconds = "0"
+          if minutes == 60
+            hours += 1
+            minutes = "0"
+          hours = "0" + hours if hours < 10
+          minutes = "0" + minutes if minutes < 10
+          seconds = "0" + seconds if seconds < 10
+          return "#{hours}:#{minutes}:#{seconds}"
+      timeDecimal:
+        args:
+          time:
+            type: "string"
+        exec: (time) ->
+          hours = time.substr(0, time.indexOf(':'))
+          minutes = time.substr(hours.length + 1, 2)
+          seconds = time.substr(hours.length + minutes.length + 2, 2)
+
+          return parseInt(hours) + parseFloat(minutes / 60) + parseFloat(seconds / 3600)
       date:
         args:
           format:
@@ -228,7 +279,6 @@ module.exports = (env) ->
       for variable in @variablesConfig
         do (variable) =>
           assert variable.name? and variable.name.length > 0
-          assert(typeof variable.value is 'number' or variable.value.length > 0) if variable.value?
           variable.name = variable.name.substring(1) if variable.name[0] is '$'
           if variable.expression?
             try

@@ -10,6 +10,8 @@ common extensible platform for home control and automation tasks.
 
 Read more at [pimatic.org](http://pimatic.org/) or visit the [forum](http://forum.pimatic.org).
 
+[![Join the chat at https://gitter.im/pimatic/pimatic](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/pimatic/pimatic?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Screenshots
 -----------
 [![Screenshot 1][screen1_thumb]](http://www.pimatic.org/screens/screen1.png) 
@@ -31,7 +33,7 @@ on [pimatic.org](http://pimatic.org/). If you need any help, [ask at the forum](
 Donation
 --------
 
-Happy with pimatic and using it everyday? Consider a donation to support developlment and keeping the website and forum up: [![Gittip donate button](http://img.shields.io/gittip/sweetpi.png)](https://www.gittip.com/sweetpi/ "Donate weekly to this project using Gittip")
+Happy with pimatic and using it everyday? Consider a donation to support development and keeping the website and forum up: [![Gittip donate button](http://img.shields.io/gittip/sweetpi.png)](https://www.gittip.com/sweetpi/ "Donate weekly to this project using Gittip")
 [![PayPal donate button](http://img.shields.io/paypal/donate.png?color=blue)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=KCVVRY4243JS6 "Donate once-off to this project using Paypal")
 
 We promise, that pimatic will always be free to use and its code be open sourced.

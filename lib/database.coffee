@@ -33,7 +33,7 @@ module.exports = (env) ->
         valueColumnType: "string"
       }
     toDBBool: (v) => if v then 1 else 0
-    fromDBBool: (v) => (v == 1 or v is "1") 
+    fromDBBool: (v) => (v == 1 or v is "1")
     deviceAttributeCache: {}
     typeToAttributeTable: (type) -> @typeMap[type]
   }
@@ -70,12 +70,19 @@ module.exports = (env) ->
           client: @dbSettings.client
           connection: connection
           pool:
-            destroy: (connection) => 
-              connection.close( (err) =>
-                @emit "close", err
-              )
+            min: 1
+            max: 1
+            destroy: (connection) =>
+              if @dbSettings.client is "sqlite3"
+                connection.close( (err) =>
+                  @emit "close", err
+                )
+              else
+                connection.end( (err) =>
+                  @emit "close", err
+                )
         )
-        
+
         @framework.on('destroy', (context) =>
           @framework.removeListener("messageLogged", @messageLoggedListener)
           @framework.removeListener('deviceAttributeChanged', @deviceAttributeChangedListener)
@@ -116,16 +123,16 @@ module.exports = (env) ->
             @knex.raw("PRAGMA journal_mode=WAL;")
           ])
 
-      ).then( =>         
+      ).then( =>
         @_createTables()
-      ).then( =>     
+      ).then( =>
         # Save log-messages
         @framework.on("messageLogged", @messageLoggedListener = ({level, msg, meta}) =>
           @saveMessageEvent(meta.timestamp, level, meta.tags, msg).done()
         )
 
         # Save device attribute changes
-        @framework.on('deviceAttributeChanged', 
+        @framework.on('deviceAttributeChanged',
           @deviceAttributeChangedListener = ({device, attributeName, time, value}) =>
             @saveDeviceAttributeEvent(device.id, attributeName, time, value).done()
         )
@@ -162,7 +169,7 @@ module.exports = (env) ->
               env.logger.debug("Deleting expired message... Done.") if @dbSettings.debug
             )
           )
-          .then( => 
+          .then( =>
             if deleteNo % syncAllNo is 0
               env.logger.debug("Done -> flushing to disk") if @dbSettings.debug
               next = @commitLoggingTransaction().then( =>
@@ -186,9 +193,9 @@ module.exports = (env) ->
     loggingTransaction: ->
       unless @_loggingTransaction?
         @_loggingTransaction = new Promise( (resolve, reject) =>
-          @knex.transaction( (trx) => 
+          @knex.transaction( (trx) =>
             transactionInfo = {
-              trx, 
+              trx,
               count: 0,
               resolve: null
             }
@@ -203,7 +210,7 @@ module.exports = (env) ->
           action = callback(transactionInfo.trx)
           # must return a promise
           transactionInfo.count++
-          actionCompleted = -> 
+          actionCompleted = ->
             transactionInfo.count--
             if transactionInfo.count is 0 and transactionInfo.resolve?
               transactionInfo.resolve()
@@ -219,13 +226,13 @@ module.exports = (env) ->
       if @_loggingTransaction?
         promise = @_loggingTransaction.then( (transactionInfo) =>
           env.logger.debug("Committing") if @dbSettings.debug
-          doCommit = => 
+          doCommit = =>
             return transactionInfo.trx.commit()
           if transactionInfo.count is 0
             return doCommit()
           else
-            return new Promise( (resolve) -> 
-              transactionInfo.resolve = -> 
+            return new Promise( (resolve) ->
+              transactionInfo.resolve = ->
                 doCommit()
                 resolve()
             )
@@ -234,14 +241,14 @@ module.exports = (env) ->
       return promise.catch( (error) =>
         env.logger.error(error.message)
         env.logger.debug(error.stack)
-      )    
+      )
 
     _createTables: ->
       pending = []
 
       createTableIfNotExists = ( (tableName, cb) =>
         @knex.schema.hasTable(tableName).then( (exists) =>
-          if not exists        
+          if not exists
             return @knex.schema.createTable(tableName, cb).then(( =>
               env.logger.info("#{tableName} table created!")
             ), (error) =>
@@ -260,52 +267,32 @@ module.exports = (env) ->
         table.text('text')
       )
       pending.push createTableIfNotExists('deviceAttribute', (table) =>
-        table.increments('id').primary()
+        table.increments('id').primary().unique()
         table.string('deviceId')
         table.string('attributeName')
         table.string('type')
         table.boolean('discrete')
         table.timestamp('lastUpdate').nullable()
         table.string('lastValue').nullable()
-      )
-
-      # add to old deviceAttribute table 
-      pending.push @knex.schema.table('deviceAttribute', (table) =>
-        table.boolean('discrete').nullable()
-      ).catch( (error) -> 
-        if error.errno is 1 then return #ignore
-        throw error
+        table.index(['deviceId','attributeName'], 'deviceAttributeDeviceIdAttributeName')
+        table.index(['deviceId'], 'deviceAttributeDeviceId')
+        table.index(['attributeName'], 'deviceAttributeAttributeName')
       )
 
       for tableName, tableInfo of dbMapping.attributeValueTables
         pending.push createTableIfNotExists(tableName, (table) =>
           table.increments('id').primary()
-          table.timestamp('time').index() 
+          table.timestamp('time').index()
           table.integer('deviceAttributeId')
+            .unsigned()
             .references('id')
             .inTable('deviceAttribute')
           table[tableInfo.valueColumnType]('value')
-        ).then( =>
-          return @knex.raw("""
-            CREATE INDEX IF NOT EXISTS
-            deviceAttributeIdTime 
-            ON #{tableName} (deviceAttributeId, time);
-          """)
+        ).then(tableName, (table) =>
+          return table.index(['deviceAttributeId','time'], 'deviceAttributeIdTime')
         )
 
-      return Promise.all(pending).then( =>
-        return @knex.raw("""
-          CREATE INDEX IF NOT EXISTS
-          deviceAttributeDeviceIdAttributeName ON 
-          deviceAttribute(deviceId, attributeName);
-          CREATE INDEX IF NOT EXISTS
-          deviceAttributeDeviceId ON 
-          deviceAttribute(deviceId);
-          CREATE INDEX IF NOT EXISTS
-          deviceAttributeAttributeName ON 
-          deviceAttribute(attributeName);
-        """)
-      )
+      return Promise.all(pending)
 
     getDeviceAttributeLogging: () ->
       return _.clone(@dbSettings.deviceAttributeLogging)
@@ -443,7 +430,7 @@ module.exports = (env) ->
       expireMs = null
       for entry in @dbSettings.messageLogging
         if (
-          (entry.level is "*" or entry.level is level) and 
+          (entry.level is "*" or entry.level is level) and
           (entry.tags.length is 0 or (t for t in entry.tags when t in tags).length > 0)
         )
           expireMs = entry.expireInfo.expireMs
@@ -459,7 +446,17 @@ module.exports = (env) ->
             return Promise.each(_.keys(dbMapping.attributeValueTables), (tableName) =>
               if @_isDestroying then return
               del = @knex(tableName).transacting(trx)
-              del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
+              if @dbSettings.client is "sqlite3"
+                del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
+              else
+                del.whereRaw(
+                  'time < FROM_UNIXTIME(?)',
+                  [
+                    @_convertTimeForDatabase(
+                      parseFloat((new Date()).getTime() - entry.expireInfo.expireMs)
+                    )
+                  ]
+                )
               del.whereRaw(subqueryRaw)
               query = del.del()
               env.logger.debug("query:", query.toString()) if @dbSettings.debug
@@ -473,7 +470,17 @@ module.exports = (env) ->
         return Promise.each(@dbSettings.messageLogging, (entry) =>
           if @_isDestroying then return
           del = @knex('message').transacting(trx)
-          del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
+          if @dbSettings.client is "sqlite3"
+            del.where('time', '<', (new Date()).getTime() - entry.expireInfo.expireMs)
+          else
+            del.whereRaw(
+              'time < FROM_UNIXTIME(?)',
+              [
+                @_convertTimeForDatabase(
+                  parseFloat((new Date()).getTime() - entry.expireInfo.expireMs)
+                )
+              ]
+            )
           del.whereRaw(entry.expireInfo.whereSQL)
           query = del.del()
           env.logger.debug("query:", query.toString()) if @dbSettings.debug
@@ -486,7 +493,7 @@ module.exports = (env) ->
       #assert typeof time is 'number'
       assert Array.isArray(tags)
       assert typeof level is 'string'
-      assert level in _.keys(dbMapping.logLevelToInt) 
+      assert level in _.keys(dbMapping.logLevelToInt)
 
       expireMs = @getMessageLoggingTime(time, level, tags, text)
       if expireMs is 0
@@ -506,6 +513,10 @@ module.exports = (env) ->
       assert typeof attributeName is 'string' and attributeName.length > 0
       @emit 'device-attribute-save', {deviceId, attributeName, time, value}
 
+      if value isnt value # just true for Number.NaN
+        # Don't insert NaN values into the database
+        return Promise.resolve()
+
       return @_getDeviceAttributeInfo(deviceId, attributeName).then( (info) =>
         return @doInLoggingTransaction( (trx) =>
           # insert into value table
@@ -515,7 +526,7 @@ module.exports = (env) ->
             # value expires immediatly
             doInsert = false
           else
-            if info.intervalMs is 0 or timestamp - info.lastInsertTime > info.intervalMs 
+            if info.intervalMs is 0 or timestamp - info.lastInsertTime > info.intervalMs
               doInsert = true
             else
               doInsert = false
@@ -551,9 +562,15 @@ module.exports = (env) ->
         else
           query.where('level', levelOp, dbMapping.logLevelToInt[level])
       if after?
-        query.where('time', '>=', after)
+        if @dbSettings.client is "sqlite3"
+          query.where('time', '>=', after)
+        else
+          query.whereRaw('time >= FROM_UNIXTIME(?)', [@_convertTimeForDatabase(parseFloat(after))])
       if before?
-        query.where('time', '<=', before)
+        if @dbSettings.client is "sqlite3"
+          query.where('time', '<=', before)
+        else
+          query.whereRaw('time <= FROM_UNIXTIME(?)', [@_convertTimeForDatabase(parseFloat(before))])
       if tags?
         unless Array.isArray tags then tags = [tags]
         for tag in tags
@@ -587,7 +604,7 @@ module.exports = (env) ->
           for m in msgs
             m.tags = JSON.parse(m.tags)
             m.level = dbMapping.logIntToLevel[m.level]
-          return msgs 
+          return msgs
         )
       )
 
@@ -595,32 +612,36 @@ module.exports = (env) ->
       return @doInLoggingTransaction( (trx) =>
         query = @knex('message').transacting(trx)
         @_buildMessageWhere(query, criteria)
-        return Promise.resolve((query).del()) 
+        return Promise.resolve((query).del())
       )
 
     _buildQueryDeviceAttributeEvents: (queryCriteria = {}) ->
       {
-        deviceId, 
-        attributeName, 
-        after, 
-        before, 
-        order, 
-        orderDirection, 
-        offset, 
+        deviceId,
+        attributeName,
+        after,
+        before,
+        order,
+        orderDirection,
+        offset,
         limit
-      } = queryCriteria 
+      } = queryCriteria
       unless order?
         order = "time"
         orderDirection = "desc"
 
       buildQueryForType = (tableName, query) =>
+        if @dbSettings.client is "sqlite3"
+          timeSelect = 'time AS time'
+        else
+          timeSelect = @knex.raw('(UNIX_TIMESTAMP(time)*1000) AS time')
         query.select(
-          'deviceAttribute.deviceId AS deviceId', 
-          'deviceAttribute.attributeName AS attributeName', 
+          'deviceAttribute.deviceId AS deviceId',
+          'deviceAttribute.attributeName AS attributeName',
           'deviceAttribute.type AS type',
-          'time AS time', 
+          timeSelect,
           'value AS value'
-        ).from(tableName).join('deviceAttribute', 
+        ).from(tableName).join('deviceAttribute',
           "#{tableName}.deviceAttributeId", '=', 'deviceAttribute.id',
         )
         if deviceId?
@@ -637,9 +658,15 @@ module.exports = (env) ->
           query.unionAll( -> buildQueryForType(tableName, this) )
 
       if after?
-        query.where('time', '>=', parseFloat(after))
+        if @dbSettings.client is "sqlite3"
+          query.where('time', '>=', after)
+        else
+          query.whereRaw('time >= FROM_UNIXTIME(?)', [@_convertTimeForDatabase(parseFloat(after))])
       if before?
-        query.where('time', '<=', parseFloat(before))
+        if @dbSettings.client is "sqlite3"
+          query.where('time', '<=', before)
+        else
+          query.whereRaw('time <= FROM_UNIXTIME(?)', [@_convertTimeForDatabase(parseFloat(before))])
       query.orderBy(order, orderDirection)
       if offset? then query.offset(offset)
       if limit? then query.limit(limit)
@@ -682,8 +709,8 @@ module.exports = (env) ->
       @doInLoggingTransaction( (trx) =>
         return @knex('deviceAttribute').transacting(trx).select(
           'id',
-          'deviceId', 
-          'attributeName', 
+          'deviceId',
+          'attributeName',
           'type'
         )
       )
@@ -692,7 +719,7 @@ module.exports = (env) ->
       @doInLoggingTransaction( (trx) =>
         return @knex('deviceAttribute').transacting(trx).select(
           'id',
-          'deviceId', 
+          'deviceId',
           'attributeName',
           'type',
           'discrete'
@@ -725,13 +752,13 @@ module.exports = (env) ->
           )
         return Promise
           .reduce(queries, (all, result) => all.concat result)
-          .each( (entry) => 
-            entry.count = entry['count("id")'] 
+          .each( (entry) =>
+            entry.count = entry['count("id")']
             entry['count("id")'] = undefined
           )
       )
 
-    runVacuum: -> 
+    runVacuum: ->
       @commitLoggingTransaction().then( =>
         return @knex.raw('VACUUM;')
       )
@@ -741,7 +768,7 @@ module.exports = (env) ->
       return @doInLoggingTransaction( (trx) =>
         return @knex('deviceAttribute').transacting(trx).select(
           'id'
-          'deviceId', 
+          'deviceId',
           'attributeName',
           'type',
           'discrete'
@@ -818,7 +845,7 @@ module.exports = (env) ->
               device = @framework.deviceManager.getDeviceById(result.deviceId)
               unless device? then throw new Error("#{result.deviceId} not found.")
               attribute = device.attributes[result.attributeName]
-              unless attribute? 
+              unless attribute?
                 new Error("#{result.deviceId} has no attribute #{result.attributeName}.")
               info = dbMapping.deviceAttributeCache[fullQualifier]
               info.discrete = attribute.discrete if info?
@@ -833,11 +860,11 @@ module.exports = (env) ->
 
     querySingleDeviceAttributeEvents: (deviceId, attributeName, queryCriteria = {}) ->
       {
-        after, 
-        before, 
-        order, 
-        orderDirection, 
-        offset, 
+        after,
+        before,
+        order,
+        orderDirection,
+        offset,
         limit,
         groupByTime
       } = queryCriteria
@@ -850,17 +877,38 @@ module.exports = (env) ->
           unless groupByTime?
             query.select('time', 'value')
           else
-            query.select(@knex.raw('MIN(time) AS time'), @knex.raw('AVG(value) AS value'))
+            if @dbSettings.client is "sqlite3"
+              query.select(@knex.raw('MIN(time) AS time'), @knex.raw('AVG(value) AS value'))
+            else
+              query.select(
+                @knex.raw('MIN(UNIX_TIMESTAMP(time) * 1000) AS time'),
+                @knex.raw('AVG(value) AS value')
+              )
           query.where('deviceAttributeId', info.id)
           if after?
-            query.where('time', '>=', parseFloat(after))
+            if @dbSettings.client is "sqlite3"
+              query.where('time', '>=', @_convertTimeForDatabase(parseFloat(after)))
+            else
+              query.whereRaw(
+                'time >= FROM_UNIXTIME(?)',
+                [@_convertTimeForDatabase(parseFloat(after))]
+              )
           if before?
-            query.where('time', '<=', parseFloat(before))
+            if @dbSettings.client is "sqlite3"
+              query.where('time', '<=', @_convertTimeForDatabase(parseFloat(before)))
+            else
+              query.whereRaw(
+                'time <= FROM_UNIXTIME(?)',
+                [@_convertTimeForDatabase(parseFloat(before))]
+              )
           if order?
             query.orderBy(order, orderDirection)
           if groupByTime?
             groupByTime = parseFloat(groupByTime)
-            query.groupByRaw("time/#{groupByTime}")
+            if @dbSettings.client is "sqlite3"
+              query.groupByRaw("time/#{groupByTime}")
+            else
+              query.groupByRaw("UNIX_TIMESTAMP(time)/#{groupByTime}")
           if offset? then query.offset(offset)
           if limit? then query.limit(limit)
           env.logger.debug("query:", query.toString()) if @dbSettings.debug
@@ -886,7 +934,7 @@ module.exports = (env) ->
       fullQualifier = "#{deviceId}.#{attributeName}"
       info = dbMapping.deviceAttributeCache[fullQualifier]
       return (
-        if info? 
+        if info?
           unless info.expireMs?
             expireInfo = @getDeviceAttributeLoggingTime(
               deviceId, attributeName, info.type, info.discrete
@@ -934,6 +982,12 @@ module.exports = (env) ->
         return @_lastDevicesStateCache.then( (devices) -> devices[deviceId] )
       )
 
+    _convertTimeForDatabase: (timestamp) ->
+      #For mysql we need a timestamp in seconds
+      if @dbSettings.client is "sqlite3"
+        return timestamp
+      else
+        return Math.floor(timestamp / 1000)
 
     _insertDeviceAttribute: (deviceId, attributeName) ->
       assert typeof deviceId is 'string' and deviceId.length > 0
@@ -962,20 +1016,38 @@ module.exports = (env) ->
         already exists.
       ###
       return @doInLoggingTransaction( (trx) =>
-        return @knex.raw("""
-          INSERT INTO deviceAttribute(deviceId, attributeName, type, discrete)
-          SELECT
-            '#{deviceId}' AS deviceId,
-            '#{attributeName}' AS attributeName,
-            '#{info.type}' as type,
-            #{dbMapping.toDBBool(info.discrete)} as discrete
-          WHERE 0 = (
-            SELECT COUNT(*)
-            FROM deviceAttribute
-            WHERE deviceId = '#{deviceId}' and attributeName = '#{attributeName}'
-          );
-          """
-        ).transacting(trx).then( => 
+        if @dbSettings.client is "sqlite3"
+          statement = """
+            INSERT INTO deviceAttribute(deviceId, attributeName, type, discrete)
+            SELECT
+              '#{deviceId}' AS deviceId,
+              '#{attributeName}' AS attributeName,
+              '#{info.type}' as type,
+              #{dbMapping.toDBBool(info.discrete)} as discrete
+            WHERE 0 = (
+              SELECT COUNT(*)
+              FROM deviceAttribute
+              WHERE deviceId = '#{deviceId}' and attributeName = '#{attributeName}'
+            );
+            """
+        else
+          statement = """
+            INSERT INTO deviceAttribute(deviceId, attributeName, type, discrete)
+            SELECT * FROM
+              ( SELECT '#{deviceId}' AS deviceId,
+              '#{attributeName}' AS attributeName,
+              '#{info.type}' as type,
+              #{dbMapping.toDBBool(info.discrete)} as discrete
+              ) as tmp
+            WHERE NOT EXISTS (
+              SELECT deviceId, attributeName
+              FROM deviceAttribute
+              WHERE deviceId = '#{deviceId}' and attributeName = '#{attributeName}'
+            ) LIMIT 1;
+            """
+        return @knex.raw(
+          statement
+        ).transacting(trx).then( =>
           @knex('deviceAttribute').transacting(trx).select('id').where(
             deviceId: deviceId
             attributeName: attributeName

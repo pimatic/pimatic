@@ -179,8 +179,153 @@ module.exports = (env) ->
           return Promise.resolve("set $#{@variableName} to #{value}")
         )
 
+        
+  ###
+  The SetPresence ActionProvider
+  -------------
+  Provides set presence action, so that rules can use `set presence of <device> to present|absent` 
+  in the actions part.
+  ###
+  class SetPresenceActionProvider extends ActionProvider
+
+    constructor: (@framework) ->
+
+    parseAction: (input, context) ->
+      retVar = null
+
+      presenceDevices = _(@framework.deviceManager.devices).values().filter( 
+        (device) => device.hasAction("changePresenceTo")
+      ).value()
+      
+      device = null
+      state = null
+      match = null
+      
+      m = M(input, context).match(['set presence of '])
+      
+      m.matchDevice(presenceDevices, (m, d) ->
+        m.match([' present', ' absent'], (m, s) ->
+          # Already had a match with another device?
+          if device? and device.id isnt d.id
+            context?.addError(""""#{input.trim()}" is ambiguous.""")
+            return
+          device = d
+          state = s.trim()
+          match = m.getFullMatch()
+        )
+      )
+      
+      if match?
+        assert device?
+        assert state in ['present', 'absent']
+        assert typeof match is "string"
+        state = (state is 'present')
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new PresenceActionHandler(device, state)
+        }
+      else
+        return null
+        
+  class PresenceActionHandler extends ActionHandler 
+
+    constructor: (@device, @state) ->
+
+    ###
+    Handles the above actions.
+    ###
+    _doExectuteAction: (simulate, state) =>
+      return (
+        if simulate
+          if state then Promise.resolve __("would set presence of %s to present", @device.name)
+          else Promise.resolve __("would set presence of %s to absent", @device.name)
+        else
+          if state then @device.changePresenceTo(state).then( => 
+            __("set presence of %s to present", @device.name) )
+          else @device.changePresenceTo(state).then( => 
+            __("set presence %s to absent", @device.name) )
+      )
+
+    # ### executeAction()
+    executeAction: (simulate) => @_doExectuteAction(simulate, @state)
+    # ### hasRestoreAction()
+    hasRestoreAction: -> yes
+    # ### executeRestoreAction()
+    executeRestoreAction: (simulate) => @_doExectuteAction(simulate, (not @state))
+
+  ###
+  The open/close ActionProvider
+  -------------
+  Provides open/close action, for the DummyContactSensor.
+  ###
+  class ContactActionProvider extends ActionProvider
+
+    constructor: (@framework) ->
+
+    parseAction: (input, context) ->
+      retVar = null
+
+      contactDevices = _(@framework.deviceManager.devices).values().filter( 
+        (device) => device.hasAction("changeContactTo")
+      ).value()
+      
+      device = null
+      state = null
+      match = null
+      
+      m = M(input, context).match(['open ', 'close '], (m, a) =>
+        m.matchDevice(contactDevices, (m, d) ->
+          if device? and device.id isnt d.id
+            context?.addError(""""#{input.trim()}" is ambiguous.""")
+            return
+          device = d
+          state = a.trim()
+          match = m.getFullMatch()
+        )
+      )
+      
+      if match?
+        assert device?
+        assert state in ['open', 'close']
+        assert typeof match is "string"
+        state = (state is 'close')
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new ContactActionHandler(device, state)
+        }
+      else
+        return null
 
 
+  class ContactActionHandler extends ActionHandler 
+
+    constructor: (@device, @state) ->
+
+    ###
+    Handles the above actions.
+    ###
+    _doExectuteAction: (simulate, state) =>
+      return (
+        if simulate
+          if state then Promise.resolve __("would set contact %s to closed", @device.name)
+          else Promise.resolve __("would set contact %s to opened", @device.name)
+        else
+          if state then @device.changeContactTo(state).then( =>
+            __("set contact %s to closed", @device.name) )
+          else @device.changeContactTo(state).then( =>
+            __("set contact %s to opened", @device.name) )
+      )
+
+    # ### executeAction()
+    executeAction: (simulate) => @_doExectuteAction(simulate, @state)
+    # ### hasRestoreAction()
+    hasRestoreAction: -> yes
+    # ### executeRestoreAction()
+    executeRestoreAction: (simulate) => @_doExectuteAction(simulate, (not @state))
+
+        
   ###
   The Switch Action Provider
   -------------
@@ -354,6 +499,88 @@ module.exports = (env) ->
       )
 
   ###
+  The Button Action Provider
+  -------------
+  Provides the ability to press the button of a buttonsdevices.
+  Currently it handles the following actions:
+
+  * press [the] _device_
+
+  where _device_ is the name or id of a the button not the buttons device and "the" is optional.
+  ###
+  class ButtonActionProvider extends ActionProvider
+
+    constructor: (@framework) ->
+
+    # ### parseAction()
+    ###
+    Parses the above actions.
+    ###
+    parseAction: (input, context) =>
+      # The result the function will return:
+      matchCount = 0
+      matchingDevice = null
+      matchingButtonId = null
+      end = () => matchCount++
+      onButtonMatch = (m, {device, buttonId}) =>
+        matchingDevice = device
+        matchingButtonId = buttonId
+
+      buttonsWithId = [] 
+
+      for id, d of @framework.deviceManager.devices
+        continue unless d instanceof env.devices.ButtonsDevice
+        for b in d.config.buttons
+          buttonsWithId.push [{device: d, buttonId: b.id}, b.id]
+          buttonsWithId.push [{device: d, buttonId: b.id}, b.text] if b.id isnt b.text
+
+      m = M(input, context)
+        .match('press ')
+        .match('the ', optional: true)
+        .match('button ', optional: true)
+        .match(
+          buttonsWithId, 
+          wildcard: "{button}",
+          onButtonMatch
+        )
+
+      match = m.getFullMatch()
+      if match?
+        assert matchingDevice?
+        assert matchingButtonId?
+        assert typeof match is "string"
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new ButtonActionHandler(matchingDevice, matchingButtonId)
+        }
+      else
+        return null
+
+  class ButtonActionHandler extends ActionHandler
+
+    constructor: (@device, @buttonId) ->
+      assert @device? and @device instanceof env.devices.ButtonsDevice
+      assert @buttonId? and typeof @buttonId is "string"
+
+    ###
+    Handles the above actions.
+    ###
+    _doExecuteAction: (simulate) =>
+      return (
+        if simulate
+          Promise.resolve __("would press button %s of device %s", @buttonId, @device.id)
+        else
+          @device.buttonPressed(@buttonId)
+            .then( =>__("press button %s of device %s", @buttonId, @device.id) )
+      )
+
+    # ### executeAction()
+    executeAction: (simulate) => @_doExecuteAction(simulate)
+    # ### hasRestoreAction()
+    hasRestoreAction: -> no
+
+  ###
   The Shutter Action Provider
   -------------
   Provides the ability to raise or lower a shutter
@@ -459,7 +686,8 @@ module.exports = (env) ->
     parseAction: (input, context) =>
 
       shutterDevices = _(@framework.deviceManager.devices).values().filter( 
-        (device) => device.hasAction("stop") 
+        # only match Shutter devices and not media players
+        (device) => device.hasAction("stop") and device.hasAction("moveUp")
       ).value()
 
       device = null
@@ -794,17 +1022,435 @@ module.exports = (env) ->
     # ### executeRestoreAction()
     executeRestoreAction: (simulate) => Promise.resolve(@_doExecuteAction(simulate, @lastValue))
 
+
+  ###
+  The Timer Action Provider
+  -------------
+  Start, stop or reset Timer
+
+  * start|stop|reset the _device_ [timer] 
+
+  where _device_ is the name or id of a timer device and "the" is optional.
+  ###
+  class TimerActionProvider extends ActionProvider
+
+    constructor: (@framework) ->
+
+    # ### parseAction()
+    ###
+    Parses the above actions.
+    ###
+    parseAction: (input, context) =>
+
+      timerDevices = _(@framework.deviceManager.devices).values().filter( 
+        (device) => (
+          device.hasAction("startTimer") and 
+          device.hasAction("stopTimer") and 
+          device.hasAction("resetTimer") 
+        )
+      ).value()
+
+      device = null
+      action = null
+      match = null
+
+      # Try to match the input string with: start|stop|reset ->
+      m = M(input, context).match(['start ', 'stop ', 'reset '], (m, a) =>
+        # device name -> up|down
+        m.matchDevice(timerDevices, (m, d) ->
+          last = m.match(' timer', {optional: yes})
+          if last.hadMatch()
+             # Already had a match with another device?
+            if device? and device.id isnt d.id
+              context?.addError(""""#{input.trim()}" is ambiguous.""")
+              return
+            device = d
+            action = a.trim()
+            match = last.getFullMatch()
+        )
+      )
+
+      if match?
+        assert device?
+        assert action in ['start', 'stop', 'reset']
+        assert typeof match is "string"
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new TimerActionHandler(device, action)
+        }
+      
+        return null
+
+  class TimerActionHandler extends ActionHandler
+
+    constructor: (@device, @action) ->
+
+    # ### executeAction()
+    executeAction: (simulate) => 
+      return (
+        if simulate
+          Promise.resolve __("would #{@action} %s", @device.name)
+        else
+          @device["#{@action}Timer"]().then( => __("#{@action}ed %s", @device.name) )
+      )
+    # ### hasRestoreAction()
+    hasRestoreAction: -> false
+
+  # Pause play volume actions
+  class AVPlayerPauseActionProvider extends ActionProvider 
+  
+    constructor: (@framework) -> 
+    # ### executeAction()
+    ###
+    This function handles action in the form of `play device`
+    ###
+    parseAction: (input, context) =>
+
+      retVar = null
+
+      avPlayers = _(@framework.deviceManager.devices).values().filter( 
+        (device) => device.hasAction("pause") 
+      ).value()
+
+      if avPlayers.length is 0 then return
+
+      device = null
+      match = null
+
+      onDeviceMatch = ( (m, d) -> device = d; match = m.getFullMatch() )
+
+      m = M(input, context)
+        .match('pause ')
+        .matchDevice(avPlayers, onDeviceMatch)
+        
+      if match?
+        assert device?
+        assert typeof match is "string"
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new AVPlayerPauseActionHandler(device)
+        }
+      else
+        return null
+
+  class AVPlayerPauseActionHandler extends ActionHandler
+
+    constructor: (@device) -> #nop
+
+    executeAction: (simulate) => 
+      return (
+        if simulate
+          Promise.resolve __("would pause %s", @device.name)
+        else
+          @device.pause().then( => __("paused %s", @device.name) )
+      )
+      
+  # stop play volume actions
+  class AVPlayerStopActionProvider extends ActionProvider 
+  
+    constructor: (@framework) -> 
+    # ### executeAction()
+    ###
+    This function handles action in the form of `execute "some string"`
+    ###
+    parseAction: (input, context) =>
+
+      retVar = null
+
+      avPlayers = _(@framework.deviceManager.devices).values().filter( 
+        # only match media players and not shutters
+        (device) => device.hasAction("stop") and device.hasAction("play")
+      ).value()
+
+      if avPlayers.length is 0 then return
+
+      device = null
+      match = null
+
+      onDeviceMatch = ( (m, d) -> device = d; match = m.getFullMatch() )
+
+      m = M(input, context)
+        .match('stop ')
+        .matchDevice(avPlayers, onDeviceMatch)
+        
+      if match?
+        assert device?
+        assert typeof match is "string"
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new AVPlayerStopActionHandler(device)
+        }
+      else
+        return null
+
+  class AVPlayerStopActionHandler extends ActionHandler
+
+    constructor: (@device) -> #nop
+
+    executeAction: (simulate) => 
+      return (
+        if simulate
+          Promise.resolve __("would stop %s", @device.name)
+        else
+          @device.stop().then( => __("stop %s", @device.name) )
+      )
+
+  class AVPlayerPlayActionProvider extends ActionProvider 
+  
+    constructor: (@framework) -> 
+    # ### executeAction()
+    ###
+    This function handles action in the form of `execute "some string"`
+    ###
+    parseAction: (input, context) =>
+
+      retVar = null
+
+      avPlayers = _(@framework.deviceManager.devices).values().filter( 
+        (device) => device.hasAction("play") 
+      ).value()
+
+      if avPlayers.length is 0 then return
+
+      device = null
+      match = null
+
+      onDeviceMatch = ( (m, d) -> device = d; match = m.getFullMatch() )
+
+      m = M(input, context)
+        .match('play ')
+        .matchDevice(avPlayers, onDeviceMatch)
+        
+      if match?
+        assert device?
+        assert typeof match is "string"
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new AVPlayerPlayActionHandler(device)
+        }
+      else
+        return null
+        
+  class AVPlayerPlayActionHandler extends ActionHandler
+
+    constructor: (@device) -> #nop
+
+    executeAction: (simulate) => 
+      return (
+        if simulate
+          Promise.resolve __("would play %s", @device.name)
+        else
+          @device.play().then( => __("playing %s", @device.name) )
+      )
+
+  class AVPlayerVolumeActionProvider extends ActionProvider 
+  
+    constructor: (@framework) -> 
+    # ### executeAction()
+    ###
+    This function handles action in the form of `execute "some string"`
+    ###
+    parseAction: (input, context) =>
+
+      retVar = null
+      volume = null
+
+      avPlayers = _(@framework.deviceManager.devices).values().filter( 
+        (device) => device.hasAction("setVolume") 
+      ).value()
+
+      if avPlayers.length is 0 then return
+
+      device = null
+      valueTokens = null
+      match = null
+
+      onDeviceMatch = ( (m, d) -> device = d; match = m.getFullMatch() )
+
+      M(input, context)
+        .match('change volume of ')
+        .matchDevice(avPlayers, (next,d) =>
+          next.match(' to ', (next) =>
+            next.matchNumericExpression( (next, ts) =>
+              m = next.match('%', optional: yes)
+              if device? and device.id isnt d.id
+                context?.addError(""""#{input.trim()}" is ambiguous.""")
+                return
+              device = d
+              valueTokens = ts
+              match = m.getFullMatch()
+            )
+          )
+        )
+
+        
+      if match?
+        value = valueTokens[0] 
+        assert device?
+        assert typeof match is "string"
+        value = parseFloat(value)
+        if value < 0.0
+          context?.addError("Can't change volume to a negativ value.")
+          return
+        if value > 100.0
+          context?.addError("Can't change volume to greater than 100%.")
+          return
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new AVPlayerVolumeActionHandler(@framework,device,valueTokens)
+        }
+      else
+        return null
+        
+  class AVPlayerVolumeActionHandler extends ActionHandler
+
+    constructor: (@framework, @device, @valueTokens) -> #nop
+
+    executeAction: (simulate, value) => 
+      return (
+        if isNaN(@valueTokens[0])
+          val = @framework.variableManager.getVariableValue(@valueTokens[0].substring(1))
+        else
+          val = @valueTokens[0]     
+        if simulate
+          Promise.resolve __("would set volume of %s to %s", @device.name, val)
+        else   
+          @device.setVolume(val).then( => __("set volume of %s to %s", @device.name, val) )
+      )   
+
+  class AVPlayerNextActionProvider extends ActionProvider 
+  
+    constructor: (@framework) -> 
+    # ### executeAction()
+    ###
+    This function handles action in the form of `execute "some string"`
+    ###
+    parseAction: (input, context) =>
+
+      retVar = null
+      volume = null
+
+      avPlayers = _(@framework.deviceManager.devices).values().filter( 
+        (device) => device.hasAction("next") 
+      ).value()
+
+      if avPlayers.length is 0 then return
+
+      device = null
+      valueTokens = null
+      match = null
+
+      onDeviceMatch = ( (m, d) -> device = d; match = m.getFullMatch() )
+
+      m = M(input, context)
+        .match(['play next', 'next '])
+        .match(" song ", optional: yes)
+        .match("on ", optional: yes)
+        .matchDevice(avPlayers, onDeviceMatch)
+
+      if match?
+        assert device?
+        assert typeof match is "string"
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new AVPlayerNextActionHandler(device)
+        }
+      else
+        return null
+        
+  class AVPlayerNextActionHandler extends ActionHandler
+    constructor: (@device) -> #nop
+
+    executeAction: (simulate) => 
+      return (
+        if simulate
+          Promise.resolve __("would play next track of %s", @device.name)
+        else
+          @device.next().then( => __("play next track of %s", @device.name) )
+      )      
+
+  class AVPlayerPrevActionProvider extends ActionProvider 
+  
+    constructor: (@framework) -> 
+    # ### executeAction()
+    ###
+    This function handles action in the form of `execute "some string"`
+    ###
+    parseAction: (input, context) =>
+
+      retVar = null
+      volume = null
+
+      avPlayers = _(@framework.deviceManager.devices).values().filter( 
+        (device) => device.hasAction("previous") 
+      ).value()
+
+      if avPlayers.length is 0 then return
+
+      device = null
+      valueTokens = null
+      match = null
+
+      onDeviceMatch = ( (m, d) -> device = d; match = m.getFullMatch() )
+
+      m = M(input, context)
+        .match(['play previous', 'previous '])
+        .match(" song ", optional: yes)
+        .match("on ", optional: yes)
+        .matchDevice(avPlayers, onDeviceMatch)
+
+      if match?
+        assert device?
+        assert typeof match is "string"
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          actionHandler: new AVPlayerNextActionHandler(device)
+        }
+      else
+        return null
+        
+  class AVPlayerPrevActionHandler extends ActionHandler
+    constructor: (@device) -> #nop
+
+    executeAction: (simulate) => 
+      return (
+        if simulate
+          Promise.resolve __("would play previous track of %s", @device.name)
+        else
+          @device.previous().then( => __("play previous track of %s", @device.name) )
+      ) 
+         
+
+
+
   # Export the classes so that they can be accessed by the framework
   return exports = {
     ActionHandler
     ActionProvider
     SetVariableActionProvider
+    SetPresenceActionProvider
+    ContactActionProvider
     SwitchActionProvider
     DimmerActionProvider
     LogActionProvider
     ShutterActionProvider
     StopShutterActionProvider
     ToggleActionProvider
+    ButtonActionProvider
     HeatingThermostatModeActionProvider
     HeatingThermostatSetpointActionProvider
+    TimerActionProvider
+    AVPlayerPauseActionProvider
+    AVPlayerStopActionProvider
+    AVPlayerPlayActionProvider
+    AVPlayerVolumeActionProvider
+    AVPlayerNextActionProvider
+    AVPlayerPrevActionProvider
   }

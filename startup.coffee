@@ -4,6 +4,9 @@ assert = require 'cassert'
 fs = require 'fs'
 path = require 'path'
 Promise = require 'bluebird'
+# Enable this for better stack traces: 
+# https://github.com/petkaantonov/bluebird/blob/master/API.md#promiselongstacktraces---void
+#Promise.longStackTraces()
 
 # Setup the environment
 env = { logger: require './lib/logger' }

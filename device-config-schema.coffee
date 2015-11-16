@@ -17,11 +17,15 @@ module.exports = {
               type: "string"
             text:
               type: "string"
+            confirm:
+              description: "Ask the user to confirm the button press"
+              type: "boolean"
+              default: false
   }
   VariablesDevice: {
     title: "VariablesDevice config"
     type: "object"
-    extensions: ["xLink"]
+    extensions: ["xLink", "xAttributeOptions"]
     properties:
       variables:
         description: "Variables to display"
@@ -57,6 +61,10 @@ module.exports = {
                 Should be set to true if the value does not change continuously over time.
               "
               type: "boolean"
+            acronym:
+              description: "Acronym to show as value label in the frontend"
+              type: "string"
+              required: false
   }
   DummySwitch:
     title: "DummySwitch config"
@@ -73,9 +81,28 @@ module.exports = {
     type: "object"
     extensions: ["xLink"]
     properties: {}
+  DummyContactSensor:
+    title: "DummyContactSensor config"
+    type: "object"
+    extensions: ["xLink", "xClosedLabel", "xOpenedLabel"]
+    properties: {}
+  DummyPresenceSensor:
+    title: "DummyPresenceSensor config"
+    type: "object"
+    extensions: ["xLink", "xClosedLabel", "xOpenedLabel"]
+    properties:
+      autoReset:
+        description: """Reset the state to absent after resetTime"""
+        type: "boolean"
+        default: true
+      resetTime:
+        description: "Time after that the presence value is reseted to absent."
+        type: "integer"
+        default: 10000
   DummyHeatingThermostat: {
     title: "DummyHeatingThermostat config options"
     type: "object"
+    extensions: ["xLink"]
     properties:
       comfyTemp:
         description: "The defined comfy temperature"
@@ -85,6 +112,10 @@ module.exports = {
         description: "The defined eco mode temperature"
         type: "number"
         default: 17
+      guiShowValvePosition:
+        description: "Show the valve position in the GUI"
+        type: "boolean"
+        default: true
       guiShowModeControl: 
         description: "Show the mode buttons in the GUI"
         type: "boolean"
@@ -93,9 +124,19 @@ module.exports = {
         description: "Show the preset temperatures in the GUI"
         type: "boolean"
         default: true
-      guiShowTemperatueInput:
+      guiShowTemperatureInput:
         description: "Show the temperature input spinbox in the GUI"
         type: "boolean"
         default: true        
   }
+  Timer:
+    title: "timer config"
+    type: "object"
+    extensions: ["xLink"]
+    properties: {
+      resolution:
+        description: "The interval the timer is updated in seconds"
+        type: "number"
+        default: 1
+    }
 }

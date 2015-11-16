@@ -9,6 +9,7 @@ JaySchema = require 'jayschema'
 RJSON = require 'relaxed-json'
 i18n = require 'i18n'
 express = require "express"
+connectTimeout = require 'connect-timeout'
 socketIo = require 'socket.io'
 # Require engine.io from socket.io
 engineIo = require.cache[require.resolve('socket.io')].require('engine.io')
@@ -18,11 +19,12 @@ S = require 'string'
 _ = require 'lodash'
 declapi = require 'decl-api'
 util = require 'util'
-cjson = require 'cjson'
+jsonlint = require 'jsonlint'
+events = require 'events'
 
 module.exports = (env) ->
 
-  class Framework extends require('events').EventEmitter
+  class Framework extends events.EventEmitter
     configFile: null
     app: null
     io: null
@@ -39,7 +41,7 @@ module.exports = (env) ->
     constructor: (@configFile) ->
       assert configFile?
       @maindir = path.resolve __dirname, '..'
-      env.logger.winston.on("logged", (level, msg, meta) => 
+      env.logger.winston.on("logged", (level, msg, meta) =>
         @_emitMessageLoggedEvent(level, msg, meta)
       )
       @pluginManager = new env.plugins.PluginManager(this)
@@ -93,7 +95,7 @@ module.exports = (env) ->
     _loadConfig: () ->
       schema = require("../config-schema")
       contents = fs.readFileSync(@configFile).toString()
-      instance = cjson.parse(RJSON.transform(contents))
+      instance = jsonlint.parse(RJSON.transform(contents))
 
       # some legacy support for old single user
       auth = instance.settings?.authentication
@@ -132,6 +134,9 @@ module.exports = (env) ->
         defaultLocale: @config.settings.locale,
       })
 
+      unless @config.debug
+        events.EventEmitter.defaultMaxListeners = 100
+
 
     _checkConfig: (config)->
 
@@ -155,9 +160,9 @@ module.exports = (env) ->
       # Check groups, rules, variables, pages integrity
       logWarning = (type, id, name, collection = "group") ->
         env.logger.warn(
-          """Could not find a #{type} with the ID "#{id}" from """ + 
+          """Could not find a #{type} with the ID "#{id}" from """ +
           """#{collection} "#{name}" in #{type}s config section."""
-        )        
+        )
 
       for group in config.groups
         for deviceId in group.devices
@@ -183,6 +188,17 @@ module.exports = (env) ->
       # Setup express
       # -------------
       @app = express()
+      @app.use(connectTimeout("5min", respond: false))
+      @app.use( (req, res, next) =>
+        req.on("timeout", =>
+          env.logger.warn(
+            "http request handler timeout. Possible unhandled request:
+            #{req.method} #{req.url}"
+          )
+          env.logger.debug(req.body) if req.body?
+        )
+        next()
+      )
       #@app.use express.logger()
       @app.use express.cookieParser()
       @app.use express.urlencoded(limit: '10mb')
@@ -200,13 +216,14 @@ module.exports = (env) ->
       @app.cookieSessionOptions = {
         secret:  auth.secret
         key: 'pimatic.sess'
-        cookie: { maxAge: null }        
+        cookie: { maxAge: null }
       }
       @app.use express.cookieSession(@app.cookieSessionOptions)
+
       # Setup authentication
       # ----------------------
       # Use http-basicAuth if authentication is not disabled.
-      
+
       assert auth.enabled in [yes, no]
 
       if auth.enabled is yes
@@ -244,15 +261,15 @@ module.exports = (env) ->
 
         # if already logged in so just continue
         loggedIn = (
-          typeof req.session.username is "string" and 
-          typeof req.session.loginToken is "string" and 
+          typeof req.session.username is "string" and
+          typeof req.session.loginToken is "string" and
           req.session.username.length > 0 and
           req.session.loginToken.length > 0 and
           @userManager.checkLoginToken(auth.secret, req.session.username, req.session.loginToken)
         )
         if loggedIn
           return next()
- 
+
         # else use authorization
         express.basicAuth( (user, pass) =>
           if @userManager.checkLogin(user, pass)
@@ -265,13 +282,13 @@ module.exports = (env) ->
             delete req.session.username
             delete req.session.loginToken
             delete req.session.role
-          # return allwys true, so that the next callback below is called and we can awnser with
+          # return always true, so that the next callback below is called and we can awnser with
           # 401 instead of show the auth dialog
           return yes
         )(req, res, next)
       )
 
-        
+
       @app.post('/login', (req, res) =>
         user = req.body.username
         password = req.body.password
@@ -319,7 +336,7 @@ module.exports = (env) ->
         @config.settings.httpsServer?.enabled or @config.settings.httpServer?.enabled
       )
 
-      unless serverEnabled 
+      unless serverEnabled
         env.logger.warn "You have no HTTPS and no HTTP server enabled!"
 
       @_initRestApi()
@@ -344,13 +361,13 @@ module.exports = (env) ->
             sessionCookie = req.signedCookies?[@app.cookieSessionOptions.key]
             loggedIn = (
               sessionCookie? and (
-                typeof sessionCookie.username is "string" and 
-                typeof sessionCookie.loginToken is "string" and 
+                typeof sessionCookie.username is "string" and
+                typeof sessionCookie.loginToken is "string" and
                 sessionCookie.username.length > 0 and
                 sessionCookie.loginToken.length > 0 and
                 @userManager.checkLoginToken(
-                  auth.secret, 
-                  sessionCookie.username, 
+                  auth.secret,
+                  sessionCookie.username,
                   sessionCookie.loginToken
                 )
               )
@@ -358,7 +375,7 @@ module.exports = (env) ->
             if loggedIn
               socket.username = sessionCookie.username
               return next()
-            else 
+            else
               env.logger.debug "socket.io: Cookie is invalid."
               return next(new Error('Authentication error'))
           )
@@ -372,6 +389,12 @@ module.exports = (env) ->
       @app.all( '/socket.io/socket.io.js', (req, res) => @io.serve(req, res) )
       @app.all( '/socket.io/*', (req, res) => engine.handleRequest(req, res) )
 
+      @app.use( (err, req, res, next) =>
+        env.logger.error("Error on incoming http request: #{err.message}")
+        env.logger.debug(err)
+        res.status(500).send(err.stack)
+      )
+
       onUpgrade = (req, socket, head) =>
         if socketIoPath is req.url.substr(0, socketIoPath.length)
           engine.handleUpgrade(req, socket, head)
@@ -384,7 +407,7 @@ module.exports = (env) ->
         httpsConfig = @config.settings.httpsServer
         assert httpsConfig instanceof Object
         assert typeof httpsConfig.keyFile is 'string' and httpsConfig.keyFile.length isnt 0
-        assert typeof httpsConfig.certFile is 'string' and httpsConfig.certFile.length isnt 0 
+        assert typeof httpsConfig.certFile is 'string' and httpsConfig.certFile.length isnt 0
 
         httpsOptions = {}
         httpsOptions[name] = value for name, value of httpsConfig
@@ -415,15 +438,13 @@ module.exports = (env) ->
         env.logger.error(error.message)
         env.logger.debug(error)
 
-
-
       checkPermissions = (socket, action) =>
         if auth.enabled is no then return true
         hasPermission = no
         if action.permission? and action.permission.scope?
           hasPermission = @userManager.hasPermission(
-            socket.username, 
-            action.permission.scope, 
+            socket.username,
+            action.permission.scope,
             action.permission.access
           )
         else if action.permission? and action.permission.action?
@@ -437,6 +458,7 @@ module.exports = (env) ->
 
       @io.on('connection', (socket) =>
         declapi.createSocketIoApi(socket, actionsWithBindings, onError, checkPermissions)
+
         if auth.enabled is yes
           username = socket.username
           role = @userManager.getUserByUsername(username).role
@@ -465,25 +487,25 @@ module.exports = (env) ->
         if (
           auth.enabled is no or
           @userManager.hasPermission(username, 'devices', 'read') or
-          @userManager.hasPermission(username, 'pages', 'read')  
+          @userManager.hasPermission(username, 'pages', 'read')
         )
           socket.emit('devices', (d.toJson() for d in @deviceManager.getDevices()) )
         else socket.emit('devices', [])
 
-        if auth.enabled is no or @userManager.hasPermission(username, 'rules', 'read')      
+        if auth.enabled is no or @userManager.hasPermission(username, 'rules', 'read')
           socket.emit('rules', (r.toJson() for r in @ruleManager.getRules()) )
         else socket.emit('rules', [])
 
-        if auth.enabled is no or @userManager.hasPermission(username, 'rules', 'read')   
+        if auth.enabled is no or @userManager.hasPermission(username, 'rules', 'read')
           socket.emit('variables', (v.toJson() for v in @variableManager.getVariables()) )
         else socket.emit('variables', [])
 
-        if auth.enabled is no or @userManager.hasPermission(username, 'pages', 'read')  
+        if auth.enabled is no or @userManager.hasPermission(username, 'pages', 'read')
           socket.emit('pages',  @pageManager.getPages() )
         else socket.emit('pages', [])
 
         needsRules = (
-          auth.enabled is no or 
+          auth.enabled is no or
           @userManager.hasPermission(username, 'devices', 'read') or
           @userManager.hasPermission(username, 'rules', 'read') or
           @userManager.hasPermission(username, 'variables', 'read') or
@@ -496,15 +518,15 @@ module.exports = (env) ->
       )
 
     listen: () ->
-      genErrFunc = (serverConfig) => 
+      genErrFunc = (serverConfig) =>
         return (err) =>
           msg = "Could not listen on port #{serverConfig.port}. Error: #{err.message}. "
-          switch err.code 
+          switch err.code
             when "EACCES" then msg += "Are you root?."
             when "EADDRINUSE" then msg += "Is a server already running?"
           env.logger.error msg
           env.logger.debug err.stack
-          err.silent = yes  
+          err.silent = yes
           throw err
 
       listenPromises = []
@@ -517,7 +539,7 @@ module.exports = (env) ->
         listenPromises.push awaiting.then( =>
           env.logger.info "Listening for HTTPS-request on port #{httpsServerConfig.port}..."
         )
-        
+
       if @app.httpServer?
         httpServerConfig = @config.settings.httpServer
         @app.httpServer.on 'error', genErrFunc(@config.settings.httpServer)
@@ -527,7 +549,7 @@ module.exports = (env) ->
         listenPromises.push awaiting.then( =>
           env.logger.info "Listening for HTTP-request on port #{httpServerConfig.port}..."
         )
-        
+
       Promise.all(listenPromises).then( =>
         @emit "server listen", "startup"
       )
@@ -546,7 +568,7 @@ module.exports = (env) ->
         process.exit 0
       )
 
-    getGuiSetttings: () -> {
+    getGuiSettings: () -> {
       config: @config.settings.gui
       defaults: @config.settings.gui.__proto__
     }
@@ -554,7 +576,7 @@ module.exports = (env) ->
     _emitDeviceAttributeEvent: (device, attributeName, attribute, time, value) ->
       @emit 'deviceAttributeChanged', {device, attributeName, attribute, time, value}
       @io?.emit(
-        'deviceAttributeChanged', 
+        'deviceAttributeChanged',
         {deviceId: device.id, attributeName, time: time.getTime(), value}
       )
 
@@ -630,14 +652,14 @@ module.exports = (env) ->
       @io?.emit("updateProcessStatus", {
         status: status
         modules: info.modules
-      }) 
+      })
 
     _emitUpdateProcessMessage: (message, info) ->
       @emit 'updateProcessMessages', message, info
       @io?.emit("updateProcessMessage", {
         message: message
         modules: info.modules
-      }) 
+      })
 
     init: ->
 
@@ -663,16 +685,16 @@ module.exports = (env) ->
                 break
             @emit "config"
           @_emitVariableValueChanged(changedVar, value)
-          
+
         )
         @variableManager.on("variableAdded", (addedVar) =>
           switch addedVar.type
             when 'value' then @config.variables.push({
-              name: addedVar.name, 
+              name: addedVar.name,
               value: addedVar.value
             })
             when 'expression' then @config.variables.push({
-              name: addedVar.name, 
+              name: addedVar.name,
               expression: addedVar.exprInputStr
             })
           @_emitVariableAdded(addedVar)
@@ -689,15 +711,25 @@ module.exports = (env) ->
 
       initActionProvider = =>
         defaultActionProvider = [
+          env.actions.SetPresenceActionProvider
+          env.actions.ContactActionProvider
           env.actions.SwitchActionProvider
           env.actions.DimmerActionProvider
           env.actions.LogActionProvider
           env.actions.SetVariableActionProvider
           env.actions.ShutterActionProvider
           env.actions.StopShutterActionProvider
+          env.actions.ButtonActionProvider
           env.actions.ToggleActionProvider
           env.actions.HeatingThermostatModeActionProvider
           env.actions.HeatingThermostatSetpointActionProvider
+          env.actions.TimerActionProvider
+          env.actions.AVPlayerPauseActionProvider
+          env.actions.AVPlayerStopActionProvider
+          env.actions.AVPlayerPlayActionProvider
+          env.actions.AVPlayerVolumeActionProvider
+          env.actions.AVPlayerNextActionProvider
+          env.actions.AVPlayerPrevActionProvider
         ]
         for actProv in defaultActionProvider
           actProvInst = new actProv(this)
@@ -736,19 +768,19 @@ module.exports = (env) ->
             unless rule.name? then rule.name = S(rule.id).humanize().s
 
             @ruleManager.addRuleByString(rule.id, {
-              name: rule.name, 
-              ruleString: rule.rule, 
+              name: rule.name,
+              ruleString: rule.rule,
               active: rule.active
               logging: rule.logging
             }, force = true).catch( (err) =>
-              env.logger.error "Could not parse rule \"#{rule.rule}\": " + err.message 
+              env.logger.error "Could not parse rule \"#{rule.rule}\": " + err.message
               env.logger.debug err.stack
-            )        
+            )
         )
 
         return Promise.all(addRulePromises).then(=>
           # Save rule updates to the config file:
-          # 
+          #
           # * If a new rule was added then...
           @ruleManager.on "ruleAdded", (rule) =>
             # ...add it to the rules Array in the config.json file
@@ -766,10 +798,10 @@ module.exports = (env) ->
           # * If a rule was changed then...
           @ruleManager.on "ruleChanged", (rule) =>
             # ...change the rule with the right id in the config.json file
-            @config.rules = for r in @config.rules 
+            @config.rules = for r in @config.rules
               if r.id is rule.id
                 {
-                  id: rule.id, 
+                  id: rule.id,
                   name: rule.name,
                   rule: rule.string,
                   active: rule.active,
@@ -795,12 +827,12 @@ module.exports = (env) ->
         .then(initActionProvider)
         .then(initPredicateProvider)
         .then(initRules)
-        .then( =>         
+        .then( =>
           # Save the config on "config" event
           @on "config", =>
             @saveConfig()
 
-          context = 
+          context =
             waitFor: []
             waitForIt: (promise) -> @waitFor.push promise
 
@@ -818,31 +850,6 @@ module.exports = (env) ->
           env.logger.error error.message
           env.logger.debug error.stack
 
-      @app.get("/api/device/:deviceId/:actionName", (req, res, next) =>
-        if auth.enabled is yes
-          username = req.session.username
-          hasPermission = @userManager.hasPermissionBoolean(
-            username, 'controlDevices'
-          )
-        else
-          hasPermission = true
-          username = "nobody"
-
-        if hasPermission
-          deviceId = req.params.deviceId
-          actionName = req.params.actionName
-          device = @deviceManager.getDeviceById(deviceId)
-          if device?
-            if device.hasAction(actionName)
-              action = device.actions[actionName]
-              declapi.callActionFromReqAndRespond(actionName, action, device, req, res)
-            else
-              declapi.sendErrorResponse(res, 'device hasn\'t that action')
-          else declapi.sendErrorResponse(res, 'device not found')
-        else
-          res.send(403)
-      )
-
       @app.get("/api", (req, res, nest) => res.send(declapi.stringifyApi(env.api.all)) )
       @app.get("/api/decl-api-client.js", declapi.serveClient)
 
@@ -857,8 +864,8 @@ module.exports = (env) ->
                   username = req.session.username
                   if action.permission.scope?
                     hasPermission = @userManager.hasPermission(
-                      username, 
-                      action.permission.scope, 
+                      username,
+                      action.permission.scope,
                       action.permission.access
                     )
                   else if action.permission.action?
@@ -910,7 +917,7 @@ module.exports = (env) ->
             if schema.items? and obj?
               for e in obj
                 blankSecrets schema.items, e
-      schema = require("../config-schema") 
+      schema = require("../config-schema")
       configCopy = _.cloneDeep(@config)
       delete configCopy['//']
       assert @userManager.requestUsername
@@ -937,7 +944,7 @@ module.exports = (env) ->
         packageInfo = @pluginManager.getInstalledPackageInfo(fullPluginName)
         if packageInfo?.configSchema?
           pathToSchema = path.resolve(
-            @pluginManager.pathToPlugin(fullPluginName), 
+            @pluginManager.pathToPlugin(fullPluginName),
             packageInfo.configSchema
           )
           pluginConfigSchema = require(pathToSchema)
@@ -956,8 +963,8 @@ module.exports = (env) ->
         warnings = []
         classInfo.prepareConfig(deviceConfig) if classInfo.prepareConfig?
         @_validateConfig(
-          deviceConfig, 
-          classInfo.configDef, 
+          deviceConfig,
+          classInfo.configDef,
             "config of device #{deviceConfig.id}"
         )
         declapi.checkConfig(classInfo.configDef.properties, deviceConfig, warnings)
@@ -972,7 +979,7 @@ module.exports = (env) ->
     destroy: ->
       if @_destroying? then return @_destroying
       return @_destroying = Promise.resolve().then( =>
-        context = 
+        context =
           waitFor: []
           waitForIt: (promise) -> @waitFor.push promise
 
