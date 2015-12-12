@@ -2,7 +2,7 @@
 	"on": "an",
 	"turned %s on": "%s eingeschaltet",
 	"Please enter a id": "Bitte eine ID eingeben",
-	"would turn %s on": "würde %s ausschalten",
+	"would turn %s on": "würde %s anschalten",
 	"would log \"%s\"": "würde  \"%s\" protokollieren",
 	"turned %s off": "%s ausgeschaltet",
 	"log: \"%s\"": "protokolliert: \"%s\"",
