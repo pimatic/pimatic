@@ -66,6 +66,20 @@ module.exports = {
               type: "string"
               required: false
   }
+  VariableInputDevice: {
+    title: "VariablesDevice config"
+    type: "object"
+    extensions: ["xLink"]
+    properties:
+      variable:
+        description: "The variable to modify on input change"
+        type: "string"
+      type:
+        description: "The type of the input"
+        type: "string"
+        default: "string"
+        enum: ["string", "number"]
+  }
   DummySwitch:
     title: "DummySwitch config"
     type: "object"
