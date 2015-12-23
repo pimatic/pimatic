@@ -1093,6 +1093,82 @@ module.exports = (env) ->
         createCallback
       }
 
+    checkConfigEntry: (name, entry, val) ->
+      # validate the type of entry against given value
+      switch entry.type
+        when 'string' then if typeof val isnt "string"
+          throw new Error("Expected " + name + " to be a string")
+        when 'number' then if typeof val isnt "number"
+          throw new Error("Expected " + name + " to be a number")
+        when 'boolean' then if typeof val isnt "boolean"
+          throw new Error("Expected " + name + " to be a boolean")
+        when 'object' then if typeof val isnt "object"
+          throw new Error("Expected " + name + " to be a object")
+        when 'array' then unless Array.isArray(val)
+          throw new Error("Expected " + name + " to be a array")
+        else
+          unless entry.type?
+            env.logger.warn("No field 'type' defined for #{name}. Update/correct schema?")
+          else
+            env.logger.warn("Unknown type '#{entry.type}' for '#{name}' specified. No check performed.")
+
+    search: (dict, key) ->
+      # search for key with value of key in dictionary dict. Return null or found result
+
+      #check if dict is not an object and return immediately
+      return null if dict != Object(dict)
+      #get value of key
+      result = dict[key]
+      # return value if key is found
+      return result if result
+      #else iterate over keys and call search recursively for the value
+      for k of dict
+        result = @search(dict[k], key)
+        # return as soon as something is found
+        return result if result
+      #return null if nothing found
+      return null
+
+    checkConfigAgainstSchema: (schema, config, warnings = []) ->
+      # valide config against schema
+
+      # when config is a array check each index value
+      if Array.isArray(config)
+        for element in config
+          @checkConfigAgainstSchema(schema, element, warnings)
+      else
+       # check each entry of config
+       for name of config
+        # exclude id, class and name when also id or class is present. Already checked in checkConfig
+        if not (name is "id") and 
+        not (name is "class") and
+        not ((name is "name") and (config.id? and config.class?))
+          # search for entry with key value of name in schema
+          dict = @search(schema, name)
+          unless dict?
+            warnings.push("Unknown config entry with name '" + name + "'.")
+          # entry found, when object type recursively go through whole schema
+          else if typeof config[name] is "object"
+            # when name is not a key on same level pass sub dictionary otherwise complete dictionary
+            unless config.name?
+              @checkConfigAgainstSchema(dict, config[name], warnings)
+            else 
+              @checkConfigAgainstSchema(schema, config[name], warnings)
+
+    checkConfig: (def, config, warnings = []) ->
+      # def contains the configuration specified via the schema
+      # config contains the config.json content to be checked against the schema
+
+      # run over schema and check:
+      # * type for all present entries in config when type field is present
+      # * existance of entry when required flag is set and no default value specified
+      for name, entry of def
+        if config[name]? then @checkConfigEntry(name, entry, config[name])
+        else if not entry["default"]? and (entry.required is true)
+          throw new Error("Missing config entry " + name + ".")
+      # check for config entries to be present in schema 
+      @checkConfigAgainstSchema(def, config, warnings)
+
     updateDeviceOrder: (deviceOrder) ->
       assert deviceOrder? and Array.isArray deviceOrder
       @framework.config.devices = @devicesConfig = _.sortBy(@devicesConfig,  (device) => 
@@ -1149,7 +1225,7 @@ module.exports = (env) ->
         classInfo.configDef, 
           "config of device #{deviceConfig.id}"
       )
-      declapi.checkConfig(classInfo.configDef.properties, deviceConfig, warnings)
+      @checkConfig(classInfo.configDef.properties, deviceConfig, warnings)
       for w in warnings
         env.logger.warn("Device configuration of #{deviceConfig.id}: #{w}")
       deviceConfig = declapi.enhanceJsonSchemaWithDefaults(classInfo.configDef, deviceConfig)
