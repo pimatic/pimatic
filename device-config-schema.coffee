@@ -129,6 +129,11 @@ module.exports = {
         type: "boolean"
         default: true        
   }
+  DummyTemperatureSensor:
+    title: "DummyHeatingThermostat config options"
+    type: "object"
+    extensions: ["xLink"]
+    properties: {}
   Timer:
     title: "timer config"
     type: "object"

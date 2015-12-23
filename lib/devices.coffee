@@ -802,6 +802,44 @@ module.exports = (env) ->
       @_setContact(contact)
       return Promise.resolve()
 
+  class DummyTemperatureSensor extends TemperatureSensor
+
+    _temperature: null
+    _humidity: null
+
+    attributes:
+      temperature:
+        description: "The measured temperature"
+        type: "number"
+        unit: '°C'
+      humidity:
+        description: "The actual degree of Humidity"
+        type: "number"
+        unit: '%'
+
+    constructor: (@config, lastState) ->
+      @id = @config.id
+      @name = @config.name
+      @_temperature = lastState?.temperature?.value
+      @_humidity = lastState?.humidity?.value
+      super()
+
+      @requestValue()
+      setInterval( ( => @requestValue() ), @config.interval)
+
+    requestValue: ->
+      @_temperature = @random(25, -10)
+      @_humidity = @random(100)
+      @emit "temperature", @_temperature
+      @emit "humidity", @_humidity
+
+    getTemperature: -> Promise.resolve(@_temperature)
+    getHumidity: -> Promise.resolve(@_humidity)
+
+    random: (max, min = 0) =>
+      return Math.floor(Math.random() * (max - min) + min)
+
+
   class DeviceConfigExtension
     extendConfigShema: (schema) ->
       unless schema.extensions? then return
@@ -1237,6 +1275,7 @@ module.exports = (env) ->
         env.devices.DummyHeatingThermostat
         env.devices.DummyContactSensor
         env.devices.DummyPresenceSensor
+        env.devices.DummyTemperatureSensor
         env.devices.Timer
       ]
       for deviceClass in defaultDevices
@@ -1269,5 +1308,6 @@ module.exports = (env) ->
     DummyHeatingThermostat
     DummyContactSensor
     DummyPresenceSensor
+    DummyTemperatureSensor
     Timer
   }
