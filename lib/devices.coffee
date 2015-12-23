@@ -691,6 +691,58 @@ module.exports = (env) ->
       @_vars.cancelNotifyOnChange(cl) for cl in @_exprChangeListeners
       super()
 
+  class VariableInputDevice extends Device
+
+    _input: ""
+
+    template: "input"
+
+    actions:
+      changeInputTo:
+        params:
+          value:
+            type: t.string
+        description: "Sets the variable to the value"
+
+    constructor: (@config, lastState, @framework) ->
+      @name = config.name
+      @id = config.id
+
+      @attributes = {
+        input:
+          description: "The value of the input field"
+          type: @config.type
+      }
+
+      @framework.variableManager.on('variableValueChanged', @changeListener = (changedVar, value) =>
+        unless @config.variable is changedVar.name then return
+        @_setInput value
+      )
+
+      @_input = lastState?.input?.value or null
+      super()
+
+    getInput: () -> Promise.resolve(@_input)
+
+    _setInput: (value) ->
+      if @_input is value then return
+      @_input = value
+      @emit 'input', value
+
+    changeInputTo: (value) ->
+      name = @config.variable
+      variable = @framework.variableManager.getVariableByName(name)
+      unless variable?
+        throw new Error("Could not find variable with name #{name}")
+      @framework.variableManager.setVariableToValue(name, value, variable.unit)
+      @_setInput value
+      return Promise.resolve()
+
+    destroy: ->
+      @framework.variableManager.removeListener('variableValueChanged', @changeListener)
+      super()
+
+
   class DummySwitch extends SwitchActuator
     
     constructor: (@config, lastState) ->
@@ -1269,6 +1321,7 @@ module.exports = (env) ->
       defaultDevices = [
         env.devices.ButtonsDevice
         env.devices.VariablesDevice
+        env.devices.VariableInputDevice
         env.devices.DummySwitch
         env.devices.DummyDimmer
         env.devices.DummyShutter
@@ -1301,6 +1354,7 @@ module.exports = (env) ->
     HeatingThermostat
     ButtonsDevice
     VariablesDevice
+    VariableInputDevice
     AVPlayer
     DummySwitch
     DummyDimmer
