@@ -82,9 +82,11 @@ module.exports = {
       min:
         description: "Minimum value for numeric values"
         type: "number"
+        required: false
       max:
         description: "Maximum value for numeric values"
         type: "number"
+        required: false
       step:
         description: "Step size for minus and plus buttons for numeric values"
         type: "number"
