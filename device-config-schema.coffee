@@ -53,7 +53,7 @@ module.exports = {
             unit:
               description: "The unit of the variable. Only works if type is a number."
               type: "string"
-            label: 
+            label:
               description: "A custom label to use in the frontend."
               type: "string"
             discrete:
@@ -79,6 +79,18 @@ module.exports = {
         type: "string"
         default: "string"
         enum: ["string", "number"]
+      min:
+        description: "Minimum value for numeric values"
+        type: "number"
+        required: false
+      max:
+        description: "Maximum value for numeric values"
+        type: "number"
+        required: false
+      step:
+        description: "Step size for minus and plus buttons for numeric values"
+        type: "number"
+        default: 1
   }
   DummySwitch:
     title: "DummySwitch config"

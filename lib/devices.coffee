@@ -735,7 +735,12 @@ module.exports = (env) ->
       unless variable?
         throw new Error("Could not find variable with name #{name}")
       @framework.variableManager.setVariableToValue(name, value, variable.unit)
-      @_setInput value
+      if @config.type is "number"
+        if isNaN(value)
+          throw new Error("Input value is not a number")
+          @_setInput(parseFloat(value))
+      else
+        @_setInput value
       return Promise.resolve()
 
     destroy: ->
