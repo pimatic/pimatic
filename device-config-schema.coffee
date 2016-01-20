@@ -41,7 +41,7 @@ module.exports = {
               type: "string"
             expression:
               description: "
-                The expression to use to get the value. Can be just a variable name ($myVar), 
+                The expression to use to get the value. Can be just a variable name ($myVar),
                 a calculation ($myVar + 10) or a string interpolation (\"Test: {$myVar}!\")
                 "
               type: "string"
@@ -142,7 +142,7 @@ module.exports = {
         description: "Show the valve position in the GUI"
         type: "boolean"
         default: true
-      guiShowModeControl: 
+      guiShowModeControl:
         description: "Show the mode buttons in the GUI"
         type: "boolean"
         default: true
@@ -153,13 +153,17 @@ module.exports = {
       guiShowTemperatureInput:
         description: "Show the temperature input spinbox in the GUI"
         type: "boolean"
-        default: true        
+        default: true
   }
   DummyTemperatureSensor:
-    title: "DummyHeatingThermostat config options"
+    title: "DummyTemperatureSensor config options"
     type: "object"
     extensions: ["xLink"]
-    properties: {}
+    properties:
+      resetTime:
+        description: "Time after the values are changed"
+        type: "integer"
+        default: "10000"
   Timer:
     title: "timer config"
     type: "object"

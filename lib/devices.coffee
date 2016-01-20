@@ -882,7 +882,7 @@ module.exports = (env) ->
       super()
 
       @requestValue()
-      setInterval( ( => @requestValue() ), 10000)
+      setInterval( ( => @requestValue() ), @config.resetTime)
 
     requestValue: ->
       @_temperature = @random(25, -10)
