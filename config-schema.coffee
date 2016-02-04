@@ -453,4 +453,9 @@ module.exports = {
                 """
                 type: "boolean"
                 default: false
+  patternProperties:
+    '//.*': {
+      description: "Comments"
+      type: "string"
+    }
 }

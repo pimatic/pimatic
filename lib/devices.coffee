@@ -1149,14 +1149,12 @@ module.exports = (env) ->
         throw new Error("Unknown device class \"#{deviceConfig.class}\"")
       warnings = []
       classInfo.prepareConfig(deviceConfig) if classInfo.prepareConfig?
+      @framework._normalizeScheme(classInfo.configDef)
       @framework._validateConfig(
         deviceConfig, 
         classInfo.configDef, 
-          "config of device #{deviceConfig.id}"
+          "config of device \"#{deviceConfig.id}\""
       )
-      declapi.checkConfig(classInfo.configDef.properties, deviceConfig, warnings)
-      for w in warnings
-        env.logger.warn("Device configuration of #{deviceConfig.id}: #{w}")
       deviceConfig = declapi.enhanceJsonSchemaWithDefaults(classInfo.configDef, deviceConfig)
       device = classInfo.createCallback(deviceConfig, lastDeviceState)
       assert deviceConfig is device.config, """
@@ -1185,7 +1183,7 @@ module.exports = (env) ->
             try
               @_loadDevice(deviceConfig, lastDeviceState, true)
             catch e
-              env.logger.error("Error loading device #{deviceConfig.id}: #{e.message}")
+              env.logger.error("Error loading device \"#{deviceConfig.id}\": #{e.message}")
               env.logger.debug(e.stack)
           else
             env.logger.warn("""
