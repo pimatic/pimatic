@@ -861,18 +861,28 @@ module.exports = (env) ->
 
   class DummyTemperatureSensor extends TemperatureSensor
 
-    _temperature: null
     _humidity: null
 
     attributes:
       temperature:
         description: "The measured temperature"
-        type: "number"
+        type: t.number
         unit: '°C'
+        acronym: 'T'
       humidity:
         description: "The actual degree of Humidity"
-        type: "number"
+        type: t.number
         unit: '%'
+
+    actions:
+      changeTemperatureTo:
+        params:
+          temperature:
+            type: "number"
+      changeHumidityTo:
+        params:
+          humidity:
+            type: "number"
 
     constructor: (@config, lastState) ->
       @id = @config.id
@@ -881,21 +891,20 @@ module.exports = (env) ->
       @_humidity = lastState?.humidity?.value
       super()
 
-      @requestValue()
-      setInterval( ( => @requestValue() ), @config.resetTime)
+    _setHumidity: (value) ->
+      if @_humidity is value then return
+      @_humidity = value
+      @emit 'humidity', value
 
-    requestValue: ->
-      @_temperature = @random(25, -10)
-      @_humidity = @random(100)
-      @emit "temperature", @_temperature
-      @emit "humidity", @_humidity
-
-    getTemperature: -> Promise.resolve(@_temperature)
     getHumidity: -> Promise.resolve(@_humidity)
 
-    random: (max, min = 0) =>
-      return Math.floor(Math.random() * (max - min) + min)
+    changeTemperatureTo: (temperature) ->
+      @_setTemperature(temperature)
+      return Promise.resolve()
 
+    changeHumidityTo: (humidity) ->
+      @_setHumidity(humidity)
+      return Promise.resolve()
 
   class DeviceConfigExtension
     extendConfigShema: (schema) ->

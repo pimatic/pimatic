@@ -159,11 +159,7 @@ module.exports = {
     title: "DummyTemperatureSensor config options"
     type: "object"
     extensions: ["xLink"]
-    properties:
-      resetTime:
-        description: "Time after the values are changed"
-        type: "integer"
-        default: "10000"
+    properties: {}
   Timer:
     title: "timer config"
     type: "object"
