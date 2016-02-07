@@ -383,7 +383,6 @@ module.exports = (env) ->
         acronym: 'T'
 
     _setTemperature: (value) ->
-      if @_temperature is value then return
       @_temperature = value
       @emit 'temperature', value
 
@@ -892,7 +891,6 @@ module.exports = (env) ->
       super()
 
     _setHumidity: (value) ->
-      if @_humidity is value then return
       @_humidity = value
       @emit 'humidity', value
 
