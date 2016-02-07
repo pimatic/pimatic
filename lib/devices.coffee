@@ -864,7 +864,7 @@ module.exports = (env) ->
       unless schema.extensions? then return
       for name, def of @configSchema
         if name in schema.extensions
-          schema.properties[name] = def
+          schema.properties[name] = _.clone(def)
 
     applicable: (schema) -> 
       unless schema.extensions? then return
