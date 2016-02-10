@@ -77,17 +77,42 @@ module.exports = (env) ->
 
       @_setupExpressApp()
 
+    _normalizeScheme: (scheme) ->
+      if scheme.type is "object" and typeof scheme.properties is "object"
+        requiredProps = scheme.required or []
+        for own prop, s of scheme.properties
+          isRequired = true
+          if typeof s.required is "boolean"
+            if s.required is false
+              isRequired = false
+            delete s.required
+          if s.default?
+            isRequired = false
+          if isRequired and not (prop in requiredProps)
+            requiredProps.push prop
+        @_normalizeScheme(s) if s?
+        if requiredProps.length > 0
+          scheme.required = requiredProps
+          unless scheme.additionalProperties
+            scheme.additionalProperties = false
+      if scheme.type is "array"
+        @_normalizeScheme(scheme.items) is scheme.items?
+
     _validateConfig: (config, schema, scope = "config") ->
       js = new JaySchema()
       errors = js.validate(config, schema)
       if errors.length > 0
         errorMessage = "Invalid #{scope}: "
         for e in errors
-          if e.desc?
+          if e.kind is "ObjectValidationError" and e.constraintName is "required"
+            errorMessage += e.desc.replace(/^missing: (.*)$/, 'Missing property "$1"')
+          else if e.kind is "ObjectValidationError" and e.constraintName is "additionalProperties" and e.testedValue?
+            errorMessage += "Property \"#{e.testedValue}\" is not a valid property"
+          else if e.desc?
             errorMessage += e.desc
           else
             errorMessage += (
-              "\n#{e.instanceContext}: Should have #{e.constraintName} #{e.constraintValue}"
+              "Property \"#{e.instanceContext}\" Should have #{e.constraintName} #{e.constraintValue}"
             )
             if e.testedValue? then errorMessage += ", was: #{e.testedValue}"
         throw new Error(errorMessage)
@@ -112,6 +137,7 @@ module.exports = (env) ->
           delete auth.password
           env.logger.warn("Move user authentication setting to new users definition!")
 
+      @_normalizeScheme(schema)
       @_validateConfig(instance, schema)
       @config = declapi.enhanceJsonSchemaWithDefaults(schema, instance)
       for role, i in @config.roles
@@ -955,6 +981,7 @@ module.exports = (env) ->
 
     updateConfig: (config) ->
       schema = require("../config-schema")
+      @_normalizeScheme(schema)
       @_validateConfig(config, schema)
       assert Array.isArray config.plugins
       assert Array.isArray config.devices
@@ -971,6 +998,7 @@ module.exports = (env) ->
             packageInfo.configSchema
           )
           pluginConfigSchema = require(pathToSchema)
+          @_normalizeScheme(pluginConfigSchema)
           @_validateConfig(pConf, pluginConfigSchema, "config of #{fullPluginName}")
         else
           env.logger.warn(
@@ -985,14 +1013,12 @@ module.exports = (env) ->
           continue
         warnings = []
         classInfo.prepareConfig(deviceConfig) if classInfo.prepareConfig?
+        @_normalizeScheme(classInfo.configDef)
         @_validateConfig(
           deviceConfig,
           classInfo.configDef,
             "config of device #{deviceConfig.id}"
         )
-        declapi.checkConfig(classInfo.configDef.properties, deviceConfig, warnings)
-        for w in warnings
-          env.logger.warn("Device configuration of #{deviceConfig.id}: #{w}")
 
       @config = config
       @saveConfig()

@@ -66,21 +66,12 @@ module.exports = (env) ->
         pending = @framework.pluginManager.spawnNpm(['install', dbPackageToInstall])
 
       return pending.then( =>
-        @knex = Knex.initialize(
+        @knex = Knex(
           client: @dbSettings.client
           connection: connection
           pool:
             min: 1
             max: 1
-            destroy: (connection) =>
-              if @dbSettings.client is "sqlite3"
-                connection.close( (err) =>
-                  @emit "close", err
-                )
-              else
-                connection.end( (err) =>
-                  @emit "close", err
-                )
         )
 
         @framework.on('destroy', (context) =>
@@ -91,20 +82,9 @@ module.exports = (env) ->
           env.logger.info("Flushing database to disk, please wait...")
           context.waitForIt(
             @commitLoggingTransaction().then( () =>
-              return new Promise( (resolve, reject) =>
-                destroy = =>
-                  if  @knex.client.pool.genericPool.availableObjects.length isnt 0
-                    @once('close', (err) =>
-                      if err? then reject(err)
-                      else resolve()
-                    )
-                    @knex.destroy()
-                  else
-                    setTimeout(destroy, 100)
-                destroy()
-              ).then( =>
-                env.logger.info("Flushing database to disk, please wait... Done.")
-              )
+              return @knex.destroy()
+            ).then( =>
+              env.logger.info("Flushing database to disk, please wait... Done.")
             )
           )
         )

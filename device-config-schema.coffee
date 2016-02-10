@@ -41,7 +41,7 @@ module.exports = {
               type: "string"
             expression:
               description: "
-                The expression to use to get the value. Can be just a variable name ($myVar), 
+                The expression to use to get the value. Can be just a variable name ($myVar),
                 a calculation ($myVar + 10) or a string interpolation (\"Test: {$myVar}!\")
                 "
               type: "string"
@@ -53,7 +53,7 @@ module.exports = {
             unit:
               description: "The unit of the variable. Only works if type is a number."
               type: "string"
-            label: 
+            label:
               description: "A custom label to use in the frontend."
               type: "string"
             discrete:
@@ -65,6 +65,32 @@ module.exports = {
               description: "Acronym to show as value label in the frontend"
               type: "string"
               required: false
+  }
+  VariableInputDevice: {
+    title: "VariablesDevice config"
+    type: "object"
+    extensions: ["xLink"]
+    properties:
+      variable:
+        description: "The variable to modify on input change"
+        type: "string"
+      type:
+        description: "The type of the input"
+        type: "string"
+        default: "string"
+        enum: ["string", "number"]
+      min:
+        description: "Minimum value for numeric values"
+        type: "number"
+        required: false
+      max:
+        description: "Maximum value for numeric values"
+        type: "number"
+        required: false
+      step:
+        description: "Step size for minus and plus buttons for numeric values"
+        type: "number"
+        default: 1
   }
   DummySwitch:
     title: "DummySwitch config"
@@ -112,7 +138,11 @@ module.exports = {
         description: "The defined eco mode temperature"
         type: "number"
         default: 17
-      guiShowModeControl: 
+      guiShowValvePosition:
+        description: "Show the valve position in the GUI"
+        type: "boolean"
+        default: true
+      guiShowModeControl:
         description: "Show the mode buttons in the GUI"
         type: "boolean"
         default: true
@@ -120,11 +150,16 @@ module.exports = {
         description: "Show the preset temperatures in the GUI"
         type: "boolean"
         default: true
-      guiShowTemperatueInput:
+      guiShowTemperatureInput:
         description: "Show the temperature input spinbox in the GUI"
         type: "boolean"
-        default: true        
+        default: true
   }
+  DummyTemperatureSensor:
+    title: "DummyTemperatureSensor config options"
+    type: "object"
+    extensions: ["xLink"]
+    properties: {}
   Timer:
     title: "timer config"
     type: "object"
