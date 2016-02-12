@@ -252,6 +252,7 @@ module.exports = {
             type: "string"
           class:
             type: "string"
+        additionalProperties: true
     rules:
       description: "Array of rules"
       type: "array"
