@@ -748,6 +748,10 @@ module.exports = (env) ->
           @emit "config"
         )
         @deviceManager.on("deviceChanged", (changedDevice) =>
+          for device, i in @config.devices
+            if device.id is changedDevice.id
+              @config.devices[i] = changedDevice.config
+              break
           @_emitDeviceChanged(changedDevice)
           @emit "config"
         )
