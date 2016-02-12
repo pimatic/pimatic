@@ -78,6 +78,7 @@ module.exports = (env) ->
       @_setupExpressApp()
 
     _normalizeScheme: (scheme) ->
+      if scheme._normalized then return
       if scheme.type is "object" and typeof scheme.properties is "object"
         requiredProps = scheme.required or []
         for own prop, s of scheme.properties
@@ -90,13 +91,14 @@ module.exports = (env) ->
             isRequired = false
           if isRequired and not (prop in requiredProps)
             requiredProps.push prop
-        @_normalizeScheme(s) if s?
+          @_normalizeScheme(s) if s?
         if requiredProps.length > 0
           scheme.required = requiredProps
-          unless scheme.additionalProperties
+          unless scheme.additionalProperties?
             scheme.additionalProperties = false
       if scheme.type is "array"
-        @_normalizeScheme(scheme.items) is scheme.items?
+        @_normalizeScheme(scheme.items) if scheme.items?
+      scheme._normalized = true
 
     _validateConfig: (config, schema, scope = "config") ->
       js = new JaySchema()
