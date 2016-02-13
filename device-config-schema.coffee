@@ -53,14 +53,17 @@ module.exports = {
             unit:
               description: "The unit of the variable. Only works if type is a number."
               type: "string"
+              required: false
             label:
               description: "A custom label to use in the frontend."
               type: "string"
+              required: false
             discrete:
               description: "
                 Should be set to true if the value does not change continuously over time.
               "
               type: "boolean"
+              required: false
             acronym:
               description: "Acronym to show as value label in the frontend"
               type: "string"

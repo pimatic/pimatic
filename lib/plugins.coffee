@@ -384,7 +384,15 @@ module.exports = (env) ->
                       packageInfo.configSchema
                     )
                     configSchema = require(pathToSchema)
-                    @framework._normalizeScheme(configSchema)
+                    unless configSchema._normalized
+                      configSchema.properties.plugin = {
+                        type: "string"
+                      }
+                      configSchema.properties.active = {
+                        type: "boolean"
+                        required: false
+                      }
+                      @framework._normalizeScheme(configSchema)
                     @framework._validateConfig(pConf, configSchema, "config of #{fullPluginName}")
                     pConf = declapi.enhanceJsonSchemaWithDefaults(configSchema, pConf)
                   else

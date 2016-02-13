@@ -239,6 +239,12 @@ module.exports = {
       description: "Array of plugins to load"
       type: "array"
       default: []
+      items:
+        type: "object"
+        properties:
+          plugin:
+            type: "string"
+        additionalProperties: true
     devices:
       description: "Array of device definitions"
       type: "array"
@@ -438,6 +444,13 @@ module.exports = {
               config:
                 description: """
                 Allow to show the config (read) or edit existing config (write)
+                """
+                type: "string"
+                default: "none"
+                enum: ["none", "read", "write"]
+              database:
+                description: """
+                Allow read and or write to the database
                 """
                 type: "string"
                 default: "none"
