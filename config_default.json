@@ -3,26 +3,26 @@
   "settings": {
     "httpServer": {
       "enabled": true,
-      "port": 80      
+      "port": 80
     },
     "database": {
     }
   },
   "plugins": [
-    { 
-      "plugin": "cron" 
-    }, 
-    { 
+    {
+      "plugin": "cron"
+    },
+    {
       "plugin": "mobile-frontend"
     }
   ],
   "devices": [
- 
+
   ],
   "rules": [
 
   ],
-  "pages": [ 
+  "pages": [
     {
       "id": "favourite",
       "name": "Favourites",
@@ -36,7 +36,7 @@
     {
       "username": "admin",
       "password": "",
-      "role": "admin"  
+      "role": "admin"
     }
   ],
   "roles": [
