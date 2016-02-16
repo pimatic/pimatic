@@ -1137,11 +1137,13 @@ module.exports = (env) ->
       for extension in @deviceConfigExtensions
         extension.extendConfigShema(configDef)
 
-      @deviceClasses[className] = {
+      classInfo = {
         prepareConfig
         configDef
         createCallback
       }
+      @deviceClasses[className] = classInfo
+      @emit 'registerDeviceClass', classInfo
 
     updateDeviceOrder: (deviceOrder) ->
       assert deviceOrder? and Array.isArray deviceOrder
@@ -1196,8 +1198,8 @@ module.exports = (env) ->
       classInfo.prepareConfig(deviceConfig) if classInfo.prepareConfig?
       @framework._normalizeScheme(classInfo.configDef)
       @framework._validateConfig(
-        deviceConfig, 
-        classInfo.configDef, 
+        deviceConfig,
+        classInfo.configDef,
           "config of device \"#{deviceConfig.id}\""
       )
       deviceConfig = declapi.enhanceJsonSchemaWithDefaults(classInfo.configDef, deviceConfig)
