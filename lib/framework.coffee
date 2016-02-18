@@ -94,8 +94,8 @@ module.exports = (env) ->
           @_normalizeScheme(s) if s?
         if requiredProps.length > 0
           scheme.required = requiredProps
-          unless scheme.additionalProperties?
-            scheme.additionalProperties = false
+        unless scheme.additionalProperties?
+          scheme.additionalProperties = false
       if scheme.type is "array"
         @_normalizeScheme(scheme.items) if scheme.items?
       scheme._normalized = true
@@ -105,7 +105,8 @@ module.exports = (env) ->
       errors = js.validate(config, schema)
       if errors.length > 0
         errorMessage = "Invalid #{scope}: "
-        for e in errors
+        for e, i in errors
+          if i > 0 then errorMessage += ", "
           if e.kind is "ObjectValidationError" and e.constraintName is "required"
             errorMessage += e.desc.replace(/^missing: (.*)$/, 'Missing property "$1"')
           else if e.kind is "ObjectValidationError" and e.constraintName is "additionalProperties" and e.testedValue?
@@ -117,7 +118,10 @@ module.exports = (env) ->
               "Property \"#{e.instanceContext}\" Should have #{e.constraintName} #{e.constraintValue}"
             )
             if e.testedValue? then errorMessage += ", was: #{e.testedValue}"
-        throw new Error(errorMessage)
+          if e.instanceContext? and e.instanceContext.length > 1
+            errorMessage += " in " + e.instanceContext.replace('#', '')
+        #throw new Error(errorMessage)
+        env.logger.error(errorMessage)
 
     _loadConfig: () ->
       schema = require("../config-schema")

@@ -35,6 +35,7 @@ module.exports = {
               checked. If 0 then the cookie will be deleted on browser close. """
               type: "integer"
               default: 10 * 365 * 24 * 60 * 60 * 1000 #ten years
+          required: false
         logLevel:
           description: "The log level: debug, info, warn, error" 
           type: "string"
@@ -98,6 +99,7 @@ module.exports = {
               "
               type: "string"
               default: "ca/certs/cacert.crt"
+          required: false
         database:
           type: "object"
           properties:
@@ -190,6 +192,7 @@ module.exports = {
               """
               type: "boolean"
               default: false
+          required: false
     pages:
       description: "Array of GUI pages"
       type: "array"
@@ -239,6 +242,12 @@ module.exports = {
       description: "Array of plugins to load"
       type: "array"
       default: []
+      items:
+        type: "object"
+        properties:
+          plugin:
+            type: "string"
+        additionalProperties: true
     devices:
       description: "Array of device definitions"
       type: "array"
@@ -438,6 +447,13 @@ module.exports = {
               config:
                 description: """
                 Allow to show the config (read) or edit existing config (write)
+                """
+                type: "string"
+                default: "none"
+                enum: ["none", "read", "write"]
+              database:
+                description: """
+                Allow read and or write to the database
                 """
                 type: "string"
                 default: "none"
