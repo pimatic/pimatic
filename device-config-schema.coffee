@@ -166,7 +166,7 @@ module.exports = {
   Timer:
     title: "timer config"
     type: "object"
-    extensions: ["xLink"]
+    extensions: ["xLink","xAttributeOptions"]
     properties: {
       resolution:
         description: "The interval the timer is updated in seconds"
