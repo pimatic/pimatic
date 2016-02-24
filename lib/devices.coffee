@@ -794,6 +794,20 @@ module.exports = (env) ->
 
   class DummyHeatingThermostat extends HeatingThermostat
 
+    actions:
+      changeModeTo:
+        params:
+          mode:
+            type: "string"
+      changeTemperatureTo:
+        params:
+          temperatureSetpoint:
+            type: "number"
+      changeValveTo:
+        params:
+          valve:
+            type: "number"
+
     constructor: (@config, lastState) ->
       @id = @config.id
       @name = @config.name
@@ -805,6 +819,10 @@ module.exports = (env) ->
 
     changeModeTo: (mode) ->
       @_setMode(mode)
+      return Promise.resolve()
+
+    changeValveTo: (valve) ->
+      @_setValve(valve)
       return Promise.resolve()
 
     changeTemperatureTo: (temperatureSetpoint) ->
