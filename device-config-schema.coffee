@@ -161,12 +161,12 @@ module.exports = {
   DummyTemperatureSensor:
     title: "DummyTemperatureSensor config options"
     type: "object"
-    extensions: ["xLink"]
+    extensions: ["xLink","xAttributeOptions"]
     properties: {}
   Timer:
     title: "timer config"
     type: "object"
-    extensions: ["xLink","xAttributeOptions"]
+    extensions: ["xLink"]
     properties: {
       resolution:
         description: "The interval the timer is updated in seconds"
