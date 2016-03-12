@@ -595,10 +595,10 @@ module.exports = (env) ->
       if rule.valid
         for p in rule.predicates
           do (p) =>
-            assert typeof p.changeListener is "function"
-            p.handler.removeListener 'change', p.changeListener
-            delete p.changeListener
-            p.handler.destroy()
+            if typeof p.changeListener is "function"
+              p.handler.removeListener 'change', p.changeListener
+              delete p.changeListener
+              p.handler.destroy()
 
     _cancelScheduledActions: (rule) ->
       assert rule?
