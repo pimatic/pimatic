@@ -299,6 +299,10 @@ module.exports = (env) ->
     changeDimlevelTo: (state) ->
       throw new Error "Function \"changeDimlevelTo\" is not implemented!"
 
+    # Retuns a promise that is fulfilled when done.
+    changeStateTo: (state) ->
+      return if state then @turnOn() else @turnOff()
+
     _setDimlevel: (level) =>
       level = parseFloat(level)
       assert(not isNaN(level))
