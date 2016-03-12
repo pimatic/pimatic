@@ -302,6 +302,8 @@ module.exports = (env) ->
         lastToken = tokens[tokens.length-1]
         if lastToken in ["and", "or"]
           context.addError("""Expected a new predicate after last "#{lastToken}".""")
+      if openedParentheseCount > 0
+        context.addError("""Expected closing parenthese ("]") at end.""")
       return {
         predicates: predicates
         tokens: tokens

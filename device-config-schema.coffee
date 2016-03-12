@@ -161,7 +161,7 @@ module.exports = {
   DummyTemperatureSensor:
     title: "DummyTemperatureSensor config options"
     type: "object"
-    extensions: ["xLink"]
+    extensions: ["xLink","xAttributeOptions"]
     properties: {}
   Timer:
     title: "timer config"

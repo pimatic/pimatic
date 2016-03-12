@@ -274,6 +274,8 @@ module.exports = (env) ->
         description: "Turns the dim level to 100%"
       turnOff:
         description: "Turns the dim level to 0%"
+      toggle:
+        description: "Toggle the state of the dimmer"
 
     attributes:
       dimlevel:
@@ -296,6 +298,10 @@ module.exports = (env) ->
     # Retuns a promise that is fulfilled when done.
     changeDimlevelTo: (state) ->
       throw new Error "Function \"changeDimlevelTo\" is not implemented!"
+
+    # Retuns a promise that is fulfilled when done.
+    changeStateTo: (state) ->
+      return if state then @turnOn() else @turnOff()
 
     _setDimlevel: (level) =>
       level = parseFloat(level)
@@ -794,6 +800,20 @@ module.exports = (env) ->
 
   class DummyHeatingThermostat extends HeatingThermostat
 
+    actions:
+      changeModeTo:
+        params:
+          mode:
+            type: "string"
+      changeTemperatureTo:
+        params:
+          temperatureSetpoint:
+            type: "number"
+      changeValveTo:
+        params:
+          valve:
+            type: "number"
+
     constructor: (@config, lastState) ->
       @id = @config.id
       @name = @config.name
@@ -805,6 +825,10 @@ module.exports = (env) ->
 
     changeModeTo: (mode) ->
       @_setMode(mode)
+      return Promise.resolve()
+
+    changeValveTo: (valve) ->
+      @_setValve(valve)
       return Promise.resolve()
 
     changeTemperatureTo: (temperatureSetpoint) ->
