@@ -1103,6 +1103,47 @@ api.plugins = {
       permission:
         scope: "updates"
         access: "none"
+    getPluginConfigSchema:
+      description: "Get the config schema of a plugin name (must be installed)."
+      rest:
+        type: "GET"
+        url: "/api/plugin-config-schema/:pluginName"
+      params:
+        pluginName:
+          type: t.string
+      result:
+        configSchema:
+          type: t.object
+      permission:
+        scope: "plugins"
+        access: "read"
+    getPluginConfig:
+      description: "Get the config of a plugin."
+      rest:
+        type: "GET"
+        url: "/api/plugin-config/:pluginName"
+      params:
+        pluginName:
+          type: t.string
+      result:
+        config:
+          type: t.object
+      permission:
+        scope: "plugins"
+        access: "read"
+    updatePluginConfig:
+      description: "Update the config of a plugin."
+      rest:
+        type: "POST"
+        url: "/api/plugin-config/:pluginName"
+      params:
+        pluginName:
+          type: t.string
+        config:
+          type: t.object
+      permission:
+        scope: "plugins"
+        access: "read"
 }
 
 

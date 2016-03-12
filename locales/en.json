@@ -216,5 +216,16 @@
 	"Reset": "Reset",
 	"opened": "opened",
 	"closed": "closed",
-	"press button %s of device %s": "press button %s of device %s"
+	"press button %s of device %s": "press button %s of device %s",
+	"default: ": "default: ",
+	"(default)": "(default)",
+	"default:": "default:",
+	"(not set)": "(not set)",
+	"use default": "use default",
+	"not set": "not set",
+	"Edit Config": "Edit Config",
+	"Browse Plugins": "Browse Plugins",
+	"Activate": "Activate",
+	"Deactivate": "Deactivate",
+	"Uninstall": "Uninstall"
 }

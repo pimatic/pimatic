@@ -378,21 +378,8 @@ module.exports = (env) ->
               ).then( =>
                 return @loadPlugin(fullPluginName).then( ([plugin, packageInfo]) =>
                   # Check config
-                  if packageInfo.configSchema?
-                    pathToSchema = path.resolve(
-                      @pathToPlugin(fullPluginName), 
-                      packageInfo.configSchema
-                    )
-                    configSchema = require(pathToSchema)
-                    unless configSchema._normalized
-                      configSchema.properties.plugin = {
-                        type: "string"
-                      }
-                      configSchema.properties.active = {
-                        type: "boolean"
-                        required: false
-                      }
-                      @framework._normalizeScheme(configSchema)
+                  configSchema = @_getConfigSchemaFromPackageInfo(packageInfo)
+                  if configSchema?
                     @framework._validateConfig(pConf, configSchema, "config of #{fullPluginName}")
                     pConf = declapi.enhanceJsonSchemaWithDefaults(configSchema, pConf)
                   else
@@ -411,6 +398,25 @@ module.exports = (env) ->
           )
 
       return chain
+
+    _getConfigSchemaFromPackageInfo: (packageInfo) ->
+      unless packageInfo.configSchema?
+        return null
+      pathToSchema = path.resolve(
+        @pathToPlugin(packageInfo.name),
+        packageInfo.configSchema
+      )
+      configSchema = require(pathToSchema)
+      unless configSchema._normalized
+        configSchema.properties.plugin = {
+          type: "string"
+        }
+        configSchema.properties.active = {
+          type: "boolean"
+          required: false
+        }
+        @framework._normalizeScheme(configSchema)
+      return configSchema
 
     initPlugins: ->
       for plugin in @plugins
@@ -438,21 +444,30 @@ module.exports = (env) ->
         if p.config.plugin is name then return p.plugin
       return null
 
-    addPluginsToConfig: (plugins) ->
-      Array.isArray pluginNames
-      pluginNames = (p.plugin for p in @pluginsConfig)
-      added = []
-      for p in plugins
-        unless p in pluginNames
-          @pluginsConfig.push {plugin: p}
-          added.push p
-      @framework.saveConfig()
-      return added
+    getPluginConfig: (name) ->
+      for plugin in @framework.config.plugins
+        if plugin.plugin is name then return plugin
+      return null
 
-    removePluginsFromConfig: (plugins) ->
-      removed = _.remove(@pluginsConfig, (p) -> p.plugin in plugins)
-      @framework.saveConfig()
-      return removed
+    getPluginConfigSchema: (name) ->
+      assert name?
+      assert typeof name is "string"
+      packageInfo = @getInstalledPackageInfo(name)
+      return @_getConfigSchemaFromPackageInfo(packageInfo)
+
+    updatePluginConfig: (pluginName, config) ->
+      assert pluginName?
+      assert typeof pluginName is "string"
+      config.plugin = pluginName;
+      fullPluginName = "pimatic-#{pluginName}"
+      configSchema = @getPluginConfigSchema(fullPluginName)
+      if configSchema?
+        @framework._validateConfig(config, configSchema, "config of #{fullPluginName}")
+      for plugin, i in @framework.config.plugins
+        if plugin.plugin
+          @framework.config.plugins[i] = config
+          return
+      @framework.config.plugins.push(config)
 
 
   class Plugin extends require('events').EventEmitter
