@@ -274,6 +274,8 @@ module.exports = (env) ->
         description: "Turns the dim level to 100%"
       turnOff:
         description: "Turns the dim level to 0%"
+      toggle:
+        description: "Toggle the state of the dimmer"
 
     attributes:
       dimlevel:
@@ -292,6 +294,14 @@ module.exports = (env) ->
 
     # Retuns a promise
     turnOff: -> @changeDimlevelTo 0
+    
+    toggle: ->
+      @getDimlevel().then( (level) => 
+        if level > 0
+          @turnOff()
+        else 
+          @turnOn()
+      )
 
     # Retuns a promise that is fulfilled when done.
     changeDimlevelTo: (state) ->
