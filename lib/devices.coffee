@@ -294,14 +294,6 @@ module.exports = (env) ->
 
     # Retuns a promise
     turnOff: -> @changeDimlevelTo 0
-    
-    toggle: ->
-      @getDimlevel().then( (level) => 
-        if level > 0
-          @turnOff()
-        else 
-          @turnOn()
-      )
 
     # Retuns a promise that is fulfilled when done.
     changeDimlevelTo: (state) ->
