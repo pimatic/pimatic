@@ -230,5 +230,7 @@
 	"Uninstall": "Uninstall",
 	"Install": "Install",
 	"activated": "activated",
-	"loaded": "loaded"
+	"loaded": "loaded",
+	"Some settings have changed, a restart is required.": "Some settings have changed, a restart is required.",
+	"Restart Now": "Restart Now"
 }

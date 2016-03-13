@@ -461,7 +461,7 @@ module.exports = (env) ->
     isActivated: (name) ->
       for plugin in @framework.config.plugins
         if plugin.plugin is name
-          return if plugin.active then plugin.active else true
+          return if plugin.active? then plugin.active else true
       return false
 
     getPluginConfigSchema: (name) ->
