@@ -1064,31 +1064,47 @@ api.plugins = {
       permission:
         scope: "updates"
         access: "write"
-    addPluginsToConfig:
-      description: "Add plugins to config"
+    uninstallPlugin:
+      description: "Uninstalls a plugin completely"
       rest:
-        type: "POST"
-        url: "/api/config/plugins"
+        type: "DELETE"
+        url: "/api/plugins/:name"
       params:
-        pluginNames:
-          type: t.array
+        name:
+          type: t.string
       result:
-        added:
-          type: t.array
+        status:
+          type: 'any'
       permission:
-        scope: "plugins"
+        scope: "updates"
         access: "write"
-    removePluginsFromConfig:
-      description: "Remove plugins from config"
+    removePluginFromConfig:
+      description: "Remove a plugin from config"
       rest:
         type: "DELETE"
         url: "/api/config/plugins"
       params:
-        pluginNames:
-          type: t.array
+        pluginName:
+          type: t.string
       result:
         removed:
-          type: t.array
+          type: t.boolean
+      permission:
+        scope: "plugins"
+        access: "write"
+    setPluginActivated:
+      description: "Set active state of the plugin"
+      rest:
+        type: "POST"
+        url: "/api/config/plugins-active"
+      params:
+        pluginName:
+          type: t.string
+        active:
+          type: t.boolean
+      result:
+        pluginUpdated:
+          type: t.boolean
       permission:
         scope: "plugins"
         access: "write"

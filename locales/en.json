@@ -227,5 +227,8 @@
 	"Browse Plugins": "Browse Plugins",
 	"Activate": "Activate",
 	"Deactivate": "Deactivate",
-	"Uninstall": "Uninstall"
+	"Uninstall": "Uninstall",
+	"Install": "Install",
+	"activated": "activated",
+	"loaded": "loaded"
 }

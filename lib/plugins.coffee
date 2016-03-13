@@ -96,6 +96,10 @@ module.exports = (env) ->
           return @spawnNpm(['update', name])
       )
 
+    uninstallPlugin: (name) ->
+      pluginDir = @pathToPlugin(name)
+      return fs.rmrfAsync(pluginDir)
+
     _emitUpdateProcessStatus: (status, info) ->
       @updateProcessStatus = status
       @emit 'updateProcessStatus', status, info
@@ -110,14 +114,15 @@ module.exports = (env) ->
         messages: @updateProcessMessages
       }
 
-    update: (modules) -> 
+    install: (modules) ->
       info = {modules}
       @_emitUpdateProcessStatus('running', info)
       npmMessageListener = ( (line) => @_emitUpdateProcessMessage(line, info); )
       @on 'npmMessage', npmMessageListener
       hasErrors = false
       return Promise.each(modules, (plugin) =>
-        @updatePlugin(plugin).catch( (error) =>
+        (if @isInstalled(plugin) then @updatePlugin(plugin) else @installPlugin(plugin))
+        .catch( (error) =>
           env.logger.error("Error Updating plugin #{plugin}: #{error.message}")
           env.logger.debug(error.stack)
         )
@@ -147,6 +152,8 @@ module.exports = (env) ->
     searchForPlugin: ->
       return @_pluginList = rp('http://api.pimatic.org/plugins').then( (res) =>
         json = JSON.parse(res)
+        # sort
+        json.sort( (a, b) => a.name.localeCompare(b.name) )
         # cache for 1min
         setTimeout( (=> @_pluginList = null), 60*1000)
         return json
@@ -171,7 +178,7 @@ module.exports = (env) ->
     searchForPluginsWithInfo: ->
       return @searchForPlugin().then( (plugins) =>
         return pluginList = (
-          for k, p of plugins 
+          for k, p of plugins
             name = p.name.replace 'pimatic-', ''
             loadedPlugin = @framework.pluginManager.getPlugin name
             installed = @isInstalled p.name
@@ -184,7 +191,8 @@ module.exports = (env) ->
               description: p.description
               version: p.version
               installed: installed
-              active: loadedPlugin?
+              loaded: loadedPlugin?
+              activated: @isActivated(name)
               isNewer: (if installed then semver.gt(p.version, packageJson.version) else false)
             }
         )
@@ -315,7 +323,8 @@ module.exports = (env) ->
             loadedPlugin = @framework.pluginManager.getPlugin name
             listEntry = {
               name: name
-              active: loadedPlugin?
+              loaded: loadedPlugin?
+              activated: @isActivated(name)
               description: packageJson.description
               version: packageJson.version
               homepage: packageJson.homepage
@@ -326,7 +335,7 @@ module.exports = (env) ->
     installUpdatesAsync: (modules) ->
       return new Promise( (resolve, reject) =>
         # resolve when complete
-        @update(modules).then(resolve).catch(reject)
+        @install(modules).then(resolve).catch(reject)
         # or after 10 seconds to prevent a timeout
         Promise.delay('still running', 10000).then(resolve)
       )
@@ -449,6 +458,12 @@ module.exports = (env) ->
         if plugin.plugin is name then return plugin
       return null
 
+    isActivated: (name) ->
+      for plugin in @framework.config.plugins
+        if plugin.plugin is name
+          return if plugin.active then plugin.active else true
+      return false
+
     getPluginConfigSchema: (name) ->
       assert name?
       assert typeof name is "string"
@@ -458,16 +473,32 @@ module.exports = (env) ->
     updatePluginConfig: (pluginName, config) ->
       assert pluginName?
       assert typeof pluginName is "string"
-      config.plugin = pluginName;
+      config.plugin = pluginName
       fullPluginName = "pimatic-#{pluginName}"
       configSchema = @getPluginConfigSchema(fullPluginName)
       if configSchema?
         @framework._validateConfig(config, configSchema, "config of #{fullPluginName}")
       for plugin, i in @framework.config.plugins
-        if plugin.plugin
+        if plugin.plugin is pluginName
           @framework.config.plugins[i] = config
+          @framework.emit 'config'
           return
       @framework.config.plugins.push(config)
+      @framework.emit 'config'
+
+    removePluginFromConfig: (pluginName) ->
+      removed = _.remove(@framework.config.plugins, (p) => p.plugin is pluginName)
+      if removed.length > 0
+        @framework.emit 'config'
+      return removed.length > 0
+
+    setPluginActivated: (pluginName, active) ->
+      for plugin, i in @framework.config.plugins
+        if plugin.plugin is pluginName
+          plugin.active = active
+          @framework.emit 'config'
+          return true
+      return false
 
 
   class Plugin extends require('events').EventEmitter
