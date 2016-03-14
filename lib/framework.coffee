@@ -92,6 +92,9 @@ module.exports = (env) ->
           if isRequired and not (prop in requiredProps)
             requiredProps.push prop
           @_normalizeScheme(s) if s?
+          if s.defines?.options?
+            for own optName, opt of s.defines.options
+              @_normalizeScheme(opt)
         if requiredProps.length > 0
           scheme.required = requiredProps
         unless scheme.additionalProperties?

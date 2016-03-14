@@ -1161,6 +1161,8 @@ module.exports = (env) ->
       for extension in @deviceConfigExtensions
         extension.extendConfigShema(configDef)
 
+      @framework._normalizeScheme(configDef)
+
       @deviceClasses[className] = {
         prepareConfig
         configDef

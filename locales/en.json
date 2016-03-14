@@ -232,5 +232,6 @@
 	"activated": "activated",
 	"loaded": "loaded",
 	"Some settings have changed, a restart is required.": "Some settings have changed, a restart is required.",
-	"Restart Now": "Restart Now"
+	"Restart Now": "Restart Now",
+	"No properties": "No properties"
 }
