@@ -74,6 +74,9 @@ module.exports = (env) ->
         group = @groupManager.getGroupOfVariable(variable.name)
         @groupManager.removeVariableFromGroup(group.id, variable.name) if group?
       )
+      for discoverEvent in ['discover', 'discoverMessage', 'deviceDiscovered']
+        do (discoverEvent) =>
+          @deviceManager.on(discoverEvent, (eventData) => @io?.emit(discoverEvent, eventData) )
 
       @_setupExpressApp()
 

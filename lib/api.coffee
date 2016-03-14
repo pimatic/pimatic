@@ -267,6 +267,18 @@ api.devices = {
       permission:
         scope: "devices"
         access: "write"
+    discoverDevices:
+      description: "Start to scan for new devices"
+      rest:
+        type: "POST"
+        url: "/api/discover-devices"
+      params:
+        time:
+          type: t.number
+          optional: yes
+      permission:
+        scope: "devices"
+        access: "write"
     callDeviceAction:
       description: "Calls the action of the given device"
       rest:

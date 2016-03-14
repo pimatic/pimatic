@@ -233,5 +233,7 @@
 	"loaded": "loaded",
 	"Some settings have changed, a restart is required.": "Some settings have changed, a restart is required.",
 	"Restart Now": "Restart Now",
-	"No properties": "No properties"
+	"No properties": "No properties",
+	"Discover Devices": "Discover Devices",
+	"Discovered devices": "Discovered devices"
 }

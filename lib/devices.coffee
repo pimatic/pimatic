@@ -1291,7 +1291,18 @@ module.exports = (env) ->
         @emit 'deviceChanged', newDevice
         oldDevice.destroy()    
       )
- 
+
+    discoverDevices: (time = 20000) ->
+      env.logger.info("Starting device discovery for #{time}ms.")
+      @emit 'discover', {time}
+
+    discoverMessage: (pluginName, message) ->
+      env.logger.info("#{pluginName}: #{message}")
+      @emit 'discoverMessage', {pluginName, message}
+
+    discoveredDevice: (pluginName, deviceName, config) ->
+      env.logger.info("Device discovered: #{pluginName}: #{deviceName}")
+      @emit 'deviceDiscovered', {pluginName, deviceName, config}
 
     updateDeviceByConfig: (deviceConfig) ->
       unless deviceConfig.id?
