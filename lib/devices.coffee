@@ -182,6 +182,19 @@ module.exports = (env) ->
       return json
 
   ###
+  ErrorDevice
+  -----
+  Devices of this type are createsd if the rcreate operation
+  for the real type cant be created
+  ###
+  class ErrorDevice extends Device
+
+    constructor: (@config, @error) ->
+      @name = config.name
+      @id = config.id
+      super()
+
+  ###
   Actuator
   -----
   An Actuator is an physical or logical element you can control by triggering an action on it.
@@ -199,7 +212,7 @@ module.exports = (env) ->
 
     actions:
       turnOn:
-        description: "Turns the switch on"
+        description: "Turns the swch on"
       turnOff:
         description: "Turns the switch off"
       changeStateTo:
@@ -1198,10 +1211,11 @@ module.exports = (env) ->
             This could lead to errors in rules.
           """
 
-      if isNew
-        env.logger.info "New device \"#{device.name}\"..."
-      else
-        env.logger.info "Recreating \"#{device.name}\"..."
+      unless device instanceof ErrorDevice
+        if isNew
+          env.logger.info "New device \"#{device.name}\"..."
+        else
+          env.logger.info "Recreating \"#{device.name}\"..."
 
       @devices[device.id]=device
 
@@ -1246,6 +1260,9 @@ module.exports = (env) ->
 
       return @registerDevice(device, isNew)
 
+    _loadErrorDevice: (deviceConfig, error) ->
+      return @registerDevice(new ErrorDevice(deviceConfig, error))
+
     loadDevices: ->
       return Promise.each(@devicesConfig, (deviceConfig) =>
         @framework.database.getLastDeviceState(deviceConfig.id).then( (lastDeviceState) =>
@@ -1256,10 +1273,12 @@ module.exports = (env) ->
             catch e
               env.logger.error("Error loading device \"#{deviceConfig.id}\": #{e.message}")
               env.logger.debug(e.stack)
+              @_loadErrorDevice(deviceConfig, e.message)
           else
             env.logger.warn("""
               no plugin found for device "#{deviceConfig.id}" of class "#{deviceConfig.class}"!
             """)
+            @_loadErrorDevice(deviceConfig, "Plugin not loaded")
         )
       )
 
@@ -1315,7 +1334,7 @@ module.exports = (env) ->
     removeDevice: (deviceId) ->
       device = @getDeviceById(deviceId)
       unless device? then return
-      delete @devices[deviceId];
+      delete @devices[deviceId]
       @emit 'deviceRemoved', device
       device.emit 'remove'
       device.destroy()
@@ -1391,6 +1410,7 @@ module.exports = (env) ->
   return exports = {
     DeviceManager
     Device
+    ErrorDevice
     Actuator
     SwitchActuator
     PowerSwitch
