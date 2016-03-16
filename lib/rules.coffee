@@ -265,6 +265,7 @@ module.exports = (env) ->
 
       success = yes
       openedParentheseCount = 0
+      justCondition = false
 
       while (not context.hasErrors()) and nextInput.length isnt 0
         M(nextInput, context).matchOpenParenthese('[', (next, ptokens) =>
@@ -276,7 +277,9 @@ module.exports = (env) ->
         i = predicates.length
         predId = "prd-#{id}-#{i}"
 
-        { predicate, token, nextInput } = @_parsePredicate(predId, nextInput, context)
+        { predicate, token, nextInput } = @_parsePredicate(
+          predId, nextInput, context, null, justCondition
+        )
         unless context.hasErrors()
           predicates.push(predicate)
           tokens = tokens.concat ["predicate", "(", i, ")"]
@@ -288,8 +291,12 @@ module.exports = (env) ->
           )
 
           # Try to match " and ", " or ", ...
-          possibleTokens = [' and ', ' or ']
-          onMatch = (m, s) => tokens.push s.trim()
+          possibleTokens = [' and if ', ' and ', ' or when', ' or ']
+          onMatch = (m, s) => 
+            token = s.trim()
+            if token is 'and if' then justCondition = true
+            else if token is 'or when' then justCondition = false
+            tokens.push token
           m = M(nextInput, context).match(possibleTokens, onMatch)
           unless nextInput.length is 0
             if m.hadNoMatch()
@@ -300,7 +307,7 @@ module.exports = (env) ->
               nextInput = nextInput.substring(token.length)
       if tokens.length > 0
         lastToken = tokens[tokens.length-1]
-        if lastToken in ["and", "or"]
+        if lastToken in ["and", "or", "and if", "or when"]
           context.addError("""Expected a new predicate after last "#{lastToken}".""")
       if openedParentheseCount > 0
         context.addError("""Expected closing parenthese ("]") at end.""")
@@ -309,7 +316,7 @@ module.exports = (env) ->
         tokens: tokens
       }
 
-    _parsePredicate: (predId, nextInput, context, predicateProviderClass) =>
+    _parsePredicate: (predId, nextInput, context, predicateProviderClass, justCondition) =>
       assert typeof predId is "string" and predId.length isnt 0
       assert typeof nextInput is "string"
       assert context?
@@ -319,22 +326,18 @@ module.exports = (env) ->
         token: null
         handler: null
         for: null
-        justTrigger: null
-        justCondition: null
+        justTrigger: false
+        justCondition: justCondition
 
       token = ''
 
       # trigger keyword?
-      m = M(nextInput, context).match(["trigger: ", "if "])
+      m = M(nextInput, context).match(["trigger: "])
       if m.hadMatch()
         match = m.getFullMatch()
         token += match
         nextInput = nextInput.substring(match.length)
         predicate.justTrigger = match is "trigger: "
-        predicate.justCondition = match is "if "
-      else
-        predicate.justTrigger = no
-        predicate.justCondition = no
 
       # find a predicate provider for that can parse and decide the predicate:
       parseResults = []
@@ -1104,7 +1107,7 @@ module.exports = (env) ->
 
     getPredicateInfo: (input, predicateProviderClass) ->
       context = @_createParseContext()
-      result = @_parsePredicate("id", input, context, predicateProviderClass)
+      result = @_parsePredicate("id", input, context, predicateProviderClass, false)
       if result?.predicate?
         unless result.predicate.justTrigger or result.predicate.handler?.getType() is "event"
           unless result.forElements?

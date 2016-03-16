@@ -153,6 +153,92 @@ describe "BoolExpressionTreeBuilder", ->
         ]
         predicates: [{token: '0'}, {token: '1'}, {token: '2'}, {token: '3'}]
         result: "or(or(and(predicate('0'), predicate('1')), predicate('2')), predicate('3'))"
+      },
+      {
+        tokens: [
+          'predicate', '(', 0, ')', 
+          'and if',
+          'predicate', '(', 1, ')', 
+          'or', 
+          'predicate', '(', 2, ')'
+        ]
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}, {token: '3'}]
+        result: "andif(predicate('0'), or(predicate('1'), predicate('2')))"
+      },
+      {
+        tokens: [
+          'predicate', '(', 0, ')', 
+          'or when',
+          'predicate', '(', 1, ')', 
+          'or when',
+          'predicate', '(', 2, ')'
+        ]
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}]
+        result: "orwhen(orwhen(predicate('0'), predicate('1')), predicate('2'))"
+      },
+      {
+        tokens: [
+          'predicate', '(', 0, ')', 
+          'or',
+          'predicate', '(', 1, ')', 
+          'or when',
+          'predicate', '(', 2, ')'
+        ]
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}]
+        result: "orwhen(or(predicate('0'), predicate('1')), predicate('2'))"
+      },
+      {
+        tokens: [
+          'predicate', '(', 0, ')', 
+          'and',
+          'predicate', '(', 1, ')', 
+          'or when',
+          'predicate', '(', 2, ')'
+        ]
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}]
+        result: "orwhen(and(predicate('0'), predicate('1')), predicate('2'))"
+      },
+      {
+        tokens: [
+          'predicate', '(', 0, ')', 
+          'and if',
+          'predicate', '(', 1, ')', 
+          'or', 
+          'predicate', '(', 2, ')',
+          'or when', 
+          'predicate', '(', 3, ')'
+        ]
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}, {token: '3'}]
+        result: "orwhen(andif(predicate('0'), or(predicate('1'), predicate('2'))), predicate('3'))"
+      },
+      {
+        tokens: [
+          'predicate', '(', 0, ')', 
+          'and if',
+          'predicate', '(', 1, ')', 
+          'or', 
+          'predicate', '(', 2, ')',
+          'or when', 
+          'predicate', '(', 3, ')'
+          'or', 
+          'predicate', '(', 4, ')',
+        ]
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}, {token: '3'}, {token: '4'}]
+        result: "orwhen(andif(predicate('0'), or(predicate('1'), predicate('2'))), " +
+          "or(predicate('3'), predicate('4')))"
+      }
+      {
+        tokens: [
+          '['
+          'predicate', '(', 0, ')', 
+          'and',
+          'predicate', '(', 1, ')', 
+          ']'
+          'or when', 
+          'predicate', '(', 2, ')'
+        ]
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}]
+        result: "orwhen(and(predicate('0'), predicate('1')), predicate('2'))"
       }
     ]
 

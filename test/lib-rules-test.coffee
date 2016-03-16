@@ -288,7 +288,7 @@ describe "RuleManager", ->
     for tc in testCases
       do (tc) ->
         it "it should parse \"#{tc.input}\"", ->
-          result = ruleManager._parseRuleCondition("test1", tc.input, context)
+          result = ruleManager._parseRuleCondition("test1", tc.input, context, null, false)
           assert.deepEqual result, tc.result
 
   describe '#parseRuleActions', ->
@@ -597,8 +597,9 @@ describe "RuleManager", ->
         cassert S(input).startsWith("predicate 1")
         predHandler = new DummyPredicateHandler()
         predHandler.on = (event, handler) -> 
-          cassert event is 'change'
-          changeHandler = handler
+          if event is 'change'
+            cassert event is 'change'
+            changeHandler = handler
         return {
           token: "predicate 1"
           nextInput: S(input).chompLeft("predicate 1").s
@@ -1171,10 +1172,10 @@ describe "RuleManager", ->
         i++
         predHandler = new DummyPredicateHandler()
         predHandler.on = (event, listener) -> 
-          cassert event is 'change'
-          changeListener = listener
-          onCalled = i
-          i++
+          if event is 'change'
+            changeListener = listener
+            onCalled = i
+            i++
 
         predHandler.getVale = => Promise.resolve true
         predHandler.getType => 'event'
