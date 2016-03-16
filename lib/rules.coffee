@@ -291,7 +291,7 @@ module.exports = (env) ->
           )
 
           # Try to match " and ", " or ", ...
-          possibleTokens = [' and if ', ' and ', ' or when', ' or ']
+          possibleTokens = [' and if ', ' and ', ' or when ', ' or ']
           onMatch = (m, s) => 
             token = s.trim()
             if token is 'and if' then justCondition = true
