@@ -109,13 +109,15 @@ module.exports = (env) ->
           if i > 0 then errorMessage += ", "
           if e.kind is "ObjectValidationError" and e.constraintName is "required"
             errorMessage += e.desc.replace(/^missing: (.*)$/, 'Missing property "$1"')
-          else if e.kind is "ObjectValidationError" and e.constraintName is "additionalProperties" and e.testedValue?
+          else if e.kind is "ObjectValidationError" and
+              e.constraintName is "additionalProperties" and e.testedValue?
             errorMessage += "Property \"#{e.testedValue}\" is not a valid property"
           else if e.desc?
             errorMessage += e.desc
           else
             errorMessage += (
-              "Property \"#{e.instanceContext}\" Should have #{e.constraintName} #{e.constraintValue}"
+              "Property \"#{e.instanceContext}\" Should have #{e.constraintName} " +
+              "#{e.constraintValue}"
             )
             if e.testedValue? then errorMessage += ", was: #{e.testedValue}"
           if e.instanceContext? and e.instanceContext.length > 1

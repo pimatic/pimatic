@@ -33,7 +33,7 @@ startup = =>
     else path.resolve __dirname, '../../config.json'
   )
 
-  exit = (code) ->  
+  exit = (code) ->
     env.logger.info "exiting..."
     if process.logStream?
       # close logstream first
@@ -45,33 +45,62 @@ startup = =>
     else
       process.exit(code)
 
+  # This is to trace back uncaughtException from net socket
+  (hijackSocketConnectToTraceUncaughtException = =>
+    net = require('net')
+    orgConnect = net.Socket.prototype.connect
+
+    net.Socket.prototype.__defineGetter__('connect', () ->
+      # capture stack
+      this.__connectStack = new Error("From connect").stack
+      # is already setup?
+      if this.__emitModified?
+        return orgConnect
+      orgEmit = this.emit
+      this.emit = (args...) ->
+        if args.length >= 2 and args[0] is 'error'
+          args[1].__trace = this.__connectStack
+        return orgEmit.apply(this, args)
+      this.__emitModified = true
+      return orgConnect
+    )
+  )()
+
+  initComplete = false
+  uncaughtException = (err) ->
+    unless err.silent
+      trace = (if err.__trace? then err.__trace.toString().replace('Error: ', '\n') else '')
+      env.logger.error(
+        "A uncaught exception occured: #{err.stack}#{trace}\n
+         This is most probably a bug in pimatic or in a module, please report it!"
+      )
+    if initComplete
+      if process.env['PIMATIC_DAEMONIZED']
+        env.logger.warn(
+          "Keeping pimatic alive, but could be in an undefined state, 
+           please restart pimatic as soon as possible!"
+        )
+      else
+        env.logger.warn("shutting pimatic down...")
+        framework.destroy().then( -> exit(1) )
+    else
+      exit(1)
+
+  process.on('uncaughtException', uncaughtException)
+
   # Setup the framework
   env.framework = (require './lib/framework') env 
   return Promise.try( =>
     framework = new env.framework.Framework configFile
     promise = framework.init().then( ->
+      initComplete = true
 
-      onKill = -> 
+      onKill = ->
         framework.destroy().then( -> exit(0) )
-
-      uncaughtException = (err) ->
-        unless err.silent
-          env.logger.error(
-            "A uncaught exception occured: #{err.stack}\n
-             This is most probably a bug in pimatic or in a module, please report it!"
-          )
-        if process.env['PIMATIC_DAEMONIZED']
-          env.logger.warn(
-            "Keeping pimatic alive, but could be in an undefined state, 
-             please restart pimatic as soon as possible!"
-          )
-        else
-          env.logger.warn("shutting pimatic down...")
-          framework.destroy().then( -> exit(1) )
 
       process.on('SIGINT', onKill)
       process.on('SIGTERM', onKill)
-      process.on('uncaughtException', uncaughtException)
+
     )
 
     return promise.then( => framework )

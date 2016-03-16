@@ -302,6 +302,8 @@ module.exports = (env) ->
         lastToken = tokens[tokens.length-1]
         if lastToken in ["and", "or"]
           context.addError("""Expected a new predicate after last "#{lastToken}".""")
+      if openedParentheseCount > 0
+        context.addError("""Expected closing parenthese ("]") at end.""")
       return {
         predicates: predicates
         tokens: tokens
@@ -593,10 +595,10 @@ module.exports = (env) ->
       if rule.valid
         for p in rule.predicates
           do (p) =>
-            assert typeof p.changeListener is "function"
-            p.handler.removeListener 'change', p.changeListener
-            delete p.changeListener
-            p.handler.destroy()
+            if typeof p.changeListener is "function"
+              p.handler.removeListener 'change', p.changeListener
+              delete p.changeListener
+              p.handler.destroy()
 
     _cancelScheduledActions: (rule) ->
       assert rule?
