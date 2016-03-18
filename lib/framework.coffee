@@ -573,8 +573,8 @@ module.exports = (env) ->
       if @app.httpsServer?
         httpsServerConfig = @config.settings.httpsServer
         @app.httpsServer.on 'error', genErrFunc(httpsServerConfig)
-        awaiting = Promise.promisify(@app.httpsServer.listen, @app.httpsServer)(
-          httpsServerConfig.port, httpsServerConfig.hostname
+        awaiting = Promise.fromCallback( (callback) =>
+          @app.httpsServer.listen(httpsServerConfig.port, httpsServerConfig.hostname, callback)
         )
         listenPromises.push awaiting.then( =>
           env.logger.info "Listening for HTTPS-request on port #{httpsServerConfig.port}..."
@@ -583,8 +583,8 @@ module.exports = (env) ->
       if @app.httpServer?
         httpServerConfig = @config.settings.httpServer
         @app.httpServer.on 'error', genErrFunc(@config.settings.httpServer)
-        awaiting = Promise.promisify(@app.httpServer.listen, @app.httpServer)(
-          httpServerConfig.port, httpServerConfig.hostname
+        awaiting = Promise.fromCallback( (callback) =>
+          @app.httpServer.listen(httpServerConfig.port, httpServerConfig.hostname, callback)
         )
         listenPromises.push awaiting.then( =>
           env.logger.info "Listening for HTTP-request on port #{httpServerConfig.port}..."
