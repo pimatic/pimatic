@@ -19,7 +19,7 @@
     "plugins.md",
     "LICENSE"
   ],
-  "version": "0.8.102",
+  "version": "0.9.0-beta.1",
   "license": "GPL-2.0",
   "homepage": "http://pimatic.org",
   "repository": {
