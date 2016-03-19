@@ -43,7 +43,7 @@ module.exports = (env) ->
     _publicPathes: {}
 
     constructor: (@configFile) ->
-      assert configFile?
+      assert @configFile?
       @maindir = path.resolve __dirname, '..'
       env.logger.winston.on("logged", (level, msg, meta) =>
         @_emitMessageLoggedEvent(level, msg, meta)

@@ -49,7 +49,7 @@ module.exports = (env) ->
     constructor: (vars, @_device, @_attrName) ->
       super(
         vars, 
-        "#{@_device.id}.#{_attrName}", 
+        "#{@_device.id}.#{@_attrName}", 
         'attribute', 
         @_device.attributes[@_attrName].unit, 
         yes
