@@ -150,7 +150,8 @@ module.exports = (env) ->
       else return @searchForCoreUpdate()
 
     searchForPlugin: ->
-      return @_pluginList = rp('http://api.pimatic.org/plugins').then( (res) =>
+      version = @framework.packageJson.version
+      return @_pluginList = rp("http://api.pimatic.org/plugins?version=#{version}").then( (res) =>
         json = JSON.parse(res)
         # sort
         json.sort( (a, b) => a.name.localeCompare(b.name) )
@@ -160,7 +161,8 @@ module.exports = (env) ->
       )
 
     searchForCoreUpdate: ->
-      return @_coreInfo = rp('http://api.pimatic.org/core').then( (res) =>
+      version = @framework.packageJson.version
+      return @_coreInfo = rp("http://api.pimatic.org/core?version=#{version}").then( (res) =>
         json = JSON.parse(res)
         # cache for 1min
         setTimeout( (=> @_coreInfo = null), 60*1000)
@@ -174,6 +176,13 @@ module.exports = (env) ->
         if plugin? then return plugin
         throw new Error("Couldn't find plugin info for #{name}")
       )
+
+    isCompatible: (packageInfo) ->
+      version = @framework.packageJson.version
+      pimaticRange = packageInfo.peerDependencies?.pimatic
+      unless pimaticRange
+        return null
+      return semver.satisfies(version, pimaticRange)
 
     searchForPluginsWithInfo: ->
       return @searchForPlugin().then( (plugins) =>
@@ -194,6 +203,7 @@ module.exports = (env) ->
               loaded: loadedPlugin?
               activated: @isActivated(name)
               isNewer: (if installed then semver.gt(p.version, packageJson.version) else false)
+              isCompatible: @isCompatible(p)
             }
         )
       )
@@ -328,6 +338,7 @@ module.exports = (env) ->
               description: packageJson.description
               version: packageJson.version
               homepage: packageJson.homepage
+              isCompatible: @isCompatible(packageJson)
             }
         )
       )
