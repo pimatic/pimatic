@@ -10,6 +10,9 @@ RJSON = require 'relaxed-json'
 i18n = require 'i18n'
 express = require "express"
 connectTimeout = require 'connect-timeout'
+cookieParser = require 'cookie-parser'
+bodyParser = require 'body-parser'
+cookieSession = require 'cookie-session'
 socketIo = require 'socket.io'
 # Require engine.io from socket.io
 engineIo = require.cache[require.resolve('socket.io')].require('engine.io')
@@ -21,6 +24,7 @@ declapi = require 'decl-api'
 util = require 'util'
 jsonlint = require 'jsonlint'
 events = require 'events'
+Cookies = require 'cookie-session/node_modules/cookies'
 
 module.exports = (env) ->
 
@@ -240,9 +244,9 @@ module.exports = (env) ->
         next()
       )
       #@app.use express.logger()
-      @app.use express.cookieParser()
-      @app.use express.urlencoded(limit: '10mb')
-      @app.use express.json(limit: '10mb')
+      @app.use cookieParser()
+      @app.use bodyParser.urlencoded(limit: '10mb', extended: true)
+      @app.use bodyParser.json(limit: '10mb')
       auth = @config.settings.authentication
       validSecret = (
         auth.secret? and typeof auth.secret is "string" and auth.secret.length >= 32
@@ -253,12 +257,11 @@ module.exports = (env) ->
       assert typeof auth.secret is "string"
       assert auth.secret.length >= 32
 
-      @app.cookieSessionOptions = {
+      @app.use cookieSession({
         secret:  auth.secret
         key: 'pimatic.sess'
         cookie: { maxAge: null }
-      }
-      @app.use express.cookieSession(@app.cookieSessionOptions)
+      })
 
       # Setup authentication
       # ----------------------
@@ -328,7 +331,6 @@ module.exports = (env) ->
         )(req, res, next)
       )
 
-
       @app.post('/login', (req, res) =>
         user = req.body.username
         password = req.body.password
@@ -336,7 +338,6 @@ module.exports = (env) ->
         if rememberMe is 'true' then rememberMe = yes
         if rememberMe is 'false' then rememberMe = no
         rememberMe = !!rememberMe
-
         if @userManager.checkLogin(user, password)
           role = @userManager.getUserByUsername(user).role
           assert role? and typeof role is "string" and role.length > 0
@@ -345,9 +346,9 @@ module.exports = (env) ->
           req.session.role = role
           req.session.rememberMe = rememberMe
           if rememberMe and auth.loginTime isnt 0
-            req.session.cookie.maxAge = auth.loginTime
+            req.sessionOptions.maxAge = auth.loginTime
           else
-            req.session.cookie.maxAge = null
+            req.sessionOptions.maxAge = null
           res.send({
             success: yes
             username: user
@@ -359,17 +360,15 @@ module.exports = (env) ->
           delete req.session.loginToken
           delete req.session.role
           delete req.session.rememberMe
-          res.send(401, {
+          res.status(401).send({
             success: false
             message: __("Wrong username or password.")
           })
       )
 
       @app.get('/logout', (req, res) =>
-        delete req.session.username
-        delete req.session.loginToken
-        delete req.session.role
-        res.send 401, "You are now logged out."
+        req.session = null
+        res.status(401).send("You are now logged out.")
         return
       )
       serverEnabled = (
@@ -384,7 +383,6 @@ module.exports = (env) ->
       socketIoPath = '/socket.io'
       engine = new engineIo.Server({path: socketIoPath})
       @io = new socketIo()
-      ioCookieParser = express.cookieParser(@app.cookieSessionOptions.secret)
       @io.use( (socket, next) =>
         if auth.enabled is no
           return next()
@@ -395,32 +393,24 @@ module.exports = (env) ->
             return next()
           else
             return next(new Error('unauthorizied'))
-        else if req.headers.cookie?
-          req.cookies = null
-          ioCookieParser(req, null, =>
-            sessionCookie = req.signedCookies?[@app.cookieSessionOptions.key]
-            loggedIn = (
-              sessionCookie? and (
-                typeof sessionCookie.username is "string" and
-                typeof sessionCookie.loginToken is "string" and
-                sessionCookie.username.length > 0 and
-                sessionCookie.loginToken.length > 0 and
-                @userManager.checkLoginToken(
-                  auth.secret,
-                  sessionCookie.username,
-                  sessionCookie.loginToken
-                )
-              )
+        else if req.session?
+          loggedIn = (
+            typeof req.session.username is "string" and
+            typeof req.session.loginToken is "string" and
+            req.session.username.length > 0 and
+            req.session.loginToken.length > 0 and
+            @userManager.checkLoginToken(
+              auth.secret,
+              req.session.username,
+              req.session.loginToken
             )
-            if loggedIn
-              socket.username = sessionCookie.username
-              return next()
-            else
-              env.logger.debug "socket.io: Cookie is invalid."
-              return next(new Error('Authentication error'))
           )
+          if loggedIn
+            socket.username = req.session.username
+            return next()
+          else
+            return next(new Error('Authentication error'))
         else
-          env.logger.warn "No cookie transmitted."
           return next(new Error('Unauthorized'))
       )
 
@@ -950,7 +940,7 @@ module.exports = (env) ->
                   next()
                   @userManager.requestUsername = null
                 else
-                  res.send(403)
+                  res.status(403).send()
               )
 
       createPermissionCheck(@app, env.api.framework.actions)
