@@ -254,9 +254,10 @@ module.exports = (env) ->
             optional: yes
         exec: (number, decimals, unit) ->
           unless unit?
-            info = humanFormat.raw(number, unit: this.units[0] )
-            formated = (if decimals? then Number(info.num) else info.num)
-            return "#{formated}#{info.prefix}#{info.unit}"
+            unit = this.units[0]
+            info = humanFormat.raw(number, unit: unit)
+            formated = (if decimals? then Number(info.value).toFixed(decimals) else info.value)
+            return "#{formated}#{info.prefix}#{unit}"
           else
             unless decimals?
               decimals = 2
