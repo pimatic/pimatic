@@ -72,6 +72,7 @@ module.exports = (env) ->
           pool:
             min: 1
             max: 1
+          useNullAsDefault: true
         )
 
         @framework.on('destroy', (context) =>
