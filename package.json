@@ -33,6 +33,7 @@
     "test": "grunt test"
   },
   "dependencies": {
+    "basic-auth": "^1.0.3",
     "bluebird": "^3.3.4",
     "body-parser": "^1.15.0",
     "byline": "~4.2.1",

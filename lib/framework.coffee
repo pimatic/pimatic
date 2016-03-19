@@ -13,6 +13,7 @@ connectTimeout = require 'connect-timeout'
 cookieParser = require 'cookie-parser'
 bodyParser = require 'body-parser'
 cookieSession = require 'cookie-session'
+basicAuth = require 'basic-auth'
 socketIo = require 'socket.io'
 # Require engine.io from socket.io
 engineIo = require.cache[require.resolve('socket.io')].require('engine.io')
@@ -24,7 +25,6 @@ declapi = require 'decl-api'
 util = require 'util'
 jsonlint = require 'jsonlint'
 events = require 'events'
-Cookies = require 'cookie-session/node_modules/cookies'
 
 module.exports = (env) ->
 
@@ -313,22 +313,31 @@ module.exports = (env) ->
         if loggedIn
           return next()
 
-        # else use authorization
-        express.basicAuth( (user, pass) =>
-          if @userManager.checkLogin(user, pass)
-            role = @userManager.getUserByUsername(user).role
-            assert role? and typeof role is "string" and role.length > 0
-            req.session.username = user
-            req.session.loginToken = @userManager.getLoginTokenForUsername(auth.secret, user)
-            req.session.role = role
-          else
-            delete req.session.username
-            delete req.session.loginToken
-            delete req.session.role
-          # return always true, so that the next callback below is called and we can awnser with
-          # 401 instead of show the auth dialog
-          return yes
-        )(req, res, next)
+        # else use basic authorization
+
+        unauthorized = (res) =>
+          res.set('WWW-Authenticate', 'Basic realm=Authorization Required')
+          return res.status(401).send("Unauthorized")
+
+        authInfo = basicAuth(req)
+
+        if !authInfo or !authInfo.name or !authInfo.pass
+          return unauthorized(res)
+
+        if @userManager.checkLogin(authInfo.name, authInfo.pass)
+          role = @userManager.getUserByUsername(authInfo.name).role
+          assert role? and typeof role is "string" and role.length > 0
+          req.session.username = authInfo.name
+          req.session.loginToken = @userManager.getLoginTokenForUsername(
+            auth.secret, authInfo.name
+          )
+          req.session.role = role
+          next()
+        else
+          delete req.session.username
+          delete req.session.loginToken
+          delete req.session.role
+          unauthorized()
       )
 
       @app.post('/login', (req, res) =>
