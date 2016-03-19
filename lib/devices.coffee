@@ -190,8 +190,8 @@ module.exports = (env) ->
   class ErrorDevice extends Device
 
     constructor: (@config, @error) ->
-      @name = config.name
-      @id = config.id
+      @name = @config.name
+      @id = @config.id
       super()
 
   ###
@@ -620,8 +620,8 @@ module.exports = (env) ->
     _lastPressedButton: null
 
     constructor: (@config)->
-      @id = config.id
-      @name = config.name
+      @id = @config.id
+      @name = @config.name
       super()
 
     getButton: -> Promise.resolve(@_lastPressedButton)
@@ -637,8 +637,8 @@ module.exports = (env) ->
   class VariablesDevice extends Device
 
     constructor: (@config, lastState, @framework) ->
-      @id = config.id
-      @name = config.name
+      @id = @config.id
+      @name = @config.name
       @_vars = @framework.variableManager
       @_exprChangeListeners = []
       @attributes = {}
@@ -723,8 +723,8 @@ module.exports = (env) ->
         description: "Sets the variable to the value"
 
     constructor: (@config, lastState, @framework) ->
-      @name = config.name
-      @id = config.id
+      @name = @config.name
+      @id = @config.id
 
       @attributes = {
         input:
@@ -769,8 +769,8 @@ module.exports = (env) ->
   class DummySwitch extends SwitchActuator
 
     constructor: (@config, lastState) ->
-      @name = config.name
-      @id = config.id
+      @name = @config.name
+      @id = @config.id
       @_state = lastState?.state?.value or off
       super()
 
@@ -782,8 +782,8 @@ module.exports = (env) ->
   class DummyDimmer extends DimmerActuator
 
     constructor: (@config, lastState) ->
-      @name = config.name
-      @id = config.id
+      @name = @config.name
+      @id = @config.id
       @_dimlevel = lastState?.dimlevel?.value or 0
       @_state = lastState?.state?.value or off
       super()
@@ -796,8 +796,8 @@ module.exports = (env) ->
   class DummyShutter extends ShutterController
 
     constructor: (@config, lastState) ->
-      @name = config.name
-      @id = config.id
+      @name = @config.name
+      @id = @config.id
       @_position = lastState?.position?.value or 'stopped'
       super()
 
@@ -857,8 +857,8 @@ module.exports = (env) ->
             type: "boolean"
 
     constructor: (@config, lastState) ->
-      @name = config.name
-      @id = config.id
+      @name = @config.name
+      @id = @config.id
       @_presence = lastState?.presence?.value or off
       @_triggerAutoReset()
       super()
@@ -886,8 +886,8 @@ module.exports = (env) ->
             type: "boolean"
 
     constructor: (@config, lastState) ->
-      @name = config.name
-      @id = config.id
+      @name = @config.name
+      @id = @config.id
       @_contact = lastState?.contact?.value or off
       super()
 
