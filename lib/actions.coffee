@@ -269,6 +269,7 @@ module.exports = (env) ->
 
     setup: ->
       @dependOnDevice(@device)
+      super()
 
     ###
     Handles the above actions.
@@ -343,6 +344,7 @@ module.exports = (env) ->
 
     setup: ->
       @dependOnDevice(@device)
+      super()
 
     ###
     Handles the above actions.
@@ -447,6 +449,7 @@ module.exports = (env) ->
 
     setup: ->
       @dependOnDevice(@device)
+      super()
 
     ###
     Handles the above actions.
@@ -535,6 +538,7 @@ module.exports = (env) ->
 
     setup: ->
       @dependOnDevice(@device)
+      super()
 
     # ### executeAction()
     executeAction: (simulate) => 
@@ -612,6 +616,7 @@ module.exports = (env) ->
 
     setup: ->
       @dependOnDevice(@device)
+      super()
 
     ###
     Handles the above actions.
@@ -701,6 +706,7 @@ module.exports = (env) ->
 
     setup: ->
       @dependOnDevice(@device)
+      super()
 
     # ### executeAction()
     executeAction: (simulate) => 
@@ -776,6 +782,7 @@ module.exports = (env) ->
 
     setup: ->
       @dependOnDevice(@device)
+      super()
 
     # ### executeAction()
     executeAction: (simulate) => 
@@ -863,6 +870,7 @@ module.exports = (env) ->
 
     setup: ->
       @dependOnDevice(@device)
+      super()
 
     _clampVal: (value) ->
       assert(not isNaN(value))
@@ -961,6 +969,7 @@ module.exports = (env) ->
 
     setup: ->
       @dependOnDevice(@device)
+      super()
 
     ###
     Handles the above actions.
@@ -1052,6 +1061,7 @@ module.exports = (env) ->
 
     setup: ->
       @dependOnDevice(@device)
+      super()
 
     ###
     Handles the above actions.
@@ -1145,6 +1155,7 @@ module.exports = (env) ->
 
     setup: ->
       @dependOnDevice(@device)
+      super()
 
     # ### executeAction()
     executeAction: (simulate) => 
@@ -1201,6 +1212,7 @@ module.exports = (env) ->
 
     setup: ->
       @dependOnDevice(@device)
+      super()
 
     executeAction: (simulate) => 
       return (
@@ -1255,6 +1267,7 @@ module.exports = (env) ->
 
     setup: ->
       @dependOnDevice(@device)
+      super()
 
     executeAction: (simulate) => 
       return (
@@ -1307,6 +1320,7 @@ module.exports = (env) ->
 
     setup: ->
       @dependOnDevice(@device)
+      super()
 
     executeAction: (simulate) => 
       return (
@@ -1382,6 +1396,7 @@ module.exports = (env) ->
 
     setup: ->
       @dependOnDevice(@device)
+      super()
 
     executeAction: (simulate, value) => 
       return (
@@ -1441,6 +1456,7 @@ module.exports = (env) ->
 
     setup: ->
       @dependOnDevice(@device)
+      super()
 
     executeAction: (simulate) => 
       return (
@@ -1496,6 +1512,7 @@ module.exports = (env) ->
 
     setup: ->
       @dependOnDevice(@device)
+      super()
 
     executeAction: (simulate) => 
       return (
