@@ -548,34 +548,6 @@ module.exports = (env) ->
 
       return { action, token, nextInput }
 
-    # ###_addPredicateChangeListener()
-    # Register for every predicate the callback function that should be called
-    # when the predicate becomes true.
-    _addPredicateChangeListener: (rule) ->
-      assert rule?
-      assert rule.predicates?
-      
-      setupTime = (new Date()).getTime()
-      # For all predicate providers
-      for p in rule.predicates
-        do (p) =>
-          assert(not p.changeListener?)
-          p.lastChange = setupTime
-          p.handler.setup()
-          # Let us be notified when the predicate state changes.
-          p.handler.on 'change', changeListener = (state) =>
-            assert state is 'event' or state is true or state is false
-            p.lastChange = (new Date()).getTime()
-            # If the state is true then call the `whenPredicateIsTrue` function.
-            unless p.justCondition
-              if state is true or state is 'event'
-                whenPredicateIsTrue rule, p.id, state
-          p.changeListener = changeListener
-
-          p.handler.on 'recreate', recreateListener = =>
-            @recreateRule(rule)
-
-
       # This function should be called by a provider if a predicate becomes true.
       whenPredicateIsTrue = (rule, predicateId, state) =>
         assert rule?
@@ -601,29 +573,55 @@ module.exports = (env) ->
           env.logger.debug error
         )
         return
-            
-    # ###_cancelPredicateproviderNotify()
-    # Cancels for every predicate the callback that should be called
+
+    # ###_addPredicateChangeListener()
+    # Register for every predicate the callback function that should be called
     # when the predicate becomes true.
+    _addPredicateChangeListener: (rule) ->
+      assert rule?
+      assert rule.predicates?
+
+      setupTime = (new Date()).getTime()
+      # For all predicate providers
+      for p in rule.predicates
+        do (p) =>
+          assert(not p.changeListener?)
+          p.lastChange = setupTime
+          p.handler.setup()
+          # Let us be notified when the predicate state changes.
+          p.handler.on 'change', changeListener = (state) =>
+            assert state is 'event' or state is true or state is false
+            p.lastChange = (new Date()).getTime()
+            # If the state is true then call the `whenPredicateIsTrue` function.
+            unless p.justCondition
+              if state is true or state is 'event'
+                whenPredicateIsTrue rule, p.id, state
+          p.changeListener = changeListener
+
+          p.handler.on 'recreate', recreateListener = =>
+            @recreateRule(rule)
+          p.ready = true
+
     _removePredicateChangeListener: (rule) ->
       assert rule?
       # Then cancel the notifier for all predicates
       if rule.valid
         for p in rule.predicates
           do (p) =>
-            unless p.destroyed is true
+            if p.ready
               assert typeof p.changeListener is "function"
               p.handler.removeListener 'change', p.changeListener
               delete p.changeListener
               p.handler.removeAllListeners 'recreate'
               p.handler.destroy()
-              p.destroyed = true
+              p.ready = false
 
     _setupActions: (rule) ->
       for action in rule.actions
         action.handler.setup()
         action.handler.on 'recreate', recreateListener = =>
           @recreateRule(rule)
+        action.ready = true
 
 
     _destroyActionsAndCancelSheduledActions: (rule) ->
@@ -632,10 +630,10 @@ module.exports = (env) ->
       if rule.valid
         for action in rule.actions
           do (action) =>
-            unless action.destroyed is true
+            if action.ready
               action.handler.destroy()
               action.handler.removeAllListeners 'recreate'
-              action.destroyed = true
+              action.ready = false
               if action.scheduled?
                 action.scheduled.cancel(
                   "canceling schedule of action #{action.token}"
