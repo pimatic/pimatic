@@ -548,31 +548,31 @@ module.exports = (env) ->
 
       return { action, token, nextInput }
 
-      # This function should be called by a provider if a predicate becomes true.
-      whenPredicateIsTrue = (rule, predicateId, state) =>
-        assert rule?
-        assert predicateId? and typeof predicateId is "string" and predicateId.length isnt 0
-        assert state is 'event' or state is true
+    # This function should be called by a provider if a predicate becomes true.
+    whenPredicateIsTrue = (rule, predicateId, state) =>
+      assert rule?
+      assert predicateId? and typeof predicateId is "string" and predicateId.length isnt 0
+      assert state is 'event' or state is true
 
-        # If not active, then nothing to do
-        unless rule.active then return
+      # If not active, then nothing to do
+      unless rule.active then return
 
-        # Then mark the given predicate as true
-        knownPredicates = {}
-        knownPredicates[predicateId] = true
+      # Then mark the given predicate as true
+      knownPredicates = {}
+      knownPredicates[predicateId] = true
 
-        # And check if the rule is now true.
-        @_doesRuleCondtionHold(rule, knownPredicates).then( (isTrue) =>
-          # If the rule is now true, then execute its action
-          if isTrue 
-            return @_executeRuleActionsAndLogResult(rule)
-        ).catch( (error) => 
-          env.logger.error """
-            Error on evaluation of rule condition of rule #{rule.id}: #{error.message}
-          """ 
-          env.logger.debug error
-        )
-        return
+      # And check if the rule is now true.
+      @_doesRuleCondtionHold(rule, knownPredicates).then( (isTrue) =>
+        # If the rule is now true, then execute its action
+        if isTrue 
+          return @_executeRuleActionsAndLogResult(rule)
+      ).catch( (error) => 
+        env.logger.error """
+          Error on evaluation of rule condition of rule #{rule.id}: #{error.message}
+        """ 
+        env.logger.debug error
+      )
+      return
 
     # ###_addPredicateChangeListener()
     # Register for every predicate the callback function that should be called
