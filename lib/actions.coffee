@@ -201,6 +201,7 @@ module.exports = (env) ->
 
     setup: ->
       @dependOnVariable(@framework.variableManager, @variableName)
+      super()
 
     executeAction: (simulate, context) ->
       if simulate
