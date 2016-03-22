@@ -549,7 +549,7 @@ module.exports = (env) ->
       return { action, token, nextInput }
 
     # This function should be called by a provider if a predicate becomes true.
-    whenPredicateIsTrue = (rule, predicateId, state) =>
+    whenPredicateIsTrue: (rule, predicateId, state) =>
       assert rule?
       assert predicateId? and typeof predicateId is "string" and predicateId.length isnt 0
       assert state is 'event' or state is true
@@ -595,7 +595,7 @@ module.exports = (env) ->
             # If the state is true then call the `whenPredicateIsTrue` function.
             unless p.justCondition
               if state is true or state is 'event'
-                whenPredicateIsTrue rule, p.id, state
+                @whenPredicateIsTrue rule, p.id, state
           p.changeListener = changeListener
 
           p.handler.on 'recreate', recreateListener = =>
