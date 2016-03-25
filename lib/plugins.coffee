@@ -22,6 +22,39 @@ download = require 'gethub'
 
 module.exports = (env) ->
 
+  isCompatible = (refVersion, packageInfo) ->
+    try
+      peerVersion = packageInfo.peerDependencies?.pimatic
+      if peerVersion?
+        if semver.satisfies(refVersion, peerVersion)
+          return true
+    catch err
+      env.logger.error(err)
+    return false
+
+  satisfyingVersion = (p, refVersion) ->
+    versions = []
+    _.forEach(p.versions, (value, key) =>
+      if isCompatible(refVersion, value)
+        versions.push key
+    )
+    return versions
+
+  getLatestCompatible = (packageInfo, refVersion) ->
+    result = packageInfo.versions[packageInfo['dist-tags'].latest]
+    if isCompatible(refVersion, result)
+      return result
+    else
+      satisfyingV = satisfyingVersion(packageInfo, refVersion)
+      if satisfyingV.length > 0
+        latestSatisfying = satisfyingV[satisfyingV.length-1]
+        result = packageInfo.versions[latestSatisfying]
+        return result
+      else
+        # no compatible version found, return latest
+        return result
+    return result
+
   class PluginManager extends events.EventEmitter
     plugins: []
     updateProcessStatus: 'idle'
@@ -64,13 +97,6 @@ module.exports = (env) ->
       assert name.match(/^pimatic.*$/)?
       return fs.existsSync("#{@pathToPlugin name}/.git")
 
-    installByGit: (name) ->
-      return @findInPluginList(name).then( (plugin) =>
-        unless plugin? then return false
-        dist = @_findDist(plugin)
-        return dist?
-      )
-
     _getFullPlatfrom: ->
       abiVersion = process.versions.modules
       platform = process.platform
@@ -86,26 +112,28 @@ module.exports = (env) ->
       return null
 
     # Install a plugin from the npm repository
-    installPlugin: (name) ->
+    installPlugin: (name, update = false) ->
       assert name?
       assert name.match(/^pimatic.*$/)?
-      return @installByGit(name).then( (useGit) =>
-        if useGit
-          return @installGitPlugin(name)
-        else
+      if update
+        if @isGitRepo(name) then throw new Error("Can't update a git repository!")
+      return @getPluginInfo(name).then( (packageInfo) =>
+        unless packageInfo?
+          env.logger.warn(
+            "Could not determine compatible version for \"#{name}\"" +
+            ", trying to installing latest version"
+          )
           env.logger.info("Installing: \"#{name}\" from npm-registry.")
-          return @spawnNpm(['install', name])
+          return if update then @spawnNpm(['update', name]) else @spawnNpm(['install', name])
+        dist = @_findDist(packageInfo)
+        if dist
+          return if update then @updateGitPlugin(name) else @installGitPlugin(name)
+        env.logger.info("Installing: \"#{name}@#{packageInfo.version}\" from npm-registry.")
+        return @spawnNpm(['install', "#{name}@#{packageInfo.version}"])
       )
 
     updatePlugin: (name) ->
-      if @isGitRepo(name) then throw new Error("Can't update a git repository!")
-      return @installByGit(name).then( (useGit) =>
-        if useGit
-          return @updateGitPlugin(name)
-        else
-          env.logger.info("Installing: \"#{name}\" from npm-registry.")
-          return @spawnNpm(['update', name])
-      )
+      return @installPlugin(name, true)
 
     _emitUpdateProcessStatus: (status, info) ->
       @updateProcessStatus = status
@@ -171,12 +199,25 @@ module.exports = (env) ->
         return json
       )
 
-    findInPluginList: (name) ->
+    getPluginInfo: (name) ->
       return @getCoreInfo() if name is "pimatic"
+      pluginInfo = null
       return @getPluginList().then( (plugins) =>
-        plugin = _.find(plugins, (p) -> p.name is name)
-        if plugin? then return plugin
-        throw new Error("Couldn't find plugin info for #{name}")
+        pluginInfo = _.find(plugins, (p) -> p.name is name)
+      ).finally( () =>
+        unless pluginInfo?
+          env.logger.info("Could not get plugin info from update server, request info from npm")
+          return pluginInfo = @getPluginInfoFromNpm(name)
+      ).then( () =>
+        return pluginInfo
+      )
+
+    getPluginInfoFromNpm: (name) ->
+      return rp("https://registry.npmjs.org/#{name}").then( (res) =>
+        packageInfos = JSON.parse(res)
+        if packageInfos.error?
+          throw new Error("Error getting info about #{name} from npm failed: #{info.reason}")
+        return getLatestCompatible(packageInfos, @framework.packageJson.version)
       )
 
     searchForPluginsWithInfo: ->
@@ -203,7 +244,7 @@ module.exports = (env) ->
 
     isPimaticOutdated: ->
       installed = @getInstalledPackageInfo("pimatic")
-      return @findInPluginList("pimatic").then( (latest) =>
+      return @getPluginInfo("pimatic").then( (latest) =>
         if semver.gt(latest.version, installed.version)
           return {
             current: installed.version
@@ -228,7 +269,7 @@ module.exports = (env) ->
         for p in plugins
           do (p) =>
             installed = @getInstalledPackageInfo(p)
-            waiting.push @findInPluginList(p).then( (latest) =>
+            waiting.push @getPluginInfo(p).then( (latest) =>
               infos.push {
                 plugin: p
                 current: installed.version
@@ -286,7 +327,7 @@ module.exports = (env) ->
       )
 
     installGitPlugin: (name) ->
-      return @findInPluginList(name).then( (plugin) =>
+      return @getPluginInfo(name).then( (plugin) =>
         dist = @_findDist(plugin)
         unless dist? then throw new Error("dist package not found")
         env.logger.info("Installing: \"#{name}\" from precompiled source (#{dist.name})")
