@@ -307,10 +307,14 @@ module.exports = (env) ->
         @npmRunning = yes
         output = ''
         npmLogger = env.logger.createSublogger("npm")
+        errCode = null
         onLine = ( (line) => 
           line = line.toString()
+          if (match = line.match(/ERR! code (E[A-Z]+)/))?
+            errCode = match[1]
           output += "#{line}\n"
           if line.indexOf('npm http 304') is 0 then return
+          if line.match(/ERR! peerinvalid .*/) then return
           @emit "npmMessage", line
           line = S(line).chompLeft('npm ').s
           npmLogger.info line
@@ -328,7 +332,11 @@ module.exports = (env) ->
           @npmRunning = no
           command = "npm " + _.reduce(args, (akk, a) -> "#{akk} #{a}")
           if code isnt 0
-            reject new Error("Error running \"#{command}\"")
+            # ignore EPEERINVALID errors
+            if errCode isnt 'EPEERINVALID'
+              reject new Error("Error running \"#{command}\"")
+            else
+              resolve(output)
           else resolve(output)
 
       )
