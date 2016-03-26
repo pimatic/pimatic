@@ -1308,7 +1308,8 @@ module.exports = (env) ->
         @framework._emitDeviceChanged(newDevice)
         oldDevice.emit 'change', newDevice
         @emit 'deviceChanged', newDevice
-        oldDevice.destroy()    
+        oldDevice.destroy()
+        return newDevice
       )
 
     discoverDevices: (time = 20000) ->
