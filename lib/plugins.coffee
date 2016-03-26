@@ -63,6 +63,17 @@ module.exports = (env) ->
     constructor: (@framework) ->
       @modulesParentDir = path.resolve @framework.maindir, '../../'
 
+    checkNpmVersion: () ->
+      @spawnNpm(['--version']).then( (result) =>
+        version = result.trim()
+        unless semver.satisfies(version, '2.*')
+          env.logger.error(
+            "pimatic needs npm version 2, your version is #{version}, run \"npm install -g npm@2\"."
+          )
+      ).catch( (err) =>
+        env.logger.error("Could not run npm, plugin and module installation will not work.")
+      )
+
     # Loads the given plugin by name
     loadPlugin: (name) ->
       packageInfo = @getInstalledPackageInfo(name)

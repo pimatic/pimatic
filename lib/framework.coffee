@@ -885,6 +885,7 @@ module.exports = (env) ->
         )
 
       return @database.init()
+        .then( => @pluginManager.checkNpmVersion() )
         .then( => @pluginManager.loadPlugins() )
         .then( => @pluginManager.initPlugins() )
         .then( => @deviceManager.initDevices() )
