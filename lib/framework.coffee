@@ -429,9 +429,10 @@ module.exports = (env) ->
       @app.all( '/socket.io/*', (req, res) => engine.handleRequest(req, res) )
 
       @app.use( (err, req, res, next) =>
-        env.logger.error("Error on incoming http request: #{err.message}")
+        env.logger.error("Error on incoming http request to #{req.path}: #{err.message}")
         env.logger.debug(err)
-        res.status(500).send(err.stack)
+        unless res.headerSent
+          res.status(500).send(err.stack)
       )
 
       onUpgrade = (req, socket, head) =>
