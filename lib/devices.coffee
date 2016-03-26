@@ -692,7 +692,7 @@ module.exports = (env) ->
 
           getValue = ( (varsInEvaluation) =>
             # wait till veraibelmanager is ready
-            return Promise.delay(1).then( =>
+            return @_vars.waitForInit().then( =>
               unless info?
                 parseExprAndAddListener()
               return evaluateExpr(varsInEvaluation)

@@ -265,6 +265,8 @@ module.exports = (env) ->
             return "#{formated}#{unit}"
     }
 
+    inited: false
+
     constructor: (@framework, @variablesConfig) ->
       # For each new device add a variable for every attribute
       @framework.on 'deviceAdded', (device) =>
@@ -272,6 +274,7 @@ module.exports = (env) ->
           @_addVariable(
             new DeviceAttributeVariable(this, device, attrName)
           )
+
 
     init: () ->
       # Import variables
@@ -318,7 +321,15 @@ module.exports = (env) ->
             )
 
       setExpr() for setExpr in setExpressions
-          
+      @inited = true
+      @emit 'init'
+
+    waitForInit: () ->
+      return new Promise( (resolve) =>
+        if @inited then return resolve()
+        @once('init', resolve)
+      )
+
     _addVariable: (variable) ->
       assert variable instanceof Variable
       assert (not @variables[variable.name]?)
