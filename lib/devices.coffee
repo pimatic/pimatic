@@ -70,6 +70,7 @@ module.exports = (env) ->
       device = @
       @_attributesMeta[attrName] = {
         value: null
+        error: null
         history: []
         update: (value) ->
           if attr.type in ["number", "integer"] and typeof value is "string"
@@ -92,6 +93,7 @@ module.exports = (env) ->
       @emit('destroy', @)
       @removeAllListeners('destroy')
       @removeAllListeners(attrName) for attrName of @attributes
+      @_destroyed = true
       return
 
     afterRegister: ->
@@ -103,11 +105,8 @@ module.exports = (env) ->
             @getUpdatedAttributeValue(attrName).then( (value) ->
               meta.update(value) unless meta.value?
             ).catch( (err) =>
-              env.logger.error(
-                "Could not get attribute value of #{@name}.#{attrName}: #{err.message}"
-              )
-              env.logger.debug(err.stack)
-            )
+              @logAttributeError(attrName, err)
+            ).done()
 
     # Checks if the actuator has a given action.
     hasAction: (name) -> @actions[name]?
@@ -133,9 +132,7 @@ module.exports = (env) ->
       getter = 'get' + upperCaseFirst(attrName)
       # call the getter
       assert @[getter]?, "Method #{getter} of #{@name} does not exist!"
-      result = @[getter](arg)
-      # Be sure that it is a promise!
-      assert result.then?, "#{getter} of #{@name} should always return a promise!"
+      result = Promise.resolve().then( => return @[getter](arg) )
       return result
 
     getUpdatedAttributeValueCached: (attrName, arg) ->
@@ -181,6 +178,42 @@ module.exports = (env) ->
         json.actions.push actionJson
       return json
 
+    _setupPolling: (attrName, interval) ->
+      unless typeof interval is 'number'
+        throw new Error("Illegal polling interval #{interval}!");
+      unless interval > 0
+        throw new Error("Polling interval must be greater then 0, was #{interval}")
+      doPolling = () =>
+        if @_destroyed then return
+        Promise.resolve()
+          .then( => @getUpdatedAttributeValue(attrName) )
+          .then( (value) =>
+            # may emit value, if it was not already emitted by getter
+            lastUpdate = @_attributesMeta[attrName].lastUpdate
+            if lastUpdate? and (new Date().getTime() - lastUpdate) < 500
+              return
+            @emit(attrName, value)
+          )
+          .catch( (err) => @logAttributeError(attrName, err) )
+          .finally( =>
+            if @_destroyed then return
+            setTimeout(doPolling, interval)
+          ).done()
+      setTimeout(doPolling, interval)
+
+    logAttributeError: (attrName, err) ->
+      lastError = @_attributesMeta[attrName].error
+      if lastError? and err.message is lastError.message
+        @logger.debug("Supressing repeated error for #{@id}.#{attrName} #{err.message}")
+        @logger.debug(err.stack)
+        return
+      # save attribute error
+      @_attributesMeta[attrName].error = err
+      # clear error on next success
+      @once(attrName, => @_attributesMeta[attrName].error = null )
+      @logger.error("Error getting attribute value #{@id}.#{attrName}: #{err.message}");
+      @logger.debug(err.stack);
+
   ###
   ErrorDevice
   -----
@@ -192,6 +225,9 @@ module.exports = (env) ->
     constructor: (@config, @error) ->
       @name = @config.name
       @id = @config.id
+      super()
+
+    destroy: () ->
       super()
 
   ###
@@ -634,6 +670,9 @@ module.exports = (env) ->
           return Promise.resolve()
       throw new Error("No button with the id #{buttonId} found")
 
+    destroy: () ->
+      super()
+
   class VariablesDevice extends Device
 
     constructor: (@config, lastState, @framework) ->
@@ -778,6 +817,9 @@ module.exports = (env) ->
       @_setState(state)
       return Promise.resolve()
 
+    destroy: () ->
+      super()
+
 
   class DummyDimmer extends DimmerActuator
 
@@ -810,6 +852,8 @@ module.exports = (env) ->
       @_setPosition(position)
       return Promise.resolve()
 
+    destroy: () ->
+      super()
 
   class DummyHeatingThermostat extends HeatingThermostat
 
@@ -848,6 +892,9 @@ module.exports = (env) ->
       @_setSetpoint(temperatureSetpoint)
       return Promise.resolve()
 
+    destroy: () ->
+      super()
+
   class DummyPresenceSensor extends PresenceSensor
 
     actions:
@@ -875,6 +922,9 @@ module.exports = (env) ->
 
     _resetPresence: =>
       @_setPresence(no)
+
+    destroy: () ->
+      super()
 
 
   class DummyContactSensor extends ContactSensor
@@ -941,19 +991,8 @@ module.exports = (env) ->
       @_setHumidity(humidity)
       return Promise.resolve()
 
-  class DeviceConfigExtension
-    extendConfigShema: (schema) ->
-      unless schema.extensions? then return
-      for name, def of @configSchema
-        if name in schema.extensions
-          schema.properties[name] = _.clone(def)
-
-    applicable: (schema) ->
-      unless schema.extensions? then return
-      for name, def of @configSchema
-        if name in schema.extensions
-          return yes
-      return false
+    destroy: () ->
+      super()
 
   class Timer extends Device
 
@@ -1029,6 +1068,20 @@ module.exports = (env) ->
     destroy: ->
       @_destroyInterval()
       super()
+
+  class DeviceConfigExtension
+    extendConfigShema: (schema) ->
+      unless schema.extensions? then return
+      for name, def of @configSchema
+        if name in schema.extensions
+          schema.properties[name] = _.clone(def)
+
+    applicable: (schema) ->
+      unless schema.extensions? then return
+      for name, def of @configSchema
+        if name in schema.extensions
+          return yes
+      return false
 
   class ConfirmDeviceConfigExtention extends DeviceConfigExtension
     configSchema:
@@ -1170,16 +1223,17 @@ module.exports = (env) ->
         description: "The class to use for the device"
         type: "string"
       }
+      pluginName = @framework.pluginManager.getCallingPlugin()
 
       for extension in @deviceConfigExtensions
         extension.extendConfigShema(configDef)
 
       @framework._normalizeScheme(configDef)
-
       @deviceClasses[className] = {
         prepareConfig
         configDef
         createCallback
+        pluginName
       }
 
     updateDeviceOrder: (deviceOrder) ->
@@ -1196,6 +1250,15 @@ module.exports = (env) ->
       assert device?
       assert device instanceof env.devices.Device
       assert device._constructorCalled
+
+      unless device.logger?
+        classInfo = @deviceClasses[device.config.class]
+        if classInfo?
+          pluginName = classInfo.pluginName
+        else
+          pluginName = @framework.pluginManager.getCallingPlugin()
+        deviceLogger = env.logger.base.createSublogger([pluginName, device.config.class])
+        device.logger = deviceLogger
 
       if isNew and @devices[device.id]?
         throw new Error("Duplicate device id \"#{device.id}\"")
@@ -1224,6 +1287,8 @@ module.exports = (env) ->
           device.on(attrName, onChange = (value) =>
             @framework._emitDeviceAttributeEvent(device, attrName, attr,  new Date(), value)
           )
+
+      @_checkDestroyFunction(device)
       device.afterRegister()
       @framework._emitDeviceAdded(device) if isNew
       return device
@@ -1236,12 +1301,15 @@ module.exports = (env) ->
       classInfo.prepareConfig(deviceConfig) if classInfo.prepareConfig?
       @framework._normalizeScheme(classInfo.configDef)
       @framework._validateConfig(
-        deviceConfig, 
-        classInfo.configDef, 
+        deviceConfig,
+        classInfo.configDef,
           "config of device \"#{deviceConfig.id}\""
       )
       deviceConfig = declapi.enhanceJsonSchemaWithDefaults(classInfo.configDef, deviceConfig)
-      device = classInfo.createCallback(deviceConfig, lastDeviceState)
+
+      deviceLogger = env.logger.base.createSublogger([classInfo.pluginName, deviceConfig.class])
+      device = classInfo.createCallback(deviceConfig, lastDeviceState, deviceLogger)
+      device.logger = deviceLogger
       assert deviceConfig is device.config, """
         You must assign the config to your device in the the constructor function of your device:
         "@config = config"
@@ -1276,7 +1344,7 @@ module.exports = (env) ->
               @_loadErrorDevice(deviceConfig, e.message)
           else
             env.logger.warn("""
-              no plugin found for device "#{deviceConfig.id}" of class "#{deviceConfig.class}"!
+              No plugin found for device "#{deviceConfig.id}" of class "#{deviceConfig.class}"!
             """)
             @_loadErrorDevice(deviceConfig, "Plugin not loaded")
         )
@@ -1302,6 +1370,16 @@ module.exports = (env) ->
       @addDeviceToConfig(deviceConfig)
       return device
 
+    _checkDestroyFunction: (device) ->
+      if device.destroy is Device.prototype.destroy
+        deviceClass = device.config.class
+        unless @_alreadyWarnedFor?
+          @_alreadyWarnedFor = {}
+        if @_alreadyWarnedFor[deviceClass]?
+          return
+        @_alreadyWarnedFor[deviceClass] = true
+        env.logger.warn("The device type #{deviceClass} does not implement a destroy function")
+
     recreateDevice: (oldDevice, newDeviceConfig) ->
       return @framework.database.getLastDeviceState(oldDevice.id).then( (lastDeviceState) =>
         newDevice =  @_loadDevice(newDeviceConfig, lastDeviceState, false)
@@ -1309,6 +1387,10 @@ module.exports = (env) ->
         oldDevice.emit 'change', newDevice
         @emit 'deviceChanged', newDevice
         oldDevice.destroy()
+        assert(
+          oldDevice._destroyed,
+          "The device subclass #{oldDevice.config.class} did not call super() in destroy()"
+        )
         return newDevice
       )
 
@@ -1339,6 +1421,10 @@ module.exports = (env) ->
       @emit 'deviceRemoved', device
       device.emit 'remove'
       device.destroy()
+      assert(
+        device._destroyed,
+        "The device subclass #{device.config.class} did not call super() in destroy()"
+      )
       return device
 
     addDeviceToConfig: (deviceConfig) ->

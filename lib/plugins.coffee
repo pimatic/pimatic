@@ -571,6 +571,14 @@ module.exports = (env) ->
           return true
       return false
 
+    getCallingPlugin: () ->
+      stack = new Error().stack.toString();
+      matches = stack.match(/^.+?\/node_modules\/(pimatic-.+?)\//m)
+      if matches?
+        return matches[1]
+      else
+        return 'pimatic'
+
 
   class Plugin extends require('events').EventEmitter
     name: null
