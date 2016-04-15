@@ -459,6 +459,8 @@ module.exports = (env) ->
                 return @loadPlugin(fullPluginName).then( ([plugin, packageInfo]) =>
                   # Check config
                   configSchema = @_getConfigSchemaFromPackageInfo(packageInfo)
+                  if typeof plugin.prepareConfig is "function"
+                    plugin.prepareConfig(pConf);
                   if configSchema?
                     @framework._validateConfig(pConf, configSchema, "config of #{fullPluginName}")
                     pConf = declapi.enhanceJsonSchemaWithDefaults(configSchema, pConf)
