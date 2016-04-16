@@ -69,6 +69,7 @@ module.exports = (env) ->
       @deviceManager.on('deviceRemoved', (device) =>
         group = @groupManager.getGroupOfDevice(device.id)
         @groupManager.removeDeviceFromGroup(group.id, device.id) if group?
+        @pageManager.removeDeviceFromAllPages(device.id)
       )
       @ruleManager.on('ruleRemoved', (rule) =>
         group = @groupManager.getGroupOfRule(rule.id)
