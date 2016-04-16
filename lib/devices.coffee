@@ -102,8 +102,9 @@ module.exports = (env) ->
           # force update of the device value
           meta = @_attributesMeta[attrName]
           unless meta.value?
-            @getUpdatedAttributeValue(attrName).then( (value) ->
-              meta.update(value) unless meta.value?
+            @getUpdatedAttributeValue(attrName).then( (value) =>
+              if (not meta.lastUpdate?) or (new Date().getTime() - meta.lastUpdate)
+                @emit(attrName, value)
             ).catch( (err) =>
               @logAttributeError(attrName, err)
             ).done()
