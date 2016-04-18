@@ -94,7 +94,7 @@
     "blanket": "^1.2.2",
     "coffee-errors": "^0.8.6",
     "grunt": "^0.4.5",
-    "grunt-bump": "^0.7.0",
+    "grunt-bump": "0.7.0",
     "grunt-cli": "^0.1.13",
     "grunt-coffeelint": "0.0.8",
     "grunt-mocha-test": "^0.12.7",
