@@ -181,7 +181,7 @@ module.exports = (env) ->
 
     _setupPolling: (attrName, interval) ->
       unless typeof interval is 'number'
-        throw new Error("Illegal polling interval #{interval}!");
+        throw new Error("Illegal polling interval #{interval}!")
       unless interval > 0
         throw new Error("Polling interval must be greater then 0, was #{interval}")
       doPolling = () =>
@@ -212,8 +212,8 @@ module.exports = (env) ->
       @_attributesMeta[attrName].error = err
       # clear error on next success
       @once(attrName, => @_attributesMeta[attrName].error = null )
-      @logger.error("Error getting attribute value #{@id}.#{attrName}: #{err.message}");
-      @logger.debug(err.stack);
+      @logger.error("Error getting attribute value #{@id}.#{attrName}: #{err.message}")
+      @logger.debug(err.stack)
 
   ###
   ErrorDevice
