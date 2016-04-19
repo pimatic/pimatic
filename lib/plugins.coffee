@@ -156,7 +156,7 @@ module.exports = (env) ->
     install: (modules) ->
       info = {modules}
       @_emitUpdateProcessStatus('running', info)
-      npmMessageListener = ( (line) => @_emitUpdateProcessMessage(line, info); )
+      npmMessageListener = ( (line) => @_emitUpdateProcessMessage(line, info) )
       @on 'npmMessage', npmMessageListener
       hasErrors = false
       return Promise.each(modules, (plugin) =>
@@ -319,7 +319,7 @@ module.exports = (env) ->
         output = ''
         npmLogger = env.logger.createSublogger("npm")
         errCode = null
-        onLine = ( (line) => 
+        onLine = ( (line) =>
           line = line.toString()
           if (match = line.match(/ERR! code (E[A-Z]+)/))?
             errCode = match[1]
@@ -434,7 +434,7 @@ module.exports = (env) ->
         ).on "error", reject
       )
 
-    loadPlugins: -> 
+    loadPlugins: ->
       # Promise chain, begin with an empty promise
       chain = Promise.resolve()
 
@@ -443,24 +443,24 @@ module.exports = (env) ->
           chain = chain.then( () =>
             assert pConf?
             assert pConf instanceof Object
-            assert pConf.plugin? and typeof pConf.plugin is "string" 
+            assert pConf.plugin? and typeof pConf.plugin is "string"
 
             if pConf.active is false
               return Promise.resolve()
 
             fullPluginName = "pimatic-#{pConf.plugin}"
-            return Promise.try( =>     
+            return Promise.try( =>
               # If the plugin folder already exist
               return (
                 if @isInstalled(fullPluginName) then Promise.resolve()
-                else 
+                else
                   @installPlugin(fullPluginName)
               ).then( =>
                 return @loadPlugin(fullPluginName).then( ([plugin, packageInfo]) =>
                   # Check config
                   configSchema = @_getConfigSchemaFromPackageInfo(packageInfo)
                   if typeof plugin.prepareConfig is "function"
-                    plugin.prepareConfig(pConf);
+                    plugin.prepareConfig(pConf)
                   if configSchema?
                     @framework._validateConfig(pConf, configSchema, "config of #{fullPluginName}")
                     pConf = declapi.enhanceJsonSchemaWithDefaults(configSchema, pConf)
@@ -574,7 +574,7 @@ module.exports = (env) ->
       return false
 
     getCallingPlugin: () ->
-      stack = new Error().stack.toString();
+      stack = new Error().stack.toString()
       matches = stack.match(/^.+?\/node_modules\/(pimatic-.+?)\//m)
       if matches?
         return matches[1]
