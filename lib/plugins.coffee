@@ -124,12 +124,15 @@ module.exports = (env) ->
             ", trying to installing latest version"
           )
           env.logger.info("Installing: \"#{name}\" from npm-registry.")
-          return if update then @spawnNpm(['update', name]) else @spawnNpm(['install', name])
+          if update
+            return @spawnNpm(['update', name, '--unsafe-perm'])
+          else
+            return @spawnNpm(['install', name, '--unsafe-perm'])
         dist = @_findDist(packageInfo)
         if dist
           return if update then @updateGitPlugin(name) else @installGitPlugin(name)
         env.logger.info("Installing: \"#{name}@#{packageInfo.version}\" from npm-registry.")
-        return @spawnNpm(['install', "#{name}@#{packageInfo.version}"])
+        return @spawnNpm(['install', "#{name}@#{packageInfo.version}", '--unsafe-perm'])
       )
 
     updatePlugin: (name) ->
