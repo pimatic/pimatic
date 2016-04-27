@@ -835,6 +835,9 @@ module.exports = (env) ->
     changeDimlevelTo: (level) ->
       @_setDimlevel(level)
       return Promise.resolve()
+    
+    destroy: () ->
+      super()
 
   class DummyShutter extends ShutterController
 
@@ -945,6 +948,9 @@ module.exports = (env) ->
     changeContactTo: (contact) ->
       @_setContact(contact)
       return Promise.resolve()
+    
+    destroy: () ->
+      super()
 
   class DummyTemperatureSensor extends TemperatureSensor
 
