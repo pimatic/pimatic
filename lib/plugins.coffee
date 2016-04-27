@@ -239,7 +239,7 @@ module.exports = (env) ->
     searchForPluginsWithInfo: ->
       return @searchForPlugin().then( (plugins) =>
         return pluginList = (
-          for k, p of plugins
+          for p in plugins
             name = p.name.replace 'pimatic-', ''
             loadedPlugin = @framework.pluginManager.getPlugin name
             installed = @isInstalled p.name
@@ -274,7 +274,7 @@ module.exports = (env) ->
     getOutdatedPlugins: ->
       return @getInstalledPluginUpdateVersions().then( (result) =>
         outdated = []
-        for i, p of result
+        for p in result
           if semver.gt(p.latest, p.current)
             outdated.push p
         return outdated
