@@ -149,7 +149,7 @@ module.exports = (env) ->
         messages: @updateProcessMessages
       }
 
-    update: (modules) -> 
+    update: (modules) ->
       info = {modules}
       @_emitUpdateProcessStatus('running', info)
       npmMessageListener = ( (line) => @_emitUpdateProcessMessage(line, info); )
@@ -223,7 +223,7 @@ module.exports = (env) ->
     searchForPluginsWithInfo: ->
       return @searchForPlugin().then( (plugins) =>
         return pluginList = (
-          for k, p of plugins 
+          for p in plugins
             name = p.name.replace 'pimatic-', ''
             loadedPlugin = @framework.pluginManager.getPlugin name
             installed = @isInstalled p.name
@@ -256,7 +256,7 @@ module.exports = (env) ->
     getOutdatedPlugins: ->
       return @getInstalledPluginUpdateVersions().then( (result) =>
         outdated = []
-        for i, p of result
+        for p in result
           if semver.gt(p.latest, p.current)
             outdated.push p
         return outdated
@@ -300,7 +300,7 @@ module.exports = (env) ->
         @npmRunning = yes
         output = ''
         npmLogger = env.logger.createSublogger("npm")
-        onLine = ( (line) => 
+        onLine = ( (line) =>
           line = line.toString()
           output += "#{line}\n"
           if line.indexOf('npm http 304') is 0 then return
@@ -406,7 +406,7 @@ module.exports = (env) ->
         ).on "error", reject
       )
 
-    loadPlugins: -> 
+    loadPlugins: ->
       # Promise chain, begin with an empty promise
       chain = Promise.resolve()
 
@@ -415,24 +415,24 @@ module.exports = (env) ->
           chain = chain.then( () =>
             assert pConf?
             assert pConf instanceof Object
-            assert pConf.plugin? and typeof pConf.plugin is "string" 
+            assert pConf.plugin? and typeof pConf.plugin is "string"
 
             if pConf.active is false
               return Promise.resolve()
 
             fullPluginName = "pimatic-#{pConf.plugin}"
-            return Promise.try( =>     
+            return Promise.try( =>
               # If the plugin folder already exist
               return (
                 if @isInstalled(fullPluginName) then Promise.resolve()
-                else 
+                else
                   @installPlugin(fullPluginName)
               ).then( =>
                 return @loadPlugin(fullPluginName).then( ([plugin, packageInfo]) =>
                   # Check config
                   if packageInfo.configSchema?
                     pathToSchema = path.resolve(
-                      @pathToPlugin(fullPluginName), 
+                      @pathToPlugin(fullPluginName),
                       packageInfo.configSchema
                     )
                     configSchema = require(pathToSchema)
