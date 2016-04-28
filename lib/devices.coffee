@@ -324,6 +324,10 @@ module.exports = (env) ->
   ###
   class ShutterController extends Actuator
     _position: null
+    _percentage: null
+
+    # Approx. amount of time (in seconds) for shutter to close or open completely.
+    rollingTime: null
 
     attributes:
       position:
@@ -331,6 +335,11 @@ module.exports = (env) ->
         description: "State of the shutter"
         type: t.string
         enum: ['up', 'down', 'stopped']
+      percentage:
+        label: "Percentage"
+        description: "State of the shutter in percentage"
+        type: t.number
+        unit: "%"
 
     actions:
       moveUp:
@@ -344,6 +353,11 @@ module.exports = (env) ->
         params:
           state:
             type: t.string
+      moveToPercentage:
+        description: "Move shutter to position in percentage"
+        params:
+          percentage:
+            type: t.number
 
     template: "shutter"
 
@@ -359,14 +373,33 @@ module.exports = (env) ->
     moveToPosition: (position) ->
       throw new Error "Function \"moveToPosition\" is not implemented!"
 
+    moveToPercentage: (percentage) ->
+      assert 0 <= percentage <= 100
+      if @_percentage is percentage then return
+      rollingTime = @_calulateRollingTime(percentage)
+      promise = if percentage > @_percentage then @moveUp() else @moveDown()
+      promise.delay(rollingTime).then( =>
+        @stop()
+        @_percentage = percentage
+        @emit "percentage", percentage
+      )
+      return promise
+
     # Returns a promise that will be fulfilled with the position
     getPosition: -> Promise.resolve(@_position)
 
     _setPosition: (position) ->
       assert position in ['up', 'down', 'stopped']
-      if @position is position then return
+      if @_position is position then return
       @_position = position
       @emit "position", position
+
+    getPercentage: -> Promise.resolve(@_percentage)
+
+    _calulateRollingTime: (percentage) ->
+      if @rollingTime?
+        return rollingTime * percentage / 100
+      throw new Error "No rolling time configured."
 
   ###
   Sensor
@@ -782,14 +815,22 @@ module.exports = (env) ->
 
   class DummyShutter extends ShutterController
 
+    _rollingTime: null
+    _timeout: null
+
     constructor: (@config, lastState) ->
       @name = config.name
       @id = config.id
+      @_rollingTime = config.rollingTime
       @_position = lastState?.position?.value or 'stopped'
+      # assume that window is open if last state is unknown
+      @_percentage = lastState?.percentage?.value or 100
       super()
 
     stop: ->
       @_setPosition('stopped')
+      clearTimeout(@_timeout) if @_timeout?
+      @_timeout = null
       return Promise.resolve()
 
     # Retuns a promise that is fulfilled when done.
@@ -797,6 +838,18 @@ module.exports = (env) ->
       @_setPosition(position)
       return Promise.resolve()
 
+    moveToPercentage: (percentage) ->
+      if percentage == 100
+        @moveUp()
+      else if percentage == 0
+        @moveDown()
+      else
+        timeout = setTimeout ( -> @stop() ), @_calulateTimeout(percentage)
+        if percentage > @_percentage then @moveUp() else @moveDown()
+
+    # timeout in milliseconds for given percentage
+    _calulateTimeout: (percentage) ->
+      return @_rollingTime * 1000 * percentage / 100
 
   class DummyHeatingThermostat extends HeatingThermostat
 
@@ -1220,8 +1273,8 @@ module.exports = (env) ->
       classInfo.prepareConfig(deviceConfig) if classInfo.prepareConfig?
       @framework._normalizeScheme(classInfo.configDef)
       @framework._validateConfig(
-        deviceConfig, 
-        classInfo.configDef, 
+        deviceConfig,
+        classInfo.configDef,
           "config of device \"#{deviceConfig.id}\""
       )
       deviceConfig = declapi.enhanceJsonSchemaWithDefaults(classInfo.configDef, deviceConfig)
