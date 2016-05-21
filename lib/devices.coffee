@@ -928,6 +928,7 @@ module.exports = (env) ->
       @_setPresence(no)
 
     destroy: () ->
+      clearTimeout(@_resetPresenceTimeout)
       super()
 
 
