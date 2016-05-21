@@ -1172,6 +1172,17 @@ api.plugins = {
       permission:
         scope: "plugins"
         access: "read"
+    doesRequireRestart:
+      description: "Check if a restart is required."
+      rest:
+        type: "GET"
+        url: "/api/restart-required"
+      result:
+        restartRequired:
+          type: t.boolean
+      permission:
+        scope: "plugins"
+        access: "read"
 }
 
 

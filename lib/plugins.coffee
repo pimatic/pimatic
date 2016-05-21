@@ -59,6 +59,7 @@ module.exports = (env) ->
     plugins: []
     updateProcessStatus: 'idle'
     updateProcessMessages: []
+    restartRequired: false
 
     constructor: (@framework) ->
       @modulesParentDir = path.resolve @framework.maindir, '../../'
@@ -140,6 +141,7 @@ module.exports = (env) ->
 
     uninstallPlugin: (name) ->
       pluginDir = @pathToPlugin(name)
+      @requrieRestart()
       return fs.rmrfAsync(pluginDir)
 
     _emitUpdateProcessStatus: (status, info) ->
@@ -165,11 +167,12 @@ module.exports = (env) ->
       return Promise.each(modules, (plugin) =>
         (if @isInstalled(plugin) then @updatePlugin(plugin) else @installPlugin(plugin))
         .catch( (error) =>
-          env.logger.error("Error Updating plugin #{plugin}: #{error.message}")
+          env.logger.error("Error installing plugin #{plugin}: #{error.message}")
           env.logger.debug(error.stack)
         )
       ).then( =>
         @_emitUpdateProcessStatus('done', info)
+        @requrieRestart()
         @removeListener 'npmMessage', npmMessageListener
         return modules
       ).catch( (error) =>
@@ -571,6 +574,8 @@ module.exports = (env) ->
     setPluginActivated: (pluginName, active) ->
       for plugin, i in @framework.config.plugins
         if plugin.plugin is pluginName
+          if !!plugin.active isnt !!active
+            @requrieRestart()
           plugin.active = active
           @framework.emit 'config'
           return true
@@ -583,6 +588,12 @@ module.exports = (env) ->
         return matches[1]
       else
         return 'pimatic'
+
+    requrieRestart: () ->
+      @restartRequired = true
+
+    doesRequireRestart: () ->
+      return @restartRequired
 
 
   class Plugin extends require('events').EventEmitter
