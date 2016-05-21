@@ -432,7 +432,7 @@ module.exports = (env) ->
       @app.use( (err, req, res, next) =>
         env.logger.error("Error on incoming http request to #{req.path}: #{err.message}")
         env.logger.debug(err)
-        unless res.headerSent
+        unless res.headersSent
           res.status(500).send(err.stack)
       )
 
