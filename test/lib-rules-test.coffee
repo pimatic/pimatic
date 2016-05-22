@@ -682,11 +682,11 @@ describe "RuleManager", ->
 
       rule.conditionExprTree = (new rulesAst.BoolExpressionTreeBuilder())
         .build(rule.tokens, rule.predicates)
-      ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
+      ruleManager._evaluateConditionOfRule(rule).then( (isTrue) ->
         cassert isTrue is true
       ).then( -> 
         predHandler1.getValue = => Promise.resolve false 
-      ).then( -> ruleManager._doesRuleCondtionHold rule).then( (isTrue) ->
+      ).then( -> ruleManager._evaluateConditionOfRule rule).then( (isTrue) ->
         cassert isTrue is false
         finish()
       ).catch(finish).done()
@@ -717,13 +717,13 @@ describe "RuleManager", ->
       
       rule.conditionExprTree = (new rulesAst.BoolExpressionTreeBuilder())
         .build(rule.tokens, rule.predicates)
-      ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
+      ruleManager._evaluateConditionOfRule(rule).then( (isTrue) ->
         cassert isTrue is false
       ).then( ->
         knownPredicates = {
           test1: true
         }
-        return ruleManager._doesRuleCondtionHold(rule, knownPredicates).then( (isTrue) ->
+        return ruleManager._evaluateConditionOfRule(rule, knownPredicates).then( (isTrue) ->
           cassert isTrue is false
           finish()
         )
@@ -766,12 +766,12 @@ describe "RuleManager", ->
 
       rule.conditionExprTree = (new rulesAst.BoolExpressionTreeBuilder())
         .build(rule.tokens, rule.predicates)
-      ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
+      ruleManager._evaluateConditionOfRule(rule).then( (isTrue) ->
         cassert isTrue is true
       ).then( -> 
         predHandler1.getValue = => Promise.resolve true
         predHandler2.getValue = => Promise.resolve false
-      ).then( -> ruleManager._doesRuleCondtionHold rule ).then( (isTrue) ->
+      ).then( -> ruleManager._evaluateConditionOfRule rule ).then( (isTrue) ->
         cassert isTrue is false
         finish()
       ).catch(finish).done()
@@ -813,12 +813,12 @@ describe "RuleManager", ->
 
       rule.conditionExprTree = (new rulesAst.BoolExpressionTreeBuilder())
         .build(rule.tokens, rule.predicates)
-      ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
+      ruleManager._evaluateConditionOfRule(rule).then( (isTrue) ->
         cassert isTrue is true
       ).then( ->       
         predHandler1.getValue = => Promise.resolve true
         predHandler2.getValue = => Promise.resolve false
-      ).then( -> ruleManager._doesRuleCondtionHold rule ).then( (isTrue) ->
+      ).then( -> ruleManager._evaluateConditionOfRule rule ).then( (isTrue) ->
         cassert isTrue is true
         finish()
       ).catch(finish).done()
@@ -841,6 +841,7 @@ describe "RuleManager", ->
             exprTokens: [ 1 ]
             unit: 'second'
           lastChange: start
+          timeAchived: false
         ]
         tokens: [
           "predicate"
@@ -853,11 +854,13 @@ describe "RuleManager", ->
 
       rule.conditionExprTree = (new rulesAst.BoolExpressionTreeBuilder())
         .build(rule.tokens, rule.predicates)
-      ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
-        elapsed = getTime() - start
-        cassert isTrue is true
-        cassert elapsed >= 1000
-        finish()
+      ruleManager._evaluateConditionOfRule(rule).then( (isTrue) ->
+        cassert isTrue is false
+        rule.predicates[0].timeAchived = true
+        return ruleManager._evaluateConditionOfRule(rule).then( (isTrue) ->
+          cassert isTrue is true
+          finish()
+        )
       ).done()
 
     it 'should decide predicate 1 for 1 second (does not hold)', (finish) ->
@@ -883,6 +886,7 @@ describe "RuleManager", ->
             exprTokens: [ 1 ]
             unit: 'second'
           lastChange: start
+          timeAchived: false
         ]
         tokens: [
           "predicate"
@@ -895,10 +899,8 @@ describe "RuleManager", ->
 
       rule.conditionExprTree = (new rulesAst.BoolExpressionTreeBuilder())
         .build(rule.tokens, rule.predicates)
-      ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
-        elapsed = getTime() - start
+      ruleManager._evaluateConditionOfRule(rule).then( (isTrue) ->
         cassert isTrue is false
-        cassert elapsed < 1000
         finish()
       ).done()
 
@@ -920,6 +922,7 @@ describe "RuleManager", ->
               exprTokens: [ 1 ]
               unit: 'second'
             lastChange: start
+            timeAchived: true
           }
           {
             id: "test2"
@@ -931,6 +934,7 @@ describe "RuleManager", ->
               exprTokens: [ 2 ]
               unit: 'seconds'
             lastChange: start
+            timeAchived: true
           }
         ]
         tokens: [
@@ -949,10 +953,8 @@ describe "RuleManager", ->
 
       rule.conditionExprTree = (new rulesAst.BoolExpressionTreeBuilder())
         .build(rule.tokens, rule.predicates)
-      ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
-        elapsed = getTime() - start
+      ruleManager._evaluateConditionOfRule(rule).then( (isTrue) ->
         cassert isTrue is true
-        cassert elapsed >= 2000
         finish()
       ).done()
 
@@ -981,6 +983,7 @@ describe "RuleManager", ->
               exprTokens: [ 1 ]
               unit: 'second'
             lastChange: start
+            timeAchived: true
           }
           {
             id: "test2"
@@ -992,6 +995,7 @@ describe "RuleManager", ->
               exprTokens: [ 2 ]
               unit: 'seconds'
             lastChange: start
+            timeAchived: false
           }
         ]
         tokens: [
@@ -1010,10 +1014,8 @@ describe "RuleManager", ->
 
       rule.conditionExprTree = (new rulesAst.BoolExpressionTreeBuilder())
         .build(rule.tokens, rule.predicates)
-      ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
-        elapsed = getTime() - start
+      ruleManager._evaluateConditionOfRule(rule).then( (isTrue) ->
         cassert isTrue is false
-        cassert elapsed < 3000
         finish()
       ).done()
 
@@ -1044,6 +1046,7 @@ describe "RuleManager", ->
               exprTokens: [ 1 ]
               unit: 'second'
             lastChange: start
+            timeAchived: true
           }
           {
             id: "test2"
@@ -1055,6 +1058,7 @@ describe "RuleManager", ->
               exprTokens: [ 2 ]
               unit: 'seconds'
             lastChange: start
+            timeAchived: true
           }
         ]
         tokens: [
@@ -1073,10 +1077,8 @@ describe "RuleManager", ->
 
       rule.conditionExprTree = (new rulesAst.BoolExpressionTreeBuilder())
         .build(rule.tokens, rule.predicates)
-      ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
-        elapsed = getTime() - start
+      ruleManager._evaluateConditionOfRule(rule).then( (isTrue) ->
         cassert isTrue is true
-        cassert elapsed >= 1000
         finish()
       ).done()
 
@@ -1117,6 +1119,7 @@ describe "RuleManager", ->
               exprTokens: [ 1 ]
               unit: 'second'
             lastChange: start
+            timeAchived: false
           }
           {
             id: "test2"
@@ -1128,6 +1131,7 @@ describe "RuleManager", ->
               exprTokens: [ 2 ]
               unit: 'seconds'
             lastChange: start
+            timeAchived: false
           }
         ]
         tokens: [
@@ -1146,10 +1150,8 @@ describe "RuleManager", ->
 
       rule.conditionExprTree = (new rulesAst.BoolExpressionTreeBuilder())
         .build(rule.tokens, rule.predicates)
-      ruleManager._doesRuleCondtionHold(rule).then( (isTrue) ->
-        elapsed = getTime() - start
+      ruleManager._evaluateConditionOfRule(rule).then( (isTrue) ->
         cassert isTrue is false
-        cassert elapsed < 1000
         finish()
       ).done()
 

@@ -34,7 +34,7 @@ class PredicateExpression extends BoolExpression
   constructor: (@predicate) -> #nop
     @type = "predicate"
   
-  evaluate: (cache) -> 
+  evaluate: (cache) ->
     id = @predicate.id
     value = cache[id]
     return (
@@ -42,8 +42,12 @@ class PredicateExpression extends BoolExpression
       # If the trigger keyword was present then the predicate is only true of it got triggered...
       else if @predicate.justTrigger is yes then Promise.resolve(false)
       else @predicate.handler.getValue().then( (value) =>
-        cache[id] = value
-        return value
+        # Check if the time condition is true
+        if @predicate.for? and value is true
+          return @predicate.timeAchived
+        else
+          cache[id] = value
+          return value
       )
     )
   toString: -> "predicate('#{@predicate.token}')"

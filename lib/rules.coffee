@@ -562,7 +562,7 @@ module.exports = (env) ->
       knownPredicates[predicateId] = true
 
       # And check if the rule is now true.
-      @_doesRuleCondtionHold(rule, knownPredicates).then( (isTrue) =>
+      @_evaluateConditionOfRule(rule, knownPredicates).then( (isTrue) =>
         # If the rule is now true, then execute its action
         if isTrue 
           return @_executeRuleActionsAndLogResult(rule)
@@ -588,15 +588,56 @@ module.exports = (env) ->
           assert(not p.changeListener?)
           p.lastChange = setupTime
           p.handler.setup()
+          if p.for
+            p.timeAchived = false
           # Let us be notified when the predicate state changes.
           p.handler.on 'change', changeListener = (state) =>
             assert state is 'event' or state is true or state is false
             p.lastChange = (new Date()).getTime()
             # If the state is true then call the `whenPredicateIsTrue` function.
             unless p.justCondition
-              if state is true or state is 'event'
-                @whenPredicateIsTrue rule, p.id, state
+              if p.for?
+                if state is false
+                  clearTimeout(p.forTimeout)
+                  p.forTimeout = undefined
+                  p.timeAchived = false
+                if state is true
+                  # If timeout already set, -> return
+                  if p.forTimeout? then return
+                  @_evaluateTimeExpr(
+                    p.for.exprTokens,
+                    p.for.unit
+                  ).then( (ms) =>
+                    # If timeout already set, -> return
+                    if p.forTimeout? then return
+                    p.forTimeout = setTimeout( ( () =>
+                      p.timeAchived = true
+                      @whenPredicateIsTrue rule, p.id, state
+                    ), ms)
+                  ).catch( (err) =>
+                    env.logger.error "Error evaluating time expr for predicate: #{err.message}"
+                    env.logger.debug error
+                  )
+              else
+                if state is true or state is 'event'
+                  @whenPredicateIsTrue rule, p.id, state
           p.changeListener = changeListener
+          if p.for?
+            # bootstrap timeout
+            p.handler.getValue().then( (val) =>
+              if val is true
+                if p.forTimeout? then return
+                @_evaluateTimeExpr(
+                  p.for.exprTokens,
+                  p.for.unit
+                ).then( (ms) =>
+                  # If timeout already set, -> return
+                  if p.forTimeout? then return
+                  p.forTimeout = setTimeout( ( () =>
+                    p.timeAchived = true
+                  ), ms)
+                )
+            )
 
           p.handler.on 'recreate', recreateListener = =>
             @recreateRule(rule)
@@ -614,6 +655,7 @@ module.exports = (env) ->
               delete p.changeListener
               p.handler.removeAllListeners 'recreate'
               p.handler.destroy()
+              clearTimeout(p.forTimeout)
               p.ready = false
 
     _setupActions: (rule) ->
@@ -673,18 +715,6 @@ module.exports = (env) ->
         rule.valid = yes
         @rules[id] = rule
         @emit "ruleAdded", rule
-        # Check if the condition of the rule is already true.
-        if active
-          @_doesRuleCondtionHold(rule).then( (isTrue) =>
-            # If the condition is true then execute the action.
-            if isTrue 
-              return @_executeRuleActionsAndLogResult(rule)
-          ).catch( (error) =>
-            env.logger.error """
-              Error on evaluation of rule condition of rule #{rule.id}: #{error.message}
-            """ 
-            env.logger.debug error.stack
-          )
         return
       ).catch( (error) =>
         # If there was an error parsing the rule, but the rule is forced to be added, then add
@@ -791,129 +821,6 @@ module.exports = (env) ->
       assert rule? and rule instanceof Object
       assert knownPredicates? and knownPredicates instanceof Object
       return rule.conditionExprTree.evaluate(knownPredicates)
-
-    # ###_doesRuleCondtionHold()
-    # The same as _evaluateConditionOfRule but does not ignore the for-suffixes.
-    _doesRuleCondtionHold: (rule, knownPredicates = {}) ->
-      assert rule? and typeof rule is "object"
-      assert knownPredicates? and knownPredicates instanceof Object
-
-      # First evaluate the condition and
-      return @_evaluateConditionOfRule(rule, knownPredicates).then( (isTrue) =>
-        # if the condition is false then the condition can not hold, because it is already false,
-        # so return false.
-        unless isTrue then return false
-        # Some predicates could have a 'for'-Suffix like 'for 10 seconds' then the predicate 
-        # must at least hold for 10 seconds to be true, so we have to wait 10 seconds to decide
-        # if the rule is really true
-
-        # Create a deferred that will be resolve with the return value when the decision can be 
-        # made. 
-        return new Promise( (resolve, reject) =>
-
-          # We will collect all predicates that have a for suffix and are not yet decideable in an 
-          # awaiting list.
-          awaiting = {}
-
-          # Whenever an awaiting predicate gets resolved then we will revalidate the rule condition.
-          reevaluateCondition = () =>
-            return @_evaluateConditionOfRule(rule, knownPredicates).then( (isTrueNew) =>
-              # If it is true
-              if isTrueNew 
-                # then resolve the return value as true
-                resolve true
-                # and cancel all awaitings.
-                for id, a of awaiting
-                  a.cancel()
-                return
-
-              # Else check if we have awaiting predicates.
-              # If we have no awaiting predicates
-              if (id for id of awaiting).length is 0
-                # then we can resolve the return value as false
-                resolve false 
-            ).catch( (error) => 
-              env.logger.error """
-                Error on evaluation of rule condition of rule #{rule.id}: #{error.message}
-              """ 
-              env.logger.debug error
-              reject error.message
-            )
-
-          predsWithForTime = []
-          for pred in rule.predicates
-            do (pred) =>
-              if pred.for?
-                # If it has a for suffix and it is an event something gone wrong, because an event 
-                # can't hold (it's just one time)
-                assert pred.handler.getType() is 'state'
-                # if predicate is false we don't have to wait for it
-                if knownPredicates[pred.id] isnt false
-                  promise = @_evaluateTimeExpr(
-                    pred.for.exprTokens,
-                    pred.for.unit
-                  ).then( (ms) => [pred, ms] )
-                  predsWithForTime.push(promise)
-          nowTime = (new Date()).getTime()
-          # Fill the awaiting list:
-          # Check for each predicate,
-          return Promise.each(predsWithForTime, ([pred, forTime]) =>
-            assert pred.lastChange?
-            return pred.handler.getValue().then( (currentValue) =>
-              # when predicate is false then its already false
-              if currentValue is false
-                knownPredicates[pred.id] = false
-                return
-              # The time since last change
-              lastChangeTimeDiff = nowTime - pred.lastChange 
-              # Time to wait till condition becomes true, if nothing changes
-              timeToWait = forTime - lastChangeTimeDiff
-
-              if timeToWait > 0              
-                # Mark that we are awaiting the result
-                awaiting[pred.id] = {}
-                # and as long as we are awaiting the result, the predicate is false.
-                knownPredicates[pred.id] = false
-
-                # When the time passes
-                timeout = setTimeout( ( =>
-                  knownPredicates[pred.id] = true
-                  # the predicate remains true and no value is awaited anymore.
-                  awaiting[pred.id].cancel()
-                  reevaluateCondition()
-                ), timeToWait)
-
-                # Let us be notified when it becomes false.
-                pred.handler.on 'change', changeListener = (state) =>
-                  assert state is true or state is false
-                  # If it changes to false
-                  if state is false
-                    # then the predicate is false
-                    knownPredicates[pred.id] = false
-                    # and clear the timeout,
-                    awaiting[pred.id].cancel()
-                    reevaluateCondition()
-
-                awaiting[pred.id].cancel = =>
-                  delete awaiting[pred.id]
-                  clearTimeout timeout
-                  # and we can cancel the notify
-                  pred.handler.removeListener 'change', changeListener
-                return
-              )
-          ).then( =>
-            # If we have not found awaiting predicates
-            if (id for id of awaiting).length is 0
-              # then resolve the return value to true.
-              resolve true
-          ).catch( (error) =>
-            # Cancel all awaiting changeHandler
-            for id, a of awaiting
-              a.cancel()
-            throw error
-          )
-        )
-      )
 
     # ###_executeRuleActionsAndLogResult()
     # Executes the actions of the string using `executeAction` and logs the result to 
