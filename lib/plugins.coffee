@@ -194,24 +194,38 @@ module.exports = (env) ->
       if @_coreInfo then return @_coreInfo
       else return @searchForCoreUpdate()
 
+    _tranformRequestErrors: (err) ->
+      if err.name is 'RequestError'
+        throw new Error(
+          """
+          Could not connect to the pimatic update server: #{err.message}
+          Either the update server is currently not available or your internet connection is down.
+          """)
+      throw err
+
+
     searchForPlugin: ->
       version = @framework.packageJson.version
-      return @_pluginList = rp("http://api.pimatic.org/plugins?version=#{version}").then( (res) =>
-        json = JSON.parse(res)
-        # sort
-        json.sort( (a, b) => a.name.localeCompare(b.name) )
-        # cache for 1min
-        setTimeout( (=> @_pluginList = null), 60*1000)
-        return json
+      return @_pluginList = rp("http://api.pimatic.org/plugins?version=#{version}")
+        .catch(@_tranformRequestErrors)
+        .then( (res) =>
+          json = JSON.parse(res)
+          # sort
+          json.sort( (a, b) => a.name.localeCompare(b.name) )
+          # cache for 1min
+          setTimeout( (=> @_pluginList = null), 60*1000)
+          return json
       )
 
     searchForCoreUpdate: ->
       version = @framework.packageJson.version
-      return @_coreInfo = rp("http://api.pimatic.org/core?version=#{version}").then( (res) =>
-        json = JSON.parse(res)
-        # cache for 1min
-        setTimeout( (=> @_coreInfo = null), 60*1000)
-        return json
+      return @_coreInfo = rp("http://api.pimatic.org/core?version=#{version}")
+        .catch(@_tranformRequestErrors)
+        .then( (res) =>
+          json = JSON.parse(res)
+          # cache for 1min
+          setTimeout( (=> @_coreInfo = null), 60*1000)
+          return json
       )
 
     getPluginInfo: (name) ->
