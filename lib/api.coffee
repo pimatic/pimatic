@@ -1084,9 +1084,6 @@ api.plugins = {
       params:
         name:
           type: t.string
-      result:
-        status:
-          type: 'any'
       permission:
         scope: "updates"
         access: "write"
