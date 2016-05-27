@@ -654,6 +654,8 @@ module.exports = (env) ->
           if variable.acronym?
             @attributes[name].acronym = variable.acronym
 
+          if variable.icon?
+            @attributes[name].icon = variable.icon
 
           parseExprAndAddListener = ( () =>
             info = @_vars.parseVariableExpression(variable.expression)
