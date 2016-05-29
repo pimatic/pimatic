@@ -1301,7 +1301,8 @@ module.exports = (env) ->
       @framework._emitDeviceAdded(device) if isNew
       return device
 
-    _loadDevice: (deviceConfig, lastDeviceState, isNew = true) ->
+    _loadDevice: (deviceConfig, lastDeviceState, oldDevice = null) ->
+      isNew = not oldDevice?
       classInfo = @deviceClasses[deviceConfig.class]
       unless classInfo?
         throw new Error("Unknown device class \"#{deviceConfig.class}\"")
@@ -1316,6 +1317,14 @@ module.exports = (env) ->
       deviceConfig = declapi.enhanceJsonSchemaWithDefaults(classInfo.configDef, deviceConfig)
 
       deviceLogger = env.logger.base.createSublogger([classInfo.pluginName, deviceConfig.class])
+
+      if oldDevice? and not oldDevice._destroyed
+        oldDevice.destroy()
+        assert(
+          oldDevice._destroyed,
+          "The device subclass #{oldDevice.config.class} did not call super() in destroy()"
+        )
+
       device = classInfo.createCallback(deviceConfig, lastDeviceState, deviceLogger)
       device.logger = deviceLogger
       assert deviceConfig is device.config, """
@@ -1345,7 +1354,7 @@ module.exports = (env) ->
           classInfo = @deviceClasses[deviceConfig.class]
           if classInfo?
             try
-              @_loadDevice(deviceConfig, lastDeviceState, true)
+              @_loadDevice(deviceConfig, lastDeviceState)
             catch e
               env.logger.error("Error loading device \"#{deviceConfig.id}\": #{e.message}")
               env.logger.debug(e.stack)
@@ -1390,15 +1399,32 @@ module.exports = (env) ->
 
     recreateDevice: (oldDevice, newDeviceConfig) ->
       return @framework.database.getLastDeviceState(oldDevice.id).then( (lastDeviceState) =>
-        newDevice =  @_loadDevice(newDeviceConfig, lastDeviceState, false)
+        loadDeviceError = null
+        try
+          newDevice = @_loadDevice(newDeviceConfig, lastDeviceState, oldDevice)
+        catch err
+          loadDeviceError = err
+          if oldDevice._destroyed
+            # the old device was destoryed but there was an error creating the new device,
+            # we have to recreate the original (old) device
+            try
+              newDevice = @_loadDevice(oldDevice.config, lastDeviceState, oldDevice)
+            catch err
+              # we failed to restore the old destroyed device, we log this error and
+              # rethrow the first error
+              logger = oldDevice.logger or env.logger
+              logger.error("Error restoring changed device #{oldDevice.id}: #{err.message}")
+              logger.debug(err.stack)
+              throw loadDeviceError
+          else
+            # the old device was not destroyed, so just throw the load device error
+            throw loadDeviceError
         @framework._emitDeviceChanged(newDevice)
         oldDevice.emit 'change', newDevice
         @emit 'deviceChanged', newDevice
-        oldDevice.destroy()
-        assert(
-          oldDevice._destroyed,
-          "The device subclass #{oldDevice.config.class} did not call super() in destroy()"
-        )
+        # rethrow the error if the creation of the device with the new config failed
+        if loadDeviceError?
+          throw loadDeviceError
         return newDevice
       )
 
