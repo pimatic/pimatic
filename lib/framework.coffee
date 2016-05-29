@@ -1011,7 +1011,15 @@ module.exports = (env) ->
 
       for pConf in config.plugins
         fullPluginName = "pimatic-#{pConf.plugin}"
-        packageInfo = @pluginManager.getInstalledPackageInfo(fullPluginName)
+        packageInfo = null
+        try
+          packageInfo = @pluginManager.getInstalledPackageInfo(fullPluginName)
+        catch err
+          env.logger.warn(
+            "Could not open package.json for \"#{fullPluginName}\": #{err.message} " +
+            "Could not validate config."
+          )
+          continue
         if packageInfo?.configSchema?
           pathToSchema = path.resolve(
             @pluginManager.pathToPlugin(fullPluginName),
