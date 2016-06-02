@@ -502,7 +502,7 @@ module.exports = (env) ->
     isAVariable: (token) -> token.length > 0 and token[0] is '$'
 
     extractVariables: (tokens) ->
-      return (vars = t.substring(1) for t in tokens when @isAVariable(t))
+      return (vars = (t.substring(1) for t in tokens when @isAVariable(t)))
 
     notifyOnChange: (tokens, listener) ->
       variablesInExpr = @extractVariables(tokens)
