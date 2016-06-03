@@ -453,7 +453,7 @@ api.rules = {
       result:
         presets:
           type: "array"
-       permission:
+      permission:
         scope: "rules"
         access: "read"
     getPredicateInfo:
@@ -471,7 +471,7 @@ api.rules = {
       result:
         result:
           type: "array"
-       permission:
+      permission:
         scope: "rules"
         access: "read"
     executeAction:

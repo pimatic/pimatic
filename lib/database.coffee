@@ -381,7 +381,7 @@ module.exports = (env) ->
         i--
 
 
-     getDeviceAttributeLoggingTime: (deviceId, attributeName, type, discrete) ->
+    getDeviceAttributeLoggingTime: (deviceId, attributeName, type, discrete) ->
       expireMs = 0
       expire = "0"
       intervalMs = 0
