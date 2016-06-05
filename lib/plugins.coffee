@@ -339,10 +339,13 @@ module.exports = (env) ->
         output = ''
         npmLogger = env.logger.createSublogger("npm")
         errCode = null
+        errorMessage = null
         onLine = ( (line) =>
           line = line.toString()
           if (match = line.match(/ERR! code (E[A-Z]+)/))?
             errCode = match[1]
+          if (match = line.match(/error .* requires a C\+\+11 compiler/))?
+            errorMessage = match[0]
           output += "#{line}\n"
           if line.indexOf('npm http 304') is 0 then return
           if line.match(/ERR! peerinvalid .*/) then return
@@ -365,7 +368,9 @@ module.exports = (env) ->
           if code isnt 0
             # ignore EPEERINVALID errors
             if errCode isnt 'EPEERINVALID'
-              reject new Error("Error running \"#{command}\"")
+              reject new Error(
+                "Error running \"#{command}\"" + (errorMessage? ": #{errorMessage}" : "")
+              )
             else
               resolve(output)
           else resolve(output)
