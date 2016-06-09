@@ -324,10 +324,9 @@ module.exports = (env) ->
   ###
   class ShutterController extends Actuator
     _position: null
-    _percentage: null
 
     # Approx. amount of time (in seconds) for shutter to close or open completely.
-    rollingTime: null
+    rollingTime = null
 
     attributes:
       position:
@@ -335,11 +334,6 @@ module.exports = (env) ->
         description: "State of the shutter"
         type: t.string
         enum: ['up', 'down', 'stopped']
-      percentage:
-        label: "Percentage"
-        description: "State of the shutter in percentage"
-        type: t.number
-        unit: "%"
 
     actions:
       moveUp:
@@ -353,8 +347,8 @@ module.exports = (env) ->
         params:
           state:
             type: t.string
-      moveToPercentage:
-        description: "Move shutter to position in percentage"
+      moveByPercentage:
+        description: "Move shutter by percentage relative to current position"
         params:
           percentage:
             type: t.number
@@ -373,15 +367,15 @@ module.exports = (env) ->
     moveToPosition: (position) ->
       throw new Error "Function \"moveToPosition\" is not implemented!"
 
-    moveToPercentage: (percentage) ->
-      assert 0 <= percentage <= 100
-      if @_percentage is percentage then return
-      rollingTime = @_calulateRollingTime(percentage)
-      promise = if percentage > @_percentage then @moveUp() else @moveDown()
-      promise.delay(rollingTime).then( =>
-        @stop()
-        @_percentage = percentage
+    moveByPercentage: (percentage) ->
+      duration = @_calculateRollingTime(Math.abs(percentage))
+      if (duration == 0)
+        return Promise.resolve()
+
+      promise = if percentage > 0 then @moveUp() else @moveDown()
+      promise = promise.delay(duration + 10).then( () =>
         @emit "percentage", percentage
+        @stop()
       )
       return promise
 
@@ -396,9 +390,10 @@ module.exports = (env) ->
 
     getPercentage: -> Promise.resolve(@_percentage)
 
-    _calulateRollingTime: (percentage) ->
-      if @rollingTime?
-        return rollingTime * percentage / 100
+    # calculates rolling time in ms for given percentage
+    _calculateRollingTime: (percentage) ->
+      assert 0 <= percentage <= 100, "percentage must be between 0 and 100"
+      return @rollingTime * 1000 * percentage / 100 if @rollingTime?
       throw new Error "No rolling time configured."
 
   ###
@@ -815,41 +810,21 @@ module.exports = (env) ->
 
   class DummyShutter extends ShutterController
 
-    _rollingTime: null
-    _timeout: null
-
     constructor: (@config, lastState) ->
       @name = config.name
       @id = config.id
-      @_rollingTime = config.rollingTime
+      @rollingTime = config.rollingTime
       @_position = lastState?.position?.value or 'stopped'
-      # assume that window is open if last state is unknown
-      @_percentage = lastState?.percentage?.value or 100
       super()
 
     stop: ->
       @_setPosition('stopped')
-      clearTimeout(@_timeout) if @_timeout?
-      @_timeout = null
       return Promise.resolve()
 
     # Retuns a promise that is fulfilled when done.
     moveToPosition: (position) ->
       @_setPosition(position)
       return Promise.resolve()
-
-    moveToPercentage: (percentage) ->
-      if percentage == 100
-        @moveUp()
-      else if percentage == 0
-        @moveDown()
-      else
-        timeout = setTimeout ( -> @stop() ), @_calulateTimeout(percentage)
-        if percentage > @_percentage then @moveUp() else @moveDown()
-
-    # timeout in milliseconds for given percentage
-    _calulateTimeout: (percentage) ->
-      return @_rollingTime * 1000 * percentage / 100
 
   class DummyHeatingThermostat extends HeatingThermostat
 
