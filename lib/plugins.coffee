@@ -65,14 +65,8 @@ module.exports = (env) ->
       @modulesParentDir = path.resolve @framework.maindir, '../../'
 
     checkNpmVersion: () ->
-      @spawnNpm(['--version']).then( (result) =>
-        version = result.trim()
-        unless semver.satisfies(version, '2.*')
-          env.logger.error(
-            "pimatic needs npm version 2, your version is #{version}, run \"npm install -g npm@2\"."
-          )
-      ).catch( (err) =>
-        env.logger.error("Could not run npm, plugin and module installation will not work.")
+      @spawnPpm(['--version']).catch( (err) =>
+        env.logger.error("Could not run ppm, plugin and module installation will not work.")
       )
 
     # Loads the given plugin by name
@@ -126,14 +120,14 @@ module.exports = (env) ->
           )
           env.logger.info("Installing: \"#{name}\" from npm-registry.")
           if update
-            return @spawnNpm(['update', name, '--unsafe-perm'])
+            return @spawnPpm(['update', name, '--unsafe-perm'])
           else
-            return @spawnNpm(['install', name, '--unsafe-perm'])
+            return @spawnPpm(['install', name, '--unsafe-perm'])
         dist = @_findDist(packageInfo)
         if dist
           return if update then @updateGitPlugin(name) else @installGitPlugin(name)
         env.logger.info("Installing: \"#{name}@#{packageInfo.version}\" from npm-registry.")
-        return @spawnNpm(['install', "#{name}@#{packageInfo.version}", '--unsafe-perm'])
+        return @spawnPpm(['install', "#{name}@#{packageInfo.version}", '--unsafe-perm'])
       )
 
     updatePlugin: (name) ->
@@ -330,14 +324,14 @@ module.exports = (env) ->
         )
       )
 
-    spawnNpm: (args) ->
+    spawnPpm: (args) ->
       return new Promise( (resolve, reject) =>
         if @npmRunning
           reject "npm is currently in use"
           return
         @npmRunning = yes
         output = ''
-        npmLogger = env.logger.createSublogger("npm")
+        npmLogger = env.logger.createSublogger("ppm")
         errCode = null
         errorMessage = null
         onLine = ( (line) =>
@@ -348,7 +342,7 @@ module.exports = (env) ->
             errorMessage = match[0]
           output += "#{line}\n"
           if line.indexOf('npm http 304') is 0 then return
-          if line.match(/ERR! peerinvalid .*/) then return
+          if line.match(/ERR! peerinvalid .*/) then return  
           @emit "npmMessage", line
           line = S(line).chompLeft('npm ').s
           npmLogger.info line
@@ -356,7 +350,8 @@ module.exports = (env) ->
         npmEnv = _.clone(process.env)
         npmEnv['HOME'] = require('path').resolve @framework.maindir, '../..'
         npmEnv['NPM_CONFIG_UNSAFE_PERM'] = true
-        npm = spawn('npm', args, {cwd: @modulesParentDir, env: npmEnv})
+        ppmBin = './node_modules/pimatic/ppm.js'
+        npm = spawn(ppmBin, args, {cwd: @modulesParentDir, env: npmEnv})
         stdout = byline(npm.stdout)
         stdout.on "data", onLine
         stderr = byline(npm.stderr)
@@ -364,15 +359,11 @@ module.exports = (env) ->
 
         npm.on "close", (code) =>
           @npmRunning = no
-          command = "npm " + _.reduce(args, (akk, a) -> "#{akk} #{a}")
+          command = ppmBin + " " + _.reduce(args, (akk, a) -> "#{akk} #{a}")
           if code isnt 0
-            # ignore EPEERINVALID errors
-            if errCode isnt 'EPEERINVALID'
-              reject new Error(
-                "Error running \"#{command}\"" + (errorMessage? ": #{errorMessage}" : "")
-              )
-            else
-              resolve(output)
+            reject new Error(
+              "Error running \"#{command}\"" + (if errorMessage? then ": #{errorMessage}" else "")
+            )
           else resolve(output)
 
       )
