@@ -60,6 +60,7 @@
     "lodash": "^3.10.1",
     "logrotate-stream": "^0.2.3",
     "moment": "^2.12.0",
+    "npm": "^2.15.6",
     "relaxed-json": "^1.0.0",
     "request-promise": "^2.0.1",
     "semver": "^5.1.0",
@@ -90,7 +91,8 @@
     "relaxed-json",
     "source-map-support",
     "human-format",
-    "gethub"
+    "gethub",
+    "npm"
   ],
   "devDependencies": {
     "blanket": "^1.2.2",
