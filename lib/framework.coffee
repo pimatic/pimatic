@@ -606,7 +606,7 @@ module.exports = (env) ->
       @destroy().then( =>
         daemon = require 'daemon'
         daemon.daemon process.argv[1], process.argv[2..]
-        process.exit 0
+        env.exit 0
       )
 
     getGuiSettings: () -> {
