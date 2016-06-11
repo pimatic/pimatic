@@ -1,4 +1,4 @@
-#!/usr/bin/node
+#!/usr/bin/env node
 /*
   Modified version of https://github.com/npm/npm/blob/master/bin/npm-cli.js
   Copyright (c) npm, Inc. and Contributors
