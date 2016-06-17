@@ -63,7 +63,7 @@ module.exports = (env) ->
         env.logger.info(
           "Installing database package #{dbPackageToInstall}, this can take some minutes"
         )
-        pending = @framework.pluginManager.spawnNpm(['install', dbPackageToInstall])
+        pending = @framework.pluginManager.spawnPpm(['install', dbPackageToInstall])
 
       return pending.then( =>
         @knex = Knex(
