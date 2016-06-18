@@ -63,6 +63,8 @@ module.exports = (env) ->
         env.logger.info(
           "Installing database package #{dbPackageToInstall}, this can take some minutes"
         )
+        if dbPackageToInstall is "sqlite3"
+          dbPackageToInstall = "sqlite3@3.1.3"
         pending = @framework.pluginManager.spawnPpm(['install', dbPackageToInstall])
 
       return pending.then( =>
