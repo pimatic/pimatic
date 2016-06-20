@@ -49,7 +49,7 @@ module.exports = (env) ->
     constructor: (vars, @_device, @_attrName) ->
       super(
         vars, 
-        "#{@_device.id}.#{_attrName}", 
+        "#{@_device.id}.#{@_attrName}", 
         'attribute', 
         @_device.attributes[@_attrName].unit, 
         yes
@@ -254,15 +254,18 @@ module.exports = (env) ->
             optional: yes
         exec: (number, decimals, unit) ->
           unless unit?
-            info = humanFormat.raw(number, unit: this.units[0] )
-            formated = (if decimals? then Number(info.num) else info.num)
-            return "#{formated}#{info.prefix}#{info.unit}"
+            unit = this.units[0]
+            info = humanFormat.raw(number, unit: unit)
+            formated = (if decimals? then Number(info.value).toFixed(decimals) else info.value)
+            return "#{formated}#{info.prefix}#{unit}"
           else
             unless decimals?
               decimals = 2
             formated = Number(number).toFixed(decimals)
             return "#{formated}#{unit}"
     }
+
+    inited: false
 
     constructor: (@framework, @variablesConfig) ->
       # For each new device add a variable for every attribute
@@ -271,6 +274,7 @@ module.exports = (env) ->
           @_addVariable(
             new DeviceAttributeVariable(this, device, attrName)
           )
+
 
     init: () ->
       # Import variables
@@ -317,7 +321,15 @@ module.exports = (env) ->
             )
 
       setExpr() for setExpr in setExpressions
-          
+      @inited = true
+      @emit 'init'
+
+    waitForInit: () ->
+      return new Promise( (resolve) =>
+        if @inited then return resolve()
+        @once('init', resolve)
+      )
+
     _addVariable: (variable) ->
       assert variable instanceof Variable
       assert (not @variables[variable.name]?)
@@ -490,7 +502,7 @@ module.exports = (env) ->
     isAVariable: (token) -> token.length > 0 and token[0] is '$'
 
     extractVariables: (tokens) ->
-      return (vars = t.substring(1) for t in tokens when @isAVariable(t))
+      return (vars = (t.substring(1) for t in tokens when @isAVariable(t)))
 
     notifyOnChange: (tokens, listener) ->
       variablesInExpr = @extractVariables(tokens)

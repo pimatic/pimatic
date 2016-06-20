@@ -5,9 +5,9 @@ var path = require('path');
 var init = require('./lib/daemon');
 var semver = require('semver');
 
-if(semver.lt(process.version, '0.10.0')) {
+if(semver.lt(process.version, '4.0.0')) {
   console.log("Error: Your node.js version " + process.version + " is too old. "
-    + "Please update node.js to version >=0.10.0 and run pimatic again. See you again.");
+    + "Please update node.js to version >=4.0.0 and run pimatic again. See you again.");
   process.exit(1);
 }
 

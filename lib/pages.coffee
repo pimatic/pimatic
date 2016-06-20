@@ -67,6 +67,13 @@ module.exports = (env) ->
       @framework._emitPageChanged(page)
       return page
 
+    removeDeviceFromAllPages: (deviceId) ->
+      for page in @pages
+        removed = _.remove(page.devices, {deviceId: deviceId})
+        if removed.length > 0
+          @framework._emitPageChanged(page)
+      @framework.saveConfig()
+
     removePage: (id, page) ->
       removedPage = _.remove(@pages, {id: id})
       @framework.saveConfig() if removedPage.length > 0

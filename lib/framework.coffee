@@ -10,6 +10,10 @@ RJSON = require 'relaxed-json'
 i18n = require 'i18n'
 express = require "express"
 connectTimeout = require 'connect-timeout'
+cookieParser = require 'cookie-parser'
+bodyParser = require 'body-parser'
+cookieSession = require 'cookie-session'
+basicAuth = require 'basic-auth'
 socketIo = require 'socket.io'
 # Require engine.io from socket.io
 engineIo = require.cache[require.resolve('socket.io')].require('engine.io')
@@ -39,7 +43,7 @@ module.exports = (env) ->
     _publicPathes: {}
 
     constructor: (@configFile) ->
-      assert configFile?
+      assert @configFile?
       @maindir = path.resolve __dirname, '..'
       env.logger.winston.on("logged", (level, msg, meta) =>
         @_emitMessageLoggedEvent(level, msg, meta)
@@ -65,6 +69,7 @@ module.exports = (env) ->
       @deviceManager.on('deviceRemoved', (device) =>
         group = @groupManager.getGroupOfDevice(device.id)
         @groupManager.removeDeviceFromGroup(group.id, device.id) if group?
+        @pageManager.removeDeviceFromAllPages(device.id)
       )
       @ruleManager.on('ruleRemoved', (rule) =>
         group = @groupManager.getGroupOfRule(rule.id)
@@ -74,6 +79,9 @@ module.exports = (env) ->
         group = @groupManager.getGroupOfVariable(variable.name)
         @groupManager.removeVariableFromGroup(group.id, variable.name) if group?
       )
+      for discoverEvent in ['discover', 'discoverMessage', 'deviceDiscovered']
+        do (discoverEvent) =>
+          @deviceManager.on(discoverEvent, (eventData) => @io?.emit(discoverEvent, eventData) )
 
       @_setupExpressApp()
 
@@ -92,6 +100,9 @@ module.exports = (env) ->
           if isRequired and not (prop in requiredProps)
             requiredProps.push prop
           @_normalizeScheme(s) if s?
+          if s.defines?.options?
+            for own optName, opt of s.defines.options
+              @_normalizeScheme(opt)
         if requiredProps.length > 0
           scheme.required = requiredProps
         unless scheme.additionalProperties?
@@ -234,9 +245,9 @@ module.exports = (env) ->
         next()
       )
       #@app.use express.logger()
-      @app.use express.cookieParser()
-      @app.use express.urlencoded(limit: '10mb')
-      @app.use express.json(limit: '10mb')
+      @app.use cookieParser()
+      @app.use bodyParser.urlencoded(limit: '10mb', extended: true)
+      @app.use bodyParser.json(limit: '10mb')
       auth = @config.settings.authentication
       validSecret = (
         auth.secret? and typeof auth.secret is "string" and auth.secret.length >= 32
@@ -247,12 +258,11 @@ module.exports = (env) ->
       assert typeof auth.secret is "string"
       assert auth.secret.length >= 32
 
-      @app.cookieSessionOptions = {
+      @app.use cookieSession({
         secret:  auth.secret
         key: 'pimatic.sess'
         cookie: { maxAge: null }
-      }
-      @app.use express.cookieSession(@app.cookieSessionOptions)
+      })
 
       # Setup authentication
       # ----------------------
@@ -304,24 +314,32 @@ module.exports = (env) ->
         if loggedIn
           return next()
 
-        # else use authorization
-        express.basicAuth( (user, pass) =>
-          if @userManager.checkLogin(user, pass)
-            role = @userManager.getUserByUsername(user).role
-            assert role? and typeof role is "string" and role.length > 0
-            req.session.username = user
-            req.session.loginToken = @userManager.getLoginTokenForUsername(auth.secret, user)
-            req.session.role = role
-          else
-            delete req.session.username
-            delete req.session.loginToken
-            delete req.session.role
-          # return always true, so that the next callback below is called and we can awnser with
-          # 401 instead of show the auth dialog
-          return yes
-        )(req, res, next)
-      )
+        # else use basic authorization
 
+        unauthorized = (res) =>
+          res.set('WWW-Authenticate', 'Basic realm=Authorization Required')
+          return res.status(401).send("Unauthorized")
+
+        authInfo = basicAuth(req)
+
+        if !authInfo or !authInfo.name or !authInfo.pass
+          return unauthorized(res)
+
+        if @userManager.checkLogin(authInfo.name, authInfo.pass)
+          role = @userManager.getUserByUsername(authInfo.name).role
+          assert role? and typeof role is "string" and role.length > 0
+          req.session.username = authInfo.name
+          req.session.loginToken = @userManager.getLoginTokenForUsername(
+            auth.secret, authInfo.name
+          )
+          req.session.role = role
+          next()
+        else
+          delete req.session.username
+          delete req.session.loginToken
+          delete req.session.role
+          unauthorized()
+      )
 
       @app.post('/login', (req, res) =>
         user = req.body.username
@@ -330,7 +348,6 @@ module.exports = (env) ->
         if rememberMe is 'true' then rememberMe = yes
         if rememberMe is 'false' then rememberMe = no
         rememberMe = !!rememberMe
-
         if @userManager.checkLogin(user, password)
           role = @userManager.getUserByUsername(user).role
           assert role? and typeof role is "string" and role.length > 0
@@ -339,9 +356,9 @@ module.exports = (env) ->
           req.session.role = role
           req.session.rememberMe = rememberMe
           if rememberMe and auth.loginTime isnt 0
-            req.session.cookie.maxAge = auth.loginTime
+            req.sessionOptions.maxAge = auth.loginTime
           else
-            req.session.cookie.maxAge = null
+            req.sessionOptions.maxAge = null
           res.send({
             success: yes
             username: user
@@ -353,17 +370,15 @@ module.exports = (env) ->
           delete req.session.loginToken
           delete req.session.role
           delete req.session.rememberMe
-          res.send(401, {
+          res.status(401).send({
             success: false
             message: __("Wrong username or password.")
           })
       )
 
       @app.get('/logout', (req, res) =>
-        delete req.session.username
-        delete req.session.loginToken
-        delete req.session.role
-        res.send 401, "You are now logged out."
+        req.session = null
+        res.status(401).send("You are now logged out.")
         return
       )
       serverEnabled = (
@@ -378,7 +393,6 @@ module.exports = (env) ->
       socketIoPath = '/socket.io'
       engine = new engineIo.Server({path: socketIoPath})
       @io = new socketIo()
-      ioCookieParser = express.cookieParser(@app.cookieSessionOptions.secret)
       @io.use( (socket, next) =>
         if auth.enabled is no
           return next()
@@ -389,32 +403,24 @@ module.exports = (env) ->
             return next()
           else
             return next(new Error('unauthorizied'))
-        else if req.headers.cookie?
-          req.cookies = null
-          ioCookieParser(req, null, =>
-            sessionCookie = req.signedCookies?[@app.cookieSessionOptions.key]
-            loggedIn = (
-              sessionCookie? and (
-                typeof sessionCookie.username is "string" and
-                typeof sessionCookie.loginToken is "string" and
-                sessionCookie.username.length > 0 and
-                sessionCookie.loginToken.length > 0 and
-                @userManager.checkLoginToken(
-                  auth.secret,
-                  sessionCookie.username,
-                  sessionCookie.loginToken
-                )
-              )
+        else if req.session?
+          loggedIn = (
+            typeof req.session.username is "string" and
+            typeof req.session.loginToken is "string" and
+            req.session.username.length > 0 and
+            req.session.loginToken.length > 0 and
+            @userManager.checkLoginToken(
+              auth.secret,
+              req.session.username,
+              req.session.loginToken
             )
-            if loggedIn
-              socket.username = sessionCookie.username
-              return next()
-            else
-              env.logger.debug "socket.io: Cookie is invalid."
-              return next(new Error('Authentication error'))
           )
+          if loggedIn
+            socket.username = req.session.username
+            return next()
+          else
+            return next(new Error('Authentication error'))
         else
-          env.logger.warn "No cookie transmitted."
           return next(new Error('Unauthorized'))
       )
 
@@ -424,9 +430,10 @@ module.exports = (env) ->
       @app.all( '/socket.io/*', (req, res) => engine.handleRequest(req, res) )
 
       @app.use( (err, req, res, next) =>
-        env.logger.error("Error on incoming http request: #{err.message}")
+        env.logger.error("Error on incoming http request to #{req.path}: #{err.message}")
         env.logger.debug(err)
-        res.status(500).send(err.stack)
+        unless res.headersSent
+          res.status(500).send(err.stack)
       )
 
       onUpgrade = (req, socket, head) =>
@@ -567,8 +574,8 @@ module.exports = (env) ->
       if @app.httpsServer?
         httpsServerConfig = @config.settings.httpsServer
         @app.httpsServer.on 'error', genErrFunc(httpsServerConfig)
-        awaiting = Promise.promisify(@app.httpsServer.listen, @app.httpsServer)(
-          httpsServerConfig.port, httpsServerConfig.hostname
+        awaiting = Promise.fromCallback( (callback) =>
+          @app.httpsServer.listen(httpsServerConfig.port, httpsServerConfig.hostname, callback)
         )
         listenPromises.push awaiting.then( =>
           env.logger.info "Listening for HTTPS-request on port #{httpsServerConfig.port}..."
@@ -577,8 +584,8 @@ module.exports = (env) ->
       if @app.httpServer?
         httpServerConfig = @config.settings.httpServer
         @app.httpServer.on 'error', genErrFunc(@config.settings.httpServer)
-        awaiting = Promise.promisify(@app.httpServer.listen, @app.httpServer)(
-          httpServerConfig.port, httpServerConfig.hostname
+        awaiting = Promise.fromCallback( (callback) =>
+          @app.httpServer.listen(httpServerConfig.port, httpServerConfig.hostname, callback)
         )
         listenPromises.push awaiting.then( =>
           env.logger.info "Listening for HTTP-request on port #{httpServerConfig.port}..."
@@ -599,7 +606,7 @@ module.exports = (env) ->
       @destroy().then( =>
         daemon = require 'daemon'
         daemon.daemon process.argv[1], process.argv[2..]
-        process.exit 0
+        env.exit 0
       )
 
     getGuiSettings: () -> {
@@ -621,7 +628,8 @@ module.exports = (env) ->
 
     _emitDeviceAdded: (device) -> @_emitDeviceEvent('deviceAdded', device)
     _emitDeviceChanged: (device) -> @_emitDeviceEvent('deviceChanged', device)
-    _emitDeviceRemoved: (device) -> @_emitDeviceEvent('deviceRemoved', device)
+    _emitDeviceRemoved: (device) -> 
+      @_emitDeviceEvent('deviceRemoved', device)
 
     _emitDeviceOrderChanged: (deviceOrder) ->
       @_emitOrderChanged('deviceOrderChanged', deviceOrder)
@@ -743,6 +751,25 @@ module.exports = (env) ->
           @emit "config"
         )
 
+      initDevices = =>
+        @deviceManager.on("deviceRemoved", (removedDevice) =>
+          for device, i in @config.devices
+            if device.id is removedDevice.id
+              @config.devices.splice(i, 1)
+              break
+          @_emitDeviceRemoved(removedDevice)
+          @emit "config"
+        )
+        @deviceManager.on("deviceChanged", (changedDevice) =>
+          for device, i in @config.devices
+            if device.id is changedDevice.id
+              @config.devices[i] = changedDevice.config
+              break
+          @_emitDeviceChanged(changedDevice)
+          @emit "config"
+        )
+
+
       initActionProvider = =>
         defaultActionProvider = [
           env.actions.SetPresenceActionProvider
@@ -798,6 +825,12 @@ module.exports = (env) ->
                 Changing the ID of the rule to "#{newId}".
               """
               rule.id = newId
+
+            if rule.rule.match /^if .+/
+              env.logger.warn """
+                Converting old rule "#{rule.id}" from  "if ... then ..." to "when ... then ..."!
+              """
+              rule.rule = rule.rule.replace(/^if/, "when")
 
             unless rule.name? then rule.name = S(rule.id).humanize().s
 
@@ -859,6 +892,7 @@ module.exports = (env) ->
         .then( => @deviceManager.initDevices() )
         .then( => @deviceManager.loadDevices() )
         .then(initVariables)
+        .then(initDevices)
         .then(initActionProvider)
         .then(initPredicateProvider)
         .then(initRules)
@@ -918,7 +952,7 @@ module.exports = (env) ->
                   next()
                   @userManager.requestUsername = null
                 else
-                  res.send(403)
+                  res.status(403).send()
               )
 
       createPermissionCheck(@app, env.api.framework.actions)
@@ -977,7 +1011,15 @@ module.exports = (env) ->
 
       for pConf in config.plugins
         fullPluginName = "pimatic-#{pConf.plugin}"
-        packageInfo = @pluginManager.getInstalledPackageInfo(fullPluginName)
+        packageInfo = null
+        try
+          packageInfo = @pluginManager.getInstalledPackageInfo(fullPluginName)
+        catch err
+          env.logger.warn(
+            "Could not open package.json for \"#{fullPluginName}\": #{err.message} " +
+            "Could not validate config."
+          )
+          continue
         if packageInfo?.configSchema?
           pathToSchema = path.resolve(
             @pluginManager.pathToPlugin(fullPluginName),

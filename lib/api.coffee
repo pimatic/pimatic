@@ -267,6 +267,18 @@ api.devices = {
       permission:
         scope: "devices"
         access: "write"
+    discoverDevices:
+      description: "Start to scan for new devices"
+      rest:
+        type: "POST"
+        url: "/api/discover-devices"
+      params:
+        time:
+          type: t.number
+          optional: yes
+      permission:
+        scope: "devices"
+        access: "write"
     callDeviceAction:
       description: "Calls the action of the given device"
       rest:
@@ -441,7 +453,7 @@ api.rules = {
       result:
         presets:
           type: "array"
-       permission:
+      permission:
         scope: "rules"
         access: "read"
     getPredicateInfo:
@@ -459,7 +471,7 @@ api.rules = {
       result:
         result:
           type: "array"
-       permission:
+      permission:
         scope: "rules"
         access: "read"
     executeAction:
@@ -1064,31 +1076,44 @@ api.plugins = {
       permission:
         scope: "updates"
         access: "write"
-    addPluginsToConfig:
-      description: "Add plugins to config"
+    uninstallPlugin:
+      description: "Uninstalls a plugin completely"
       rest:
-        type: "POST"
-        url: "/api/config/plugins"
+        type: "DELETE"
+        url: "/api/plugins/:name"
       params:
-        pluginNames:
-          type: t.array
-      result:
-        added:
-          type: t.array
+        name:
+          type: t.string
       permission:
-        scope: "plugins"
+        scope: "updates"
         access: "write"
-    removePluginsFromConfig:
-      description: "Remove plugins from config"
+    removePluginFromConfig:
+      description: "Remove a plugin from config"
       rest:
         type: "DELETE"
         url: "/api/config/plugins"
       params:
-        pluginNames:
-          type: t.array
+        pluginName:
+          type: t.string
       result:
         removed:
-          type: t.array
+          type: t.boolean
+      permission:
+        scope: "plugins"
+        access: "write"
+    setPluginActivated:
+      description: "Set active state of the plugin"
+      rest:
+        type: "POST"
+        url: "/api/config/plugins-active"
+      params:
+        pluginName:
+          type: t.string
+        active:
+          type: t.boolean
+      result:
+        pluginUpdated:
+          type: t.boolean
       permission:
         scope: "plugins"
         access: "write"
@@ -1103,6 +1128,58 @@ api.plugins = {
       permission:
         scope: "updates"
         access: "none"
+    getPluginConfigSchema:
+      description: "Get the config schema of a plugin name (must be installed)."
+      rest:
+        type: "GET"
+        url: "/api/plugin-config-schema/:pluginName"
+      params:
+        pluginName:
+          type: t.string
+      result:
+        configSchema:
+          type: t.object
+      permission:
+        scope: "plugins"
+        access: "read"
+    getPluginConfig:
+      description: "Get the config of a plugin."
+      rest:
+        type: "GET"
+        url: "/api/plugin-config/:pluginName"
+      params:
+        pluginName:
+          type: t.string
+      result:
+        config:
+          type: t.object
+      permission:
+        scope: "plugins"
+        access: "read"
+    updatePluginConfig:
+      description: "Update the config of a plugin."
+      rest:
+        type: "POST"
+        url: "/api/plugin-config/:pluginName"
+      params:
+        pluginName:
+          type: t.string
+        config:
+          type: t.object
+      permission:
+        scope: "plugins"
+        access: "read"
+    doesRequireRestart:
+      description: "Check if a restart is required."
+      rest:
+        type: "GET"
+        url: "/api/restart-required"
+      result:
+        restartRequired:
+          type: t.boolean
+      permission:
+        scope: "plugins"
+        access: "read"
 }
 
 

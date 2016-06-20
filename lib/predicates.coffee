@@ -43,7 +43,26 @@ module.exports = (env) ->
       # You should call super() after that.
       unless @_setupCalled then throw new Error("Destroy called, but setup was not called!")
       delete @_setupCalled
+      @emit "destroy"
+      @removeAllListeners()
 
+    dependOnDevice: (device) ->
+      recreateEmitter = (=> @emit "recreate")
+      device.on "change", recreateEmitter
+      device.on "destroy", recreateEmitter
+      @on 'destroy', =>
+        device.removeListener "change", recreateEmitter
+        device.removeListener "destory", recreateEmitter
+
+    dependOnVariable: (variableManager, varName) ->
+      recreateEmitter = ( (variable) => 
+        if variable.name isnt varName
+          return
+        @emit "recreate"
+      )
+      variableManager.on "variableRemoved", recreateEmitter
+      @on 'destroy', =>
+        variableManager.removeListener "variableRemoved", recreateEmitter
   ###
   The Switch Predicate Provider
   ----------------
@@ -109,6 +128,7 @@ module.exports = (env) ->
   class SwitchPredicateHandler extends PredicateHandler
 
     constructor: (@device, @state) ->
+      @dependOnDevice(@device)
     setup: ->
       @stateListener = (s) => @emit 'change', (s is @state)
       @device.on 'state', @stateListener
@@ -183,7 +203,7 @@ module.exports = (env) ->
   class PresencePredicateHandler extends PredicateHandler
 
     constructor: (@device, @negated) ->
-
+      @dependOnDevice(@device)
     setup: ->
       @presenceListener = (p) => 
         @emit 'change', (if @negated then not p else p)
@@ -260,7 +280,7 @@ module.exports = (env) ->
   class ContactPredicateHandler extends PredicateHandler
 
     constructor: (@device, @negated) ->
-
+      @dependOnDevice(@device)
     setup: ->
       @contactListener = (p) => 
         @emit 'change', (if @negated then not p else p)
@@ -398,6 +418,7 @@ module.exports = (env) ->
   class DeviceAttributePredicateHandler extends PredicateHandler
 
     constructor: (@device, @attribute, @comparator, @referenceValue) ->
+      @dependOnDevice(@device)
 
     setup: ->
       lastState = null
@@ -508,7 +529,7 @@ module.exports = (env) ->
   class DeviceAttributeWatchdogPredicateHandler extends PredicateHandler
 
     constructor: (@device, @attribute, @timeMs) ->
-
+      @dependOnDevice(@device)
     setup: ->
       @_state = false
       @_rescheduleTimeout()
@@ -600,6 +621,8 @@ module.exports = (env) ->
       @variables = @framework.variableManager.extractVariables(
         @leftTokens.concat @rightTokens
       )
+      for variable in @variables
+        @dependOnVariable(@framework.variableManager, variable)
       @changeListener = (variable, value) =>
         unless variable.name in @variables then return
         evalPromise = @_evaluate()
@@ -704,6 +727,7 @@ module.exports = (env) ->
     setup: ->
       @lastValue = null
       @state = false
+      @dependOnVariable(@framework.variableManager, @variableName)
       @changeListener = (variable, value) =>
         unless variable.name is @variableName then return
         switch @mode
@@ -803,7 +827,8 @@ module.exports = (env) ->
     constructor: (@provider, @device, @buttonId) ->
       assert @device? and @device instanceof env.devices.ButtonsDevice
       assert @buttonId? and typeof @buttonId is "string"
-
+      @dependOnDevice(@device)
+      
     setup: ->
       @buttonPressedListener = ( (id) =>
         if id is @buttonId

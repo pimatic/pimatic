@@ -26,7 +26,7 @@ class AddExpression extends Expression
     rightUnit = @right.getUnit()
     if leftUnit?
       return leftUnit
-     else
+    else
       return rightUnit
 
 class SubExpression extends Expression
@@ -41,7 +41,7 @@ class SubExpression extends Expression
     rightUnit = @right.getUnit()
     if leftUnit? and leftUnit.length > 0
       return leftUnit
-     else
+    else
       return rightUnit
 
 class MulExpression extends Expression
