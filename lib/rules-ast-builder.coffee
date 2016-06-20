@@ -12,32 +12,29 @@ _ = require 'lodash'
 S = require 'string'
 
 class BoolExpression
+  toString: -> "#{@type.replace(' ', '')}(#{@left.toString()}, #{@right.toString()})"
 
 class AndExpression extends BoolExpression
-  constructor: (@left, @right) ->
-    @type = "and"
+  constructor: (@type, @left, @right) ->
 
   evaluate: (cache) -> 
     return @left.evaluate(cache).then( (val) => 
       if val then @right.evaluate(cache) else false 
     )
-  toString: -> "and(#{@left.toString()}, #{@right.toString()})"
 
 class OrExpression extends BoolExpression
-  constructor: (@left, @right) -> #nop
-    @type = "or"
+  constructor: (@type, @left, @right) -> #nop
 
   evaluate: (cache) -> 
     return @left.evaluate(cache).then( (val) => 
       if val then true else @right.evaluate(cache) 
     )
-  toString: -> "or(#{@left.toString()}, #{@right.toString()})"
   
 class PredicateExpression extends BoolExpression
   constructor: (@predicate) -> #nop
     @type = "predicate"
   
-  evaluate: (cache) -> 
+  evaluate: (cache) ->
     id = @predicate.id
     value = cache[id]
     return (
@@ -45,8 +42,12 @@ class PredicateExpression extends BoolExpression
       # If the trigger keyword was present then the predicate is only true of it got triggered...
       else if @predicate.justTrigger is yes then Promise.resolve(false)
       else @predicate.handler.getValue().then( (value) =>
-        cache[id] = value
-        return value
+        # Check if the time condition is true
+        if @predicate.for? and value is true
+          return @predicate.timeAchived
+        else
+          cache[id] = value
+          return value
       )
     )
   toString: -> "predicate('#{@predicate.token}')"
@@ -61,29 +62,46 @@ class BoolExpressionTreeBuilder
     @pos = 0
     @_nextToken()
     return @_buildExpression()
-  _buildExpression: (left = null, greedy = yes) ->
+
+  _buildOuterExpression: (left, inner) ->
+    if not inner
+      return @_buildExpression(left, yes, no)
+    else
+      return left
+
+  _buildExpression: (left = null, greedy = yes, inner = false) ->
     switch @token
       when 'predicate'
         @_nextToken()
         predicateExpr = @_buildPredicateExpression()
         return (
-          if greedy then @_buildExpression(predicateExpr, greedy)
+          if greedy then @_buildExpression(predicateExpr, greedy, inner)
           else predicateExpr
         )
       when 'or'
         @_nextToken()
-        return new OrExpression(left, @_buildExpression(null, yes))
+        outer = new OrExpression('or', left, @_buildExpression(null, yes, yes))
+        return @_buildOuterExpression(outer, inner)
+      when 'or when'
+        if inner then return left
+        @_nextToken()
+        outer = new OrExpression('or when', left, @_buildExpression(null, yes, yes))
+        return @_buildOuterExpression(outer, inner)
       when 'and'
         @_nextToken()
         right = @_buildExpression(null, false)
-        return @_buildExpression(new AndExpression(left, right), yes)
+        return @_buildExpression(new AndExpression('and', left, right), yes)
+      when 'and if'
+        @_nextToken()
+        outer = new AndExpression('and if', left, @_buildExpression(null, yes, yes))
+        return @_buildOuterExpression(outer, inner)
       when '['
         @_nextToken()
-        innerExpr = @_buildExpression(null, yes)
+        innerExpr = @_buildExpression(null, yes, yes)
         assert @token is ']'
         @_nextToken()
         return (
-          if greedy then @_buildExpression(innerExpr, greedy)
+          if greedy then @_buildExpression(innerExpr, greedy, false, yes)
           else innerExpr
         )
       when ']', ''

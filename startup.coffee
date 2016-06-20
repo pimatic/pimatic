@@ -33,7 +33,7 @@ startup = =>
     else path.resolve __dirname, '../../config.json'
   )
 
-  exit = (code) ->
+  env.exit = exit = (code) ->
     env.logger.info "exiting..."
     if process.logStream?
       # close logstream first

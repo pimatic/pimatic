@@ -63,7 +63,9 @@ module.exports = (env) ->
         env.logger.info(
           "Installing database package #{dbPackageToInstall}, this can take some minutes"
         )
-        pending = @framework.pluginManager.spawnNpm(['install', dbPackageToInstall])
+        if dbPackageToInstall is "sqlite3"
+          dbPackageToInstall = "sqlite3@3.1.3"
+        pending = @framework.pluginManager.spawnPpm(['install', dbPackageToInstall])
 
       return pending.then( =>
         @knex = Knex(
@@ -72,6 +74,7 @@ module.exports = (env) ->
           pool:
             min: 1
             max: 1
+          useNullAsDefault: true
         )
 
         @framework.on('destroy', (context) =>
@@ -380,7 +383,7 @@ module.exports = (env) ->
         i--
 
 
-     getDeviceAttributeLoggingTime: (deviceId, attributeName, type, discrete) ->
+    getDeviceAttributeLoggingTime: (deviceId, attributeName, type, discrete) ->
       expireMs = 0
       expire = "0"
       intervalMs = 0

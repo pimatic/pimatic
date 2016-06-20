@@ -5,7 +5,7 @@ Logger
 
 ###
 winston = require 'winston'
-
+_ = require 'lodash'
 events = require("events")
 util = require("util")
 moment = require("moment")
@@ -80,7 +80,11 @@ TaggedLogger::info = (args...) -> @log "info", args...
 TaggedLogger::warn = (args...) -> @log "warn", args...
 TaggedLogger::error = (args...) -> @log "error", args...
 
-TaggedLogger::createSublogger = (tag) -> new TaggedLogger(@target, @tags.concat([tag]))
+TaggedLogger::createSublogger = (tags) -> 
+  unless Array.isArray(tags)
+    tags = [tags]
+  newTags = _.uniq(@tags.concat(tags))
+  return new TaggedLogger(@target, newTags)
 
 
 winstonLogger = new (winston.Logger)(
