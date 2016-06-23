@@ -1168,7 +1168,7 @@ api.plugins = {
           type: t.object
       permission:
         scope: "plugins"
-        access: "read"
+        access: "write"
     doesRequireRestart:
       description: "Check if a restart is required."
       rest:
