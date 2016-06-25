@@ -62,29 +62,33 @@ TaggedConsoleTarget::log = (level, msg, meta, callback) ->
 
   callback null, true
 
-TaggedLogger = (target, tags) ->
+TaggedLogger = (target, tags, debug) ->
   @target = target
   @tags = tags or []
+  @logDebug = debug
   return @
 
 TaggedLogger::log = (level, args...) ->
   msg = util.format.apply(null, args)
   @target.log(level, msg, {timestamp: new Date(), tags: @tags})
 
-TaggedLogger::debug = (args...) -> 
+TaggedLogger::debug = (args...) ->
+  level = @target.level
+  @target.transports.taggedConsoleLogger.level = "debug" if @logDebug
   if args.length is 1 and args[0]?.stack
     @log "debug", args[0].stack
   else
     @log "debug", args...
+  @target.transports.taggedConsoleLogger.level = level
 TaggedLogger::info = (args...) -> @log "info", args...
 TaggedLogger::warn = (args...) -> @log "warn", args...
 TaggedLogger::error = (args...) -> @log "error", args...
 
-TaggedLogger::createSublogger = (tags) -> 
+TaggedLogger::createSublogger = (tags, debug = false) -> 
   unless Array.isArray(tags)
     tags = [tags]
   newTags = _.uniq(@tags.concat(tags))
-  return new TaggedLogger(@target, newTags)
+  return new TaggedLogger(@target, newTags, debug)
 
 
 winstonLogger = new (winston.Logger)(

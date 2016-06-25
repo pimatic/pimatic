@@ -70,14 +70,16 @@ module.exports = (env) ->
       )
 
     # Loads the given plugin by name
-    loadPlugin: (name) ->
+    loadPlugin: (name, config) ->
       packageInfo = @getInstalledPackageInfo(name)
       packageInfoStr = (if packageInfo? then "(" + packageInfo.version  + ")" else "")
       env.logger.info("""Loading plugin: "#{name}" #{packageInfoStr}""")
       # require the plugin and return it
       # create a sublogger:
       pluginEnv = Object.create(env)
-      pluginEnv.logger = env.logger.base.createSublogger(name)
+      pluginEnv.logger = env.logger.base.createSublogger(name, config.debug)
+      if config.debug
+        env.logger.debug("debug is true in plugin config, showing debug output for #{name}.")
       plugin = (require name) pluginEnv, module
       return Promise.resolve([plugin, packageInfo])
 
@@ -472,7 +474,7 @@ module.exports = (env) ->
                 else
                   @installPlugin(fullPluginName)
               ).then( =>
-                return @loadPlugin(fullPluginName).then( ([plugin, packageInfo]) =>
+                return @loadPlugin(fullPluginName, pConf).then( ([plugin, packageInfo]) =>
                   # Check config
                   configSchema = @_getConfigSchemaFromPackageInfo(packageInfo)
                   if typeof plugin.prepareConfig is "function"

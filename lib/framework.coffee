@@ -173,13 +173,17 @@ module.exports = (env) ->
       # * Set the log level
       env.logger.winston.transports.taggedConsoleLogger.level = @config.settings.logLevel
 
+      if @config.settings.debug
+        env.logger.logDebug = true
+        env.logger.debug("settings.debug is true, showing debug output for pimatic core.")
+
       i18n.configure({
         locales:['en', 'de'],
         directory: __dirname + '/../locales',
         defaultLocale: @config.settings.locale,
       })
 
-      unless @config.debug
+      unless @config.settings.debug
         events.EventEmitter.defaultMaxListeners = 100
 
 
