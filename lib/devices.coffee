@@ -21,7 +21,7 @@ module.exports = (env) ->
   The Device class is the common superclass for all devices like actuators or sensors.
   ###
   class Device extends require('events').EventEmitter
-    # A unic id defined by the config or by the plugin that provies the device.
+    # A unique id defined by the config or by the plugin that provides the device.
     id: null
     # The name of the actuator to display at the frontend.
     name: null
@@ -205,7 +205,7 @@ module.exports = (env) ->
     logAttributeError: (attrName, err) ->
       lastError = @_attributesMeta[attrName].error
       if lastError? and err.message is lastError.message
-        @logger.debug("Supressing repeated error for #{@id}.#{attrName} #{err.message}")
+        @logger.debug("Suppressing repeated error for #{@id}.#{attrName} #{err.message}")
         @logger.debug(err.stack)
         return
       # save attribute error
@@ -218,7 +218,7 @@ module.exports = (env) ->
   ###
   ErrorDevice
   -----
-  Devices of this type are createsd if the rcreate operation
+  Devices of this type are created if the create operation
   for the real type cant be created
   ###
   class ErrorDevice extends Device
@@ -249,7 +249,7 @@ module.exports = (env) ->
 
     actions:
       turnOn:
-        description: "Turns the swch on"
+        description: "Turns the switch on"
       turnOff:
         description: "Turns the switch off"
       changeStateTo:
@@ -276,13 +276,13 @@ module.exports = (env) ->
     # Returns a promise
     turnOn: -> @changeStateTo on
 
-    # Retuns a promise
+    # Returns a promise
     turnOff: -> @changeStateTo off
 
     toggle: ->
       @getState().then( (state) => @changeStateTo(!state) )
 
-    # Retuns a promise that is fulfilled when done.
+    # Returns a promise that is fulfilled when done.
     changeStateTo: (state) ->
       throw new Error "Function \"changeStateTo\" is not implemented!"
 
@@ -342,14 +342,14 @@ module.exports = (env) ->
     # Returns a promise
     turnOn: -> @changeDimlevelTo 100
 
-    # Retuns a promise
+    # Returns a promise
     turnOff: -> @changeDimlevelTo 0
 
-    # Retuns a promise that is fulfilled when done.
+    # Returns a promise that is fulfilled when done.
     changeDimlevelTo: (state) ->
       throw new Error "Function \"changeDimlevelTo\" is not implemented!"
 
-    # Retuns a promise that is fulfilled when done.
+    # Returns a promise that is fulfilled when done.
     changeStateTo: (state) ->
       return if state then @turnOn() else @turnOff()
 
@@ -399,13 +399,13 @@ module.exports = (env) ->
 
     # Returns a promise
     moveUp: -> @moveToPosition('up')
-    # Retuns a promise
+    # Returns a promise
     moveDown: -> @moveToPosition('down')
 
     stop: ->
       throw new Error "Function \"stop\" is not implemented!"
 
-    # Retuns a promise that is fulfilled when done.
+    # Returns a promise that is fulfilled when done.
     moveToPosition: (position) ->
       throw new Error "Function \"moveToPosition\" is not implemented!"
 
@@ -731,7 +731,7 @@ module.exports = (env) ->
           )
 
           getValue = ( (varsInEvaluation) =>
-            # wait till veraibelmanager is ready
+            # wait till variableManager is ready
             return @_vars.waitForInit().then( =>
               unless info?
                 parseExprAndAddListener()
@@ -831,7 +831,7 @@ module.exports = (env) ->
       @_state = lastState?.state?.value or off
       super()
 
-    # Retuns a promise that is fulfilled when done.
+    # Returns a promise that is fulfilled when done.
     changeDimlevelTo: (level) ->
       @_setDimlevel(level)
       return Promise.resolve()
@@ -851,7 +851,7 @@ module.exports = (env) ->
       @_setPosition('stopped')
       return Promise.resolve()
 
-    # Retuns a promise that is fulfilled when done.
+    # Returns a promise that is fulfilled when done.
     moveToPosition: (position) ->
       @_setPosition(position)
       return Promise.resolve()
@@ -1006,7 +1006,7 @@ module.exports = (env) ->
 
     attributes:
       time:
-        description: "The elapesed time"
+        description: "The elapsed time"
         type: "number"
         unit: "s"
         displaySparkline: no
@@ -1405,7 +1405,7 @@ module.exports = (env) ->
         catch err
           loadDeviceError = err
           if oldDevice._destroyed
-            # the old device was destoryed but there was an error creating the new device,
+            # the old device was destroyed but there was an error creating the new device,
             # we have to recreate the original (old) device
             try
               newDevice = @_loadDevice(oldDevice.config, lastDeviceState, oldDevice)

@@ -1326,7 +1326,7 @@ api.database = {
       rest:
         type: 'GET'
         url: '/api/database/device-attributes/counts'
-      description: "Get count of saved device attributes per atrtibute"
+      description: "Get count of saved device attributes per attribute"
       params: {}
       result:
         counts:
@@ -1454,7 +1454,7 @@ api.database = {
       description: "Delete a device attribute from the database"
       rest:
         type: 'DELETE'
-        url: '/api/database/device-attribue/by-id'
+        url: '/api/database/device-attribute/by-id'
       params:
         id:
           type: "number"
@@ -1465,7 +1465,7 @@ api.database = {
       description: "Updates a device attribute info in database"
       rest:
         type: 'PATCH'
-        url: '/api/database/device-attribue/by-id'
+        url: '/api/database/device-attribute/by-id'
       params:
         id:
           type: "number"
