@@ -492,7 +492,7 @@ module.exports = (env) ->
               )
             )
           ).catch( (error) ->
-            # If an error occures log an ignore it.
+            # If an error occurs log an ignore it.
             env.logger.error error.message
             env.logger.debug error.stack
           )
