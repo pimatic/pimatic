@@ -14,7 +14,7 @@ __Examples:__
   * when its 10pm then turn the tv off
   * when its friday and its 8am then turn the light on
   * when [music is playing or the light is on] and somebody is present then turn the speaker on
-  * when temperatue of living room is below 15°C for 5 minutes then log "its getting cold" 
+  * when temperature of living room is below 15°C for 5 minutes then log "its getting cold"
 
 __The condition and predicates__
 
