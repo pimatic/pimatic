@@ -506,7 +506,7 @@ module.exports = (env) ->
           tableName = dbMapping.typeToAttributeTable(info.type)
           timestamp = time.getTime()
           if info.expireMs is 0
-            # value expires immediatly
+            # value expires immediately
             doInsert = false
           else
             if info.intervalMs is 0 or timestamp - info.lastInsertTime > info.intervalMs
@@ -899,7 +899,7 @@ module.exports = (env) ->
           return Promise.resolve(query).then( (result) =>
             timeDiff = new Date().getTime()-time
             if @dbSettings.debug
-              env.logger.debug("quering #{result.length} events took #{timeDiff}ms.")
+              env.logger.debug("querying #{result.length} events took #{timeDiff}ms.")
             if info.type is "boolean"
               for r in result
                 # convert numeric or string value from db to boolean

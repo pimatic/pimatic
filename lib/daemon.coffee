@@ -88,7 +88,7 @@ exports.start = ({ pidfile, logfile, run, success, failure }) ->
     else 
       #Restart as daemon:
       process.env['PIMATIC_DAEMONIZED'] = true
-      daemon.daemon process.argv[1], process.argv[2..]
+      daemon.daemon process.argv[1], process.argv[2..], {cwd: process.cwd()}
       success()
       
   exports.status pidfile, (st) ->

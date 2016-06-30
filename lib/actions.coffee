@@ -45,7 +45,7 @@ module.exports = (env) ->
     done or would be done.
 
     If `simulate` is `true` the Action Handler should not execute the action. It should just
-    return a promise fulfilled with a descrbing string like "would _..._".
+    return a promise fulfilled with a descriptive string like "would _..._".
 
     Take a look at the Log Action Handler for a simple example.
     ###
@@ -79,7 +79,7 @@ module.exports = (env) ->
       device.on "destroy", recreateEmitter
       @on 'destroy', =>
         device.removeListener "change", recreateEmitter
-        device.removeListener "destory", recreateEmitter
+        device.removeListener "destroy", recreateEmitter
 
     dependOnVariable: (variableManager, varName) ->
       recreateEmitter = ( (variable) => 
@@ -275,7 +275,7 @@ module.exports = (env) ->
     ###
     Handles the above actions.
     ###
-    _doExectuteAction: (simulate, state) =>
+    _doExecuteAction: (simulate, state) =>
       return (
         if simulate
           if state then Promise.resolve __("would set presence of %s to present", @device.name)
@@ -288,11 +288,11 @@ module.exports = (env) ->
       )
 
     # ### executeAction()
-    executeAction: (simulate) => @_doExectuteAction(simulate, @state)
+    executeAction: (simulate) => @_doExecuteAction(simulate, @state)
     # ### hasRestoreAction()
     hasRestoreAction: -> yes
     # ### executeRestoreAction()
-    executeRestoreAction: (simulate) => @_doExectuteAction(simulate, (not @state))
+    executeRestoreAction: (simulate) => @_doExecuteAction(simulate, (not @state))
 
   ###
   The open/close ActionProvider
@@ -350,7 +350,7 @@ module.exports = (env) ->
     ###
     Handles the above actions.
     ###
-    _doExectuteAction: (simulate, state) =>
+    _doExecuteAction: (simulate, state) =>
       return (
         if simulate
           if state then Promise.resolve __("would set contact %s to closed", @device.name)
@@ -363,11 +363,11 @@ module.exports = (env) ->
       )
 
     # ### executeAction()
-    executeAction: (simulate) => @_doExectuteAction(simulate, @state)
+    executeAction: (simulate) => @_doExecuteAction(simulate, @state)
     # ### hasRestoreAction()
     hasRestoreAction: -> yes
     # ### executeRestoreAction()
-    executeRestoreAction: (simulate) => @_doExectuteAction(simulate, (not @state))
+    executeRestoreAction: (simulate) => @_doExecuteAction(simulate, (not @state))
 
         
   ###
@@ -455,7 +455,7 @@ module.exports = (env) ->
     ###
     Handles the above actions.
     ###
-    _doExectuteAction: (simulate, state) =>
+    _doExecuteAction: (simulate, state) =>
       return (
         if simulate
           if state then Promise.resolve __("would turn %s on", @device.name)
@@ -466,11 +466,11 @@ module.exports = (env) ->
       )
 
     # ### executeAction()
-    executeAction: (simulate) => @_doExectuteAction(simulate, @state)
+    executeAction: (simulate) => @_doExecuteAction(simulate, @state)
     # ### hasRestoreAction()
     hasRestoreAction: -> yes
     # ### executeRestoreAction()
-    executeRestoreAction: (simulate) => @_doExectuteAction(simulate, (not @state))
+    executeRestoreAction: (simulate) => @_doExecuteAction(simulate, (not @state))
 
   ###
   The Toggle Action Provider
@@ -850,10 +850,10 @@ module.exports = (env) ->
           assert(not isNaN(value))
           value = parseFloat(value)
           if value < 0.0
-            context?.addError("Can't dim to a negativ dimlevel.")
+            context?.addError("Can't dim to a negative dimlevel.")
             return
           if value > 100.0
-            context?.addError("Can't dim to greaer than 100%.")
+            context?.addError("Can't dim to greater than 100%.")
             return
         return {
           token: match
@@ -1041,7 +1041,7 @@ module.exports = (env) ->
           assert(not isNaN(value))
           value = parseFloat(value)
           if value < 0.0
-            context?.addError("Can't set temp to a negativ value.")
+            context?.addError("Can't set temp to a negative value.")
             return
           if value > 32.0
             context?.addError("Can't set temp higher than 32°C.")
@@ -1378,7 +1378,7 @@ module.exports = (env) ->
         assert typeof match is "string"
         value = parseFloat(value)
         if value < 0.0
-          context?.addError("Can't change volume to a negativ value.")
+          context?.addError("Can't change volume to a negative value.")
           return
         if value > 100.0
           context?.addError("Can't change volume to greater than 100%.")
