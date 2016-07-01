@@ -1,8 +1,8 @@
 #!/bin/sh
 pwd -P
-cd ../..
-mv pimatic node_modules
+cd ..
+mkdir node_modules
+mv pimatic node_modules/
 cd node_modules/pimatic
 pwd -P
-sudo apt-get install build-essential
 npm install sqlite3
