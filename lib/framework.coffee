@@ -238,7 +238,12 @@ module.exports = (env) ->
       # -------------
       @app = express()
       @app.use(connectTimeout("5min", respond: false))
+      extraHeaders = {}
+      if @config.settings.hasOwnProperty('cors') and _.isString(@config.settings.cors.allowedOrigin)
+        extraHeaders["Access-Control-Allow-Origin"] = @config.settings.cors.allowedOrigin
       @app.use( (req, res, next) =>
+        for own key, value of extraHeaders
+          res.header(key, value)
         req.on("timeout", =>
           env.logger.warn(
             "http request handler timeout. Possible unhandled request:
