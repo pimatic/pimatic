@@ -73,7 +73,7 @@ module.exports = {
             hostname:
               description: "The hostname of the HTTPS-server"
               type: "string"
-              default: "" # If is empty then listen to all ip4Adresses
+              default: "" # If is empty then listen to all ip4Addresses
             ###
             Download https://raw.githubusercontent.com/pimatic/pimatic/master/install/ssl-setup
             and run ssl-setup in you pimatic-app dir to generate the necessary key and certificate 
@@ -100,6 +100,13 @@ module.exports = {
               type: "string"
               default: "ca/certs/cacert.crt"
           required: false
+        cors:
+          type: "object"
+          properties:
+            allowedOrigin:
+              description: """The origin allowed for cross-origin accesses.
+                    The item "*" is used to accept all origins."""
+              type: "string"
         database:
           type: "object"
           properties:
