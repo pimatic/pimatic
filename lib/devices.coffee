@@ -419,7 +419,7 @@ module.exports = (env) ->
 
     moveByPercentage: (percentage) ->
       duration = @_calculateRollingTime(Math.abs(percentage))
-      if (duration == 0)
+      if duration is 0
         return Promise.resolve()
 
       promise = if percentage > 0 then @moveUp() else @moveDown()
