@@ -342,7 +342,7 @@ module.exports = (env) ->
             errorMessage = match[0]
           output += "#{line}\n"
           if line.indexOf('npm http 304') is 0 then return
-          if line.match(/ERR! peerinvalid .*/) then return  
+          if line.match(/ERR! peerinvalid .*/) then return
           @emit "npmMessage", line
           line = S(line).chompLeft('npm ').s
           npmLogger.info line

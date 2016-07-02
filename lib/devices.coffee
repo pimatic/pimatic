@@ -375,6 +375,9 @@ module.exports = (env) ->
   class ShutterController extends Actuator
     _position: null
 
+    # Approx. amount of time (in seconds) for shutter to close or open completely.
+    rollingTime = null
+
     attributes:
       position:
         label: "Position"
@@ -394,6 +397,11 @@ module.exports = (env) ->
         params:
           state:
             type: t.string
+      moveByPercentage:
+        description: "Move shutter by percentage relative to current position"
+        params:
+          percentage:
+            type: t.number
 
     template: "shutter"
 
@@ -409,14 +417,34 @@ module.exports = (env) ->
     moveToPosition: (position) ->
       throw new Error "Function \"moveToPosition\" is not implemented!"
 
+    moveByPercentage: (percentage) ->
+      duration = @_calculateRollingTime(Math.abs(percentage))
+      if (duration == 0)
+        return Promise.resolve()
+
+      promise = if percentage > 0 then @moveUp() else @moveDown()
+      promise = promise.delay(duration + 10).then( () =>
+        @emit "percentage", percentage
+        @stop()
+      )
+      return promise
+
     # Returns a promise that will be fulfilled with the position
     getPosition: -> Promise.resolve(@_position)
 
     _setPosition: (position) ->
       assert position in ['up', 'down', 'stopped']
-      if @position is position then return
+      if @_position is position then return
       @_position = position
       @emit "position", position
+
+    getPercentage: -> Promise.resolve(@_percentage)
+
+    # calculates rolling time in ms for given percentage
+    _calculateRollingTime: (percentage) ->
+      assert 0 <= percentage <= 100, "percentage must be between 0 and 100"
+      return @rollingTime * 1000 * percentage / 100 if @rollingTime?
+      throw new Error "No rolling time configured."
 
   ###
   Sensor
@@ -835,7 +863,7 @@ module.exports = (env) ->
     changeDimlevelTo: (level) ->
       @_setDimlevel(level)
       return Promise.resolve()
-    
+
     destroy: () ->
       super()
 
@@ -844,6 +872,7 @@ module.exports = (env) ->
     constructor: (@config, lastState) ->
       @name = @config.name
       @id = @config.id
+      @rollingTime = @config.rollingTime
       @_position = lastState?.position?.value or 'stopped'
       super()
 
@@ -949,7 +978,7 @@ module.exports = (env) ->
     changeContactTo: (contact) ->
       @_setContact(contact)
       return Promise.resolve()
-    
+
     destroy: () ->
       super()
 

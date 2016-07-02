@@ -109,7 +109,11 @@ module.exports = {
     title: "DummyShutter config"
     type: "object"
     extensions: ["xLink"]
-    properties: {}
+    properties:
+      rollingTime:
+        description: "Approx. amount of time (in seconds) for shutter to close or open completely."
+        type: "number"
+        default: 10
   DummyContactSensor:
     title: "DummyContactSensor config"
     type: "object"
@@ -166,7 +170,7 @@ module.exports = {
   Timer:
     title: "timer config"
     type: "object"
-    extensions: ["xLink"]
+    extensions: ["xLink","xAttributeOptions"]
     properties: {
       resolution:
         description: "The interval the timer is updated in seconds"
