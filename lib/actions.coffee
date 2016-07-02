@@ -275,7 +275,7 @@ module.exports = (env) ->
     ###
     Handles the above actions.
     ###
-    _doExectuteAction: (simulate, state) =>
+    _doExecuteAction: (simulate, state) =>
       return (
         if simulate
           if state then Promise.resolve __("would set presence of %s to present", @device.name)
@@ -288,11 +288,11 @@ module.exports = (env) ->
       )
 
     # ### executeAction()
-    executeAction: (simulate) => @_doExectuteAction(simulate, @state)
+    executeAction: (simulate) => @_doExecuteAction(simulate, @state)
     # ### hasRestoreAction()
     hasRestoreAction: -> yes
     # ### executeRestoreAction()
-    executeRestoreAction: (simulate) => @_doExectuteAction(simulate, (not @state))
+    executeRestoreAction: (simulate) => @_doExecuteAction(simulate, (not @state))
 
   ###
   The open/close ActionProvider
@@ -350,7 +350,7 @@ module.exports = (env) ->
     ###
     Handles the above actions.
     ###
-    _doExectuteAction: (simulate, state) =>
+    _doExecuteAction: (simulate, state) =>
       return (
         if simulate
           if state then Promise.resolve __("would set contact %s to closed", @device.name)
@@ -363,11 +363,11 @@ module.exports = (env) ->
       )
 
     # ### executeAction()
-    executeAction: (simulate) => @_doExectuteAction(simulate, @state)
+    executeAction: (simulate) => @_doExecuteAction(simulate, @state)
     # ### hasRestoreAction()
     hasRestoreAction: -> yes
     # ### executeRestoreAction()
-    executeRestoreAction: (simulate) => @_doExectuteAction(simulate, (not @state))
+    executeRestoreAction: (simulate) => @_doExecuteAction(simulate, (not @state))
 
         
   ###
@@ -455,7 +455,7 @@ module.exports = (env) ->
     ###
     Handles the above actions.
     ###
-    _doExectuteAction: (simulate, state) =>
+    _doExecuteAction: (simulate, state) =>
       return (
         if simulate
           if state then Promise.resolve __("would turn %s on", @device.name)
@@ -466,11 +466,11 @@ module.exports = (env) ->
       )
 
     # ### executeAction()
-    executeAction: (simulate) => @_doExectuteAction(simulate, @state)
+    executeAction: (simulate) => @_doExecuteAction(simulate, @state)
     # ### hasRestoreAction()
     hasRestoreAction: -> yes
     # ### executeRestoreAction()
-    executeRestoreAction: (simulate) => @_doExectuteAction(simulate, (not @state))
+    executeRestoreAction: (simulate) => @_doExecuteAction(simulate, (not @state))
 
   ###
   The Toggle Action Provider
