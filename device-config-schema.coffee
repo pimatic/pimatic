@@ -109,7 +109,11 @@ module.exports = {
     title: "DummyShutter config"
     type: "object"
     extensions: ["xLink"]
-    properties: {}
+    properties:
+      rollingTime:
+        description: "Approx. amount of time (in seconds) for shutter to close or open completely."
+        type: "number"
+        default: 10
   DummyContactSensor:
     title: "DummyContactSensor config"
     type: "object"
