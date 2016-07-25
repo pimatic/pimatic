@@ -241,9 +241,17 @@ module.exports = (env) ->
       extraHeaders = {}
       if @config.settings.hasOwnProperty('cors') and _.isString(@config.settings.cors.allowedOrigin)
         extraHeaders["Access-Control-Allow-Origin"] = @config.settings.cors.allowedOrigin
+        extraHeaders["Access-Control-Allow-Credentials"] = true
+        extraHeaders["Access-Control-Allow-Methods"] = "GET,PUT,POST,DELETE"
+        extraHeaders["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+
       @app.use( (req, res, next) =>
         for own key, value of extraHeaders
           res.header(key, value)
+
+        if @config.settings.hasOwnProperty('cors') and req.method is 'OPTIONS'
+          return res.sendStatus 200
+
         req.on("timeout", =>
           env.logger.warn(
             "http request handler timeout. Possible unhandled request:
@@ -649,7 +657,7 @@ module.exports = (env) ->
 
     _emitDeviceAdded: (device) -> @_emitDeviceEvent('deviceAdded', device)
     _emitDeviceChanged: (device) -> @_emitDeviceEvent('deviceChanged', device)
-    _emitDeviceRemoved: (device) -> 
+    _emitDeviceRemoved: (device) ->
       @_emitDeviceEvent('deviceRemoved', device)
 
     _emitDeviceOrderChanged: (deviceOrder) ->
