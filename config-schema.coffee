@@ -102,6 +102,7 @@ module.exports = {
           required: false
         cors:
           type: "object"
+          required: false
           properties:
             allowedOrigin:
               description: """The origin allowed for cross-origin accesses.
