@@ -894,10 +894,12 @@ module.exports = (env) ->
 
     # ### executeAction()
     executeAction: (simulate) => 
-      @framework.variableManager.evaluateNumericExpression(@valueTokens).then( (value) =>
-        value = @_clampVal value
-        @lastValue = value
-        return @_doExecuteAction(simulate, value)
+      @device.getDimlevel().then( (lastValue) =>
+        @lastValue = lastValue or 0
+        return @framework.variableManager.evaluateNumericExpression(@valueTokens).then( (value) =>
+          value = @_clampVal value
+          return @_doExecuteAction(simulate, value)
+        )
       )
 
     # ### hasRestoreAction()
