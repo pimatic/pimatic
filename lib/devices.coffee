@@ -1449,8 +1449,9 @@ module.exports = (env) ->
             # the old device was not destroyed, so just throw the load device error
             throw loadDeviceError
         @framework._emitDeviceChanged(newDevice)
-        oldDevice.emit 'change', newDevice
+        oldDevice.emit 'changed', newDevice
         @emit 'deviceChanged', newDevice
+
         # rethrow the error if the creation of the device with the new config failed
         if loadDeviceError?
           throw loadDeviceError
@@ -1488,6 +1489,7 @@ module.exports = (env) ->
         device._destroyed,
         "The device subclass #{device.config.class} did not call super() in destroy()"
       )
+      device.emit 'destroyed'
       return device
 
     addDeviceToConfig: (deviceConfig) ->

@@ -75,11 +75,11 @@ module.exports = (env) ->
 
     dependOnDevice: (device) ->
       recreateEmitter = (=> @emit "recreate")
-      device.on "change", recreateEmitter
-      device.on "destroy", recreateEmitter
+      device.on "changed", recreateEmitter
+      device.on "destroyed", recreateEmitter
       @on 'destroy', =>
-        device.removeListener "change", recreateEmitter
-        device.removeListener "destroy", recreateEmitter
+        device.removeListener "changed", recreateEmitter
+        device.removeListener "destroyed", recreateEmitter
 
     dependOnVariable: (variableManager, varName) ->
       recreateEmitter = ( (variable) => 

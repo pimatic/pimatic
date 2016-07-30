@@ -58,7 +58,7 @@ module.exports = (env) ->
 
     _addListener: () ->
       @_device.on(@_attrName, @_attrListener = (value) => @_setValue(value) )
-      @_device.on('change', @_deviceChangeListener = (newDevice) =>
+      @_device.on('changed', @_deviceChangedListener = (newDevice) =>
         if newDevice.hasAttribute(@_attrName)
           @unit = newDevice.attributes[@_attrName].unit
           @_removeListener()
@@ -67,14 +67,14 @@ module.exports = (env) ->
         else
           @_vars._removeDeviceAttributeVariable(@name)
       )
-      @_device.on('destroy', @_deviceDestroyListener = =>
+      @_device.on('destroyed', @_deviceDestroyedListener = =>
         @_vars._removeDeviceAttributeVariable(@name)
       )
 
     _removeListener: () ->
       @_device.removeListener(@_attrName, @_attrListener)
-      @_device.removeListener("change", @_deviceChangeListener)
-      @_device.removeListener("destroy", @_deviceDestroyListener)
+      @_device.removeListener("changed", @_deviceChangedListener)
+      @_device.removeListener("destroyed", @_deviceDestroyedListener)
       
     getUpdatedValue: (varsInEvaluation = {}) -> 
       return @_device.getUpdatedAttributeValue(@_attrName, varsInEvaluation)
