@@ -75,11 +75,11 @@ module.exports = (env) ->
 
     dependOnDevice: (device) ->
       recreateEmitter = (=> @emit "recreate")
-      device.on "change", recreateEmitter
-      device.on "destroy", recreateEmitter
+      device.on "changed", recreateEmitter
+      device.on "destroyed", recreateEmitter
       @on 'destroy', =>
-        device.removeListener "change", recreateEmitter
-        device.removeListener "destroy", recreateEmitter
+        device.removeListener "changed", recreateEmitter
+        device.removeListener "destroyed", recreateEmitter
 
     dependOnVariable: (variableManager, varName) ->
       recreateEmitter = ( (variable) => 
@@ -894,10 +894,12 @@ module.exports = (env) ->
 
     # ### executeAction()
     executeAction: (simulate) => 
-      @framework.variableManager.evaluateNumericExpression(@valueTokens).then( (value) =>
-        value = @_clampVal value
-        @lastValue = value
-        return @_doExecuteAction(simulate, value)
+      @device.getDimlevel().then( (lastValue) =>
+        @lastValue = lastValue or 0
+        return @framework.variableManager.evaluateNumericExpression(@valueTokens).then( (value) =>
+          value = @_clampVal value
+          return @_doExecuteAction(simulate, value)
+        )
       )
 
     # ### hasRestoreAction()
