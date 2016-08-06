@@ -95,6 +95,32 @@ module.exports = {
         type: "number"
         default: 1
   }
+  VariableTimeInputDevice: {
+    title: "TimeVariablesDevice config"
+    type: "object"
+    extensions: ["xLink"]
+    properties:
+      variable:
+        description: "The variable to modify on input change"
+        type: "string"
+      type:
+        description: "The type of the input"
+        type: "string"
+        default: "string"
+        enum: ["string", "number"]
+      min:
+        description: "Minimum value for numeric values"
+        type: "number"
+        required: false
+      max:
+        description: "Maximum value for numeric values"
+        type: "number"
+        required: false
+      step:
+        description: "Step size for minus and plus buttons for numeric values"
+        type: "number"
+        default: 1
+  }
   DummySwitch:
     title: "DummySwitch config"
     type: "object"
