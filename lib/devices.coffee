@@ -838,7 +838,7 @@ module.exports = (env) ->
 
     _input: ""
 
-    template: "input"
+    template: "inputTime"
 
     actions:
       changeInputTo:
