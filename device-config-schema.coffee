@@ -107,19 +107,18 @@ module.exports = {
         description: "The type of the input"
         type: "string"
         default: "string"
-        enum: ["string", "number"]
       min:
-        description: "Minimum value for numeric values"
-        type: "number"
+        description: "Minimum time to be set"
+        type: "string"
         required: false
       max:
-        description: "Maximum value for numeric values"
-        type: "number"
+        description: "Maximum time to be set"
+        type: "string"
         required: false
       step:
-        description: "Step size for minus and plus buttons for numeric values"
+        description: "Step size in minutes for minus and plus buttons"
         type: "number"
-        default: 1
+        default: 15
   }
   DummySwitch:
     title: "DummySwitch config"
