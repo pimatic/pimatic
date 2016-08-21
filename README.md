@@ -33,7 +33,7 @@ on [pimatic.org](http://pimatic.org/). If you need any help, [ask at the forum](
 Donation
 --------
 
-Happy with pimatic and using it everyday? Consider a donation to support development and keeping the website and forum up: [![Gittip donate button](http://img.shields.io/gittip/sweetpi.png)](https://www.gittip.com/sweetpi/ "Donate weekly to this project using Gittip")
+Happy with pimatic and using it every day? Consider a donation to support development and keeping the website and forum up: [![Gittip donate button](http://img.shields.io/gittip/sweetpi.png)](https://www.gittip.com/sweetpi/ "Donate weekly to this project using Gittip")
 [![PayPal donate button](http://img.shields.io/paypal/donate.png?color=blue)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=KCVVRY4243JS6 "Donate once-off to this project using Paypal")
 
 We promise, that pimatic will always be free to use and its code be open sourced.
@@ -64,8 +64,8 @@ Extensions and Hacking
 ----------------------
 The framework is built to be extendable by plugins. If you have devices that are currently not 
 supported please add a plugin for your devices. 
-As well, if you have a nice Ideas for plugins or need support for specials devices you are
-welcome to create a issue or submit a patch.
+As well, if you have nice ideas for plugins or need support for special devices you are
+welcome to create an issue or submit a patch.
 
 For plugin development take a look at the 
 [development guide](http://pimatic.org/guide/development/required-skills-readings/) and
