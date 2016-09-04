@@ -834,6 +834,69 @@ module.exports = (env) ->
       super()
 
 
+  class VariableTimeInputDevice extends Device
+
+    _input: ""
+
+    template: "inputTime"
+
+    actions:
+      changeInputTo:
+        params:
+          value:
+            type: t.string
+        description: "Sets the variable to the value"
+
+    constructor: (@config, lastState, @framework) ->
+      @name = @config.name
+      @id = @config.id
+
+      @attributes = {
+        input:
+          description: "The value of the input field"
+          type: @config.type
+      }
+
+      @framework.variableManager.on('variableValueChanged', @changeListener = (changedVar, value) =>
+        unless @config.variable is changedVar.name then return
+        @_setInput value
+      )
+
+      @_input = lastState?.input?.value or null
+      super()
+
+    getInput: () -> Promise.resolve(@_input)
+
+    _setInput: (value) ->
+      if @_input is value then return
+      @_input = value
+      @emit 'input', value
+
+    changeInputTo: (value) ->
+      name = @config.variable
+      variable = @framework.variableManager.getVariableByName(name)
+      unless variable?
+        throw new Error("Could not find variable with name #{name}")
+      @framework.variableManager.setVariableToValue(name, value, variable.unit)
+      timePattern = /// ^([01]?[0-9]|2[0-3]):[0-5][0-9] ///
+      hourPattern = ///
+            ^[01]?[0-9]|2[0-3] 
+            ///
+
+      if value.match timePattern
+        @_setInput value
+      else
+        if value.match hourPattern
+          @_setInput value "#{textValue}:00"
+        else
+          throw new Error("Input value is not a valid time")
+      return Promise.resolve()
+
+    destroy: ->
+      @framework.variableManager.removeListener('variableValueChanged', @changeListener)
+      super()
+
+
   class DummySwitch extends SwitchActuator
 
     constructor: (@config, lastState) ->
@@ -1542,6 +1605,7 @@ module.exports = (env) ->
         env.devices.ButtonsDevice
         env.devices.VariablesDevice
         env.devices.VariableInputDevice
+        env.devices.VariableTimeInputDevice
         env.devices.DummySwitch
         env.devices.DummyDimmer
         env.devices.DummyShutter
@@ -1576,6 +1640,7 @@ module.exports = (env) ->
     ButtonsDevice
     VariablesDevice
     VariableInputDevice
+    VariableTimeInputDevice
     AVPlayer
     DummySwitch
     DummyDimmer
