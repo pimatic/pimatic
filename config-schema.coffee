@@ -201,6 +201,10 @@ module.exports = {
               type: "boolean"
               default: false
           required: false
+        defaultMaxListeners:
+          description: "The number of listeners which can be registered for any single event (soft limit)"
+          type: "number"
+          default: 200
     pages:
       description: "Array of GUI pages"
       type: "array"
