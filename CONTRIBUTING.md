@@ -12,7 +12,7 @@ Please ask in the [forum](http://forum.pimatic.org), but please use the search f
 
 Please post in the [forum](http://forum.pimatic.org), but use the search first.
 
-##### You need assistence with plugin-develeopment?
+##### You need assistance with plugin-develeopment?
 
 Make sure that you code is available online (on github) and open a new issue here.
 
