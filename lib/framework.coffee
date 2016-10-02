@@ -183,7 +183,7 @@ module.exports = (env) ->
         defaultLocale: @config.settings.locale,
       })
 
-      events.EventEmitter.defaultMaxListeners = 100
+      events.EventEmitter.defaultMaxListeners = @config.settings.defaultMaxListeners
 
 
     _checkConfig: (config)->
