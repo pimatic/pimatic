@@ -116,13 +116,14 @@ exports.hardKiller = () ->
       sig = "SIG#{signals[0]}"
       try
         if time is 0
-          console.log "Sending #{sig} to pimatic, waiting for process exit..."
+          console.log "Sending #{sig} to pimatic(#{pid}), waiting for process exit..."
           # throws when the process no longer exists
           process.kill pid, sig
         else if time >= timeout
-          console.log "Process didn't shutdown in time, sending signal #{sig} to pimatic, 
+          console.log "Process didn't shutdown in time, sending signal #{sig} to pimatic(#{pid}), 
             waiting for process exit..."
           # throws when the process no longer exists
+          process.kill pid, sig
           signals.shift() if signals.length > 1
           time = 0
         else
