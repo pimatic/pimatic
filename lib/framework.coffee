@@ -14,6 +14,7 @@ cookieParser = require 'cookie-parser'
 bodyParser = require 'body-parser'
 cookieSession = require 'cookie-session'
 basicAuth = require 'basic-auth'
+ExpressBrute = require 'express-brute'
 socketIo = require 'socket.io'
 # Require engine.io from socket.io
 engineIo = require.cache[require.resolve('socket.io')].require('engine.io')
@@ -60,6 +61,7 @@ module.exports = (env) ->
       @_loadConfig()
       @pluginManager.pluginsConfig = @config.plugins
       @userManager = new env.users.UserManager(this, @config.users, @config.roles)
+      @bruteforce = new ExpressBrute new ExpressBrute.MemoryStore()
       @deviceManager = new env.devices.DeviceManager(this, @config.devices)
       @groupManager = new env.groups.GroupManager(this, @config.groups)
       @pageManager = new env.pages.PageManager(this, @config.pages)
@@ -357,7 +359,7 @@ module.exports = (env) ->
           unauthorized()
       )
 
-      @app.post('/login', (req, res) =>
+      @app.post('/login', @bruteforce.prevent, (req, res) =>
         user = req.body.username
         password = req.body.password
         rememberMe = req.body.rememberMe
