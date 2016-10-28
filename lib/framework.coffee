@@ -354,7 +354,7 @@ module.exports = (env) ->
           delete req.session.username
           delete req.session.loginToken
           delete req.session.role
-          unauthorized()
+          unauthorized(res)
       )
 
       @app.post('/login', (req, res) =>
