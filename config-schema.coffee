@@ -216,6 +216,9 @@ module.exports = {
             type: "string"
           name:
             type: "string"
+          adminOnly:
+            type: "boolean"
+            default: false
           devices:
             type: "array"
             default: []

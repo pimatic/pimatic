@@ -80,7 +80,10 @@ module.exports = (env) ->
       @framework._emitPageRemoved(removedPage[0])
       return removedPage
 
-    getPages: () ->
+    getPages: (role = "admin") ->
+      if role isnt "admin"
+        console.log("Using pages filter for role [" + role + "]")
+        return @pages.filter (page) -> not page.adminOnly
       return @pages
 
     updatePageOrder: (pageOrder) ->
