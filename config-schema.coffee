@@ -216,9 +216,13 @@ module.exports = {
             type: "string"
           name:
             type: "string"
-          adminOnly:
-            type: "boolean"
-            default: false
+          allowedRoles:
+            description: """
+            The roles allowed for accessing the page. If absent
+            roles are granted access.
+            """
+            type: "array"
+            required: false
           devices:
             type: "array"
             default: []

@@ -81,10 +81,8 @@ module.exports = (env) ->
       return removedPage
 
     getPages: (role = "admin") ->
-      if role isnt "admin"
-        console.log("Using pages filter for role [" + role + "]")
-        return @pages.filter (page) -> not page.adminOnly
-      return @pages
+      @pages.filter (page) ->
+        if page.allowedRoles? then page.allowedRoles.indexOf(role) isnt -1 else true
 
     updatePageOrder: (pageOrder) ->
       assert pageOrder? and Array.isArray pageOrder
