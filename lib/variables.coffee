@@ -185,6 +185,15 @@ module.exports = (env) ->
           minf = parseFloat(min)
           maxf = parseFloat(max)
           return Math.floor( Math.random() * (maxf+1-minf) ) + minf
+      pow:
+        args:
+          base:
+            type: "number"
+          exponent:
+            type: "number"
+            optional: yes
+        exec: (base, exponent=2) ->
+          return Math.pow(base, exponent)
       round:
         args:
           number:
@@ -256,13 +265,13 @@ module.exports = (env) ->
           unless unit?
             unit = this.units[0]
             info = humanFormat.raw(number, unit: unit)
-            formated = (if decimals? then Number(info.value).toFixed(decimals) else info.value)
-            return "#{formated}#{info.prefix}#{unit}"
+            formatted = (if decimals? then Number(info.value).toFixed(decimals) else info.value)
+            return "#{formatted}#{info.prefix}#{unit}"
           else
             unless decimals?
               decimals = 2
-            formated = Number(number).toFixed(decimals)
-            return "#{formated}#{unit}"
+            formatted = Number(number).toFixed(decimals)
+            return "#{formatted}#{unit}"
     }
 
     inited: false
@@ -297,7 +306,7 @@ module.exports = (env) ->
               @_addVariable(exprVar)
               setExpressions.push( -> 
                 try
-                  exprVar.setToExpression(variable.expression.trim()) 
+                  exprVar.setToExpression(variable.expression.trim())
                 catch
                   env.logger.error(
                     "Error parsing expression variable #{variable.name}:", e.message
