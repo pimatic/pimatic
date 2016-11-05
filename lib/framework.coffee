@@ -238,7 +238,8 @@ module.exports = (env) ->
       @app = express()
       @app.use(connectTimeout("5min", respond: false))
       extraHeaders = {}
-      if @config.settings.hasOwnProperty('cors') and _.isString(@config.settings.cors.allowedOrigin)
+      @corsEnabled = @config.settings.hasOwnProperty('cors') and not _.isEmpty(@config.settings.cors.allowedOrigin)
+      if @corsEnabled
         extraHeaders["Access-Control-Allow-Origin"] = @config.settings.cors.allowedOrigin
         extraHeaders["Access-Control-Allow-Credentials"] = true
         extraHeaders["Access-Control-Allow-Methods"] = "GET,PUT,POST,DELETE"
@@ -248,7 +249,7 @@ module.exports = (env) ->
         for own key, value of extraHeaders
           res.header(key, value)
 
-        if @config.settings.hasOwnProperty('cors') and req.method is 'OPTIONS'
+        if @corsEnabled and req.method is 'OPTIONS'
           return res.sendStatus 200
 
         req.on("timeout", =>

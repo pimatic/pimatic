@@ -106,8 +106,11 @@ module.exports = {
           properties:
             allowedOrigin:
               description: """The origin allowed for cross-origin accesses.
-                    The item "*" is used to accept all origins."""
+                    The item "*" is used to accept all origins.
+                    The empty string is used to deny all cross-origin accesses.
+                    """
               type: "string"
+              default: ""
         database:
           type: "object"
           properties:
