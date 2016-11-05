@@ -238,7 +238,7 @@ module.exports = (env) ->
       @app = express()
       @app.use(connectTimeout("5min", respond: false))
       extraHeaders = {}
-      @corsEnabled = @config.settings.hasOwnProperty('cors') and not _.isEmpty(@config.settings.cors.allowedOrigin)
+      @corsEnabled = @config.settings.cors? and not _.isEmpty(@config.settings.cors.allowedOrigin)
       if @corsEnabled
         extraHeaders["Access-Control-Allow-Origin"] = @config.settings.cors.allowedOrigin
         extraHeaders["Access-Control-Allow-Credentials"] = true
