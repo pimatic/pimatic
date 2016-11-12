@@ -424,7 +424,6 @@ module.exports = (env) ->
 
       promise = if percentage > 0 then @moveUp() else @moveDown()
       promise = promise.delay(duration + 10).then( () =>
-        @emit "percentage", percentage
         @stop()
       )
       return promise
@@ -437,8 +436,6 @@ module.exports = (env) ->
       if @_position is position then return
       @_position = position
       @emit "position", position
-
-    getPercentage: -> Promise.resolve(@_percentage)
 
     # calculates rolling time in ms for given percentage
     _calculateRollingTime: (percentage) ->
