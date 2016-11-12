@@ -559,7 +559,7 @@ module.exports = (env) ->
         else socket.emit('variables', [])
 
         if auth.enabled is no or @userManager.hasPermission(username, 'pages', 'read')
-          socket.emit('pages',  @pageManager.getPages() )
+          socket.emit('pages',  @pageManager.getPages(role) )
         else socket.emit('pages', [])
 
         needsRules = (
