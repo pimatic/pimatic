@@ -202,7 +202,10 @@ module.exports = {
               default: false
           required: false
         defaultMaxListeners:
-          description: "The number of listeners which can be registered for any single event (soft limit)"
+          description: """
+          The number of listeners which can be registered
+          for any single event (soft limit)
+          """
           type: "number"
           default: 200
     pages:
@@ -216,6 +219,13 @@ module.exports = {
             type: "string"
           name:
             type: "string"
+          allowedRoles:
+            description: """
+            The roles allowed for accessing the page. If absent
+            roles are granted access.
+            """
+            type: "array"
+            required: false
           devices:
             type: "array"
             default: []

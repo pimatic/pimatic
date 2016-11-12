@@ -80,8 +80,9 @@ module.exports = (env) ->
       @framework._emitPageRemoved(removedPage[0])
       return removedPage
 
-    getPages: () ->
-      return @pages
+    getPages: (role = "admin") ->
+      @pages.filter (page) ->
+        if page.allowedRoles? then page.allowedRoles.indexOf(role) isnt -1 else true
 
     updatePageOrder: (pageOrder) ->
       assert pageOrder? and Array.isArray pageOrder
