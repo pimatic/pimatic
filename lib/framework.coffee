@@ -13,6 +13,8 @@ connectTimeout = require 'connect-timeout'
 cookieParser = require 'cookie-parser'
 bodyParser = require 'body-parser'
 cookieSession = require 'cookie-session'
+ExpressBrute = require 'express-brute'
+BruteKnex = require 'brute-knex'
 basicAuth = require 'basic-auth'
 socketIo = require 'socket.io'
 # Require engine.io from socket.io
@@ -280,6 +282,22 @@ module.exports = (env) ->
         key: 'pimatic.sess'
         cookie: { maxAge: null }
       })
+      console.log(knex: this.database.knex);
+      expressBrute = new ExpressBrute(
+        new BruteKnex({
+          knex: this.database.knex
+        }),
+        {
+          freeRetries: 5
+          attachResetToRequest: true,
+          failCallback: ExpressBrute.FailTooManyRquests
+          # handleStoreError: (error) =>
+          #   env.logger.error(error)
+          #   env.logger.debug(error.stack)
+        }
+      )
+
+      @app.use expressBrute.prevent
 
       # Setup authentication
       # ----------------------
@@ -315,9 +333,11 @@ module.exports = (env) ->
         # auth is deactivated so we allways continue
         if auth.enabled is no
           req.session.username = ''
+          req.brute.reset()
           return next()
 
         if @userManager.isPublicAccessAllowed(req)
+          req.brute.reset()
           return next()
 
         # if already logged in so just continue
@@ -329,6 +349,7 @@ module.exports = (env) ->
           @userManager.checkLoginToken(auth.secret, req.session.username, req.session.loginToken)
         )
         if loggedIn
+          req.brute.reset()
           return next()
 
         # else use basic authorization
@@ -343,6 +364,7 @@ module.exports = (env) ->
           return unauthorized(res)
 
         if @userManager.checkLogin(authInfo.name, authInfo.pass)
+          req.brute.reset()
           role = @userManager.getUserByUsername(authInfo.name).role
           assert role? and typeof role is "string" and role.length > 0
           req.session.username = authInfo.name
@@ -366,6 +388,7 @@ module.exports = (env) ->
         if rememberMe is 'false' then rememberMe = no
         rememberMe = !!rememberMe
         if @userManager.checkLogin(user, password)
+          req.brute.reset()
           role = @userManager.getUserByUsername(user).role
           assert role? and typeof role is "string" and role.length > 0
           req.session.username = user

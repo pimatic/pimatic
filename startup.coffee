@@ -65,7 +65,7 @@ startup = =>
       return orgConnect
     )
   )()
-
+  framework = null
   initComplete = false
   uncaughtException = (err) ->
     unless err.silent
