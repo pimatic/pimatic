@@ -31,7 +31,7 @@
 	"Add a new rule": "新規ルールを追加",
 	"Advanced Options": "拡張オプション",
 	"Connection lost, retying...": "接続が切断されました。再接続します...",
-	"The rule must start with \"if\" and contain a \"then\" part!": "ルールは \"もし次の条件になれば\" で始まり、 \"次の動作をさせる\" が続きます。",
+	"The rule must start with \"if\" and contain a \"then\" part!": "ルールは \"もし \" で始まり、 \"それから\" を含みます。",
 	"No id given": "IDが不明です",
 	"Plugins": "プラグイン",
 	"Installed Plugins": "インストール済プラグイン",
