@@ -147,7 +147,7 @@ module.exports = {
   DummyPresenceSensor:
     title: "DummyPresenceSensor config"
     type: "object"
-    extensions: ["xLink", "xClosedLabel", "xOpenedLabel"]
+    extensions: ["xLink", "xPresentLabel", "xAbsentLabel"]
     properties:
       autoReset:
         description: """Reset the state to absent after resetTime"""
