@@ -18,7 +18,7 @@
 # Make sure the pimatic.js file is linked in one of the pathes in the PATH variable below.
 # The node.js binary must be in the PATH, too.
 
-PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/sbin:/usr/local/bin:/opt/node/bin
+PATH=/sbin:/usr/sbin:/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/opt/node/bin
 
 if [ "$1" = "start" ] || [ "$1" = "stop" ] || [ "$1" = "restart" ] || [ "$1" = "status" ] 
 then
