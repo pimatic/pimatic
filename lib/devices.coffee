@@ -1647,4 +1647,5 @@ module.exports = (env) ->
     DummyPresenceSensor
     DummyTemperatureSensor
     Timer
+    DeviceConfigExtension
   }

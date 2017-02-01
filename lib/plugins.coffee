@@ -211,7 +211,11 @@ module.exports = (env) ->
           # cache for 1min
           setTimeout( (=> @_pluginList = null), 60*1000)
           return json
-      )
+        ).catch( (err) =>
+          # cache errors only for 1 sec
+          setTimeout( (=> @_pluginList = null), 1*1000)
+          throw err;
+        )
 
     searchForCoreUpdate: ->
       version = @framework.packageJson.version
@@ -222,7 +226,11 @@ module.exports = (env) ->
           # cache for 1min
           setTimeout( (=> @_coreInfo = null), 60*1000)
           return json
-      )
+        ).catch( (err) =>
+          # cache errors only for 1 sec
+          setTimeout( (=> @_coreInfo = null), 1*1000)
+          throw err;
+        )
 
     getPluginInfo: (name) ->
       return @getCoreInfo() if name is "pimatic"

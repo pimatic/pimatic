@@ -9,6 +9,7 @@ JaySchema = require 'jayschema'
 RJSON = require 'relaxed-json'
 i18n = require 'i18n'
 express = require "express"
+methodOverride = require 'method-override'
 connectTimeout = require 'connect-timeout'
 cookieParser = require 'cookie-parser'
 bodyParser = require 'body-parser'
@@ -236,6 +237,7 @@ module.exports = (env) ->
       # Setup express
       # -------------
       @app = express()
+      @app.use(methodOverride('X-HTTP-Method-Override'))
       @app.use(connectTimeout("5min", respond: false))
       extraHeaders = {}
       @corsEnabled = @config.settings.cors? and not _.isEmpty(@config.settings.cors.allowedOrigin)
