@@ -1,6 +1,7 @@
 assert = require "cassert"
 Promise = require 'bluebird'
 os = require 'os'
+path = require 'path'
 fs = require 'fs.extra'
 
 env = require('../startup').env
@@ -31,8 +32,8 @@ describe "PluginManager", ->
   describe '#pathToPlugin()', ->
 
     it "should return #{os.tmpdir()}/pimatic-test/node_modules/pimatic-test", ->
-      path = pluginManager.pathToPlugin('pimatic-test')
-      assert path is "#{os.tmpdir()}/pimatic-test/node_modules/pimatic-test"
+      pluginPath = pluginManager.pathToPlugin('pimatic-test')
+      assert pluginPath is path.normalize "#{os.tmpdir()}/pimatic-test/node_modules/pimatic-test"
 
   describe '#installPlugin()', ->
 
@@ -72,6 +73,7 @@ describe "PluginManager", ->
     it 'should return pimatic package info from the registry', (done) ->
       promise = pluginManager.getNpmInfo('pimatic')
       promise.then( (pkgInfo) ->
+        console.log "-----", pkgInfo.name is "pimatic"
         assert pkgInfo.name is "pimatic"
         done()
       ).catch(done)
