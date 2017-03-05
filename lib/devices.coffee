@@ -1198,6 +1198,15 @@ module.exports = (env) ->
 
     apply: (config, device) -> #should be handled by the frontend
 
+  class XButtonDeviceConfigExtension extends DeviceConfigExtension
+    configSchema:
+      xButton:
+        description: "Label for xButton device extension"
+        type: "string"
+        required: no
+
+    apply: (config, device) -> #should be handled by the frontend
+
   class PresentLabelConfigExtension extends DeviceConfigExtension
     configSchema:
       xPresentLabel:
@@ -1295,6 +1304,7 @@ module.exports = (env) ->
     constructor: (@framework, @devicesConfig) ->
       @deviceConfigExtensions.push(new ConfirmDeviceConfigExtention())
       @deviceConfigExtensions.push(new LinkDeviceConfigExtention())
+      @deviceConfigExtensions.push(new XButtonDeviceConfigExtension())
       @deviceConfigExtensions.push(new PresentLabelConfigExtension())
       @deviceConfigExtensions.push(new SwitchLabelConfigExtension())
       @deviceConfigExtensions.push(new ContactLabelConfigExtension())
