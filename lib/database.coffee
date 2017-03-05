@@ -65,7 +65,9 @@ module.exports = (env) ->
         )
         if dbPackageToInstall is "sqlite3"
           dbPackageToInstall = "sqlite3@3.1.8"
-        pending = @framework.pluginManager.spawnPpm(['install', dbPackageToInstall, '--unsafe-perm'])
+        pending = @framework.pluginManager.spawnPpm(
+          ['install', dbPackageToInstall, '--unsafe-perm']
+        )
 
       return pending.then( =>
         @knex = Knex(

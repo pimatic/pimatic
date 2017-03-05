@@ -214,7 +214,7 @@ module.exports = (env) ->
         ).catch( (err) =>
           # cache errors only for 1 sec
           setTimeout( (=> @_pluginList = null), 1*1000)
-          throw err;
+          throw err
         )
 
     searchForCoreUpdate: ->
@@ -229,7 +229,7 @@ module.exports = (env) ->
         ).catch( (err) =>
           # cache errors only for 1 sec
           setTimeout( (=> @_coreInfo = null), 1*1000)
-          throw err;
+          throw err
         )
 
     getPluginInfo: (name) ->
