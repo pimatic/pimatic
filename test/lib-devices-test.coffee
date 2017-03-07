@@ -2,7 +2,6 @@ assert = require "cassert"
 Promise = require 'bluebird'
 i18n = require 'i18n'
 events = require 'events'
-_ = require 'lodash'
 
 env = require('../startup').env
 

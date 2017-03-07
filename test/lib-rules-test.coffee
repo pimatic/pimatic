@@ -26,7 +26,7 @@ describe "RuleManager", ->
     getType: -> 'state'
 
   class DummyPredicateProvider extends env.predicates.PredicateProvider
-    type: 'unknwon'
+    type: 'unknown'
     name: 'test'
 
     parsePredicate: (input, context) -> 
@@ -555,6 +555,7 @@ describe "RuleManager", ->
           cassert canDecideCalled
           finish()
         ).catch(finish)
+      return
 
     it 'should reject unknown action', (finish) ->
       canDecideCalled = false
@@ -584,6 +585,7 @@ describe "RuleManager", ->
           cassert parseActionCalled
           finish()
         ).catch(finish)
+      return
 
   notifyId = null
 

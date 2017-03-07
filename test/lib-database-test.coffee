@@ -17,7 +17,7 @@ describe "Database", ->
 
   describe "#constructor()", ->
 
-    it "should connect", (finish) ->
+    it "should connect", () ->
       frameworkDummy.pluginManager = new env.plugins.PluginManager(frameworkDummy)
       dbSettings = {
         client: "sqlite3"
@@ -36,7 +36,7 @@ describe "Database", ->
         diskSyncInterval: '2h'
       }
       database = new env.database.Database(frameworkDummy, dbSettings)
-      database.init().then( => finish() ).catch(finish)
+      database.init()
   describe '#saveMessageEvent()', ->
 
     it "should save the messages"#, (finish) ->

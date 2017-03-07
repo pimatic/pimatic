@@ -16,6 +16,7 @@ describe "VariableManager", ->
         assert.equal value, 1
         finish()
       ).catch(finish)
+      return
 
   describe '#setVariableToExpr()', ->
     it "should set the variable to a numeric expression", (finish) ->
@@ -24,6 +25,7 @@ describe "VariableManager", ->
         assert.equal value, 2
         finish()
       ).catch(finish)
+      return
 
     it "should set the variable to a numeric expression with vars", (finish) ->
       varManager.setVariableToExpr('c', '1*$a+10*$b')
@@ -31,6 +33,7 @@ describe "VariableManager", ->
         assert.equal value, 21
         finish()
       ).catch(finish)
+      return
 
     it "should set the variable to a string expression", (finish) ->
       varManager.setVariableToExpr('d', '"foo"')
@@ -38,6 +41,7 @@ describe "VariableManager", ->
         assert.equal value, "foo"
         finish()
       ).catch(finish)
+      return
 
     it "should set the variable to a string expression with vars", (finish) ->
       varManager.setVariableToExpr('e', '"$a bars"')
@@ -45,6 +49,7 @@ describe "VariableManager", ->
         assert.equal value, "1 bars"
         finish()
       ).catch(finish)
+      return
 
     it "should set the variable to a numeric expression with vars", (finish) ->
       varManager.setVariableToExpr('f', '$c')
@@ -52,6 +57,7 @@ describe "VariableManager", ->
         assert.equal value, 21
         finish()
       ).catch(finish)
+      return
 
     it "should detect cycles", (finish) ->
       varManager.setVariableToExpr('c', "$f")
@@ -61,6 +67,7 @@ describe "VariableManager", ->
         assert error.message is "Dependency cycle detected for variable f"
         finish()
       ).done()
+      return
 
     it "should set the variable to a function expression", (finish) ->
       varManager.setVariableToExpr('g', 'min(1, 2)', )
@@ -68,6 +75,7 @@ describe "VariableManager", ->
         assert.equal value, 1
         finish()
       ).catch(finish)
+      return
 
   describe '#isVariableDefined()', ->
     it "should return true", ->
@@ -80,6 +88,7 @@ describe "VariableManager", ->
         assert.equal value, 1
         finish()
       ).catch(finish)
+      return
 
   describe '#evaluateNumericExpression()', ->
     it 'should calculate 1 + 2 * 3', (finish) ->
@@ -87,18 +96,21 @@ describe "VariableManager", ->
         assert result, 7
         finish()
       ).catch(finish)
+      return
 
     it 'should calculate 3 + $a * 2', (finish) ->
       varManager.evaluateNumericExpression([3, '+', '$a', '*', 2]).then( (result) =>
         assert result, 5
         finish()
       ).catch(finish)
+      return
 
     it 'should calculate $a + $a', (finish) ->
       varManager.evaluateNumericExpression(['$a', '+', '$a']).then( (result) =>
         assert result, 2
         finish()
       ).catch(finish)
+      return
 
 
   describe '#evaluateStringExpression()', ->
@@ -107,17 +119,21 @@ describe "VariableManager", ->
         assert result, "abc"
         finish()
       ).catch(finish)
+      return
 
     it 'should interpolate "abc $a"', (finish) ->
       varManager.evaluateStringExpression(['"abc "', '$a']).then( (result) =>
         assert result, "abc 1"
         finish()
       ).catch(finish)
+      return
+
     it 'should interpolate "abc $a de"', (finish) ->
       varManager.evaluateStringExpression(['"abc "', '$a', '" de"']).then( (result) =>
         assert result, "abc 1 de"
         finish()
       ).catch(finish)
+      return
 
 
   describe '#units()', ->
@@ -131,36 +147,42 @@ describe "VariableManager", ->
         assert result.unit is 'V'
         finish()
       ).catch(finish)
+      return
 
     it 'should use the right unit for 1V - 2', (finish) ->
       varManager.evaluateExpressionWithUnits(["$a", "-", "$b"]).then( (result) =>
         assert result.unit is 'V'
         finish()
       ).catch(finish)
+      return
 
     it 'should use the right unit for 1V * 2', (finish) ->
       varManager.evaluateExpressionWithUnits(["$a", "*", "$b"]).then( (result) =>
         assert result.unit is 'V'
         finish()
       ).catch(finish)
+      return
 
     it 'should use the right unit for 1V * 1V', (finish) ->
       varManager.evaluateExpressionWithUnits(["$a", "*", "$a"]).then( (result) =>
         assert result.unit is 'V*V'
         finish()
       ).catch(finish)
+      return
 
     it 'should use the right unit for 1V / 2', (finish) ->
       varManager.evaluateExpressionWithUnits(["$a", "/", "$b"]).then( (result) =>
         assert result.unit is 'V'
         finish()
       ).catch(finish)
+      return
 
     it 'should use the right unit for 2 / 1V', (finish) ->
       varManager.evaluateExpressionWithUnits(["$b", "/", "$a"]).then( (result) =>
         assert result.unit is '1/V'
         finish()
       ).catch(finish)
+      return
 
     it 'should format the value', (finish) ->
       varManager.evaluateExpressionWithUnits(["formatNumber", "(", "$a", ")"]).then( (result) =>
@@ -168,6 +190,7 @@ describe "VariableManager", ->
         assert result.unit is ''
         finish()
       ).catch(finish)
+      return
 
     it 'should format the value with prefix', (finish) ->
       varManager.setVariableToValue('a', 1000, 'V')
@@ -176,3 +199,4 @@ describe "VariableManager", ->
         assert result.unit is ''
         finish()
       ).catch(finish)
+      return

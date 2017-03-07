@@ -77,5 +77,6 @@ describe "PluginManager", ->
         assert pkgInfo.name is "pimatic"
         done()
       ).catch(done)
+      return
 
  configFile = "#{os.tmpdir()}/pimatic-test-config.json"

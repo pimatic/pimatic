@@ -112,7 +112,7 @@ describe "SwitchActionHandler", ->
       assert not result?
       assert not turnOnCalled
 
-describe "ShutteActionHandler", ->
+describe "ShutterActionHandler", ->
 
   frameworkDummy =
     deviceManager:

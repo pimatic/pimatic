@@ -542,6 +542,7 @@ describe "VariablePredicateProvider", ->
             assert.equal val, tc.result.value
             finish()
           ).catch(finish)
+          return
 
 
   describe "VariablePredicateHandler", ->

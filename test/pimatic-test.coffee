@@ -87,5 +87,5 @@ describe "pimatic", ->
     it 'should find actuator in config', ->
       assert framework.deviceManager.isDeviceInConfig deviceConfig.id
 
-    it 'should not find antother actuator in config', ->
+    it 'should not find another actuator in config', ->
       assert not framework.deviceManager.isDeviceInConfig 'a-not-present-id'
