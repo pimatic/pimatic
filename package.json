@@ -103,7 +103,7 @@
     "grunt-cli": "^1.2.0",
     "grunt-coffeelint": "^0.0.16",
     "grunt-mocha-test": "^0.13.2",
-    "mocha": "^3.1.2",
+    "mocha": "^3.2.0",
     "sinon": "^1.17.3",
     "supertest": "^2.0.1"
   },
