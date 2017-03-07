@@ -47,6 +47,7 @@ describe "pimatic", ->
         framework = fm
         finish()
       ).catch(finish)
+      return
 
     it "httpServer should run", (done)->
       http = require 'http'
@@ -54,6 +55,7 @@ describe "pimatic", ->
         done()
       ).on "error", (e) ->
         throw e
+      return
 
     it "httpServer should ask for password", (done)->
       http = require 'http'
@@ -62,6 +64,7 @@ describe "pimatic", ->
         done()
       ).on "error", (e) ->
         throw e
+      return
 
   describe '#addDeviceToConfig()', ->
 
