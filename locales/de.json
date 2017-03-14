@@ -232,7 +232,7 @@
 	"Discovered devices": "Erkannte Geräte",
 	"Some settings have changed, a restart is required.": "Einige Einstellungen haben sich geändert, ein Neustart ist erforderlich.",
 	"Restart Now": "Jetzt neu starten",
-	"Browse Plugins": "Zeige Plugins",
+	"Browse Plugins": "Verfügbare Plugins",
 	"loaded": "geladen",
 	"activated": "aktiviert",
 	"compatibility unknown": "Kompatibilität unbekannt",
@@ -241,6 +241,11 @@
 	"Deactivate": "Deaktivieren",
 	"Uninstall": "Deinstallieren",
 	"Install": "Installieren",
-	"set color %s": "set color %s",
-	"set input %s": "set input %s"
+	"Edit Device": "Bearbeite Gerät",
+	"No connection": "Keine Verbindung zum Server",
+	"Connecting": "Verbinde",
+	"Reconnecting": "Wiederherstellen der Verbindung",
+	"Could not connect (%s), retrying": "Konnte keine Verbindung herstellen (%s), erneuter Versuch",
+	"Connect timed out": "Verbindung wegen Zeitüberschreitung fehlgeschlagen",
+	"Connection lost: %s": "Verbindung wurde unerwartet beendet"
 }
