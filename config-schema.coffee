@@ -144,9 +144,10 @@ module.exports = {
               }
             deviceAttributeLogging:
               description: """
-                Defines time constraints on how attribute value changes of logged devices shall kept in
-                the database. Constraints will be evaluated sequentially where a subsequent constraint may override
-                the previous one. A constraint can be discrimated by device id, attribute name, and attribute type
+                Defines time constraints on how attribute value changes of logged devices shall
+                kept in the database. Constraints will be evaluated sequentially where a
+                subsequent constraint may override the previous one. A constraint can be
+                discrimated by device id, attribute name, and attribute type
                 """
               type: "array"
               default: [ 
@@ -172,32 +173,36 @@ module.exports = {
                 properties:
                   deviceId:
                     description: """
-                      The deviceId of the logged device or "*" for all devices in the matching context
+                      The deviceId of the logged device or "*" for all devices in the matching
+                      context
                     """
                     type: "string"
                   attributeName:
                     description: """
-                      The name of the attribute or "*" for all attributes in the matching context
+                      The name of the attribute or "*" for all attributes in the matching
+                      context
                     """
                     type: "string"
                   type:
                     description: """
-                      The type of the attribute mapping, one of: "number", "string", "boolean", "date",
-                      "discrete", "continuous", "*". The default, "*" is used for all applicable attribute types
-                      in the matching context
+                      The type of the attribute mapping, one of: "number", "string", "boolean",
+                      "date", "discrete", "continuous", "*". The default, "*" is used for all
+                      applicable attribute types in the matching context
                     """
                     type: "string"
                     default: "*"
                   interval:
                     description: """
-                      A time constraint on the minmum time interval between attribute value changes stored in
-                      database. If absent all attribute value changes will stored in the database
+                      A time constraint on the minmum time interval between attribute value
+                      changes stored in database. If absent all attribute value changes will
+                      stored in the database
                     """
                     type: "string"
                     required: false
                   expire:
                     description: """
-                      A time constraint on how long attribute values shall be kept in the database
+                      A time constraint on how long attribute values shall be kept in the
+                      database
                     """
                     type: "string"
                     required: false
