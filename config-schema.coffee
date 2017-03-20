@@ -193,16 +193,20 @@ module.exports = {
                     default: "*"
                   interval:
                     description: """
-                      A time constraint on the minmum time interval between attribute value
-                      changes stored in database. If absent all attribute value changes will
-                      stored in the database
+                      A time duartion constraint on the minmum time interval between attribute
+                      value changes stored in database. If absent all attribute value changes will
+                      stored in the database. The duration is provided in miliseconds if no unit
+                      is provided. Supported units are: ms, second, seconds, s, minute, minutes,
+                      m, hour, hours, h, day, days, d, year, years, y
                     """
                     type: "string"
                     required: false
                   expire:
                     description: """
-                      A time constraint on how long attribute values shall be kept in the
-                      database
+                      A time duration constraint on how long attribute values shall be kept in the
+                      database. The duration is provided in miliseconds if no unit is provided.
+                      Supported units are: ms, second, seconds, s, minute, minutes, m, hour, hours,
+                      h, day, days, d, year, years, y
                     """
                     type: "string"
                     required: false
