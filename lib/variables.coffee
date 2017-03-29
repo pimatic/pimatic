@@ -186,10 +186,13 @@ module.exports = (env) ->
           maxf = parseFloat(max)
           return Math.floor( Math.random() * (maxf+1-minf) ) + minf
       pow:
+        description: "Returns the base to the exponent power"
         args:
           base:
+            description: "A numeric expression for base number"
             type: "number"
           exponent:
+            description: "A numeric expression the exponent. If omitted base 2 is applied"
             type: "number"
             optional: yes
         exec: (base, exponent=2) ->
@@ -272,6 +275,53 @@ module.exports = (env) ->
               decimals = 2
             formatted = Number(number).toFixed(decimals)
             return "#{formatted}#{unit}"
+      subString:
+        description: """
+            Returns the substring of the given string matching the given regular expression
+            and flags. If the global flag is used the resulting substring is a concatenation
+            of all matches. If the expression contains capture groups the group matches will
+            be concatenated to provide the resulting substring. If there is no match the
+            empty string is returned
+        """
+        args:
+          string:
+            description: """
+              The input string which is a string expression which may also contain variable
+              references and function calls
+            """
+            type: "string"
+          expression:
+            description: "A string value which may contain a regular expression"
+            type: "string"
+          flags:
+            description: """
+              A string with flags for a regular expression: g: global match,
+              i: ignore case
+            """
+            type: "string"
+            optional: yes
+        exec: (string, expression, flags) ->
+          try
+            matchResult = string.match new RegExp(expression, flags)
+          catch error
+            env.logger.error "Error in subString expression: #{error.message}"
+            throw error
+
+          if matchResult?
+            if flags? and flags.includes('g')
+             # concatenate all global matches
+              _.reduce(matchResult, (fullMatch, val) -> fullMatch = fullMatch + val)
+            else
+              # concatenate all matched capture groups (if any) or prompt the match result
+              if _.isString matchResult[1]
+                matchResult.shift()
+                _.reduce(matchResult, (fullMatch, val) ->
+                  if _.isString val then fullMatch = fullMatch + val)
+              else
+                matchResult[0]
+          else
+            env.logger.debug "subString expression did not match"
+            return ""
     }
 
     inited: false
