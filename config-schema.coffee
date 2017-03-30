@@ -56,7 +56,7 @@ module.exports = {
             hostname:
               description: "The hostname of the HTTP-server"
               type: "string"
-              default: "" # If is empty then listen to all ip4Adresses
+              default: "" # If is empty then listen to all ip4 addresses
         httpsServer:
           type: "object"
           properties:
@@ -147,8 +147,10 @@ module.exports = {
                 Defines time constraints on how attribute value changes of logged devices shall
                 kept in the database. Constraints will be evaluated sequentially where a
                 subsequent constraint may override the previous one. A constraint can be
-                discrimated by device id, attribute name, and attribute type
-                """
+                defined by device id, attribute name, and attribute type. See also
+                <a href='https://forum.pimatic.org/topic/44/database-configuration-howto'>
+                Database configuration howto</a>
+              """
               type: "array"
               default: [ 
                 { 
