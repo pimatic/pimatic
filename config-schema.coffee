@@ -145,7 +145,7 @@ module.exports = {
             deviceAttributeLogging:
               description: """
                 Defines time constraints on how attribute value changes of logged devices shall
-                kept in the database. Constraints will be evaluated sequentially where a
+                be kept in the database. Constraints will be evaluated sequentially where a
                 subsequent constraint may override the previous one. A constraint can be
                 defined by device id, attribute name, and attribute type. See also
                 <a href='https://forum.pimatic.org/topic/44/database-configuration-howto'>
@@ -195,7 +195,7 @@ module.exports = {
                     default: "*"
                   interval:
                     description: """
-                      A time duartion constraint on the minmum time interval between attribute
+                      A time duration constraint on the minmum time interval between attribute
                       value changes stored in database. If absent all attribute value changes will
                       stored in the database. The duration is provided in miliseconds if no unit
                       is provided. Supported units are: ms, second, seconds, s, minute, minutes,
