@@ -1,6 +1,8 @@
 pimatic
 =======
 
+[![Join the chat at https://gitter.im/pimatic/pimatic](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/pimatic/pimatic?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![Build Status](https://travis-ci.org/pimatic/pimatic.png?branch=master)](https://travis-ci.org/pimatic/pimatic)
 [![NPM version](https://badge.fury.io/js/pimatic.png)](http://badge.fury.io/js/pimatic)
 [![Ready](https://badge.waffle.io/pimatic/pimatic.png?label=ready&title=Ready)](https://waffle.io/pimatic/pimatic)
