@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/pimatic/pimatic.png?label=ready&title=Ready)](https://waffle.io/pimatic/pimatic)
 pimatic
 =======
 
