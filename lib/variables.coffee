@@ -275,6 +275,47 @@ module.exports = (env) ->
               decimals = 2
             formatted = Number(number).toFixed(decimals)
             return "#{formatted}#{unit}"
+      hexString:
+        description: """
+          Converts a given number to a hex string
+        """
+        args:
+          number:
+            description: """
+              The input number. Negative numbers will be treated as 32-bit
+              signed integers. Thus, numbers smaller than -2147483648 will
+              be cut off which is due to limitation of using bitwise operators
+              in JavaScript. Positive integers will be handled up to 53-bit
+              as JavaScript uses IEEE 754 double-precision floating point
+              numbers, internally
+            """
+            type: "number"
+          padding:
+            description: """
+              Specifies the (minimum) number of digits the resulting string
+              shall contain. The string will be padded by prepending leading
+              "0" digits, accordingly. By default, padding is set to 0 which
+              means no padding is performed
+            """
+            type: "number"
+            optional: yes
+          prefix:
+            description: """
+              Specifies a prefix string which will be prepended to the
+              resulting hex number. By default, no prefix is set
+            """
+            type: "string"
+            optional: yes
+        exec: (number, padding=0, prefix="") ->
+          try
+            padding = Math.max(Math.min(padding, 10), 0)
+            hex = Number(if number < 0 then number >>> 0 else 0).toString(16).toUpperCase()
+            if hex.length < padding
+              hex = Array(padding + 1 - hex.length).join('0') + hex
+            return prefix + hex
+          catch error
+            env.logger.error "Error in hexString expression: #{error.message}"
+            throw error
       subString:
         description: """
             Returns the substring of the given string matching the given regular expression
