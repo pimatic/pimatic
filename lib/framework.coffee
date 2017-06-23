@@ -622,7 +622,7 @@ module.exports = (env) ->
         )
       env.logger.info("Restarting...")
       # we launch the restart script, which will send the kill signal this process
-      # thefore we don't call destory and exit here
+      # therefore, we don't call destroy and exit here
       daemon = require 'daemon'
       scriptName = process.argv[1]
       args = process.argv[2..]; args[0] = 'restart'
