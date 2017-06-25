@@ -71,7 +71,7 @@ startup = =>
     unless err.silent
       trace = (if err.__trace? then err.__trace.toString().replace('Error: ', '\n') else '')
       env.logger.error(
-        "A uncaught exception occurred: #{err.stack}#{trace}\n
+        "An uncaught exception occurred: #{err.stack}#{trace}\n
          This is most probably a bug in pimatic or in a module, please report it!"
       )
     if initComplete
