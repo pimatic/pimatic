@@ -621,8 +621,9 @@ module.exports = (env) ->
           'Please run pimatic with: "node ' + process.argv[1] + ' start" to use this feature.'
         )
       env.logger.info("Restarting...")
-      # first we call destroy to be able to release resources allocated by the currenty process
-      # next, we launch the restart script with the daemonizer, which will send the kill signal to this process
+      # first we call destroy to be able to release resources allocated by the current process.
+      # next, we launch the restart script with the daemonizer, which will send the kill signal
+      # to this process
       proxy = new events()
       @destroy()
       .catch (err) ->
