@@ -1,4 +1,8 @@
-pimatic documentation
+Pimatic Documentation
 =======
 
-You can browse [the self generated documentation here](http://pimatic.org/docs/pimatic). Also  take a look at the [getting started](http://pimatic.org/guide/getting-started) and [usage guide](http://pimatic.org/guide/usage).
+* [Config Schema](https://pimatic.org/pages/config/)
+* [API](https://pimatic.org/api/actions/)
+* [Getting Stated Guide](https://pimatic.teamemo.com/Guide)
+* [Usage Guide](https://pimatic.teamemo.com/Usage)
+* [Advanced Configuration Guide](https://pimatic.teamemo.com/Advanced-Configuration)
