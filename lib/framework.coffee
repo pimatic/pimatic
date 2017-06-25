@@ -621,16 +621,24 @@ module.exports = (env) ->
           'Please run pimatic with: "node ' + process.argv[1] + ' start" to use this feature.'
         )
       env.logger.info("Restarting...")
-      # we launch the restart script, which will send the kill signal this process
-      # therefore, we don't call destroy and exit here
-      daemon = require 'daemon'
-      scriptName = process.argv[1]
-      args = process.argv[2..]; args[0] = 'restart'
-      child = daemon.daemon(scriptName, args, {cwd: process.cwd()})
+      # first we call destroy to be able to release resources allocated by the currenty process
+      # next, we launch the restart script with the daemonizer, which will send the kill signal to this process
+      proxy = new events()
+      @destroy()
+      .catch (err) ->
+        env.logger.error("Error during orderly shutdown of pimatic: #{err.message}")
+        env.logger.debug(err.stack)
+      .finally ->
+        daemon = require 'daemon'
+        scriptName = process.argv[1]
+        args = process.argv[2..]; args[0] = 'restart'
+        child = daemon.daemon(scriptName, args, {cwd: process.cwd()})
+        child.on 'error', (error) -> proxy.emit 'error', error
+        child.on 'close', (code) -> proxy.emit 'close', code
       # Catch errors executing the restart script
       return new Promise( (resolve, reject) =>
-        child.on('error', reject)
-        child.on('close', (code) =>
+        proxy.on('error', reject)
+        proxy.on('close', (code) ->
           if code is 0 then resolve()
           else reject(new Error("Error restarting pimatic, exit code #{code}"))
         )
