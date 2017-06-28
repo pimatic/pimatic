@@ -852,8 +852,8 @@ module.exports = (env) ->
             next = logMessageForResult(next)
           return [message, next]
         ).catch( (error) =>
-          env.logger.error "rule #{rule.id} error executing an action: #{error.message}"
-          env.logger.debug error.stack
+          env.logger.error "rule #{rule.id} error executing an action: #{error.message ? error}"
+          env.logger.debug error.stack if error.stack?
         )
 
       for actionResult in actionResults
