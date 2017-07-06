@@ -22,7 +22,7 @@ describe "Database", ->
       dbSettings = {
         client: "sqlite3"
         connection: {
-          filename: ':memory:'
+          filename: 'file::memory:?cache=private'
         }
         deviceAttributeLogging: [ 
           { deviceId: '*', attributeName: '*', expire: '7d' }
