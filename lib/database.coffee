@@ -50,8 +50,13 @@ module.exports = (env) ->
 
     init: () ->
       connection = _.clone(@dbSettings.connection)
-      if @dbSettings.client is 'sqlite3' and connection.filename isnt ':memory:'
-        connection.filename = path.resolve(@framework.maindir, '../..', connection.filename)
+      if @dbSettings.client is 'sqlite3'
+        (
+          if connection.filename is ':memory:'
+            connection.filename = 'file::memory:?cache=shared'
+          else
+            connection.filename = path.resolve(@framework.maindir, '../..', connection.filename)
+        )
 
       pending = Promise.resolve()
 
