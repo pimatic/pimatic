@@ -124,6 +124,12 @@ module.exports = (env) ->
         @attributes = _.clone(@attributes)
       @attributes[name] = attribute
 
+    addAction: (name, action) ->
+      assert (not @_constructorCalled), "Actions can only be added in the constructor"
+      if @actions is @constructor.prototype.actions
+        @actions = _.clone(@actions)
+      @actions[name] = action
+
     updateName: (name) ->
       if name is @name then return
       @name = name
