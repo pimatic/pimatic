@@ -197,6 +197,33 @@ module.exports = (env) ->
             optional: yes
         exec: (base, exponent=2) ->
           return Math.pow(base, exponent)
+      sqrt:
+        description: "Returns the square root of a number"
+        args:
+          x:
+            description: "A numeric expression"
+            type: "number"
+        exec: (x) ->
+          return Math.sqrt(x)
+      cos:
+        description: "Returns the cosine of a number"
+        args:
+          x:
+            description: "A numeric expression for the radians"
+            type: "number"
+        exec: (x) ->
+          return Math.cos(x)
+      acos:
+        description: """
+          Returns the arccosine (in radians) of a number
+          if it's between -1 and 1; otherwise, NaN
+        """
+        args:
+          x:
+            description: "A numeric expression"
+            type: "number"
+        exec: (x) ->
+          return Math.acos(x)
       round:
         args:
           number:
