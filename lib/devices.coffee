@@ -183,6 +183,32 @@ module.exports = (env) ->
         actionJson = _.cloneDeep(action)
         actionJson.name = name
         json.actions.push actionJson
+
+      # experimental feature to list the capabilities of a device
+      predicate = (accumulator, value) =>
+        if (@ instanceof value) and (@constructor.name isnt value.name)
+          accumulator.push value.name
+        return accumulator
+      json.capabilities = [
+        ErrorDevice
+        Actuator
+        SwitchActuator
+        PowerSwitch
+        DimmerActuator
+        ShutterController
+        Sensor
+        TemperatureSensor
+        PresenceSensor
+        ContactSensor
+        HeatingThermostat
+        ButtonsDevice
+        InputDevice
+        VariablesDevice
+        VariableInputDevice
+        VariableTimeInputDevice
+        AVPlayer
+        Timer
+      ].reduce predicate, []
       return json
 
     _setupPolling: (attrName, interval) ->
