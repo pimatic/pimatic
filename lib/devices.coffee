@@ -768,14 +768,16 @@ module.exports = (env) ->
     constructor: (@config, lastState) ->
       @name = @config.name
       @id = @config.id
+      @_inputType = @config.type or "string"
 
       @attributes = {
         input:
           description: "The value of the input field"
-          type: @config.type or "string"
+          type: @_inputType
       }
 
-      @_input = lastState?.input?.value or null
+      @_defaultValue = if @_inputType is "string" then "" else 0
+      @_input = lastState?.input?.value or @_defaultValue
       super()
 
     getInput: () -> Promise.resolve(@_input)
