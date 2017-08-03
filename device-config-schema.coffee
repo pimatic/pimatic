@@ -126,10 +126,6 @@ module.exports = {
       variable:
         description: "The variable to modify on input change"
         type: "string"
-      type:
-        description: "The type of the input"
-        type: "string"
-        default: "string"
       min:
         description: "Minimum time to be set"
         type: "string"

@@ -772,7 +772,7 @@ module.exports = (env) ->
       @attributes = {
         input:
           description: "The value of the input field"
-          type: @config.type
+          type: @config.type or "string"
       }
 
       @_input = lastState?.input?.value or null
@@ -884,18 +884,18 @@ module.exports = (env) ->
 
     constructor: (@config, lastState, @framework) ->
       super(@config, lastState)
+      @_variableName = (@config.variable||'').replace /^[\s\$]+|[\s]$/g, ''
 
       @framework.variableManager.on('variableValueChanged', @changeListener = (changedVar, value) =>
-        unless @config.variable is changedVar.name then return
-        @_setInput value
+        if @_variableName is changedVar.name
+          @_setInput value
       )
 
     changeInputTo: (value) ->
-      name = @config.variable
-      variable = @framework.variableManager.getVariableByName(name)
+      variable = @framework.variableManager.getVariableByName(@_variableName)
       unless variable?
-        throw new Error("Could not find variable with name #{name}")
-      @framework.variableManager.setVariableToValue(name, value, variable.unit)
+        throw new Error("Could not find variable with name #{@_variableName}")
+      @framework.variableManager.setVariableToValue(@_variableName, value, variable.unit)
       super(value)
 
     destroy: ->
@@ -918,11 +918,10 @@ module.exports = (env) ->
       super(@config, lastState, @framework)
 
     changeInputTo: (value) ->
-      name = @config.variable
-      variable = @framework.variableManager.getVariableByName(name)
+      variable = @framework.variableManager.getVariableByName(@_variableName)
       unless variable?
-        throw new Error("Could not find variable with name #{name}")
-      @framework.variableManager.setVariableToValue(name, value, variable.unit)
+        throw new Error("Could not find variable with name #{@_variableName}")
+      @framework.variableManager.setVariableToValue(@_variableName, value, variable.unit)
       timePattern = /// ^([01]?[0-9]|2[0-3]):[0-5][0-9] ///
       hourPattern = ///
             ^[01]?[0-9]|2[0-3] 
