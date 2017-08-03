@@ -22,6 +22,29 @@ module.exports = {
               type: "boolean"
               default: false
   }
+  InputDevice: {
+    title: "InputDevice config"
+    type: "object"
+    extensions: ["xLink"]
+    properties:
+      type:
+        description: "The type of the input"
+        type: "string"
+        default: "string"
+        enum: ["string", "number"]
+      min:
+        description: "Minimum value for numeric values"
+        type: "number"
+        required: false
+      max:
+        description: "Maximum value for numeric values"
+        type: "number"
+        required: false
+      step:
+        description: "Step size for minus and plus buttons for numeric values"
+        type: "number"
+        default: 1
+  }
   VariablesDevice: {
     title: "VariablesDevice config"
     type: "object"
@@ -70,7 +93,7 @@ module.exports = {
               required: false
   }
   VariableInputDevice: {
-    title: "VariablesDevice config"
+    title: "VariableInputDevice config"
     type: "object"
     extensions: ["xLink"]
     properties:
@@ -96,7 +119,7 @@ module.exports = {
         default: 1
   }
   VariableTimeInputDevice: {
-    title: "TimeVariablesDevice config"
+    title: "VariableTimeInputDevice config"
     type: "object"
     extensions: ["xLink"]
     properties:

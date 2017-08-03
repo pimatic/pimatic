@@ -726,6 +726,52 @@ module.exports = (env) ->
     destroy: () ->
       super()
 
+  class InputDevice extends Device
+
+    _input: ""
+
+    template: "input"
+
+    actions:
+      changeInputTo:
+        params:
+          value:
+            type: t.string
+        description: "Sets the input value"
+
+    constructor: (@config, lastState) ->
+      @name = @config.name
+      @id = @config.id
+
+      @attributes = {
+        input:
+          description: "The value of the input field"
+          type: @config.type
+      }
+
+      @_input = lastState?.input?.value or null
+      super()
+
+    getInput: () -> Promise.resolve(@_input)
+
+    _setInput: (value) ->
+      unless @_input is value
+        @_input = value
+        @emit 'input', value
+
+    changeInputTo: (value) ->
+      if @config.type is "number"
+        if isNaN(value)
+          throw new Error("Input value is not a number")
+        else
+          @_setInput(parseFloat(value))
+      else
+        @_setInput value
+      return Promise.resolve()
+
+    destroy: ->
+      super()
+
   class VariablesDevice extends Device
 
     constructor: (@config, lastState, @framework) ->
@@ -801,11 +847,7 @@ module.exports = (env) ->
       @_vars.cancelNotifyOnChange(cl) for cl in @_exprChangeListeners
       super()
 
-  class VariableInputDevice extends Device
-
-    _input: ""
-
-    template: "input"
+  class VariableInputDevice extends InputDevice
 
     actions:
       changeInputTo:
@@ -815,29 +857,12 @@ module.exports = (env) ->
         description: "Sets the variable to the value"
 
     constructor: (@config, lastState, @framework) ->
-      @name = @config.name
-      @id = @config.id
-
-      @attributes = {
-        input:
-          description: "The value of the input field"
-          type: @config.type
-      }
+      super(@config, lastState)
 
       @framework.variableManager.on('variableValueChanged', @changeListener = (changedVar, value) =>
         unless @config.variable is changedVar.name then return
         @_setInput value
       )
-
-      @_input = lastState?.input?.value or null
-      super()
-
-    getInput: () -> Promise.resolve(@_input)
-
-    _setInput: (value) ->
-      if @_input is value then return
-      @_input = value
-      @emit 'input', value
 
     changeInputTo: (value) ->
       name = @config.variable
@@ -845,22 +870,14 @@ module.exports = (env) ->
       unless variable?
         throw new Error("Could not find variable with name #{name}")
       @framework.variableManager.setVariableToValue(name, value, variable.unit)
-      if @config.type is "number"
-        if isNaN(value)
-          throw new Error("Input value is not a number")
-          @_setInput(parseFloat(value))
-      else
-        @_setInput value
-      return Promise.resolve()
+      super(value)
 
     destroy: ->
       @framework.variableManager.removeListener('variableValueChanged', @changeListener)
       super()
 
 
-  class VariableTimeInputDevice extends Device
-
-    _input: ""
+  class VariableTimeInputDevice extends VariableInputDevice
 
     template: "inputTime"
 
@@ -872,29 +889,7 @@ module.exports = (env) ->
         description: "Sets the variable to the value"
 
     constructor: (@config, lastState, @framework) ->
-      @name = @config.name
-      @id = @config.id
-
-      @attributes = {
-        input:
-          description: "The value of the input field"
-          type: @config.type
-      }
-
-      @framework.variableManager.on('variableValueChanged', @changeListener = (changedVar, value) =>
-        unless @config.variable is changedVar.name then return
-        @_setInput value
-      )
-
-      @_input = lastState?.input?.value or null
-      super()
-
-    getInput: () -> Promise.resolve(@_input)
-
-    _setInput: (value) ->
-      if @_input is value then return
-      @_input = value
-      @emit 'input', value
+      super(@config, lastState, @framework)
 
     changeInputTo: (value) ->
       name = @config.variable
@@ -917,7 +912,6 @@ module.exports = (env) ->
       return Promise.resolve()
 
     destroy: ->
-      @framework.variableManager.removeListener('variableValueChanged', @changeListener)
       super()
 
 
@@ -1637,6 +1631,7 @@ module.exports = (env) ->
       deviceConfigDef = require("../device-config-schema")
       defaultDevices = [
         env.devices.ButtonsDevice
+        env.devices.InputDevice
         env.devices.VariablesDevice
         env.devices.VariableInputDevice
         env.devices.VariableTimeInputDevice
@@ -1672,6 +1667,7 @@ module.exports = (env) ->
     ContactSensor
     HeatingThermostat
     ButtonsDevice
+    InputDevice
     VariablesDevice
     VariableInputDevice
     VariableTimeInputDevice
