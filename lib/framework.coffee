@@ -45,7 +45,7 @@ module.exports = (env) ->
 
     constructor: (@configFile) ->
       assert @configFile?
-      @maindir = path.resolve __dirname, '..'
+      @maindir = path.resolve path.dirname(process.argv[1])
       env.logger.winston.on("logged", (level, msg, meta) =>
         @_emitMessageLoggedEvent(level, msg, meta)
       )

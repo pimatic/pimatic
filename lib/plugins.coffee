@@ -1,4 +1,5 @@
 
+
 ###
 Plugin Manager
 =======
@@ -122,14 +123,14 @@ module.exports = (env) ->
           )
           env.logger.info("Installing: \"#{name}\" from npm-registry.")
           if update
-            return @spawnPpm(['update', name, '--unsafe-perm'])
+            return @spawnPpm(['update', name, '--unsafe-perm', '--global-style'])
           else
-            return @spawnPpm(['install', name, '--unsafe-perm'])
+            return @spawnPpm(['install', name, '--unsafe-perm', '--global-style'])
         dist = @_findDist(packageInfo)
         if dist
           return if update then @updateGitPlugin(name) else @installGitPlugin(name)
         env.logger.info("Installing: \"#{name}@#{packageInfo.version}\" from npm-registry.")
-        return @spawnPpm(['install', "#{name}@#{packageInfo.version}", '--unsafe-perm'])
+        return @spawnPpm(['install', "#{name}@#{packageInfo.version}", '--unsafe-perm', '--global-style'])
       )
 
     updatePlugin: (name) ->
@@ -360,7 +361,7 @@ module.exports = (env) ->
         npmEnv = _.clone(process.env)
         npmEnv['HOME'] = require('path').resolve @framework.maindir, '../..'
         npmEnv['NPM_CONFIG_UNSAFE_PERM'] = true
-        ppmBin = './node_modules/pimatic/ppm.js'
+        ppmBin = 'npm'
         npm = spawn(ppmBin, args, {cwd: @modulesParentDir, env: npmEnv})
         stdout = byline(npm.stdout)
         stdout.on "data", onLine
