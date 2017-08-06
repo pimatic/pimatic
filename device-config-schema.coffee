@@ -152,7 +152,7 @@ module.exports = {
   DummyShutter:
     title: "DummyShutter config"
     type: "object"
-    extensions: ["xLink"]
+    extensions: ["xLink", "xConfirm"]
     properties:
       rollingTime:
         description: "Approx. amount of time (in seconds) for shutter to close or open completely."
