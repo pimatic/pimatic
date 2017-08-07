@@ -1,5 +1,6 @@
 {
 	"on": "an",
+	"off": "aus",
 	"turned %s on": "%s eingeschaltet",
 	"Please enter a id": "Bitte eine ID eingeben",
 	"would turn %s on": "würde %s ausschalten",
@@ -95,6 +96,7 @@
 	"Button": "Button",
 	"Add a button": "Button hinzufügen",
 	"unknown": "Unbekannt",
+	"Unknown": "Unbekannt",
 	"connecting": "Verbinde",
 	"Variables": "Variablen",
 	"Choose an action": "Aktion auswählen",
@@ -104,7 +106,9 @@
 	"Value": "Wert",
 	"Delete this variable": "Diese Variable löschen",
 	"Down": "Ab",
+	"down": "ab",
 	"Up": "Auf",
+	"up": "auf",
 	"Expression": "Reg. Ausdruck",
 	"Type": "Typ",
 	"pushover message sent successfully": "Pushover Nachricht wurde erfolgreich gesendet",
@@ -247,5 +251,7 @@
 	"Reconnecting": "Wiederherstellen der Verbindung",
 	"Could not connect (%s), retrying": "Konnte keine Verbindung herstellen (%s), erneuter Versuch",
 	"Connect timed out": "Verbindung wegen Zeitüberschreitung fehlgeschlagen",
-	"Connection lost: %s": "Verbindung wurde unerwartet beendet"
+	"Connection lost: %s": "Verbindung wurde unerwartet beendet",
+	"Do you really want to press \"%s\"?": "Wirklich \"%s\" drücken?",
+	"Do you really want to turn %s?": "Wirklich %sschalten?"
 }

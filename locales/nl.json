@@ -1,5 +1,6 @@
 {
 	"on": "aan",
+	"off": "uit",
 	"turned %s on": "%s aangezet",
 	"Please enter a id": "Vul een ID in",
 	"would turn %s on": "wil %s aanzetten",
@@ -239,5 +240,7 @@
 	"and if": "en als",
 	"or when": "of wanneer",
 	"compatibility unknown": "Compatibiliteit onbekend",
-	"Show Readme": "Toon Leesmij"
+	"Show Readme": "Toon Leesmij",
+	"Do you really want to press \"%s\"?": "Do you really want to press \"%s\"?",
+	"Do you really want to turn %s?": "Do you really want to turn %s?"
 }

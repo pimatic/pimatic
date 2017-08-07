@@ -1,5 +1,6 @@
 {
 	"on": "allumé",
+	"off": "éteint",
 	"turned %s on": "a %s allumé",
 	"Please enter a id": "Entrez l'id",
 	"would turn %s on": "would turn %s on",
@@ -95,6 +96,7 @@
 	"Button": "Boutton",
 	"Add a button": "Ajouter un boutton",
 	"unknown": "Inconnu",
+	"Unknown": "Inconnu",
 	"connecting": "Connection en cours",
 	"Variables": "Variables",
 	"Choose an action": "Choisir une action",
@@ -153,7 +155,7 @@
 	"Drop here to remove device": "Lâcher ici pour supprimer le périphérique",
 	"Add a new device": "Ajouter un nouveau périphérique",
 	"Delete this Device": "Supprimer ce périphérique",
-	"Showen devices": "Showen devices",
+	"Showen devices": "Shown devices",
 	"Hide": "Cacher",
 	"pushover message sent successfully": "message pushover envoyé",
 	"Show data of ": "Montre data de ",
@@ -214,5 +216,7 @@
 	"Remove": "Enlève",
 	"Stop": "Arret",
 	"pushbullet message sent successfully": "message pushbullet envoyé",
-	"displaying \"%s\" on lcd line %s": "affiche \"%s\" sur la ligne %s du lcd "
+	"displaying \"%s\" on lcd line %s": "affiche \"%s\" sur la ligne %s du lcd ",
+	"Do you really want to press \"%s\"?": "Do you really want to press \"%s\"?",
+	"Do you really want to turn %s?": "Do you really want to turn %s?"
 }

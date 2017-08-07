@@ -212,5 +212,7 @@
     "Count": "Счетчик",
     "Attribute logging info": "Атрибуты служебной информации",
     "Remove": "Удалить",
-    "Stop": "Стоп"
+    "Stop": "Стоп",
+    "Do you really want to press \"%s\"?": "Do you really want to press \"%s\"?",
+    "Do you really want to turn %s?": "Do you really want to turn %s?"
 }

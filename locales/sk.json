@@ -1,5 +1,6 @@
 {
 	"on": "on",
+	"off": "off",
 	"turned %s on": " %s zapnuté",
 	"Please enter a id": "Zadajte prosím ID",
 	"would turn %s on": "would turn %s on",
@@ -240,5 +241,7 @@
 	"or when": "or when",
 	"compatibility unknown": "compatibility unknown",
 	"Show Readme": "Ukázať popis",
-	"Add a property": "Pridať vlastnosť"
+	"Add a property": "Pridať vlastnosť",
+	"Do you really want to press \"%s\"?": "Do you really want to press \"%s\"?",
+	"Do you really want to turn %s?": "Do you really want to turn %s?"
 }
