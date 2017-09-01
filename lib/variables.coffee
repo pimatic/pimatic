@@ -336,7 +336,7 @@ module.exports = (env) ->
         exec: (number, padding=0, prefix="") ->
           try
             padding = Math.max(Math.min(padding, 10), 0)
-            hex = Number(if number < 0 then number >>> 0 else 0).toString(16).toUpperCase()
+            hex = Number(if number < 0 then number >>> 0 else number).toString(16).toUpperCase()
             if hex.length < padding
               hex = Array(padding + 1 - hex.length).join('0') + hex
             return prefix + hex
