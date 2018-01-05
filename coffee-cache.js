@@ -96,16 +96,17 @@ require('source-map-support').install({
 
 // See: https://github.com/evanw/node-source-map-support/issues/34
 var prepareStackTrace = Error.prepareStackTrace;
-Error.__defineGetter__('prepareStackTrace', function(){
+Object.defineProperty(Error, 'prepareStackTrace', {
+  get: function() {
     return prepareStackTrace;
-});
-
-Error.__defineSetter__('prepareStackTrace', function(arg){
-  if(arg && arg.toString().indexOf("getSourceMapping") != -1) {
-    //ignore changes to stack trace from coffeescript
-    return;
+  },
+  set: function(arg) {
+    if(arg && arg.toString().indexOf("getSourceMapping") != -1) {
+      //ignore changes to stack trace from coffeescript
+      return;
+    }
+    prepareStackTrace = arg;
   }
-  prepareStackTrace = arg;
 });
 
 // Set up an extension map for .coffee files -- we are completely overriding
@@ -171,6 +172,8 @@ var compile = function(module, filename) {
 
 // overwrite require.extensions['.coffee'] the hard way:
 // This prevents coffee-script to redefine it with coffee-script/register
-require.extensions.__defineGetter__('.coffee', function(){
-  return compile;
+Object.defineProperty(require.extensions, '.coffee', {
+  get: function() {
+    return compile;
+  }
 });
