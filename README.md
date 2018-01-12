@@ -33,7 +33,7 @@ on [pimatic.org](http://pimatic.org/). If you need any help, [ask at the forum](
 Donation
 --------
 
-Happy with pimatic and using it every day? Consider a donation to support development and keeping the website and forum up: [![Gittip donate button](http://img.shields.io/gittip/sweetpi.png)](https://www.gittip.com/sweetpi/ "Donate weekly to this project using Gittip")
+Happy with pimatic and using it every day? Consider a donation to support development and keeping the website and forum up: 
 [![PayPal donate button](http://img.shields.io/paypal/donate.png?color=blue)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=KCVVRY4243JS6 "Donate once-off to this project using Paypal")
 
 We promise, that pimatic will always be free to use and its code be open sourced.
