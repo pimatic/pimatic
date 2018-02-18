@@ -565,7 +565,9 @@ module.exports = (env) ->
         
 
     template: "contact"
-
+    
+    _battery: null
+      
     _setContact: (value) ->
       if @_contact is value then return
       @_contact = value
@@ -574,9 +576,9 @@ module.exports = (env) ->
       if battery is @_battery then return
       @_battery = battery
       @emit "battery", @_battery
-
-
+      
     getContact: -> Promise.resolve(@_contact)
+    getBattery: () -> Promise.resolve(@_battery)
 
   upperCaseFirst = (string) ->
     unless string.length is 0
