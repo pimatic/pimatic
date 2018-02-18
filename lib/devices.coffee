@@ -570,6 +570,11 @@ module.exports = (env) ->
       if @_contact is value then return
       @_contact = value
       @emit 'contact', value
+    _setBattery: (battery) ->
+      if battery is @_battery then return
+      @_battery = battery
+      @emit "battery", @_battery
+
 
     getContact: -> Promise.resolve(@_contact)
 
