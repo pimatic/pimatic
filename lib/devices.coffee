@@ -558,15 +558,27 @@ module.exports = (env) ->
         description: "State of the contact"
         type: t.boolean
         labels: ['closed', 'opened']
+      battery:
+        description: "Battery status"
+        type: "string"
+        enum: ["ok", "low"]
+        
 
     template: "contact"
-
+    
+    _battery: null
+      
     _setContact: (value) ->
       if @_contact is value then return
       @_contact = value
       @emit 'contact', value
-
+    _setBattery: (battery) ->
+      if battery is @_battery then return
+      @_battery = battery
+      @emit "battery", @_battery
+      
     getContact: -> Promise.resolve(@_contact)
+    getBattery: -> Promise.resolve(@_battery)
 
   upperCaseFirst = (string) ->
     unless string.length is 0
