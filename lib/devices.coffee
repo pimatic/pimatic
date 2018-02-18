@@ -558,6 +558,11 @@ module.exports = (env) ->
         description: "State of the contact"
         type: t.boolean
         labels: ['closed', 'opened']
+     battery:
+        description: "Battery status"
+        type: "string"
+        enum: ["ok", "low"]
+        
 
     template: "contact"
 
