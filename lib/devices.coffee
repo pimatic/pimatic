@@ -578,7 +578,7 @@ module.exports = (env) ->
       @emit "battery", @_battery
       
     getContact: -> Promise.resolve(@_contact)
-    getBattery: () -> Promise.resolve(@_battery)
+    getBattery: -> Promise.resolve(@_battery)
 
   upperCaseFirst = (string) ->
     unless string.length is 0
