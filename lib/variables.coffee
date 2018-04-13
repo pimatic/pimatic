@@ -281,6 +281,33 @@ module.exports = (env) ->
             type: "string"
             optional: yes
         exec: (format) -> (new Date()).format(if format? then format else 'YYYY-MM-DD hh:mm:ss')
+      diffDate:
+        args:
+          dateA:
+            type: "string"
+            optional: no
+          dateB:
+            type: "string"
+            optional: no
+          format:
+            type: "string"
+            optional: yes
+        exec: (dateA, dateB, format) ->
+          diff = Date.parse(dateA) - Date.parse(dateB)
+          if format
+            switch format
+              when "seconds"
+                diff = diff / 1000
+              when "minutes"
+                diff = diff / 1000 / 60
+              when "hours"
+                diff = diff / 1000 / 60 / 60
+              when "days"
+                diff = diff / 1000 / 60 / 60 / 24
+          if diff > 0
+            return Math.ceil(diff)
+          else
+            return Math.round(diff)
       formatNumber:
         args:
           number:
