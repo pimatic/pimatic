@@ -234,6 +234,22 @@ module.exports = (env) ->
             type: "number"
         exec: (x) ->
           return Math.acos(x)
+      log:
+        description: """
+          Returns the logarithm for a given
+          number and base. If no base is provided,
+          the logarithmus naturalis (base e) is assumed.
+        """
+        args:
+          x:
+            description: "A numeric expression"
+            type: "number"
+          base:
+            description: "A numeric expression"
+            type: "number"
+            optional: yes
+        exec: (x, base) ->
+          return Math.log(x) / if base? then Math.log(base) else 1
       round:
         args:
           number:
