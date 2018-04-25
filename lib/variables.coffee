@@ -197,6 +197,16 @@ module.exports = (env) ->
             optional: yes
         exec: (base, exponent=2) ->
           return Math.pow(base, exponent)
+      abs:
+        description: """
+          Returns the absolute value of a number
+        """
+        args:
+          x:
+            description: "A numeric expression"
+            type: "number"
+        exec: (x) ->
+          return Math.abs(x)
       sqrt:
         description: "Returns the square root of a number"
         args:
@@ -282,32 +292,37 @@ module.exports = (env) ->
             optional: yes
         exec: (format) -> (new Date()).format(if format? then format else 'YYYY-MM-DD hh:mm:ss')
       diffDate:
+        description: """
+          Returns the difference between to given date strings
+          in milliseconds. Optionally, a format string can be
+          provided to return the difference in "seconds",
+          "minutes", "hours", "days"
+        """
         args:
-          dateA:
+          startDate:
             type: "string"
             optional: no
-          dateB:
+          endDate:
             type: "string"
             optional: no
           format:
             type: "string"
             optional: yes
-        exec: (dateA, dateB, format) ->
-          diff = Date.parse(dateA) - Date.parse(dateB)
-          if format
-            switch format
-              when "seconds"
-                diff = diff / 1000
-              when "minutes"
-                diff = diff / 1000 / 60
-              when "hours"
-                diff = diff / 1000 / 60 / 60
-              when "days"
-                diff = diff / 1000 / 60 / 60 / 24
+        exec: (startDate, endDate, format) ->
+          diff = Date.parse(endDate) - Date.parse(startDate)
+          switch format
+            when "seconds"
+              diff = diff / 1000
+            when "minutes"
+              diff = diff / 1000 / 60
+            when "hours"
+              diff = diff / 1000 / 60 / 60
+            when "days"
+              diff = diff / 1000 / 60 / 60 / 24
           if diff > 0
-            return Math.ceil(diff)
+            return Math.floor(diff)
           else
-            return Math.round(diff)
+            return Math.ceil(diff)
       formatNumber:
         args:
           number:
