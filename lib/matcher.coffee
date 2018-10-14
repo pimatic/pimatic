@@ -3,7 +3,7 @@ Matcher/Parser helper for predicate and action strings
 =================
 ###
 
-__ = require("i18n").__
+__ = require("i18n-pimatic").__
 Promise = require 'bluebird'
 S = require 'string'
 assert = require 'cassert'

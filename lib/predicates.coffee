@@ -8,7 +8,7 @@ called event-predicates, that represent events. These predicate are just true in
 special event happen.
 ###
 
-__ = require("i18n").__
+__ = require("i18n-pimatic").__
 Promise = require 'bluebird'
 S = require 'string'
 assert = require 'cassert'

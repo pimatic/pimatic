@@ -1,6 +1,6 @@
 assert = require "cassert"
 Promise = require 'bluebird'
-i18n = require 'i18n'
+i18n = require 'i18n-pimatic'
 events = require 'events'
 M = require '../lib/matcher'
 _ = require 'lodash'

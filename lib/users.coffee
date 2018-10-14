@@ -1,5 +1,5 @@
 
-__ = require("i18n").__
+__ = require("i18n-pimatic").__
 Promise = require 'bluebird'
 assert = require 'cassert'
 _ = require 'lodash'
