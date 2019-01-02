@@ -47,6 +47,7 @@ module.exports = (env) ->
   class Database extends require('events').EventEmitter
 
     constructor: (@framework, @dbSettings) ->
+      super()
 
     init: () ->
       connection = _.clone(@dbSettings.connection)
@@ -69,7 +70,7 @@ module.exports = (env) ->
           "Installing database package #{dbPackageToInstall}, this can take some minutes"
         )
         if dbPackageToInstall is "sqlite3"
-          dbPackageToInstall = "sqlite3@3.1.8"
+          dbPackageToInstall = "sqlite3@4.0.4"
         pending = @framework.pluginManager.spawnPpm(
           ['install', dbPackageToInstall, '--unsafe-perm']
         )
