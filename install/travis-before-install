@@ -6,3 +6,4 @@ mv pimatic node_modules/
 cd node_modules/pimatic
 pwd -P
 npm install sqlite3
+rm -f package-lock.json
