@@ -12,7 +12,7 @@
     "pimatic.js",
     "ppm.js",
     "startup.coffee",
-    "Cuntfile.coffee",
+    "Gruntfile.coffee",
     "coffee-cache.js",
     "config-schema.coffee",
     "device-config-schema.coffee",
