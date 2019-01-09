@@ -701,7 +701,7 @@ class Matcher
       assert m instanceof Matcher
       matches.push m
     # Get the longest match.
-    next = _.max(matches, (m) => 
+    next = _.maxBy(matches, (m) =>
       if m.input? then m.prevInput.length else 0
     )
     return next
