@@ -206,6 +206,8 @@ module.exports = (env) ->
         .catch(@_tranformRequestErrors)
         .then( (res) =>
           json = JSON.parse(res)
+          if json.error?
+            throw new Error ("#{json.error}: #{version}")
           # sort
           json.sort( (a, b) => a.name.localeCompare(b.name) )
           # cache for 1min
@@ -249,7 +251,7 @@ module.exports = (env) ->
       return rp("https://registry.npmjs.org/#{name}").then( (res) =>
         packageInfos = JSON.parse(res)
         if packageInfos.error?
-          throw new Error("Error getting info about #{name} from npm failed: #{info.reason}")
+          throw new Error("Error getting info about #{name} from npm failed: #{packageInfos.reason}")
         return getLatestCompatible(packageInfos, @framework.packageJson.version)
       )
 
