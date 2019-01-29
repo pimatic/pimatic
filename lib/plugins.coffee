@@ -251,7 +251,8 @@ module.exports = (env) ->
       return rp("https://registry.npmjs.org/#{name}").then( (res) =>
         packageInfos = JSON.parse(res)
         if packageInfos.error?
-          throw new Error("Error getting info about #{name} from npm failed: #{packageInfos.reason}")
+          throw new Error(
+            "Error getting info about #{name} from npm failed: #{packageInfos.reason}")
         return getLatestCompatible(packageInfos, @framework.packageJson.version)
       )
 
