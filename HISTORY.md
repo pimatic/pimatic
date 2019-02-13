@@ -1,5 +1,12 @@
 # Release History
 
+* 20190213, V0.9.45
+
+    * Upgraded to sqlite3@4.0.4 which is required to support node v10
+    * Updated dependencies
+
+Now using a derivate of i18n o work-around installation issues
+
 * 20190128, V0.9.44
     * Migrated to lodash 4
     * Now using a derivate of i18n o work-around installation issues
