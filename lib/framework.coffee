@@ -24,7 +24,7 @@ S = require 'string'
 _ = require 'lodash'
 declapi = require 'decl-api'
 util = require 'util'
-jsonlint = require 'jsonlint'
+jsonlint = require 'yet-another-jsonlint'
 events = require 'events'
 
 module.exports = (env) ->
