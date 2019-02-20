@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 process.umask(0);
+var moduleAlias = require('module-alias');
+moduleAlias.addAlias('i18n', __dirname + '/node_modules/i18n-pimatic')
 require('./coffee-cache.js')
 var path = require('path');
 var init = require('./lib/daemon');
