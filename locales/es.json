@@ -108,7 +108,7 @@
 	"Up": "Arriba",
 	"Expression": "Expresión",
 	"Type": "Tipo",
-	"pusover message sent successfully": "mensaje instantáneo enviado con éxito",
+	"pushover message sent successfully": "mensaje instantáneo enviado con éxito",
 	"Drop here to remove rule": "Arrastrar aquí para eliminar la regla",
 	"Drop here to remove variable": "Arrastrar aquí para eliminar la variable",
 	"Description of the rule": "Descripción de la regla",
@@ -212,5 +212,14 @@
 	"Count": "Contador",
 	"Attribute logging info": "Información de conexión",
 	"Remove": "Borrar",
-	"Stop": "Stop"
+	"Stop": "Stop",
+	"day": "dia",
+	"days": "dias",
+	"hour": "hora",
+	"hours": "horas",
+	"minute": "minuto",
+	"minutes": "minutos",
+	"second": "segundo",
+	"seconds": "segundos",
+	"just now": "justo ahora"
 }

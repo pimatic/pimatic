@@ -110,7 +110,7 @@
 	"Up": "Descend",
 	"Expression": "Expression",
 	"Type": "Type",
-	"pusover message sent successfully": "message pushover envoyé",
+	"pushover message sent successfully": "message pushover envoyé",
 	"Drop here to remove rule": "Lâcher ici pour supprimer cette règle",
 	"Drop here to remove variable": "Lâcher ici pour supprimer cette variable",
 	"Description of the rule": "Description de la règle",
@@ -218,5 +218,14 @@
 	"pushbullet message sent successfully": "message pushbullet envoyé",
 	"displaying \"%s\" on lcd line %s": "affiche \"%s\" sur la ligne %s du lcd ",
 	"Do you really want to press \"%s\"?": "Do you really want to press \"%s\"?",
-	"Do you really want to turn %s?": "Do you really want to turn %s?"
+	"Do you really want to turn %s?": "Do you really want to turn %s?",
+	"day": "jour",
+	"days": "jours",
+	"hour": "heure",
+	"hours": "heures",
+	"minute": "minute",
+	"minutes": "minutes",
+	"second": "seconde",
+	"seconds": "secondes",
+	"just now": "juste maintenant"
 }

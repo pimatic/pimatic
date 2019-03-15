@@ -95,6 +95,7 @@
     "Button": "Кнопка",
     "Add a button": "Добавить кнопку",
     "unknown": "неизвестный",
+    "Unknown": "неизвестный",
     "connecting": "Соединение",
     "Variables": "Переменные",
     "Choose an action": "Выберите действие",
@@ -108,7 +109,6 @@
     "Up": "Вверх",
     "Expression": "Значение",
     "Type": "Тип",
-    "pusover message sent successfully": "сообщение успешно отправлено",
     "Drop here to remove rule": "Перетащите сюда, чтобы удалить правило",
     "Drop here to remove variable": "Перетащите сюда, чтобы удалить значение",
     "Description of the rule": "Описание правила",
@@ -214,5 +214,14 @@
     "Remove": "Удалить",
     "Stop": "Стоп",
     "Do you really want to press \"%s\"?": "Do you really want to press \"%s\"?",
-    "Do you really want to turn %s?": "Do you really want to turn %s?"
+    "Do you really want to turn %s?": "Do you really want to turn %s?",
+    "day": "день",
+    "days": "дней",
+    "hour": "час",
+    "hours": "часов",
+    "minute": "минут",
+    "minutes": "минут",
+    "second": "второй",
+    "seconds": "секунд",
+    "just now": "прямо сейчас"
 }

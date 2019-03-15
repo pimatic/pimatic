@@ -94,6 +94,7 @@
 	"Button": "Knop",
 	"Add a button": "Een knop toevoegen",
 	"unknown": "Onbekend",
+	"Unknown": "Onbekend",
 	"connecting": "Verbinden",
 	"Variables": "Variabelen",
 	"Choose an action": "Kies een actie",
@@ -107,7 +108,6 @@
 	"Up": "Omhoog",
 	"Expression": "Uitdrukking",
 	"Type": "Type",
-	"pusover message sent successfully": "pusover bericht succesvol verzonden",
 	"Drop here to remove rule": "Hier slepen om de regel te verwijderen",
 	"Drop here to remove variable": "Hier slepen om de variabele te verwijderen",
 	"Description of the rule": "Beschrijving van de regel",
@@ -242,5 +242,14 @@
 	"compatibility unknown": "Compatibiliteit onbekend",
 	"Show Readme": "Toon Leesmij",
 	"Do you really want to press \"%s\"?": "Do you really want to press \"%s\"?",
-	"Do you really want to turn %s?": "Do you really want to turn %s?"
+	"Do you really want to turn %s?": "Do you really want to turn %s?",
+	"day": "dag",
+	"days": "dagen",
+	"hour": "uur",
+	"hours": "uur",
+	"minute": "minuut",
+	"minutes": "minuten",
+	"second": "secunde",
+	"seconds": "secunden",
+	"just now": "net nu"
 }
