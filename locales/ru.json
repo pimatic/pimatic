@@ -32,7 +32,7 @@
     "Add an item": "Добавить пункт",
     "Add a new rule": "Добавить новое правило",
     "Advanced Options": "Дополнительные настройки",
-    "connection lost, retying": "соединение потеряно, повтор",
+    "connection lost, retrying": "соединение потеряно, повтор",
     "The rule must start with \"if\" and contain a \"then\" part!": "Правило должно начинаться с \"if\" и содержать \"then\"!",
     "No id given": "Не получено id",
     "Plugins": "Плагины",

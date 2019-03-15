@@ -33,7 +33,7 @@
 	"Add an item": "Ajouter un objet",
 	"Add a new rule": "Ajouter une règle",
 	"Advanced Options": "Options Avancées",
-	"connection lost, retying": "connexion perdue, reconnexion...",
+	"connection lost, retrying": "connexion perdue, reconnexion...",
 	"The rule must start with \"if\" and contain a \"then\" part!": "La règle doit commencée avec \"if\" et contenir une \"then\" portion!",
 	"No id given": "Pas d'ID fournit",
 	"Plugins": "Plugins",

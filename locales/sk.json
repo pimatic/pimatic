@@ -31,7 +31,7 @@
 	"Add an item": "Pridať položku",
 	"Add a new rule": "Pridať nové pravidlo",
 	"Advanced Options": "Rozšírené nastavenia",
-	"Connection lost, retying...": "Strata spojenia, opätovný pokus ...",
+	"Connection lost, retrying...": "Strata spojenia, opätovný pokus ...",
 	"The rule must start with \"if\" and contain a \"then\" part!": "Pravidlo musí začínať podmienkou \"if\" a musí obsahovať časť \"then\"!",
 	"No id given": "Nebolo pridelené ID",
 	"Plugins": "Doplnky",
