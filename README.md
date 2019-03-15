@@ -3,7 +3,6 @@ pimatic
 
 [![Build Status](https://travis-ci.org/pimatic/pimatic.png?branch=master)](https://travis-ci.org/pimatic/pimatic)
 [![NPM version](https://badge.fury.io/js/pimatic.png)](http://badge.fury.io/js/pimatic)
-[![Ready](https://badge.waffle.io/pimatic/pimatic.png?label=ready&title=Ready)](https://waffle.io/pimatic/pimatic)
 
 pimatic is a home automation framework that runs on [node.js](http://nodejs.org). It provides a 
 common extensible platform for home control and automation tasks.  
@@ -27,8 +26,8 @@ Screenshots
 Getting Started
 ------------
 
-[Install instruction](http://pimatic.org/guide/getting-started/installation/) can be found 
-on [pimatic.org](http://pimatic.org/). If you need any help, [ask at the forum](http://forum.pimatic.org).
+[Installation instructions](http://pimatic.org/guide/getting-started/installation/) can be found 
+on [pimatic.org](http://pimatic.org/). If you need any help, [please ask at the forum](http://forum.pimatic.org).
 
 Donation
 --------
@@ -68,7 +67,7 @@ As well, if you have nice ideas for plugins or need support for special devices 
 welcome to create an issue or submit a patch.
 
 For plugin development take a look at the 
-[development guide](http://pimatic.org/guide/development/required-skills-readings/) and
+[development guide](https://pimatic.teamemo.com/Development) and
 [plugin template](https://github.com/pimatic/pimatic-plugin-template).
 
 Feel free to ask development questions at the 
@@ -78,7 +77,8 @@ Feel free to ask development questions at the
 Copyright / License
 -------------------
 
-    Copyright (C) 2014 Oliver Schneider <oliverschneider89+sweetpi@gmail.com>
+    Copyright (C) 2014-2019 Oliver Schneider <oliverschneider89+sweetpi@gmail.com>
+    and contributors
 
 
     pimatic is free software: you can redistribute it and/or modify
