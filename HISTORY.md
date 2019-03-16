@@ -1,5 +1,11 @@
 # Release History
 
+* unreleased
+    * Added minimal implementation for xAttributeOption displayFormat to support custom attribute 
+      value formats with pimatic-mobile-frontend
+    * Revised localization files, thanks @hvdwolf (nl.json)
+    * Revised README
+    
 * 20190220, V0.9.46
     * Added module alias for 'i18n' to support plugins requiring it via pimatic env, thanks @madison5 for
       highlighting this issue with pimatic-fronius-solar 
