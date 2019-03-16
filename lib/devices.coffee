@@ -1328,6 +1328,14 @@ module.exports = (env) ->
               description: "Hide the attribute in the gui"
               type: "boolean"
               required: false
+            displayFormat:
+              description: """
+                Override formatting conventions used by the GUI to display
+                the value. Format outputs are: raw, fixed, localeString,
+                and uptime
+              """
+              type: "string"
+              required: false
 
     apply: (config, device) ->
       if config.xAttributeOptions?
@@ -1343,6 +1351,7 @@ module.exports = (env) ->
             continue
           attr.displaySparkline = attrOpts.displaySparkline if attrOpts.displaySparkline?
           attr.hidden = attrOpts.hidden if attrOpts.hidden?
+          attr.displayFormat = attrOpts.displayFormat if attrOpts.displayFormat?
 
   class DeviceManager extends events.EventEmitter
     devices: {}
