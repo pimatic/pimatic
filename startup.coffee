@@ -11,6 +11,7 @@ Promise = require 'bluebird'
 # Setup the environment
 env = { logger: require './lib/logger' }
 env.api = require('./lib/api')
+env.milliseconds = require('./lib/milliseconds')
 env.users = require('./lib/users') env
 env.devices = require('./lib/devices') env
 env.matcher = require './lib/matcher'
