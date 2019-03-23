@@ -64,6 +64,7 @@ module.exports = (env) ->
       @_constructorCalled = yes
       @_attributesMeta = {}
       @_initAttributeMeta(attrName, attr) for attrName, attr of @attributes
+      super()
 
 
     _initAttributeMeta: (attrName, attr) ->
@@ -211,7 +212,8 @@ module.exports = (env) ->
       ].reduce predicate, []
       return json
 
-    _setupPolling: (attrName, interval) ->
+    _setupPolling: (attrName, interval, additionalCallback) ->
+      cb = additionalCallback ? Promise.resolve
       unless typeof interval is 'number'
         throw new Error("Illegal polling interval #{interval}!")
       unless interval > 0
@@ -219,7 +221,12 @@ module.exports = (env) ->
       doPolling = () =>
         if @_destroyed then return
         Promise.resolve()
-          .then( => @getUpdatedAttributeValue(attrName) )
+          .then( =>
+            cb()
+          )
+          .then( =>
+            @getUpdatedAttributeValue(attrName)
+          )
           .then( (value) =>
             # may emit value, if it was not already emitted by getter
             lastUpdate = @_attributesMeta[attrName].lastUpdate
@@ -227,7 +234,8 @@ module.exports = (env) ->
               return
             @emit(attrName, value)
           )
-          .catch( (err) => @logAttributeError(attrName, err) )
+          .catch( (err) =>
+            @logAttributeError(attrName, err) )
           .finally( =>
             if @_destroyed then return
             setTimeout(doPolling, interval)
