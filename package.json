@@ -67,11 +67,12 @@
     "semver": "^5.1.0",
     "socket.io": "^1.7.4",
     "source-map-support": "^0.4.0",
-    "string": "^3.3.1",
-    "winston": "^2.3.0",
+    "string": "^3.3.3",
+    "winston": "^2.4.4",
     "yet-another-jsonlint": "^1.0.1"
   },
   "bundledDependencies": [
+    "basic-auth",
     "coffee-script",
     "express",
     "i18n-pimatic",
