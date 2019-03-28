@@ -507,14 +507,19 @@ module.exports = (env) ->
     inited: false
 
     constructor: (@framework, @variablesConfig) ->
-      # For each new device add a variable for every attribute
+      # For each each attribute of a new device add a variable
       @framework.on 'deviceAdded', (device) =>
         for attrName, attr of device.attributes
           @_addVariable(
             new DeviceAttributeVariable(this, device, attrName)
           )
-
-
+      # For each new attribute of a changed device add a variable
+      @framework.on 'deviceChanged', (device) =>
+        for attrName, attr of device.attributes
+          if not @variables["#{device.id}.#{attrName}"]?
+            @_addVariable(
+              new DeviceAttributeVariable(this, device, attrName)
+            )
     init: () ->
       # Import variables
       setExpressions = []
@@ -537,7 +542,7 @@ module.exports = (env) ->
               setExpressions.push( -> 
                 try
                   exprVar.setToExpression(variable.expression.trim())
-                catch
+                catch e
                   env.logger.error(
                     "Error parsing expression variable #{variable.name}:", e.message
                   )
