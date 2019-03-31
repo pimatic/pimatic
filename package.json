@@ -24,6 +24,12 @@
   "version": "0.9.47",
   "license": "GPL-2.0",
   "homepage": "http://pimatic.org",
+  "keywords": [
+    "pimatic",
+    "home-automation",
+    "smarthome",
+    "nodejs"
+  ],
   "repository": {
     "type": "git",
     "url": "git://github.com/pimatic/pimatic.git"
