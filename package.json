@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "basic-auth": "^1.1.0",
-    "bluebird": "^3.4.6",
+    "bluebird": "^3.5.4",
     "body-parser": "^1.15.2",
     "byline": "~5.0.0",
     "cassert": "git+https://github.com/sweetpi/cassert.git#master",
