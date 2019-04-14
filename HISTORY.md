@@ -1,9 +1,10 @@
 # Release History
 
-* unreleased
+* 20190414, V0.9.48
     * Added config extension for Shutter position labels
     * Fixed creation of variables for new attributes on changed (edited) device
     * Fixed catch statement missing error parameter on device initialization
+    * Updated dependencies
     
 * 20190324, V0.9.47
     * Added minimal implementation for xAttributeOption displayFormat to support custom attribute 
@@ -17,7 +18,6 @@
       highlighting this issue with pimatic-fronius-solar 
 
 * 20190213, V0.9.45
-
     * Upgraded to sqlite3@4.0.4 which is required to support node v10
     * Updated dependencies
 
@@ -26,7 +26,6 @@
     * Now using a derivation of i18n o work-around installation issues
     
 * 20180626, V0.9.43
-
     * Added log output for Node.js and OpenSSL version on startup
     * Include id on "device not found" error, issue #1100
     * Added new functions: sign, trunc, diffDate, log
