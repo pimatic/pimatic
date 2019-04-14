@@ -1,5 +1,10 @@
 # Release History
 
+* unreleased
+    * Added config extension for Shutter position labels
+    * Fixed creation of variables for new attributes on changed (edited) device
+    * Fixed catch statement missing error parameter on device initialization
+    
 * 20190324, V0.9.47
     * Added minimal implementation for xAttributeOption displayFormat to support custom attribute 
       value formats with pimatic-mobile-frontend
