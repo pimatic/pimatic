@@ -424,6 +424,7 @@ module.exports = (env) ->
         description: "State of the shutter"
         type: t.string
         enum: ['up', 'down', 'stopped']
+        labels: { up: 'up', down: 'down', stopped: 'stopped'}
 
     actions:
       moveUp:
@@ -1315,6 +1316,29 @@ module.exports = (env) ->
         device.attributes.contact.labels[0] = config.xClosedLabel if config.xClosedLabel?
         device.attributes.contact.labels[1] = config.xOpenedLabel if config.xOpenedLabel?
 
+  class ShutterLabelConfigExtension extends DeviceConfigExtension
+    configSchema:
+      xUpLabel:
+        description: "The label for the up position"
+        type: "string"
+        required: no
+      xDownLabel:
+        description: "The label for the down position"
+        type: "string"
+        required: no
+      xStoppedLabel:
+        description: "The label for the stopped position"
+        type: "string"
+        required: no
+
+    apply: (config, device) ->
+      if config.xUpLabel? or config.xDownLabel? or config.xStoppedLabel?
+        device.attributes = _.cloneDeep(device.attributes)
+        device.attributes.position.labels.up = config.xUpLabel if config.xUpLabel?
+        device.attributes.position.labels.down = config.xDownLabel if config.xDownLabel?
+        device.attributes.position.labels.stopped =
+          config.xStoppedLabel if config.xStoppedLabel?
+
   class AttributeOptionsConfigExtension extends DeviceConfigExtension
     configSchema:
       xAttributeOptions:
@@ -1373,6 +1397,7 @@ module.exports = (env) ->
       @deviceConfigExtensions.push(new PresentLabelConfigExtension())
       @deviceConfigExtensions.push(new SwitchLabelConfigExtension())
       @deviceConfigExtensions.push(new ContactLabelConfigExtension())
+      @deviceConfigExtensions.push(new ShutterLabelConfigExtension())
       @deviceConfigExtensions.push(new AttributeOptionsConfigExtension())
 
     registerDeviceClass: (className, {configDef, createCallback, prepareConfig}) ->
