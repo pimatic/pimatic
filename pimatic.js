@@ -13,13 +13,13 @@ if(semver.lt(process.version, '4.0.0')) {
   process.exit(1);
 }
 
-run = function () {
-  require('./startup').startup().done();
+run = function (command) {
+  require('./startup').startup(command).done();
 };
 
 var command = process.argv[2];
-if(!command || command === "run") {
-  run();
+if(!command || command === "run" || command === "install") {
+  run(command);
 } else {
   logFile = path.resolve(__dirname, '../../pimatic-daemon.log');
   pidFile = path.resolve(__dirname, '../../pimatic.pid');

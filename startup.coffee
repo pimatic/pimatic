@@ -25,7 +25,7 @@ env.groups = require('./lib/groups') env
 env.pages = require('./lib/pages') env
 env.require = (args...) -> module.require args...
 
-startup = =>
+startup = (command) =>
   # set the config file to
   configFile = (
     # PIMATIC_CONFIG environment variable if it has been set up
@@ -99,8 +99,12 @@ startup = =>
       onKill = ->
         framework.destroy().then( -> exit(0) )
 
-      process.on('SIGINT', onKill)
-      process.on('SIGTERM', onKill)
+      if command is "install"
+        console.log("killing")
+        exit(0)
+      else
+        process.on('SIGINT', onKill)
+        process.on('SIGTERM', onKill)
 
     )
 
