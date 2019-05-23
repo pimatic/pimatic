@@ -621,10 +621,11 @@ module.exports = (env) ->
       )
 
     restart: () ->
-      unless process.env['PIMATIC_DAEMONIZED']?
+      daemonized = process.env['PIMATIC_DAEMONIZED']
+      unless daemonized?
         throw new Error(
           'Can not restart self, when not daemonized. ' +
-          'Please run pimatic with: "node ' + process.argv[1] + ' start" to use this feature.'
+            'Please run pimatic with: "node ' + process.argv[1] + ' start" to use this feature.'
         )
       env.logger.info("Restarting...")
       # first we call destroy to be able to release resources allocated by the current process.
@@ -636,12 +637,15 @@ module.exports = (env) ->
         env.logger.error("Error during orderly shutdown of pimatic: #{err.message}")
         env.logger.debug(err.stack)
       .finally ->
-        daemon = require 'daemon'
-        scriptName = process.argv[1]
-        args = process.argv[2..]; args[0] = 'restart'
-        child = daemon.daemon(scriptName, args, {cwd: process.cwd()})
-        child.on 'error', (error) -> proxy.emit 'error', error
-        child.on 'close', (code) -> proxy.emit 'close', code
+        if daemonized is 'pm2-docker'
+          proxy.emit 'close', 0
+        else
+          daemon = require 'daemon'
+          scriptName = process.argv[1]
+          args = process.argv[2..]; args[0] = 'restart'
+          child = daemon.daemon(scriptName, args, {cwd: process.cwd()})
+          child.on 'error', (error) -> proxy.emit 'error', error
+          child.on 'close', (code) -> proxy.emit 'close', code
       # Catch errors executing the restart script
       return new Promise( (resolve, reject) =>
         proxy.on('error', reject)
