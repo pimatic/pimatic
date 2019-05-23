@@ -632,13 +632,15 @@ module.exports = (env) ->
       # next, we launch the restart script with the daemonizer, which will send the kill signal
       # to this process
       proxy = new events()
+      isRejected = false
       @destroy()
       .catch (err) ->
+        isRejected = true
         env.logger.error("Error during orderly shutdown of pimatic: #{err.message}")
         env.logger.debug(err.stack)
       .finally ->
         if daemonized is 'pm2-docker'
-          proxy.emit 'close', 0
+          process.exit(unless isRejected then 0 else 1)
         else
           daemon = require 'daemon'
           scriptName = process.argv[1]
