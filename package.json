@@ -19,7 +19,8 @@
     "config_default.json",
     "README.md",
     "plugins.md",
-    "LICENSE"
+    "LICENSE",
+    "blacklist.json"
   ],
   "version": "0.9.48",
   "license": "GPL-2.0",
