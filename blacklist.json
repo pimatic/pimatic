@@ -1,3 +1,9 @@
 [
-  "pimatic-easybox"
+  "pimatic-easybox",
+  "pimatic-hongkongpollution",
+  "pimatic-nikoniko",
+  "pimatic-smartmeter-old",
+  "pimatic-sms",
+  "pimatic-slack",
+  "pimatic-yoctopuce"
 ]
