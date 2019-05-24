@@ -1,6 +1,9 @@
 {
   "//": "Please only change this file when pimatic is NOT running, otherwise pimatic will overwrite your changes.",
   "settings": {
+    "locale": "en",
+    "debug": false,
+    "logLevel": "info",
     "httpServer": {
       "enabled": true,
       "port": 80
