@@ -19,6 +19,7 @@ S = require 'string'
 declapi = require 'decl-api'
 rp = require 'request-promise'
 download = require 'gethub'
+blacklist = require '../blacklist.json'
 
 module.exports = (env) ->
 
@@ -208,6 +209,8 @@ module.exports = (env) ->
           json = JSON.parse(res)
           if json.error?
             throw new Error ("#{json.error}: #{version}")
+          for name in blacklist
+            json = json.filter (item) -> item.name isnt name
           # sort
           json.sort( (a, b) => a.name.localeCompare(b.name) )
           # cache for 1min
@@ -410,7 +413,7 @@ module.exports = (env) ->
 
     getInstalledPlugins: ->
       return fs.readdirAsync("#{@framework.maindir}/..").then( (files) =>
-        return plugins = (f for f in files when f.match(/^pimatic-.*/)?)
+        return plugins = (f for f in files when f.match(/^pimatic-.*/)? and f isnt "pimatic-plugin-commons")
       )
 
     getInstalledPluginsWithInfo: ->
