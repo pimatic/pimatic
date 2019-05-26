@@ -413,7 +413,8 @@ module.exports = (env) ->
 
     getInstalledPlugins: ->
       return fs.readdirAsync("#{@framework.maindir}/..").then( (files) =>
-        return plugins = (f for f in files when f.match(/^pimatic-.*/)? and f isnt "pimatic-plugin-commons")
+        return plugins =
+          (f for f in files when f.match(/^pimatic-.*/)? and f isnt "pimatic-plugin-commons")
       )
 
     getInstalledPluginsWithInfo: ->
