@@ -6,5 +6,11 @@
   "pimatic-sms",
   "pimatic-slack",
   "pimatic-yoctopuce",
-  "pimatic-vr-harmonyhub"
+  "pimatic-vr-harmonyhub",
+  "pimatic-ouimeaux",
+  "pimatic-otgw",
+  "pimatic-can",
+  "pimatic-diy-controls",
+  "pimatic-ziggo-mediabox",
+  "pimatic-uber"
 ]
