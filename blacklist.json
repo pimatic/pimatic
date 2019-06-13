@@ -12,5 +12,8 @@
   "pimatic-can",
   "pimatic-diy-controls",
   "pimatic-ziggo-mediabox",
-  "pimatic-uber"
+  "pimatic-uber",
+  "pimatic-mqtt-simple",
+  "pimatic-emon",
+  "pimatic-nikoniko"
 ]
