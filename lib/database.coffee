@@ -70,7 +70,7 @@ module.exports = (env) ->
           "Installing database package #{dbPackageToInstall}, this can take some minutes"
         )
         if dbPackageToInstall is "sqlite3"
-          dbPackageToInstall = "sqlite3@4.0.8"
+          dbPackageToInstall = "sqlite3@4.0.9"
         pending = @framework.pluginManager.spawnPpm(
           ['install', dbPackageToInstall, '--unsafe-perm']
         )
