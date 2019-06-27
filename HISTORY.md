@@ -1,6 +1,6 @@
 # Release History
 
-* 20190604, V0.9.49
+* 20190627, V0.9.49
     * Added blacklist mechanism to filter-out non-functional or obsolete plugins from list of 
       installable plugins
     * Optimization for Docker
