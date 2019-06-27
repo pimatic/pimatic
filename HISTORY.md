@@ -1,5 +1,15 @@
 # Release History
 
+* 20190604, V0.9.49
+    * Added blacklist mechanism to filter-out non-functional or obsolete plugins from list of 
+      installable plugins
+    * Optimization for Docker
+      * Added support for using pm2-docker as an alternative to using the service daemon for docker containers
+      * Added experimental install mode to perform sqlite3 installation and generation of JS files as 
+        part of the docker image build
+    * Updated to sqlite3@4.0.9 for node v12 and Raspbian Buster support 
+    * Updated documentation reference
+     
 * 20190414, V0.9.48
     * Added config extension for Shutter position labels
     * Fixed creation of variables for new attributes on changed (edited) device
