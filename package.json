@@ -46,7 +46,7 @@
     "bluebird": "^3.5.4",
     "body-parser": "^1.15.2",
     "byline": "~5.0.0",
-    "cassert": "git+https://github.com/sweetpi/cassert.git#master",
+    "cassert": "git+https://github.com/pimatic/cassert.git#master",
     "coffee-script": "^1.11.1",
     "colors": "^1.1.2",
     "connect-timeout": "^1.6.2",
