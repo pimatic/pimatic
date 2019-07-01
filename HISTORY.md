@@ -1,5 +1,10 @@
 # Release History
 
+* 20190702, V0.9.50
+    * Dependency fixture for cassert package
+    * Build includes bundledDependencies as several users had issues with the unbundled
+      build v0.9.49
+      
 * 20190627, V0.9.49
     * Added blacklist mechanism to filter-out non-functional or obsolete plugins from list of 
       installable plugins
