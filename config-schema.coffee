@@ -57,6 +57,10 @@ module.exports = {
               description: "The hostname of the HTTP-server"
               type: "string"
               default: "" # If is empty then listen to all ip4 addresses
+            socket:
+              description: "The UNIX Socket of the HTTP-server"
+              type: "string"
+              default: "" # If empty use hostname + port instead
         httpsServer:
           type: "object"
           properties:
