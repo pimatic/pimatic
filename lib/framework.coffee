@@ -611,7 +611,18 @@ module.exports = (env) ->
         @app.httpServer.on 'error', genErrFunc(@config.settings.httpServer)
         awaiting = Promise.fromCallback( (callback) =>
           if !!httpServerConfig.socket
-            @app.httpServer.listen(httpServerConfig.socket, callback)
+            httpServer = @app.httpServer
+            fs.stat httpServerConfig.socket, (err, stat) ->
+              if err
+                httpServer.listen(httpServerConfig.socket, callback)
+              else
+                env.logger.info 'Removing leftover socket.'
+                fs.unlink httpServerConfig.socket, (err) ->
+                  if err
+                    env.logger.info 'Cannot remove socket file, exiting.'
+                    process.exit(0)
+                  else
+                    httpServer.listen(httpServerConfig.socket, callback)
           else
             @app.httpServer.listen(httpServerConfig.port, httpServerConfig.hostname, callback)
         )
