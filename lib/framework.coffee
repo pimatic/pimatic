@@ -1124,6 +1124,16 @@ module.exports = (env) ->
 
     destroy: ->
       if @_destroying? then return @_destroying
+      if @app.httpServer?
+        httpServerConfig = @config.settings.httpServer
+        if !!httpServerConfig.socket
+          httpServer = @app.httpServer
+          fs.stat httpServerConfig.socket, (err, stat) ->
+            if not err
+              env.logger.info 'Removing socket...'
+              fs.unlink httpServerConfig.socket, (err) ->
+                if err
+                  env.logger.info 'Cannot remove socket file.'
       return @_destroying = Promise.resolve().then( =>
         context =
           waitFor: []
