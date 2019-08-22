@@ -5,6 +5,10 @@ module.exports = {
     type: "object"
     extensions: ["xLink"]
     properties:
+      enableActiveButton:
+        description: "Highlight last pressed button if enabled"
+        type: "boolean"
+        default: true
       buttons:
         description: "Buttons to display"
         type: "array"

@@ -1,5 +1,9 @@
 # Release History
 
+* unreleased
+    * Added "enableActiveButton" property to ButtonsDevice configuration schema to control 
+      display active button feature
+      
 * 20190702, V0.9.50
     * Dependency fixture for cassert package
     * Build includes bundledDependencies as several users had issues with the unbundled
