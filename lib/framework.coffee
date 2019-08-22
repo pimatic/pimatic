@@ -610,10 +610,27 @@ module.exports = (env) ->
         httpServerConfig = @config.settings.httpServer
         @app.httpServer.on 'error', genErrFunc(@config.settings.httpServer)
         awaiting = Promise.fromCallback( (callback) =>
-          @app.httpServer.listen(httpServerConfig.port, httpServerConfig.hostname, callback)
+          if !!httpServerConfig.socket
+            httpServer = @app.httpServer
+            fs.stat httpServerConfig.socket, (err, stat) ->
+              if err
+                httpServer.listen(httpServerConfig.socket, callback)
+              else
+                env.logger.info 'Removing leftover socket.'
+                fs.unlink httpServerConfig.socket, (err) ->
+                  if err
+                    env.logger.info 'Cannot remove socket file, exiting.'
+                    process.exit(0)
+                  else
+                    httpServer.listen(httpServerConfig.socket, callback)
+          else
+            @app.httpServer.listen(httpServerConfig.port, httpServerConfig.hostname, callback)
         )
         listenPromises.push awaiting.then( =>
-          env.logger.info "Listening for HTTP-request on port #{httpServerConfig.port}..."
+          if !!httpServerConfig.socket
+            env.logger.info "Listening for HTTP-request on #{httpServerConfig.socket}..."
+          else
+            env.logger.info "Listening for HTTP-request on port #{httpServerConfig.port}..."
         )
 
       Promise.all(listenPromises).then( =>
@@ -1107,6 +1124,16 @@ module.exports = (env) ->
 
     destroy: ->
       if @_destroying? then return @_destroying
+      if @app.httpServer?
+        httpServerConfig = @config.settings.httpServer
+        if !!httpServerConfig.socket
+          httpServer = @app.httpServer
+          fs.stat httpServerConfig.socket, (err, stat) ->
+            if not err
+              env.logger.info 'Removing socket...'
+              fs.unlink httpServerConfig.socket, (err) ->
+                if err
+                  env.logger.info 'Cannot remove socket file.'
       return @_destroying = Promise.resolve().then( =>
         context =
           waitFor: []
