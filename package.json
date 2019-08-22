@@ -22,7 +22,7 @@
     "LICENSE",
     "blacklist.json"
   ],
-  "version": "0.9.50",
+  "version": "0.9.51",
   "license": "GPL-2.0",
   "homepage": "http://pimatic.org",
   "keywords": [
@@ -63,7 +63,7 @@
     "i18n-pimatic": "^0.8.3",
     "jayschema": "^0.3.1",
     "knex": "^0.12.6",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.15",
     "logrotate-stream": "^0.2.5",
     "method-override": "^2.3.7",
     "module-alias": "^2.2.0",

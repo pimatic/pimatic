@@ -1,8 +1,9 @@
 # Release History
 
-* unreleased
+* 20190822, V0.9.51
     * Added "enableActiveButton" property to ButtonsDevice configuration schema to control 
       display active button feature
+    * Added support for unix sockets, PR #1124, thanks @Unkn0wn-MDCLXIV
       
 * 20190702, V0.9.50
     * Dependency fixture for cassert package
