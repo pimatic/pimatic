@@ -769,8 +769,13 @@ module.exports = (env) ->
       )
 
     evaluateExpressionWithUnits: (tokens, varsInEvaluation = {}) ->
-      @evaluateExpression(tokens, varsInEvaluation).then( (value) =>
-        return { value: value, unit: expr.getUnit() }
+      builder = new varsAst.ExpressionTreeBuilder(@variables, @functions)
+      # do building async
+      return Promise.resolve().then( =>
+        expr = builder.build(tokens)
+        return expr.evaluate(varsInEvaluation).then( (value) =>
+          return { value: value, unit: expr.getUnit() }
+        )
       )
 
     inferUnitOfExpression: (tokens) ->
