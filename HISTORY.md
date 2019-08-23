@@ -1,5 +1,8 @@
 # Release History
 
+* 20190823, V0.9.52
+    * Fixed bug in variable expression handler introduced by earlier refactoring
+    
 * 20190822, V0.9.51
     * Added "enableActiveButton" property to ButtonsDevice configuration schema to control 
       display active button feature
