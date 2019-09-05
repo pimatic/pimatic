@@ -106,7 +106,10 @@ class VariableExpression extends Expression
         )
     ).then( (val) =>
       if expectNumeric
-        numVal = parseFloat(val)
+        if val isnt null
+          numVal = parseFloat(val)
+        else
+          numVal = 0
         if isNaN(numVal) 
           throw new Error("Expected variable #{@variable.name} to have a numeric value.")
         return numVal
