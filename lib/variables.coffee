@@ -222,7 +222,7 @@ module.exports = (env) ->
             description: "A numeric expression for base number"
             type: "number"
           exponent:
-            description: "A numeric expression the exponent. If omitted base 2 is applied"
+            description: "A numeric expression for the exponent. If omitted exponent 2 is applied"
             type: "number"
             optional: yes
         exec: (base, exponent=2) ->
