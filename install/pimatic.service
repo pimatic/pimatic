@@ -1,0 +1,18 @@
+# Systemd service template for pimatic home automation frame work
+
+[Unit]
+Description=Pimatic home automation framework
+
+[Service]
+ExecStart=/usr/local/bin/pimatic.js start
+ExecStop=/usr/local/bin/pimatic.js stop
+Environment=PATH=/sbin:/usr/sbin:/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/opt/node/bin
+Environment=NODE_ENV=production
+User=root
+Type=forking
+
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
