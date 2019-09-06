@@ -1,5 +1,13 @@
 # Release History
 
+* 20190906, V0.9.53
+    * Fixed bug: Skip log messages which do not contain meta tags and timeStamp
+    * Cast null values as part of variable expression to avoid exception "expected ... to have numeric value"
+      in case of uninitialized attributes on startup
+    * Changed cassert dependency to work-around permission issue with npm link
+    * Added Systemd service wrapper for pimatic. The Initd service wrapper is now deprecated. See also
+      https://pimatic.teamemo.com/Guide/Autostarting
+      
 * 20190823, V0.9.52
     * Fixed bug in variable expression handler introduced by earlier refactoring
     
