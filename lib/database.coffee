@@ -119,7 +119,8 @@ module.exports = (env) ->
       ).then( =>
         # Save log-messages
         @framework.on("messageLogged", @messageLoggedListener = ({level, msg, meta}) =>
-          @saveMessageEvent(meta.timestamp, level, meta.tags, msg).done()
+          if meta?.timeStamp and meta.tags?
+            @saveMessageEvent(meta.timestamp, level, meta.tags, msg).done()
         )
 
         # Save device attribute changes
