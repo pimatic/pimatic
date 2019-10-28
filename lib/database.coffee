@@ -119,7 +119,7 @@ module.exports = (env) ->
       ).then( =>
         # Save log-messages
         @framework.on("messageLogged", @messageLoggedListener = ({level, msg, meta}) =>
-          if meta?.timeStamp and meta.tags?
+          if meta?.timestamp and meta.tags?
             @saveMessageEvent(meta.timestamp, level, meta.tags, msg).done()
         )
 
