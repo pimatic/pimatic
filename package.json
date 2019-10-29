@@ -62,7 +62,7 @@
     "human-format": "^0.7.0",
     "i18n-pimatic": "^0.8.3",
     "jayschema": "^0.3.1",
-    "knex": "^0.12.6",
+    "knex": "^0.20.0",
     "lodash": "^4.17.15",
     "logrotate-stream": "^0.2.5",
     "method-override": "^2.3.7",
