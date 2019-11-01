@@ -743,11 +743,16 @@ module.exports = (env) ->
 
     _lastPressedButton: null
 
-    constructor: (@config)->
+    constructor: (@config, lastState)->
       @id = @config.id
       @name = @config.name
+      
       super()
-
+      
+      @_lastPressedButton = lastState?.button?.value
+      for button in @config.buttons
+        @_button = button if button.id is @_lastPressedButton
+    
     getButton: -> Promise.resolve(@_lastPressedButton)
 
     buttonPressed: (buttonId) ->
