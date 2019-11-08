@@ -39,6 +39,7 @@ module.exports = (env) ->
       if isCompatible(refVersion, value)
         versions.push key
     )
+    
     return versions
 
   getLatestCompatible = (packageInfo, refVersion) ->
@@ -265,7 +266,10 @@ module.exports = (env) ->
       unless pimaticRange
         return null
       return semver.satisfies(version, pimaticRange)
-
+    
+    getInstalledNode: () ->
+      return "#{process.versions.node}"
+    
     searchForPluginsWithInfo: ->
       return @searchForPlugin().then( (plugins) =>
         return pluginList = (
@@ -302,10 +306,10 @@ module.exports = (env) ->
       )
 
     getOutdatedPlugins: ->
-      return @getInstalledPluginUpdateVersions().then( (result) =>
+      @getInstalledPluginUpdateVersions().then( (result) =>
         outdated = []
         for p in result
-          if semver.gt(p.latest, p.current)
+          if semver.gt(p.latest, p.current) and semver.satisfies(@getInstalledNode(), p.node)
             outdated.push p
         return outdated
       )
@@ -322,6 +326,7 @@ module.exports = (env) ->
                 plugin: p
                 current: installed.version
                 latest: latest.version
+                node: latest.engines.node
               }
             )
         return Promise.settle(waiting).then( (results) =>
