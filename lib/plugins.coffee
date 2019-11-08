@@ -306,7 +306,7 @@ module.exports = (env) ->
       )
 
     getOutdatedPlugins: ->
-      @getInstalledPluginUpdateVersions().then( (result) =>
+      return @getInstalledPluginUpdateVersions().then( (result) =>
         outdated = []
         for p in result
           if semver.gt(p.latest, p.current) and semver.satisfies(@getInstalledNode(), p.node)
