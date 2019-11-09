@@ -215,7 +215,7 @@ module.exports = (env) ->
             json = json.filter (item) -> item.name isnt name
           
           # Filter packages based on Node compatibility
-          json = json.filter (p) => @isNodeVersionCompatible(p.engines.node)
+          json = json.filter (p) => @isNodeVersionCompatible(p.engines?.node)
           
           # sort
           json.sort( (a, b) => a.name.localeCompare(b.name) )
@@ -275,7 +275,7 @@ module.exports = (env) ->
     isNodeVersionCompatible: (version) ->
       # No node attribute in package for downward compat purposes
       # as not all maintainers have included { engines: { node: "x.x.x" }} in package.json
-      !p.engines?.node || semver.satisfies(@getInstalledNodeVersion(), version)
+      !version || semver.satisfies(@getInstalledNodeVersion(), version)
     
     getInstalledNodeVersion: () ->
       return "#{process.versions.node}"
@@ -336,7 +336,7 @@ module.exports = (env) ->
                 plugin: p
                 current: installed.version
                 latest: latest.version
-                node: latest.engines.node # Add node engine from updated package to check later
+                node: latest.engines?.node # Add node engine from updated package to check later
               }
             )
         return Promise.settle(waiting).then( (results) =>
