@@ -221,7 +221,6 @@ module.exports = (env) ->
           json.sort( (a, b) => a.name.localeCompare(b.name) )
           # cache for 1min
           setTimeout( (=> @_pluginList = null), 60*1000)
-          console.log(json)
           return json
         ).catch( (err) =>
           # cache errors only for 1 sec
