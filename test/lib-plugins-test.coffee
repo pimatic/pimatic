@@ -29,11 +29,11 @@ describe "PluginManager", ->
     fs.rmrfSync "#{os.tmpdir()}/pimatic-test"
 
   describe '#pathToPlugin()', ->
-    it "should return #{os.tmpdir()}/pimatic-test/node_modules/pimatic-test", ->
+    it "should return path to plugin", ->
       pluginPath = pluginManager.pathToPlugin('pimatic-test')
       assert pluginPath is path.normalize "#{os.tmpdir()}/pimatic-test/node_modules/pimatic-test"
 
-    it "should return #{os.tmpdir()}/pimatic-test/node_modules/pimatic-test for specific version", ->
+    it "should return path to plugin for specific version", ->
       pluginPath = pluginManager.pathToPlugin('pimatic-test@0.1.2')
       assert pluginPath is path.normalize "#{os.tmpdir()}/pimatic-test/node_modules/pimatic-test"
 
