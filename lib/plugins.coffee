@@ -129,8 +129,9 @@ module.exports = (env) ->
         dist = @_findDist(packageInfo)
         if dist
           return if update then @updateGitPlugin(name) else @installGitPlugin(name)
-        env.logger.info("Installing: \"#{name}@#{packageInfo.version}\" from npm-registry.")
-        return @spawnPpm(['install', "#{name}@#{packageInfo.version}", '--unsafe-perm'])
+        plugin = "#{packageInfo.name}@#{packageInfo.version}"
+        env.logger.info("Installing: \"#{plugin}\" from npm-registry.")
+        return @spawnPpm(['install', "#{plugin}", '--unsafe-perm'])
       )
 
     updatePlugin: (name) ->
@@ -181,7 +182,8 @@ module.exports = (env) ->
     pathToPlugin: (name) ->
       assert name?
       assert name.match(/^pimatic.*$/)? or name is "pimatic"
-      return path.resolve @framework.maindir, "..", name
+      pluginName = @extractPluginName(name)
+      return path.resolve @framework.maindir, "..", pluginName
 
     getPluginList: ->
       if @_pluginList then return @_pluginList
@@ -190,6 +192,17 @@ module.exports = (env) ->
     getCoreInfo: ->
       if @_coreInfo then return @_coreInfo
       else return @searchForCoreUpdate()
+
+    extractPluginName: (name) ->
+      versionInfo = @getSpecificVersionInfo(name)
+      return if versionInfo? then versionInfo.name else name
+
+    getSpecificVersionInfo: (name) ->
+      if match = /^(pimatic.*)@(.*)$/.exec(name)
+        return {
+          name: match[1]
+          version: match[2]
+        }
 
     _tranformRequestErrors: (err) ->
       if err.name is 'RequestError'
@@ -239,6 +252,7 @@ module.exports = (env) ->
 
     getPluginInfo: (name) ->
       return @getCoreInfo() if name is "pimatic"
+      return Promise.resolve(@getSpecificVersionInfo(name)) if name.match(/^pimatic.*@.*$/)
       pluginInfo = null
       return @getPluginList().then( (plugins) =>
         pluginInfo = _.find(plugins, (p) -> p.name is name)
@@ -489,17 +503,18 @@ module.exports = (env) ->
                 else
                   @installPlugin(fullPluginName)
               ).then( =>
-                return @loadPlugin(fullPluginName, pConf).then( ([plugin, packageInfo]) =>
+                pluginName = @extractPluginName(fullPluginName)
+                return @loadPlugin(pluginName, pConf).then( ([plugin, packageInfo]) =>
                   # Check config
                   configSchema = @_getConfigSchemaFromPackageInfo(packageInfo)
                   if typeof plugin.prepareConfig is "function"
                     plugin.prepareConfig(pConf)
                   if configSchema?
-                    @framework._validateConfig(pConf, configSchema, "config of #{fullPluginName}")
+                    @framework._validateConfig(pConf, configSchema, "config of #{pluginName}")
                     pConf = declapi.enhanceJsonSchemaWithDefaults(configSchema, pConf)
                   else
                     env.logger.warn(
-                      "package.json of \"#{fullPluginName}\" has no \"configSchema\" property. " +
+                      "package.json of \"#{pluginName}\" has no \"configSchema\" property. " +
                       "Could not validate config."
                     )
                   @registerPlugin(plugin, pConf, configSchema)
