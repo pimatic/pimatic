@@ -39,6 +39,7 @@ module.exports = (env) ->
       if isCompatible(refVersion, value)
         versions.push key
     )
+    
     return versions
 
   getLatestCompatible = (packageInfo, refVersion) ->
@@ -209,8 +210,13 @@ module.exports = (env) ->
           json = JSON.parse(res)
           if json.error?
             throw new Error ("#{json.error}: #{version}")
+          
           for name in blacklist
             json = json.filter (item) -> item.name isnt name
+          
+          # Filter packages based on Node compatibility
+          json = json.filter (p) => @isNodeVersionCompatible(p.engines?.node)
+          
           # sort
           json.sort( (a, b) => a.name.localeCompare(b.name) )
           # cache for 1min
@@ -246,7 +252,7 @@ module.exports = (env) ->
         unless pluginInfo?
           env.logger.info("Could not get plugin info from update server, request info from npm")
           return pluginInfo = @getPluginInfoFromNpm(name)
-      ).then( () =>
+      ).then( () =>  
         return pluginInfo
       )
 
@@ -265,7 +271,15 @@ module.exports = (env) ->
       unless pimaticRange
         return null
       return semver.satisfies(version, pimaticRange)
-
+    
+    isNodeVersionCompatible: (version) ->
+      # No node attribute in package for downward compat purposes
+      # as not all maintainers have included { engines: { node: "x.x.x" }} in package.json
+      !version || semver.satisfies(@getInstalledNodeVersion(), version)
+    
+    getInstalledNodeVersion: () ->
+      return "#{process.versions.node}"
+    
     searchForPluginsWithInfo: ->
       return @searchForPlugin().then( (plugins) =>
         return pluginList = (
@@ -305,7 +319,7 @@ module.exports = (env) ->
       return @getInstalledPluginUpdateVersions().then( (result) =>
         outdated = []
         for p in result
-          if semver.gt(p.latest, p.current)
+          if semver.gt(p.latest, p.current) and @isNodeVersionCompatible(p.node)
             outdated.push p
         return outdated
       )
@@ -322,6 +336,7 @@ module.exports = (env) ->
                 plugin: p
                 current: installed.version
                 latest: latest.version
+                node: latest.engines?.node # Add node engine from updated package to check later
               }
             )
         return Promise.settle(waiting).then( (results) =>
