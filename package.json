@@ -68,7 +68,7 @@
     "method-override": "^2.3.7",
     "module-alias": "^2.2.0",
     "moment": "^2.16.0",
-    "npm": "^2.5.11",
+    "npm": "^6.14.6",
     "relaxed-json": "^1.0.0",
     "request-promise": "^2.0.1",
     "semver": "^5.1.0",
