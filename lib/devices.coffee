@@ -414,6 +414,7 @@ module.exports = (env) ->
   ###
   class ShutterController extends Actuator
     _position: null
+    _percentage: 100 # default is an open shutter
 
     # Approx. amount of time (in seconds) for shutter to close or open completely.
     rollingTime = null
@@ -425,6 +426,11 @@ module.exports = (env) ->
         type: t.string
         enum: ['up', 'down', 'stopped']
         labels: { up: 'up', down: 'down', stopped: 'stopped'}
+      percentage:
+        label: "Position percentage"
+        description: "Current position of the shutter in percentage"
+        type: t.number
+        unit: "%"
 
     actions:
       moveUp:
@@ -458,6 +464,9 @@ module.exports = (env) ->
     moveToPosition: (position) ->
       throw new Error "Function \"moveToPosition\" is not implemented!"
 
+    moveToPercentage: (percentage) ->
+      @moveByPercentage(percentage - @_percentage)
+
     moveByPercentage: (percentage) ->
       duration = @_calculateRollingTime(Math.abs(percentage))
       if duration is 0
@@ -466,17 +475,35 @@ module.exports = (env) ->
       promise = if percentage > 0 then @moveUp() else @moveDown()
       promise = promise.delay(duration + 10).then( () =>
         @stop()
+        @_setPercentage(@_percentage + percentage)
       )
       return promise
 
     # Returns a promise that will be fulfilled with the position
     getPosition: -> Promise.resolve(@_position)
 
+    getPercentage: -> Promise.resolve(@_percentage)
+
     _setPosition: (position) ->
       assert position in ['up', 'down', 'stopped']
       if @_position is position then return
       @_position = position
       @emit "position", position
+      @_setPercentage(
+        switch position
+          when 'up' then 100
+          when 'down' then 0
+          else 50 # stopped is not really supported
+      )
+
+    _setPercentage: (percentage) ->
+      percentage = switch
+        when percentage < 0 then 0
+        when percentage > 100 then 100
+        else percentage
+      if @_percentage is percentage then return
+      @_percentage = percentage
+      @emit "percentage", percentage
 
     # calculates rolling time in ms for given percentage
     _calculateRollingTime: (percentage) ->

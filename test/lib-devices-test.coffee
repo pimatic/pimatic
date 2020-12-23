@@ -107,3 +107,33 @@ describe "ShutterController", ->
         assert stopped
         finish()
       ).done()
+
+  describe "#_setPercentage()", ->
+    it "should emit percentage if changed", ->
+      emittedPercentage = null
+      shutter.on "percentage", (percentage) ->
+        emittedPercentage = percentage
+      shutter._setPercentage(50)
+      assert emittedPercentage == 50
+
+    it "should not emit percentage if not changed", ->
+      shutter.on "percentage", (percentage) ->
+        assert false
+      shutter._percentage = 50
+      shutter._setPercentage(50)
+
+    it "should set percentage if higher than 100", ->
+      shutter._setPercentage(101)
+      assert shutter._percentage == 100
+
+    it "should set percentage if lower than zero", ->
+      shutter._setPercentage(-1)
+      assert shutter._percentage == 0
+
+  describe "#moveToPercentage", ->
+
+    it "should calculate the percentage to move", ->
+      shutter.moveByPercentage = (percentage) ->
+        assert percentage == -25
+      shutter._percentage = 50
+      shutter.moveToPercentage(25)
