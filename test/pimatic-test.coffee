@@ -6,10 +6,8 @@ describe "pimatic", ->
     settings:
       locale: "en"
       authentication:
-        username: "test"
-        password: "test"
         enabled: true
-        disabled: true
+        secret: "secr3t"
       logLevel: "error"
       httpServer:
         enabled: true
@@ -21,9 +19,16 @@ describe "pimatic", ->
         connection: {
           filename: ':memory:'
         }
-      plugins: []
-      devices: []
-      rules: []
+    users: [
+      {
+        username: "test"
+        password: "test"
+        role: "admin"
+      }
+    ]
+    plugins: []
+    devices: []
+    rules: []
 
   fs = require 'fs'
   os = require 'os'
