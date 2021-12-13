@@ -147,17 +147,29 @@ module.exports = {
     title: "DummySwitch config"
     type: "object"
     extensions: ["xLink", "xConfirm", "xOnLabel", "xOffLabel"]
-    properties: {}
+    properties:
+      ignoreState:
+        type: "boolean"
+        description: "Ignores if switch has the requested state already"
+        default: false
   DummyDimmer:
     title: "DummyDimmer config"
     type: "object"
     extensions: ["xLink"]
-    properties: {}
+    properties:
+      ignoreState:
+        type: "boolean"
+        description: "Ignores if dimmer has the requested state already"
+        default: false
   DummyShutter:
     title: "DummyShutter config"
     type: "object"
     extensions: ["xLink", "xConfirm", "xUpLabel", "xDownLabel", "xStoppedLabel"]
     properties:
+      ignoreState:
+        type: "boolean"
+        description: "Ignores if shutter has the requested position already"
+        default: false
       rollingTime:
         description: "Approx. amount of time (in seconds) for shutter to close or open completely."
         type: "number"
@@ -209,6 +221,10 @@ module.exports = {
         description: "Show the temperature input spinbox in the GUI"
         type: "boolean"
         default: true
+      ignoreState:
+        type: "boolean"
+        description: "Ignores if thermostat has the requested state already"
+        default: false
   }
   DummyTemperatureSensor:
     title: "DummyTemperatureSensor config options"
