@@ -876,6 +876,7 @@ module.exports = (env) ->
           env.predicates.ButtonPredicateProvider
           env.predicates.DeviceAttributeWatchdogProvider
           env.predicates.StartupPredicateProvider
+          env.predicates.AVPlayerPredicateProvider
         ]
         for predProv in defaultPredicateProvider
           predProvInst = new predProv(this)
