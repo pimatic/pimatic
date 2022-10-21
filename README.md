@@ -5,7 +5,8 @@ pimatic
 [![NPM version](https://img.shields.io/npm/v/pimatic.png)](http://badge.fury.io/js/pimatic)
 [![Mentioned in Awesome SmartHome](https://awesome.re/mentioned-badge.svg)](https://github.com/pfalcon/awesome-smarthome#notable-opensource-projects)
 
-
+This project is no longer maintained!
+========
 pimatic is a home automation framework that runs on [node.js](http://nodejs.org). It provides a 
 common extensible platform for home control and automation tasks.  
 
