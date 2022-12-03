@@ -294,6 +294,71 @@ module.exports = (env) ->
       super()
     getType: -> 'state'
 
+  class AVPlayerPredicateProvider extends PredicateProvider
+    constructor: (@framework) ->
+
+    parsePredicate: (input, context) ->
+      devices = _(@framework.deviceManager.devices).values().filter((device) => 
+        device.hasAction( 'play')
+      ).value()
+
+      device = null
+      state = null
+      negated = null
+      match = null
+
+      M(input, context)
+        .matchDevice(devices, (next, d) =>
+          next.match([' is'])
+            .match([' playing', ' stopped',' paused', ' not playing'], (m, s) =>
+              if device? and device.id isnt d.id
+                context?.addError(""""#{input.trim()}" is ambiguous.""")
+                return
+              device = d
+              mapping = {'playing': 'play', 'stopped': 'stop', 'paused': 'pause', 'not playing': 'not play'}
+              state = mapping[s.trim()] # is one of  'playing', 'stopped', 'paused', 'not playing'
+
+              match = m.getFullMatch()
+            )
+      )
+
+      if match?
+        assert device?
+        assert state?
+        assert typeof match is "string"
+        return {
+          token: match
+          nextInput: input.substring(match.length)
+          predicateHandler: new AVPlayerPredicateHandler(device, state)
+        }
+      else
+        return null
+
+  class AVPlayerPredicateHandler extends PredicateHandler
+
+    constructor: (@device, @state) ->
+      @dependOnDevice(@device)
+
+    setup: ->
+      @playingListener = (p) =>
+        if @state is p or (@state is 'not play' and p isnt 'play')
+          @emit 'change', true
+
+      @device.on 'state', @playingListener
+      super()
+
+    getValue: ->
+      return @device.getUpdatedAttributeValue('state').then(
+        (p) =>
+          @state is p or (@state is 'not play' and p isnt 'play')
+      )
+
+    destroy: ->
+      @device.removeListener 'state', @playingListener
+      super()
+
+    getType: -> 'state'
+
 
   ###
   The Device-Attribute Predicate Provider
@@ -888,6 +953,7 @@ module.exports = (env) ->
     VariablePredicateProvider
     VariableUpdatedPredicateProvider
     ContactPredicateProvider
+    AVPlayerPredicateProvider
     ButtonPredicateProvider
     DeviceAttributeWatchdogProvider
     StartupPredicateProvider
