@@ -329,8 +329,9 @@ module.exports = (env) ->
     # Returns a promise that will be fulfilled with the state
     getState: -> Promise.resolve(@_state)
 
-    _setState: (state) ->
-      if @_state is state then return
+    _setState: (state, ignoreState = false) ->
+      unless ignoreState
+        if @_state is state then return
       @_state = state
       @emit "state", state
 
@@ -393,12 +394,13 @@ module.exports = (env) ->
     changeStateTo: (state) ->
       return if state then @turnOn() else @turnOff()
 
-    _setDimlevel: (level) =>
+    _setDimlevel: (level, ignoreState = false) =>
       level = parseFloat(level)
       assert(not isNaN(level))
       cassert level >= 0
       cassert level <= 100
-      if @_dimlevel is level then return
+      unless ignoreState
+        if @_dimlevel is level then return
       @_dimlevel = level
       @emit "dimlevel", level
       @_setState(level > 0)
@@ -472,9 +474,10 @@ module.exports = (env) ->
     # Returns a promise that will be fulfilled with the position
     getPosition: -> Promise.resolve(@_position)
 
-    _setPosition: (position) ->
+    _setPosition: (position, ignoreState = false) ->
       assert position in ['up', 'down', 'stopped']
-      if @_position is position then return
+      unless ignoreState
+        if @_position is position then return
       @_position = position
       @emit "position", position
 
@@ -632,28 +635,33 @@ module.exports = (env) ->
     getBattery: () -> Promise.resolve(@_battery)
     getSynced: () -> Promise.resolve(@_synced)
 
-    _setMode: (mode) ->
-      if mode is @_mode then return
+    _setMode: (mode, ignoreState = false) ->
+      unless ignoreState
+        if mode is @_mode then return
       @_mode = mode
       @emit "mode", @_mode
 
-    _setSynced: (synced) ->
-      if synced is @_synced then return
+    _setSynced: (synced, ignoreState = false) ->
+      unless ignoreState
+        if synced is @_synced then return
       @_synced = synced
       @emit "synced", @_synced
 
-    _setSetpoint: (temperatureSetpoint) ->
-      if temperatureSetpoint is @_temperatureSetpoint then return
+    _setSetpoint: (temperatureSetpoint, ignoreState = false) ->
+      unless ignoreState
+        if temperatureSetpoint is @_temperatureSetpoint then return
       @_temperatureSetpoint = temperatureSetpoint
       @emit "temperatureSetpoint", @_temperatureSetpoint
 
-    _setValve: (valve) ->
-      if valve is @_valve then return
+    _setValve: (valve, ignoreState = false) ->
+      unless ignoreState
+        if valve is @_valve then return
       @_valve= valve
       @emit "valve", @_valve
 
-    _setBattery: (battery) ->
-      if battery is @_battery then return
+    _setBattery: (battery, ignoreState = false) ->
+      unless ignoreState
+        if battery is @_battery then return
       @_battery = battery
       @emit "battery", @_battery
 
@@ -983,7 +991,7 @@ module.exports = (env) ->
 
     # Returns a promise that is fulfilled when done.
     changeDimlevelTo: (level) ->
-      @_setDimlevel(level)
+      @_setDimlevel(level, @config.ignoreState)
       return Promise.resolve()
 
     destroy: () ->
@@ -999,12 +1007,12 @@ module.exports = (env) ->
       super()
 
     stop: ->
-      @_setPosition('stopped')
+      @_setPosition('stopped', @config.ignoreState)
       return Promise.resolve()
 
     # Returns a promise that is fulfilled when done.
     moveToPosition: (position) ->
-      @_setPosition(position)
+      @_setPosition(position, @config.ignoreState)
       return Promise.resolve()
 
     destroy: () ->

@@ -66,6 +66,14 @@ describe "ShutterController", ->
       shutter._position = "down"
       shutter._setPosition("down")
 
+    it "should emit position if ignoreState is true", ->
+      emittedPosition = null
+      shutter.on "position", (position) ->
+        emittedPosition = position
+      shutter._position = "up"
+      shutter._setPosition("up", true)
+      assert emittedPosition == "up"
+
   describe "#moveByPercentage()", ->
 
     it "should use absolute value for calculating rolling time", ->
